@@ -848,6 +848,16 @@
   .vs-cell{ display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 10px 12px; min-height: 60px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .vs-cell.opp{ grid-template-columns: auto minmax(0, 1fr) 34px; text-align: right; }
   .vs-cell.opp .vs-av{ order: 3; } .vs-cell.opp .vs-pts{ order: 1; } .vs-cell.opp .vs-who{ order: 2; }
+  /* live matchup: card tint by game state (a hole's red wins) */
+  .vs-cell.st-in{ background: color-mix(in srgb, var(--accent) 13%, transparent); box-shadow: inset 3px 0 0 var(--accent); }
+  .vs-cell.opp.st-in{ box-shadow: inset -3px 0 0 var(--accent); }
+  .vs-cell.st-post{ background: color-mix(in srgb, var(--text) 8%, transparent); }
+  .vs-cell.st-post .vs-av{ filter: saturate(.55); }
+  .vs-legend{ display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; margin: -4px 0 10px; font-size: 11.5px; color: var(--text-3); }
+  .vs-legend i{ display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; box-shadow: inset 0 0 0 1px var(--hair); }
+  .vs-legend i.st-post{ background: color-mix(in srgb, var(--text) 12%, var(--surface)); }
+  .vs-legend i.st-in{ background: color-mix(in srgb, var(--accent) 35%, var(--surface)); box-shadow: inset 2px 0 0 var(--accent); }
+  .vs-legend i.st-pre{ background: var(--surface); }
   .vs-cell.hole{ background: var(--danger-soft); }
   .vs-cell.hole .vs-nm{ color: var(--danger); }
   .vs-av{ width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
@@ -2182,14 +2192,25 @@
     return changed;
   }
   let histMemo = {}, aggMemo = {};
-  function histReset(){ histMemo = {}; aggMemo = {}; if(typeof plReset === 'function') plReset(); }
+  function histReset(){ histMemo = {}; aggMemo = {}; curMemo = {}; if(typeof plReset === 'function') plReset(); }
   function gameEntry(week, g){
     const m = g.t && ctx.nfl && ctx.nfl.sched && ctx.nfl.sched[g.t] ? ctx.nfl.sched[g.t][week] : null;
-    return { week: week, raw: g.s || {}, opp: g.o || null, away: m ? m.charAt(0) === '@' : null };
+    const raw = Object.assign({}, g.s || {}); delete raw.gp;   // gp is only used to tell a played game
+    return { week: week, raw: raw, opp: g.o || null, away: m ? m.charAt(0) === '@' : null };
   }
   // A player's completed games, scored with this league's settings: [{ week, raw, pts, opp, away }], [] when they
   // haven't played, null only when nothing is loaded yet (no weekly.json and no per-player download).
+  // hist() = completed weeks (histBase) + this week's game once it's final (thisWeekFinal), so last-3, averages, totals
+  // and the typical-week range count it as soon as it's over instead of when Sleeper moves to next week (Tue/Wed).
+  let curMemo = {};
   function hist(pid){
+    const base = histBase(pid);
+    if(!base) return base;
+    if(pid in curMemo) return curMemo[pid];
+    const cur = thisWeekFinal(pid);
+    return (curMemo[pid] = cur && !base.some(function(w){ return w.week === cur.week; }) ? base.concat([cur]) : base);
+  }
+  function histBase(pid){
     if(ctx.history[pid]) return ctx.history[pid];
     if(!ctx.weekly) return null;
     if(pid in histMemo) return histMemo[pid];
@@ -2201,7 +2222,7 @@
 
   function aggregatedRaw(pid, mode){ // mode: 'last' | 'season'  (season = full-season total)
     const memoKey = mode + '|' + pid;
-    if(!ctx.history[pid] && memoKey in aggMemo) return aggMemo[memoKey];
+    if(!ctx.history[pid] && !thisWeekFinal(pid) && memoKey in aggMemo) return aggMemo[memoKey];
     const weeks = hist(pid) || [];
     if(!weeks.length) return null;
     const set = (mode === 'last') ? weeks.slice(-1) : weeks;
@@ -2217,11 +2238,11 @@
       }
     });
     for(const k in acc){ if(statKind(k) === 'rate') acc[k] = acc[k] / n[k]; } // season rate = mean of weekly rates
-    if(!ctx.history[pid]) aggMemo[memoKey] = acc;
+    if(!ctx.history[pid] && !thisWeekFinal(pid)) aggMemo[memoKey] = acc;
     return acc;
   }
-  function lastGamePts(pid){
-    const weeks = hist(pid) || [];
+  function lastGamePts(pid){ // the game before this week; this week's (live / final) points are shown as the actual
+    const weeks = (hist(pid) || []).filter(function(w){ return w.week < ctx.week; });
     return weeks.length ? weeks[weeks.length - 1].pts : null;
   }
   function seasonAvgPts(pid){
@@ -3336,6 +3357,19 @@
     if(st) return calcPoints(st.s, ctx.league.scoring_settings || {}) || 0;
     return ctx.live.stats ? 0 : null;
   }
+  // This week's game as a finished game-log entry, once it's final (league scoring; Sleeper's live points when the
+  // player is on a roster in this league, otherwise scored from Sleeper's weekly stats).
+  function thisWeekFinal(pid){
+    if(!ctx.live || !ctx.live.stats || !ctx.players[pid] || !ctx.league) return null;
+    const p = ctx.players[pid], g = gameOf(p.team);
+    if(!g || g.state !== 'post') return null;
+    const st = ctx.live.stats[pid];
+    if(!st || !playedWeek(st.s)) return null;
+    const raw = Object.assign({}, st.s); delete raw.gp;
+    const mp = muPoints(), m = matchup(p.team, ctx.week);
+    return { week: ctx.week, raw: raw, pts: typeof mp[pid] === 'number' ? mp[pid] : (calcPoints(raw, ctx.league.scoring_settings || {}) || 0),
+      opp: m && !m.bye ? m.text.replace(/^(@|vs)\s*/, '') : (st.o || null), away: m && !m.bye ? m.text.charAt(0) === '@' : null };
+  }
   function weekRaw(pid){ const st = ctx.live.stats && ctx.live.stats[pid]; return st ? st.s : null; }
   // Projected final for one player: actual so far + projection for what's left of their game.
   function projFinal(pid){
@@ -3434,7 +3468,7 @@
   }
   // Re-render what shows live numbers, without touching filters, open menus or scroll.
   function rerenderLive(){
-    if(typeof plReset === 'function') plReset();
+    histReset();
     renderAll();
     if(ctx.view === 'fa' && !(document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName))) renderPlayers(true);
     refreshFocus();
@@ -3552,7 +3586,7 @@
       if(!pid || pid === '0' || !ctx.players[pid]){ holes.push({ i: i, text: 'the ' + escapeHTML(label) + ' slot is empty' }); return; }
       const nm = escapeHTML(playerName(ctx.players[pid]));
       if(isOnBye(pid)) holes.push({ i: i, text: nm + ' is on a bye' });
-      else { const st = effectiveStatus(pid); if(cantPlay(st)) holes.push({ i: i, text: nm + ' is ' + escapeHTML(statusInfo(st).label) }); }
+      else { const st = effectiveStatus(pid); if(!isLocked(pid) && cantPlay(st)) holes.push({ i: i, text: nm + ' is ' + escapeHTML(statusInfo(st).label) }); }
     });
     return holes;
   }
@@ -3564,7 +3598,8 @@
     const gs = live ? gameStatusHTML(p.team) : null, wa = live ? weekActual(pid) : null;
     const wg = wa === null ? null : gameOf(p.team);
     const pts = wa === null ? fmtPts(proj) + (live ? '<small>proj</small>' : '') : fmtPts(wa) + '<small>' + (wg && wg.state === 'post' ? 'final' : 'live') + '</small>';
-    return '<div class="vs-cell ' + side + (hole ? ' hole' : '') + '" data-open="' + escapeHTML(pid) + '" role="button" tabindex="0">' +
+    const gst = live ? gameOf(p.team) : null, st = !live ? '' : !gst || gst.state === 'off' ? ' st-none' : ' st-' + gst.state;
+    return '<div class="vs-cell ' + side + (hole ? ' hole' : '') + st + '" data-open="' + escapeHTML(pid) + '" role="button" tabindex="0">' +
       avatarTag(pid, 'vs-av') +
       '<div class="vs-who"><div class="vs-nm">' + escapeHTML(playerName(p)) + '</div>' +
         '<div class="vs-mt">' + escapeHTML(p.position || '') + ' · ' + escapeHTML(p.team || 'FA') + (gs ? ' · ' + gs : m ? ' · ' + (m.bye ? 'BYE' : escapeHTML(m.text)) : '') + ' ' + injuryChip(effectiveStatus(pid)) + '</div></div>' +
@@ -3617,6 +3652,7 @@
       '</div>' +
       '<div class="vs-sum' + tone + '">' + (Math.abs(d) < 0.05 ? (live ? 'Projected to finish dead even' : 'Dead even') : live ? 'Projected to ' + (d > 0 ? 'win' : 'lose') + ' by ' + Math.abs(d).toFixed(1) : 'You’re projected ' + marginText(d)) + ' · you win ' + myWins + ' of ' + ctx.rosterPositions.length + ' slots, they win ' + oppWins +
         (live ? ' <span class="mu-ago" data-live-ago>Updated ' + liveAgoText() + '</span>' : '') + '</div>' +
+      (live ? '<div class="vs-legend" aria-hidden="true"><span><i class="st-post"></i>Played</span><span><i class="st-in"></i>Playing</span><span><i class="st-pre"></i>Yet to play</span></div>' : '') +
       holesCallout('You', myHoles) + holesCallout(escapeHTML(mu.name), oppHoles) +
       '<div class="vs-list">' + rows + '</div>' +
       '<details class="vs-benches"><summary>Benches</summary><div class="vs-bench-cols"><div><div class="eyebrow">Yours</div>' + bench(ctx.myRoster.players, mine) + '</div>' +
@@ -4474,7 +4510,7 @@
     const avatarUrl = playerImageUrl(playerId);
     const proj = ctx.projections[playerId];
     const keyStats = keyStatsLine(playerId, pos);
-    const byeStarter = slotIndex !== undefined && (isOnBye(playerId) || (ro && cantPlay(effectiveStatus(playerId)))); // a starter who won't play
+    const byeStarter = slotIndex !== undefined && (isOnBye(playerId) || (ro && !isLocked(playerId) && cantPlay(effectiveStatus(playerId)))); // a starter who won't play
     const byeChip = byeStarter ? '<span class="status-chip bye-tag">Bye</span>' : '';
 
     return '' +
@@ -6035,7 +6071,7 @@
           const opp = h.opp ? (h.away === true ? '@ ' : h.away === false ? 'vs ' : '') + h.opp : '';
           return '<div class="bar"><span class="lbl">Wk ' + h.week + ' ' + escapeHTML(opp) + '</span><div class="track"><div class="fill" style="--i:' + i + ';width:' + Math.max(0, h.pts / maxPts * 100) + '%"></div></div><b>' + fmtPts(h.pts) + '</b></div>';
         }).join('') +
-        (wa !== null ? '<div class="bar"><span class="lbl">Wk ' + ctx.week + (wg && wg.state === 'post' ? ' final' : ' live') + '</span><div class="track"><div class="fill live" style="--i:' + games.length + ';width:' + Math.max(0, Math.min(100, wa / maxPts * 100)) + '%"></div></div><b>' + fmtPts(wa) + '</b></div>' : '') +
+        (wa !== null && !games.some(function(g){ return g.week === ctx.week; }) ? '<div class="bar"><span class="lbl">Wk ' + ctx.week + (wg && wg.state === 'post' ? ' final' : ' live') + '</span><div class="track"><div class="fill live" style="--i:' + games.length + ';width:' + Math.max(0, Math.min(100, wa / maxPts * 100)) + '%"></div></div><b>' + fmtPts(wa) + '</b></div>' : '') +
         (typeof ctx.projections[pid] === 'number' ? '<div class="bar"><span class="lbl">Wk ' + ctx.week + ' proj</span><div class="track"><div class="fill proj" style="--i:' + games.length + ';width:' + (ctx.projections[pid] / maxPts * 100) + '%"></div></div><b class="dim">' + fmtPts(ctx.projections[pid]) + '</b></div>' : '') +
         '</div>';
     }
