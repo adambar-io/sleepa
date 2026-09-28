@@ -685,6 +685,7 @@
   .pf-stat .k{ font-size: 10.5px; color: var(--text-3); margin-top: 2px; text-transform: uppercase; letter-spacing: .07em; font-weight: 600; }
   .pf-grid{ display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 18px; align-items: start; }
   .pf-card{ padding: 6px 20px 20px; min-width: 0; }
+  .pf-week, .pf-log{ margin-bottom: 18px; }   /* full-width stack above the charts / options grid */
   .pf-card .cand-card{ display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; column-gap: 10px; row-gap: 4px; grid-template-areas: "av info act" "av stats act"; padding: 10px; }
   .pf-card .cand-avatar{ grid-area: av; width: 40px; height: 40px; align-self: center; }
   .pf-card .cand-info{ grid-area: info; min-width: 0; }
@@ -5390,7 +5391,8 @@
     if(!weeks.length) return '<div class="empty-state">No completed games this season.</div>';
     const byWeek = {}; weeks.forEach(function(w){ byWeek[w.week] = w; });
     const cols = [];
-    for(let wk = 1; wk < ctx.week; wk++){
+    const lastWk = byWeek[ctx.week] ? ctx.week : ctx.week - 1;   // this week joins once its game is final (hist)
+    for(let wk = 1; wk <= lastWk; wk++){
       if(byWeek[wk]){ cols.push({ week: wk, w: byWeek[wk] }); continue; }
       const m = matchup(p.team, wk);
       cols.push({ week: wk, note: m && m.bye ? 'BYE' : 'DNP' });
@@ -6054,19 +6056,21 @@
         injuryChip(p.injury_status) + depthChip(pid) + '<span>· ' + (onRoster ? 'On your roster' : 'Available') + '</span></div>' + gameLineHTML(pid) + playerLinksHTML(pid) + '</div>' +
       '<div class="pf-stats stagger">' + stats.map(function(s, i){ return '<div class="pf-stat' + (s[2] || '') + '" style="--i:' + i + '"><div class="v">' + s[0] + '</div><div class="k">' + escapeHTML(s[1]) + '</div>' + (s[3] ? '<div class="k sub">' + escapeHTML(s[3]) + '</div>' : '') + '</div>'; }).join('') + '</div></div>';
 
-    let left = '';
+    // Layout: this week's stat line and the game log full width (the log gains a column each week), then the charts
+    // next to the swap / roster options.
+    let weekCard = '', left = '';
     const wr = wa !== null ? weekRaw(pid) : null;
     if(wr){
       const keys = Object.keys(wr).filter(function(k){ return wr[k] !== 0 && !NOT_PLAYER_STAT.test(k) && k !== 'gp'; });
       const g = statsForPosition(p.position, keys), shown = g.main.concat(g.more);
-      left += '<div class="card pf-card pf-week"><div class="pf-sec"><h3>Week ' + ctx.week + (wg && wg.state === 'post' ? '' : ' so far') + '</h3><span class="eyebrow">' + (wg && wg.state === 'post' ? 'Final' : 'Live') + ' · actual</span></div>' +
+      weekCard = '<div class="card pf-card pf-week"><div class="pf-sec"><h3>Week ' + ctx.week + (wg && wg.state === 'post' ? '' : ' so far') + '</h3><span class="eyebrow">' + (wg && wg.state === 'post' ? 'Final' : 'Live') + ' · actual</span></div>' +
         '<div class="raw-stats">' + (shown.length ? shown.map(function(k){ return '<div><span class="rk">' + escapeHTML(statLabel(k)) + '</span><span class="rv">' + fmtStat(wr[k]) + '</span></div>'; }).join('') : '<div class="dim">No stats yet.</div>') + '</div></div>';
     }
-    left += '<div class="card pf-card"><div class="pf-sec"><h3>Game log</h3><span class="eyebrow">League scoring</span></div>' +
-      (loading ? '<div style="display:grid;gap:10px;padding:6px 0 4px">' + [80, 100, 100, 70].map(function(w){ return '<span class="skel" style="height:14px;width:' + w + '%"></span>'; }).join('') + '</div>' : gameLogHTML(pid));
+    const logCard = '<div class="card pf-card pf-log"><div class="pf-sec"><h3>Game log</h3><span class="eyebrow">League scoring</span></div>' +
+      (loading ? '<div style="display:grid;gap:10px;padding:6px 0 4px">' + [80, 100, 100, 70].map(function(w){ return '<span class="skel" style="height:14px;width:' + w + '%"></span>'; }).join('') + '</div>' : gameLogHTML(pid)) + '</div>';
     if(!loading && games.length){
       const maxPts = Math.max.apply(null, games.map(function(h){ return h.pts; }).concat([ctx.projections[pid] || 0, 1]));
-      left += '<div class="pf-sec" style="margin-top:22px"><h3>Points by week</h3><span class="eyebrow">vs this week&#39;s projection</span></div><div class="bars">' +
+      left += '<div class="pf-sec"><h3>Points by week</h3><span class="eyebrow">vs this week&#39;s projection</span></div><div class="bars">' +
         games.map(function(h, i){
           const opp = h.opp ? (h.away === true ? '@ ' : h.away === false ? 'vs ' : '') + h.opp : '';
           return '<div class="bar"><span class="lbl">Wk ' + h.week + ' ' + escapeHTML(opp) + '</span><div class="track"><div class="fill" style="--i:' + i + ';width:' + Math.max(0, h.pts / maxPts * 100) + '%"></div></div><b>' + fmtPts(h.pts) + '</b></div>';
@@ -6077,13 +6081,13 @@
     }
     const snaps = (nflWeeks(pid) || []).filter(function(x){ return typeof x.s === 'number'; });
     if(snaps.length){
-      left += '<div class="pf-sec" style="margin-top:22px"><h3>Snap share by week</h3><span class="eyebrow">Role</span></div><div class="bars">' +
+      left += '<div class="pf-sec"' + (left ? ' style="margin-top:22px"' : '') + '><h3>Snap share by week</h3><span class="eyebrow">Role</span></div><div class="bars">' +
         snaps.map(function(x, i){ return '<div class="bar"><span class="lbl">Wk ' + x.week + '</span><div class="track"><div class="fill snap" style="--i:' + i + ';width:' + (x.s * 100) + '%"></div></div><b>' + pct(x.s) + '</b></div>'; }).join('') + '</div>';
     }
-    left += '</div>';
+    left = left ? '<div class="card pf-card">' + left + '</div>' : '<div></div>';
     const dvp = dvpInfo(pid);
     const context = rangeDetailHTML(pid) + (dvp ? '<div class="dvp-line"><span class="dvp-chip ' + (dvp.early ? 'early' : dvp.tone) + '">Matchup</span> ' + escapeHTML(dvpSentence(dvp)) + '</div>' : '');
-    return byeCallouts([pid]) + hero + injurySourcesHTML(pid) + (loading ? '' : context) + '<div class="pf-grid">' + left + '<div class="card pf-card">' + maxSideHTML(pid) + '</div></div>';
+    return byeCallouts([pid]) + hero + injurySourcesHTML(pid) + (loading ? '' : context) + weekCard + logCard + '<div class="pf-grid">' + left + '<div class="card pf-card">' + maxSideHTML(pid) + '</div></div>';
   }
 
   // The last two header cards depend on the position, so there's never a card that can't apply (no "snap %" for a kicker).
