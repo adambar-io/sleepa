@@ -176,6 +176,20 @@ def build_dvp(season, through_week, weekly=None):
     return dvp
 
 
+def last_completed_week(kick, now=None):
+    """Highest week whose every game has ended (its last kickoff + 4.5 h), from the nflverse kickoffs in nflverse.json.
+    Sleeper's state/nfl only moves to the next week a day or two after Monday night, so without this a finished week's
+    stats would wait for that. Weeks are played in order, so the highest finished week means all earlier ones are too."""
+    now = now or datetime.datetime.now(datetime.timezone.utc)
+    last = {}
+    for wk in (kick or {}).values():
+        for w, iso in wk.items():
+            ts = datetime.datetime.fromisoformat(iso.replace('Z', '+00:00'))
+            last[int(w)] = max(last.get(int(w), ts), ts)
+    done = [w for w, ts in last.items() if ts + datetime.timedelta(hours=4, minutes=30) < now]
+    return max(done) if done else 0
+
+
 def build_ros(season, from_week, last_week=LAST_FANTASY_WEEK):
     """Each player's projected raw stats summed from from_week through last_week. Bye weeks have empty
     projections, so they add nothing. 'w' = weeks with a projection, 'k' = those weeks (for the trade helper)."""
@@ -651,19 +665,22 @@ def main():
     # which the app only loads for the waiver screen and the trade helper.
     state = json.loads(get('https://api.sleeper.app/v1/state/nfl'))
     cur_week = int(state.get('week') or 1) if str(state.get('season')) == str(args.season) else LAST_FANTASY_WEEK + 1
+    # completed weeks: Sleeper's week - 1, or later if the schedule says the current week's games are all over
+    through = min(max(cur_week - 1, last_completed_week(out.get('kick'))), 18)
+    print(f'  completed weeks: 1-{through} (Sleeper week {cur_week})', file=sys.stderr)
     weekly = {}
     try:
-        out['dvp'] = build_dvp(args.season, min(cur_week - 1, 18), weekly)
-        out['dvp_through'] = min(cur_week - 1, 18)
+        out['dvp'] = build_dvp(args.season, through, weekly)
+        out['dvp_through'] = through
     except Exception as e:
         print('  (defense vs position unavailable:', e, ')', file=sys.stderr)
     # weekly.json: every fantasy player's stats for each completed game (QB/RB/WR/TE/K/DEF), so the app can show last
     # game / season / recent form for anyone (free agents, other teams, defenses) and score it with the league's settings.
     weekly_path = os.path.join(os.path.dirname(os.path.abspath(args.out)), 'weekly.json')
     old_weekly = load_previous(weekly_path)
-    if weekly and (old_weekly.get('players') != weekly or old_weekly.get('through_week') != cur_week - 1):
+    if weekly and (old_weekly.get('players') != weekly or old_weekly.get('through_week') != through):
         with open(weekly_path, 'w', encoding='utf-8') as f:
-            json.dump({'season': args.season, 'generated': out['generated'], 'through_week': min(cur_week - 1, 18), 'players': weekly}, f, separators=(',', ':'))
+            json.dump({'season': args.season, 'generated': out['generated'], 'through_week': through, 'players': weekly}, f, separators=(',', ':'))
         print(f'Wrote {weekly_path} ({os.path.getsize(weekly_path):,} bytes, {len(weekly):,} players).', file=sys.stderr)
     # espn.json: ESPN injuries (unofficial). On failure the previous file stays, so the app shows the last good copy.
     espn_path = os.path.join(os.path.dirname(os.path.abspath(args.out)), 'espn.json')

@@ -12,7 +12,9 @@ on:
     # Game days (Thu/Sun/Mon ET, i.e. into the next UTC day): every 30 min from late morning ET through the last
     # game, so injury news and inactives reach players.json quickly. Runs with no changes don't commit.
     - cron: '*/30 15-23 * * 0,1,4'
-    - cron: '*/30 0-4 * * 1,2,5'
+    - cron: '*/30 0-6 * * 1,2,5'
+    # (to 06:30 UTC: a week counts as complete ~4.5 h after its last kickoff, so Monday night's finished week lands in
+    # weekly.json overnight instead of at the next 14:00 run. Later weeks need no changes: everything follows the dates.)
   workflow_dispatch:        # "Run workflow" button for a manual refresh
 
 permissions:
