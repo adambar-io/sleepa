@@ -204,19 +204,26 @@ def boris_tiers(weekly_rows, m, kick):
     return {'week': week, 'modified': written.strftime('%Y-%m-%dT%H:%MZ') if written else None, 'players': out, 'unmatched': unmatched}
 
 
-def espn_projections(m, season, weeks):
-    """ESPN's weekly projections (statSourceId 1, split 1; record id '11' + season + week) for the given weeks."""
+def espn_projections(m, season, weeks, ros_weeks=()):
+    """ESPN's weekly projections (statSourceId 1, split 1; record id '11' + season + week) for the given weeks, plus
+    rest of season = the same weekly projection lines summed over ros_weeks (byes project nothing)."""
     body, _ = fetch(ESPN.format(season=season), {'X-Fantasy-Filter': json.dumps({'players': {
         'limit': 1500, 'filterSlotIds': {'value': [0, 2, 4, 6]}, 'sortPercOwned': {'sortPriority': 1, 'sortAsc': False}}})}, timeout=180)
     players = json.loads(body).get('players', [])
-    out, unmatched, check = {str(w): {} for w in weeks}, [], []
+    out, unmatched, check, ros = {str(w): {} for w in weeks}, [], [], {}
     for e in players:
         p = e.get('player') or {}
         pos, team = ESPN_POS.get(p.get('defaultPositionId')), ESPN_TEAMS.get(p.get('proTeamId'))
         if not pos:
             continue
         recs = {s.get('id'): s for s in p.get('stats') or []}
-        got = {}
+        got, ros_sum = {}, {}
+        for w in ros_weeks:
+            s = recs.get('11' + str(season) + str(w))
+            for k, v in ((s or {}).get('stats') or {}).items():
+                key = ESPN_STATS.get(int(k))
+                if key and v:
+                    ros_sum[key] = ros_sum.get(key, 0) + v
         for w in weeks:
             s = recs.get('11' + str(season) + str(w))
             if not s or not s.get('stats'):
@@ -232,7 +239,7 @@ def espn_projections(m, season, weeks):
                 st['bonus_rec_' + pos.lower()] = st['rec']   # Sleeper's per-position reception bonus keys
             got[str(w)] = st
             check.append((sum(st.get(k, 0) * v for k, v in ESPN_DEFAULT_PPR.items()), s.get('appliedTotal') or 0))
-        if not got:
+        if not got and not ros_sum:
             continue
         sid, how = m.espn_player(p.get('id'), p.get('fullName'), team, pos)
         if not sid:
@@ -240,8 +247,12 @@ def espn_projections(m, season, weeks):
             continue
         for w, st in got.items():
             out[w][sid] = st
+        if ros_sum:
+            if ros_sum.get('rec') and pos in ('RB', 'WR', 'TE'):
+                ros_sum['bonus_rec_' + pos.lower()] = ros_sum['rec']
+            ros[sid] = {k: round(v, 1) for k, v in ros_sum.items()}
     close = sum(1 for mine, theirs in check if abs(mine - theirs) <= 0.15)
-    return {'weeks': out, 'unmatched': unmatched, 'mapping_check': {'lines': len(check), 'within_0_15': close}}
+    return {'weeks': out, 'ros': ros, 'unmatched': unmatched, 'mapping_check': {'lines': len(check), 'within_0_15': close}}
 
 
 def build_rankings(sleeper, kick, season, week):
@@ -268,8 +279,9 @@ def build_rankings(sleeper, kick, season, week):
     except Exception as e:
         print('  (Boris Chen tiers unavailable:', e, ')', file=sys.stderr)
     try:
-        es = espn_projections(m, season, [w for w in (week, week + 1) if w <= 18])
+        es = espn_projections(m, season, [w for w in (week, week + 1) if w <= 18], range(week, 18))   # ROS: this week .. 17
         out['espn'] = es['weeks']
+        out['espn_ros'] = {'from': week, 'through': 17, 'players': es['ros']}
         out['sources']['espn'] = {'weeks': sorted(int(w) for w in es['weeks']), 'fetched': now, 'n': {w: len(v) for w, v in es['weeks'].items()},
                                   'mapping_check': es['mapping_check']}
         out['unmatched']['espn'] = es['unmatched']

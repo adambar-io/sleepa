@@ -227,9 +227,32 @@
   .ecr-chip{ flex: none; display: inline-flex; align-items: baseline; gap: 3px; padding: 1px 6px; border-radius: 6px; background: var(--surface-2);
     box-shadow: inset 0 0 0 1px var(--hair); color: var(--text-2); font-size: 10.5px; font-weight: 700; letter-spacing: .02em; font-variant-numeric: tabular-nums; }
   .ecr-chip i{ font-style: normal; font-weight: 600; color: var(--text-3); }
+  .ecr-chip s{ text-decoration: none; font-weight: 600; font-size: 9px; text-transform: uppercase; color: var(--text-3); margin-right: 1px; }
+  /* rankings table in the player views: THIS WEEK row vs REST OF SEASON row */
+  .rk-tbl-wrap{ overflow-x: auto; margin: 0 -2px; }
+  .rk-tbl{ width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  .rk-tbl th, .rk-tbl td{ padding: 6px 3px; text-align: center; white-space: nowrap; }
+  .rk-tbl thead th{ font-size: 9.5px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: .04em; }
+  .rk-tbl tbody th{ text-align: left; font-size: 12px; font-weight: 600; white-space: normal; min-width: 58px; line-height: 1.2; }
+  .rk-tbl small{ display: block; font-size: 9.5px; font-weight: 500; color: var(--text-3); text-transform: none; letter-spacing: 0; }
+  .rk-tbl .cons{ font-weight: 700; }
+  .rk-tbl tbody td.cons{ font-size: 14px; }
+  .rk-tbl tr.wk{ background: color-mix(in srgb, var(--accent) 7%, transparent); }
+  .rk-tbl tr.ros{ background: color-mix(in srgb, #7c8cff 8%, transparent); }
+  .rk-tbl tbody tr + tr th, .rk-tbl tbody tr + tr td{ border-top: 1px solid var(--hair); }
+  .rk-note{ font-size: 10.5px; color: var(--text-3); line-height: 1.4; }
+  /* full-screen tables: grouped THIS WEEK / REST OF SEASON rank columns */
+  .mx-tbl tr.grp-h th{ padding-top: 6px; padding-bottom: 2px; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
+  .mx-tbl th.gh{ text-align: center; border-bottom: 2px solid; }
+  .mx-tbl th.gh.wk{ color: var(--accent); border-color: var(--accent); }
+  .mx-tbl th.gh.ros{ color: #8f9bff; border-color: #8f9bff; }
+  .mx-tbl .rk-w{ background: color-mix(in srgb, var(--accent) 5%, transparent); }
+  .mx-tbl .rk-r{ background: color-mix(in srgb, #7c8cff 6%, transparent); }
+  .mx-tbl .g0{ box-shadow: inset 1px 0 0 var(--hair); }
+  .mx-tbl td.cons{ font-weight: 700; }
   .rk-block{ grid-column: 1 / -1; display: grid; gap: 6px; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--surface-2); font-size: 13px; }
   .pf-rk .rk-block{ background: none; padding: 0 0 4px; }
-  .rk-row{ display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 10px; align-items: baseline; }
+  .rk-row{ display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; align-items: baseline; }
   .rk-k{ color: var(--text-3); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
   .rk-v b{ font-weight: 700; } .rk-v small{ color: var(--text-3); font-size: 11.5px; }
   .rk-src{ margin-top: 2px; font-size: 10.5px; color: var(--text-3); line-height: 1.4; }
@@ -3070,6 +3093,7 @@
       });
       loadRankings().then(function(){ if(loadId === ctx.loadId) rerenderEverything(); });
       loadFantasyCalc().then(function(){ if(loadId === ctx.loadId) rerenderEverything(); });
+      loadRos().then(function(){ if(loadId === ctx.loadId){ rosMemo = {}; rerenderEverything(); } });
       weeklyPromise.then(async function(res){
         if(loadId !== ctx.loadId || !res || !applyWeekly(res)) return;
         await fillGapWeeks();
@@ -3326,12 +3350,99 @@
   }
   function fmtSrcDay(s){ const t = Date.parse(/^\d{4}-\d{2}-\d{2}$/.test(s || '') ? s + 'T12:00:00Z' : s); return isNaN(t) ? '—' : new Date(t).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }); }
   // Small chip in list rows: this week's positional consensus rank + tier. Nothing when unavailable.
+  // Row chip: THIS WEEK's consensus rank ("wk RB9") + Boris Chen tier. Nothing when there's no consensus.
   function ecrChipHTML(pid){
-    const e = ecrWeek(pid);
-    if(!e || !e.pr || e.rk === null) return '';
-    const t = tierOf(pid);
-    return '<span class="ecr-chip" title="FantasyPros consensus rank, week ' + e.week + ': ' + escapeHTML(e.pr) + ' (avg ' + e.ecr + ', best ' + e.best + ', worst ' + e.worst + ')' + (t ? '. Boris Chen tier ' + t : '') + '">' + escapeHTML(e.pr) + (t ? '<i>T' + t + '</i>' : '') + '</span>';
+    const r = ranksOf(pid).w;
+    if(!r.cons) return '';
+    const t = tierOf(pid), part = function(k, n){ return n ? k + ' ' + rkTxt(pid, n) : null; };
+    const why = [part('FantasyPros', r.fp), part('Sleeper projection', r.sl), part('ESPN projection', r.es)].filter(Boolean).join(', ');
+    return '<span class="ecr-chip" title="This week (wk ' + ctx.week + ') consensus rank ' + rkTxt(pid, r.cons) + ': average of ' + why + (t ? '. Boris Chen tier ' + t : '') + '"><s>wk</s>' + rkTxt(pid, r.cons) + (t ? '<i>T' + t + '</i>' : '') + '</span>';
   }
+
+  // ============ consensus rankings: every source's positional rank, kept apart, plus our consensus ============
+  // THIS WEEK (current Sleeper week only): FantasyPros expert consensus (only when the mirror is for this week), Sleeper
+  //   projection rank and ESPN projection rank (both in this league's scoring).
+  // REST OF SEASON (this week .. 17): FantasyPros ROS consensus, Sleeper ROS projection rank (ros.json, only when it
+  //   starts this week), ESPN ROS projection rank (its weekly projections summed), FantasyCalc trade-value rank.
+  // Consensus = average of the source ranks a player has (2 or more needed), re-ranked within the position; ties go to
+  // FantasyPros' order. Equal weights. Boris Chen tiers are shown but not counted: they're a clustering of the
+  // FantasyPros order, so counting them would count FantasyPros twice. Each source obeys its own freshness rule.
+  const RANK_POS = ['QB', 'RB', 'WR', 'TE', 'K', 'DEF'];
+  let rankMemo = null;
+  function rankByValue(values){ // {pid: points} -> {pid: rank within the player's position, 1 = most}
+    const byPos = {}, out = {};
+    for(const pid in values){
+      const p = ctx.players[pid];
+      if(!p || RANK_POS.indexOf(p.position) === -1 || !(values[pid] > 0)) continue;
+      (byPos[p.position] = byPos[p.position] || []).push(pid);
+    }
+    for(const pos in byPos) byPos[pos].sort(function(a, b){ return values[b] - values[a]; }).forEach(function(pid, i){ out[pid] = i + 1; });
+    return out;
+  }
+  function posNum(pr){ const n = pr ? Number(String(pr).replace(/\D+/g, '')) : NaN; return n > 0 ? n : null; }
+  function consensusOf(srcs){
+    const all = {}, avg = {}, byPos = {}, out = {};
+    srcs.forEach(function(sr){ for(const pid in sr) all[pid] = true; });
+    for(const pid in all){
+      const v = srcs.map(function(sr){ return sr[pid]; }).filter(function(x){ return typeof x === 'number'; });
+      if(v.length >= 2) avg[pid] = v.reduce(function(a, b){ return a + b; }, 0) / v.length;
+    }
+    for(const pid in avg){ const p = ctx.players[pid]; if(p) (byPos[p.position] = byPos[p.position] || []).push(pid); }
+    for(const pos in byPos) byPos[pos].sort(function(a, b){ return avg[a] - avg[b] || (srcs[0][a] || 999) - (srcs[0][b] || 999); })
+      .forEach(function(pid, i){ out[pid] = i + 1; });
+    return { rank: out, avg: avg };
+  }
+  function buildRanks(){
+    if(rankMemo) return rankMemo;
+    const sc = (ctx.league && ctx.league.scoring_settings) || {}, fresh = ctx.rk && srcAge(ctx.rk.generated) <= 2;
+    const fpW = {}, esWv = {}, fpR = {}, esRv = {}, slRv = {}, fcR = {};
+    if(rkWeek() === ctx.week) for(const pid in ctx.rk.weekly){ if(ctx.rk.weekly[pid].rk) fpW[pid] = ctx.rk.weekly[pid].rk; }
+    const ew = fresh && ctx.rk.espn && ctx.rk.espn[String(ctx.week)];
+    if(ew) for(const pid in ew) esWv[pid] = calcPoints(ew[pid], sc);
+    const rs = ctx.rk && ctx.rk.sources && ctx.rk.sources.ros;
+    if(rs && srcAge(rs.scraped) <= 10) for(const pid in ctx.rk.ros){ const n = posNum(ctx.rk.ros[pid].pr); if(n) fpR[pid] = n; }
+    const er = fresh && ctx.rk.espn_ros;
+    if(er && er.from === ctx.week) for(const pid in er.players) esRv[pid] = calcPoints(er.players[pid], sc);
+    if(ctx.ros && ctx.ros.players && ctx.ros.from_week === ctx.week) for(const pid in ctx.ros.players){ const r = rosValue(pid); if(r) slRv[pid] = r.pts; }
+    if(ctx.fc && ctx.fc.players) for(const pid in ctx.fc.players){ if(ctx.fc.players[pid].pr) fcR[pid] = ctx.fc.players[pid].pr; }
+    const slW = rankByValue(ctx.projections || {}), esW = rankByValue(esWv), slR = rankByValue(slRv), esR = rankByValue(esRv);
+    rankMemo = {
+      w: { fp: fpW, sl: slW, es: esW, cons: consensusOf([fpW, slW, esW]) },
+      r: { fp: fpR, sl: slR, es: esR, fc: fcR, cons: consensusOf([fpR, slR, esR, fcR]) },
+      rosFrom: ctx.week, rosTo: (ctx.ros && ctx.ros.through_week) || 17,
+    };
+    return rankMemo;
+  }
+  // One player's ranks: { w: {cons, fp, sl, es}, r: {cons, fp, sl, es, fc} } (numbers or null), plus the consensus averages
+  function ranksOf(pid){
+    const R = buildRanks();
+    return {
+      w: { cons: R.w.cons.rank[pid] || null, avg: R.w.cons.avg[pid], fp: R.w.fp[pid] || null, sl: R.w.sl[pid] || null, es: R.w.es[pid] || null },
+      r: { cons: R.r.cons.rank[pid] || null, avg: R.r.cons.avg[pid], fp: R.r.fp[pid] || null, sl: R.r.sl[pid] || null, es: R.r.es[pid] || null, fc: R.r.fc[pid] || null },
+    };
+  }
+  function posLabel(pid){ const p = ctx.players[pid]; return p ? (p.position === 'DEF' ? 'DEF' : p.position) : ''; }
+  function rkTxt(pid, n){ return n ? posLabel(pid) + n : '—'; }
+  function rosSpan(){ const R = buildRanks(); return 'wk ' + R.rosFrom + '–' + R.rosTo; }
+  // Grouped columns for the full-screen tables: THIS WEEK (consensus, FantasyPros, Sleeper, ESPN, tier) and REST OF
+  // SEASON (consensus, FantasyPros, Sleeper, ESPN, FantasyCalc). th = the table's own header-cell builder (sortable).
+  const RANK_COLS_W = [['cw', 'Cons.'], ['ecrw', 'FP'], ['slw', 'Sleeper'], ['esw', 'ESPN'], ['tier', 'Tier']];
+  const RANK_COLS_R = [['cr', 'Cons.'], ['ecrr', 'FP'], ['slr', 'Sleeper'], ['esr', 'ESPN'], ['fcr', 'FCalc']];
+  function rankGroupHead(before, after){
+    return '<tr class="grp-h"><th colspan="' + before + '"></th><th colspan="5" class="gh wk">This week · wk ' + ctx.week + '</th>' +
+      '<th colspan="5" class="gh ros">Rest of season · ' + rosSpan() + '</th>' + (after ? '<th colspan="' + after + '"></th>' : '') + '</tr>';
+  }
+  function rankHeadCells(th){
+    return RANK_COLS_W.map(function(c, i){ return th(c[1], c[0], 'rk-w' + (i === 0 ? ' g0' : '')); }).join('') +
+      RANK_COLS_R.map(function(c, i){ return th(c[1], c[0], 'rk-r' + (i === 0 ? ' g0' : '')); }).join('');
+  }
+  function rankCells(pid){
+    const r = ranksOf(pid), t = tierOf(pid), cell = function(n, cls){ return '<td class="' + cls + '">' + (n ? rkTxt(pid, n) : '<span class="dim">—</span>') + '</td>'; };
+    return cell(r.w.cons, 'rk-w g0 cons') + cell(r.w.fp, 'rk-w') + cell(r.w.sl, 'rk-w') + cell(r.w.es, 'rk-w') +
+      '<td class="rk-w">' + (t ? 'T' + t : '<span class="dim">—</span>') + '</td>' +
+      cell(r.r.cons, 'rk-r g0 cons') + cell(r.r.fp, 'rk-r') + cell(r.r.sl, 'rk-r') + cell(r.r.es, 'rk-r') + cell(r.r.fc, 'rk-r');
+  }
+
   const RK_CREDIT = 'Rankings: FantasyPros expert consensus (via DynastyProcess) · Tiers: Boris Chen · Values: FantasyCalc · Projection: ESPN';
   // Player sheet / Player Analysis block. Each line says "unavailable" rather than showing an old or guessed value.
   function rankingsHTML(pid){
@@ -3339,12 +3450,17 @@
     const e = ecrWeek(pid), r = ecrRos(pid), t = tierOf(pid), f = fcValue(pid), ep = p.position === 'K' || p.position === 'DEF' ? undefined : espnProj(pid);
     const na = '<span class="dim">unavailable</span>';
     const row = function(k, v){ return '<div class="rk-row"><span class="rk-k">' + k + '</span><span class="rk-v">' + v + '</span></div>'; };
-    const rs = ctx.rk && ctx.rk.sources || {};
+    const rs = ctx.rk && ctx.rk.sources || {}, R = ranksOf(pid), c = function(n){ return n ? rkTxt(pid, n) : '<span class="dim">—</span>'; };
+    const ros = rosValue(pid);
     return '<div class="rk-block">' +
-      row(e ? 'Wk ' + e.week + ' rank' : 'This week’s rank', e ? '<b>' + escapeHTML(e.pr) + '</b>' + (t ? ' · tier ' + t : '') + ' <small>avg ' + e.ecr + ' · best ' + e.best + ' · worst ' + e.worst + '</small>' : na) +
-      row('Rest of season', r ? '<b>' + escapeHTML(r.pr || '') + '</b> <small>best ' + r.best + ' · worst ' + r.worst + ' · as of ' + escapeHTML(fmtSrcDay(rs.ros && rs.ros.scraped)) + '</small>' : na) +
-      row('Trade value', f ? '<b>' + f.v.toLocaleString() + '</b> <small>#' + f.r + ' overall · ' + escapeHTML(p.position) + f.pr + (f.tr ? ' · ' + (f.tr > 0 ? '▲' : '▼') + Math.abs(f.tr) + ' in 30 days' : '') + '</small>' : na) +
-      (ep === undefined ? '' : row('ESPN projection', ep !== null ? '<b>' + fmtPts(ep) + '</b> <small>your scoring · Sleeper ' + fmtPts(ctx.projections[pid]) + '</small>' : na)) +
+      '<div class="rk-tbl-wrap"><table class="rk-tbl"><thead><tr><th></th><th class="cons">Cons.</th><th>FP</th><th>Sleeper</th><th>ESPN</th><th>Tier / FCalc</th></tr></thead><tbody>' +
+        '<tr class="wk"><th>This week<small>wk ' + ctx.week + '</small></th><td class="cons">' + c(R.w.cons) + '</td><td>' + c(R.w.fp) + '</td><td>' + c(R.w.sl) + '</td><td>' + c(R.w.es) + '</td><td title="Boris Chen tier">' + (t ? 'T' + t : '<span class="dim">—</span>') + '</td></tr>' +
+        '<tr class="ros"><th>Rest of season<small>' + rosSpan() + '</small></th><td class="cons">' + c(R.r.cons) + '</td><td>' + c(R.r.fp) + (R.r.fp && rs.ros && rs.ros.scraped ? '<small>' + escapeHTML(rs.ros.scraped.slice(5).split('-').map(Number).join('/')) + '</small>' : '') + '</td><td>' + c(R.r.sl) + '</td><td>' + c(R.r.es) + '</td><td title="FantasyCalc trade-value rank">' + (R.r.fc ? rkTxt(pid, R.r.fc) : '<span class="dim">—</span>') + '</td></tr>' +
+      '</tbody></table></div>' +
+      '<div class="rk-note">Consensus = average of the sources’ positional ranks (2+ needed), re-ranked. Sleeper and ESPN are ranked by their projections in your scoring. Tiers aren’t counted (they follow FantasyPros’ order).</div>' +
+      row('This week', (e ? 'FantasyPros avg <b>' + e.ecr + '</b> <small>best ' + e.best + ' · worst ' + e.worst + '</small> · ' : '') + 'Proj: Sleeper <b>' + fmtPts(ctx.projections[pid]) + '</b>' + (ep === undefined ? '' : ' · ESPN <b>' + (ep !== null ? fmtPts(ep) : '—') + '</b>')) +
+      row('Rest of season', (r ? 'FantasyPros avg <b>' + r.ecr + '</b> <small>best ' + r.best + ' · worst ' + r.worst + '</small> · ' : '') + (ros ? 'Sleeper <b>' + ros.pts.toFixed(0) + '</b> pts · ' : '') +
+        (f ? 'Trade value <b>' + f.v.toLocaleString() + '</b> <small>#' + f.r + ' overall' + (f.tr ? ' · ' + (f.tr > 0 ? '▲' : '▼') + Math.abs(f.tr) + ' in 30 days' : '') + '</small>' : 'Trade value ' + na)) +
       '<div class="rk-src">' + RK_CREDIT + '</div></div>';
   }
 
@@ -4545,7 +4661,8 @@
         '<br>Tiers (Boris Chen) · ' + (t ? 'week ' + t.week + ', ' + escapeHTML(fmtSrcDay(t.modified)) + (tierOf && rkWeek() && t.week === rkWeek() && srcAge(t.modified) <= 8 ? '' : ' <b>(not shown: not for this week)</b>') + ' · ' + t.n + ' players' + un('tiers') : 'unavailable') +
         '<br>ESPN projections · ' + (e ? 'weeks ' + e.weeks.join(', ') + ', fetched ' + escapeHTML(fmtSrcDay(e.fetched)) + un('espn') : 'unavailable') +
         '<br>FantasyCalc trade values · ' + (ctx.fc ? Object.keys(ctx.fc.players).length + ' players, ' + ctx.fc.q.numTeams + '-team ' + ctx.fc.q.numQbs + '-QB ' + (ctx.fc.q.ppr === 1 ? 'PPR' : ctx.fc.q.ppr ? 'half-PPR' : 'standard') + ', updated ' + new Date(ctx.fc.ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : 'unavailable') +
-        '<br><span class="dim">Data from FantasyPros (expert consensus rankings, via the DynastyProcess mirror), Boris Chen (borischen.co), FantasyCalc and ESPN.</span>';
+        '<br><b>Consensus ranks</b> · This week (wk ' + ctx.week + '): FantasyPros, Sleeper projection rank, ESPN projection rank. Rest of season (' + rosSpan() + '): FantasyPros, Sleeper, ESPN, FantasyCalc. Average of the ranks a player has (2+ needed), re-ranked within the position; tiers shown, not counted.' +
+        '<br><span class="dim">Data from FantasyPros (expert consensus rankings, via the DynastyProcess mirror), Boris Chen (borischen.co), FantasyCalc, ESPN and Sleeper.</span>';
     }
     renderLeagues();
     setLeagueAvatar(ctx.league);
@@ -4996,11 +5113,18 @@
     tgt:  { label: 'Target share', short: 'Tgt', pct: true, get: function(pid){ return seasonShare(pid, 't'); } },
     air:  { label: 'Air yards share', short: 'Air', pct: true, get: function(pid){ return seasonShare(pid, 'a'); } },
     gp:   { label: 'Games played', short: 'Games', unit: '', actual: true, get: function(pid){ const h = hist(pid); return h ? h.length : null; } },
-    ecrw: { label: 'Rank this week (FantasyPros consensus)', short: 'Rank', unit: '', low: true, get: function(pid){ const e = ecrWeek(pid); return e ? e.rk : null; } },
-    ecrr: { label: 'Rank rest of season (FantasyPros)', short: 'ROS rank', unit: '', low: true, get: function(pid){ const r = ecrRos(pid); return r && r.pr ? Number(r.pr.replace(/\D+/g, '')) : null; } },
-    tier: { label: 'Tier this week (Boris Chen)', short: 'Tier', unit: '', low: true, get: function(pid){ return tierOf(pid); } },
-    fcv:  { label: 'Trade value (FantasyCalc)', short: 'Value', unit: '', get: function(pid){ const f = fcValue(pid); return f ? f.v : null; } },
-    espn: { label: 'ESPN projection (this week)', short: 'ESPN', unit: 'pts', get: function(pid){ return espnProj(pid); } },
+    cw:   { label: 'This week · consensus rank', short: 'Wk rank', unit: '', low: true, get: function(pid){ return ranksOf(pid).w.cons; } },
+    ecrw: { label: 'This week · FantasyPros rank', short: 'Wk FP', unit: '', low: true, get: function(pid){ return ranksOf(pid).w.fp; } },
+    slw:  { label: 'This week · Sleeper projection rank', short: 'Wk Sleeper', unit: '', low: true, get: function(pid){ return ranksOf(pid).w.sl; } },
+    esw:  { label: 'This week · ESPN projection rank', short: 'Wk ESPN', unit: '', low: true, get: function(pid){ return ranksOf(pid).w.es; } },
+    tier: { label: 'This week · tier (Boris Chen)', short: 'Wk tier', unit: '', low: true, get: function(pid){ return tierOf(pid); } },
+    espn: { label: 'This week · ESPN projection (pts)', short: 'Wk ESPN pts', unit: 'pts', get: function(pid){ return espnProj(pid); } },
+    cr:   { label: 'Rest of season · consensus rank', short: 'ROS rank', unit: '', low: true, get: function(pid){ return ranksOf(pid).r.cons; } },
+    ecrr: { label: 'Rest of season · FantasyPros rank', short: 'ROS FP', unit: '', low: true, get: function(pid){ return ranksOf(pid).r.fp; } },
+    slr:  { label: 'Rest of season · Sleeper projection rank', short: 'ROS Sleeper', unit: '', low: true, get: function(pid){ return ranksOf(pid).r.sl; } },
+    esr:  { label: 'Rest of season · ESPN projection rank', short: 'ROS ESPN', unit: '', low: true, get: function(pid){ return ranksOf(pid).r.es; } },
+    fcr:  { label: 'Rest of season · FantasyCalc rank', short: 'ROS FCalc', unit: '', low: true, get: function(pid){ return ranksOf(pid).r.fc; } },
+    fcv:  { label: 'Rest of season · trade value (FantasyCalc)', short: 'Value', unit: '', get: function(pid){ const f = fcValue(pid); return f ? f.v : null; } },
     tgts: { label: 'Targets (season)', short: 'Tgts', unit: '', actual: true, pos: ['RB', 'WR', 'TE'], get: function(pid){ return seasonStat(pid, 'rec_tgt'); } },
     rec:  { label: 'Receptions (season)', short: 'Rec', unit: '', actual: true, pos: ['RB', 'WR', 'TE'], get: function(pid){ return seasonStat(pid, 'rec'); } },
     recyd:{ label: 'Receiving yards (season)', short: 'Rec yd', unit: '', actual: true, pos: ['RB', 'WR', 'TE'], get: function(pid){ return seasonStat(pid, 'rec_yd'); } },
@@ -5013,7 +5137,7 @@
     { k: 'snap', op: '>=', v: 60 }, { k: 'tgt', op: '>=', v: 20 }, { k: 'proj', op: '>=', v: 10 }, { k: 'avg', op: '>=', v: 12 }, { k: 'ros', op: '>=', v: 120 },
   ];
   let plMemo = {}; // derived lists and per-player metric values; cleared when data changes
-  function plReset(){ plMemo = {}; }
+  function plReset(){ plMemo = {}; rankMemo = null; }
   function metric(key, pid){
     const m = plMemo.m || (plMemo.m = {}), k = key + '|' + pid;
     if(k in m) return m[k];
@@ -6039,13 +6163,14 @@
     }
 
     let rk = '';
-    { const ea = ecrWeek(a), eb = ecrWeek(b), ra = ecrRos(a), rb = ecrRos(b), same = pa.position === pb.position;
-      const rn = function(r){ return r && r.pr ? Number(r.pr.replace(/\D+/g, '')) : null; };
-      if(ea || eb) rk += same ? row('Rank this week', ea ? ea.rk : null, eb ? eb.rk : null, function(v){ return pa.position + v; }, 'low') : textRow('Rank this week', ea && escapeHTML(ea.pr), eb && escapeHTML(eb.pr));
-      if(ra || rb) rk += same ? row('Rank rest of season', rn(ra), rn(rb), function(v){ return pa.position + v; }, 'low') : textRow('Rank rest of season', ra && escapeHTML(ra.pr), rb && escapeHTML(rb.pr));
-      const ta = tierOf(a), tb = tierOf(b); if(ta || tb) rk += same ? row('Tier (Boris Chen)', ta, tb, fmtStat, 'low') : textRow('Tier (Boris Chen)', ta && String(ta), tb && String(tb));
-      const fa = fcValue(a), fb = fcValue(b); if(fa || fb) rk += row('Trade value (FantasyCalc)', fa ? fa.v : null, fb ? fb.v : null, function(v){ return v.toLocaleString(); }, 'high');
-      const xa = espnProj(a), xb = espnProj(b); if(xa !== null || xb !== null) rk += row('ESPN projection', xa, xb, fmtPts, 'high');
+    { const Ra = ranksOf(a), Rb = ranksOf(b), same = pa.position === pb.position;
+      const rr = function(label, na, nb){ if(!na && !nb) return ''; return same ? row(label, na, nb, function(v){ return posLabel(a) + v; }, 'low') : textRow(label, na ? rkTxt(a, na) : '', nb ? rkTxt(b, nb) : ''); };
+      rk += rr('This week · consensus', Ra.w.cons, Rb.w.cons) + rr('This week · FantasyPros', Ra.w.fp, Rb.w.fp) + rr('This week · Sleeper proj rank', Ra.w.sl, Rb.w.sl) + rr('This week · ESPN proj rank', Ra.w.es, Rb.w.es);
+      const ta = tierOf(a), tb = tierOf(b); if(ta || tb) rk += same ? row('This week · tier (Boris Chen)', ta, tb, fmtStat, 'low') : textRow('This week · tier (Boris Chen)', ta && String(ta), tb && String(tb));
+      const xa = espnProj(a), xb = espnProj(b); if(xa !== null || xb !== null) rk += row('This week · ESPN projection', xa, xb, fmtPts, 'high');
+      rk += rr('Rest of season · consensus', Ra.r.cons, Rb.r.cons) + rr('Rest of season · FantasyPros', Ra.r.fp, Rb.r.fp) + rr('Rest of season · Sleeper proj rank', Ra.r.sl, Rb.r.sl) +
+        rr('Rest of season · ESPN proj rank', Ra.r.es, Rb.r.es) + rr('Rest of season · FantasyCalc rank', Ra.r.fc, Rb.r.fc);
+      const fa = fcValue(a), fb = fcValue(b); if(fa || fb) rk += row('Rest of season · trade value (FantasyCalc)', fa ? fa.v : null, fb ? fb.v : null, function(v){ return v.toLocaleString(); }, 'high');
     }
     const body = sec('This week', week) + sec('Rankings &amp; value <span class="eyebrow">FantasyPros · Boris Chen · FantasyCalc · ESPN</span>', rk) + sec('Fantasy points <span class="eyebrow">league scoring</span>', fp) +
       sec('Usage <span class="eyebrow">nflverse</span>', usage) +
@@ -6098,7 +6223,7 @@
     return pids.filter(function(pid){ return pid && pid !== '0' && ctx.players[pid]; }).map(function(pid){
       const p = ctx.players[pid], st = p.injury_status || '';
       if(isOnBye(pid)) return '<div class="callout"><b>' + escapeHTML(playerName(p)) + ' is on a bye in week ' + ctx.week + '.</b>&nbsp;' + (ctx.draftStarters.indexOf(pid) !== -1 ? 'That slot won&#39;t score.' : '') + '</div>';
-      if(cantPlay(st)) return '<div class="callout"><b>' + escapeHTML(playerName(p)) + ' is listed ' + escapeHTML(statusInfo(st).label) + '.</b></div>';
+      if(cantPlay(st) && !isLocked(pid)) return '<div class="callout"><b>' + escapeHTML(playerName(p)) + ' is listed ' + escapeHTML(statusInfo(st).label) + '.</b></div>';
       if(/^Q/i.test(st)) return '<div class="callout warn"><b>' + escapeHTML(playerName(p)) + ' is questionable.</b>&nbsp;Check the status before kickoff.</div>';
       return '';
     }).join('');
@@ -6106,8 +6231,9 @@
   function completedWeeks(){ const w = []; for(let i = 1; i < ctx.week; i++) w.push(i); return w; }
 
   function maxRosterHTML(){
-    const weeks = completedWeeks(), started = weekStarted(), extra = 1;
-    const head = '<thead><tr><th class="l">Slot</th><th class="l">Player</th><th class="l">Opp</th><th>Snap by week</th><th>Tgt share</th><th' + (started ? ' title="Actual points once their game has started, otherwise the projection"' : '') + '>' + (started ? 'Wk ' + ctx.week + ' pts' : 'Proj') + '</th>' +
+    const weeks = completedWeeks(), started = weekStarted(), extra = 11;   // 10 rank columns + L3
+    const plainTh = function(label, key, cls){ return '<th class="' + (cls || '') + '">' + label + '</th>'; };
+    const head = '<thead>' + rankGroupHead(3, 3 + weeks.length + 3) + '<tr><th class="l">Slot</th><th class="l">Player</th><th class="l">Opp</th>' + rankHeadCells(plainTh) + '<th>Snap by week</th><th>Tgt share</th><th' + (started ? ' title="Actual points once their game has started, otherwise the projection"' : '') + '>' + (started ? 'Wk ' + ctx.week + ' pts' : 'Proj') + '</th>' +
       weeks.map(function(w){ return '<th>Wk ' + w + '</th>'; }).join('') +
       '<th title="Average of the last 3 games">L3</th><th>Avg</th><th>Total</th></tr></thead>';
     function row(pid, slotLabel, slotIndex, i){
@@ -6118,7 +6244,7 @@
       const byWeek = {}; games.forEach(function(h){ byWeek[h.week] = h.pts; });
       const t = SKILL_POSITIONS.indexOf(p.position) !== -1 && p.position !== 'QB' ? pct(seasonShare(pid, 't')) : '<span class="dim">—</span>';
       return '<tr style="--i:' + i + '" data-open="' + escapeHTML(pid) + '" class="' + cls + '"><td class="l slot">' + escapeHTML(slotLabel) + '</td><td class="l">' + mxWho(pid, fresh) + '</td>' +
-        '<td class="l">' + oppCell(pid) + '</td><td>' + snapByWeek(pid) + '</td><td class="muted">' + t + '</td>' +
+        '<td class="l">' + oppCell(pid) + '</td>' + rankCells(pid) + '<td>' + snapByWeek(pid) + '</td><td class="muted">' + t + '</td>' +
         (function(){ const wa = weekActual(pid); if(wa === null) return '<td><span class="proj">' + fmtPts(ctx.projections[pid]) + '</span></td>';
           const g = gameOf(p.team), fin = g && g.state === 'post'; return '<td class="' + (fin ? '' : 'act-live') + '" title="' + (fin ? 'Final' : 'Live') + ' actual points"><b>' + fmtPts(wa) + '</b><div class="th-sub">' + (fin ? 'final' : 'live') + '</div></td>'; })() +
         weeks.map(function(w){
@@ -6147,11 +6273,13 @@
     };
     const chips = st.filters.map(function(f, i){ return '<button type="button" class="pl-chip" data-pl-remove="' + i + '">' + escapeHTML(filterLabel(f)) + ' <span aria-hidden="true">×</span></button>'; }).join('') +
       (st.q ? '<button type="button" class="pl-chip" data-pl-clear-q>“' + escapeHTML(st.q) + '” <span aria-hidden="true">×</span></button>' : '');
+    const headAfter = th('Tgt share', 'tgt') + th('Air share', 'air') + th('Proj', 'proj') +
+      (weekStarted() ? th('Wk ' + ctx.week, 'wk') : '') + th('Last', 'last') + th('L3', 'l3') + th('Avg', 'avg') + th('Total', 'tot') + th('Key stats (season)', null, 'l') + '<th></th><th></th>';
     return '<div class="mx-tools"><div class="pos-filter mx-pos" role="group" aria-label="Positions">' + posChipsHTML() + '</div>' +
         '<div class="mx-count">' + all.length + ' player' + (all.length === 1 ? '' : 's') + (chips ? '' : '') + '</div></div>' +
       (chips ? '<div class="pl-active mx-active">' + chips + '</div>' : '') +
-      '<div class="mx-scroll"><table class="mx-tbl"><thead><tr>' + th('Player', 'name', 'l') + th('Opp', null, 'l') + th('Snap by week', 'snap') +
-      th('Rank', 'ecrw') + th('Value', 'fcv') + th('Tgt share', 'tgt') + th('Air share', 'air') + th('Proj', 'proj') +
+      '<div class="mx-scroll"><table class="mx-tbl"><thead>' + rankGroupHead(3, (headAfter.match(/<th/g) || []).length) + '<tr>' + th('Player', 'name', 'l') + th('Opp', null, 'l') + th('Snap by week', 'snap') +
+      rankHeadCells(th) + th('Tgt share', 'tgt') + th('Air share', 'air') + th('Proj', 'proj') +
       (weekStarted() ? th('Wk ' + ctx.week, 'wk') : '') + th('Last', 'last') + th('L3', 'l3') + th('Avg', 'avg') + th('Total', 'tot') + th('Key stats (season)', null, 'l') +
       '<th class="l" style="padding-left:20px">' + (st.view !== 'avail' ? 'Team / vs yours' : ctx.faPos === 'FLEX' ? 'vs your FLEX' : 'vs your weakest') + '</th><th><span class="sr-only">Compare</span></th></tr></thead><tbody class="stagger">' +
       list.map(function(pid, i){
@@ -6159,9 +6287,8 @@
         const vs = v ? (v.txt ? '<b class="' + (v.cls === 'flat' ? 'dim' : 'trend ' + v.cls) + '">' + v.txt + '</b> ' : '') + '<span class="muted">' + escapeHTML(v.who) + '</span>'
           : '<span class="muted">' + (isMine(pid) ? 'On your team' : ownerOf(pid) !== undefined ? escapeHTML(rosterName(ownerOf(pid))) : '—') + '</span>';
         const c = catcher(pid);
-        const ew = ecrWeek(pid), fv = fcValue(pid), tr = tierOf(pid);
         return '<tr style="--i:' + i + '" data-open="' + escapeHTML(pid) + '"><td class="l">' + mxWho(pid) + '</td><td class="l">' + oppCell(pid) + '</td><td>' + snapByWeek(pid) + '</td>' +
-          '<td>' + (ew ? escapeHTML(ew.pr) + (tr ? ' <span class="dim">T' + tr + '</span>' : '') : '<span class="dim">—</span>') + '</td><td class="muted">' + (fv ? fv.v.toLocaleString() : '<span class="dim">—</span>') + '</td>' +
+          rankCells(pid) +
           '<td class="muted">' + (c ? pct(seasonShare(pid, 't')) : '<span class="dim">—</span>') + '</td><td class="muted">' + (c ? airPct(seasonShare(pid, 'a')) : '<span class="dim">—</span>') + '</td>' +
           '<td><span class="proj">' + fmtPts(proj) + '</span></td>' +
           (weekStarted() ? (function(){ const wa = weekActual(pid); return '<td class="' + (wa === null ? 'dim' : 'act-live') + '">' + (wa === null ? '—' : fmtPts(wa)) + '</td>'; })() : '') +
