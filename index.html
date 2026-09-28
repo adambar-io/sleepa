@@ -223,6 +223,18 @@
   .sb-shield{ position: fixed; top: 0; left: 0; right: 0; height: env(safe-area-inset-top); background: var(--bg); z-index: 45; pointer-events: none; }
   .key-stats span span{ margin-right: 0; }
   .key-stats .kv{ color: var(--text-3); }
+  /* consensus rank chip (FantasyPros ECR + Boris Chen tier) */
+  .ecr-chip{ flex: none; display: inline-flex; align-items: baseline; gap: 3px; padding: 1px 6px; border-radius: 6px; background: var(--surface-2);
+    box-shadow: inset 0 0 0 1px var(--hair); color: var(--text-2); font-size: 10.5px; font-weight: 700; letter-spacing: .02em; font-variant-numeric: tabular-nums; }
+  .ecr-chip i{ font-style: normal; font-weight: 600; color: var(--text-3); }
+  .rk-block{ grid-column: 1 / -1; display: grid; gap: 6px; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--surface-2); font-size: 13px; }
+  .pf-rk .rk-block{ background: none; padding: 0 0 4px; }
+  .rk-row{ display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 10px; align-items: baseline; }
+  .rk-k{ color: var(--text-3); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+  .rk-v b{ font-weight: 700; } .rk-v small{ color: var(--text-3); font-size: 11.5px; }
+  .rk-src{ margin-top: 2px; font-size: 10.5px; color: var(--text-3); line-height: 1.4; }
+  .pf-rk{ margin-bottom: 18px; }
+  .tr-results .tr-fc{ grid-column: 1 / -1; }
   .key-stats .kw{ color: var(--danger); font-weight: 700; font-size: 10.5px; letter-spacing: .04em; }
   /* live scoring */
   .gs{ display: inline-block; font-weight: 700; font-size: 10.5px; letter-spacing: .03em; text-transform: uppercase; padding: 1px 6px; border-radius: 6px; vertical-align: 1px; white-space: nowrap; }
@@ -1594,6 +1606,7 @@
               <p class="set-sub" style="margin:10px 0 0">sleepa remembers your username and league on this device and opens straight to your team. Switch leagues above; this button signs out.</p>
             </div>
             <div class="card set-card"><h3>Data</h3><div class="set-data" data-status></div></div>
+            <div class="card set-card"><h3>Rankings &amp; values</h3><p class="set-sub">Free sources, matched to Sleeper players by ID where possible. Anything older than its limit or not matched isn’t shown.</p><div class="set-data" id="rk-status"></div></div>
             <div class="card set-card"><h3>Injury data matching</h3><p class="set-sub">Injury reports that couldn’t be matched to a Sleeper player are listed here instead of being dropped.</p><div class="set-data" id="inj-match"></div></div>
             <div class="card set-card"><h3>About sleepa</h3><p class="set-sub" style="margin:0">Read only. Lineup changes here are a plan; nothing is sent to Sleeper. Stats and projections come from Sleeper, scored with your league's settings. Opponents, snap share, target share and depth charts come from nflverse.</p><p class="disclaimer">sleepa is an unofficial fan-made companion and isn't affiliated with or endorsed by Sleeper.</p></div>
           </div>
@@ -2972,7 +2985,7 @@
     ctx.seedCheck = null;
     const nflPromise = loadNflverse(ctx.season); // in parallel; never blocks the roster
     const weeklyPromise = loadWeekly(ctx.season);
-    ctx.weekly = null; ctx.gapWeeks = {}; histReset();
+    ctx.weekly = null; ctx.gapWeeks = {}; histReset(); ctx.rk = null; ctx.fc = null;
     ctx.live = { games: null, gamesTs: 0, gamesFailed: false, stats: null, statsTs: 0, muTs: 0, ts: 0, failed: false, busy: false };
     try{
       const dataReady = Promise.all([ fetchLeagueBundle(leagueId), getPlayersDict() ]);
@@ -3055,6 +3068,8 @@
         if(!ctx.focus) selectDefaultFocus();
         if(weekStarted()) livePoll({ force: true });
       });
+      loadRankings().then(function(){ if(loadId === ctx.loadId) rerenderEverything(); });
+      loadFantasyCalc().then(function(){ if(loadId === ctx.loadId) rerenderEverything(); });
       weeklyPromise.then(async function(res){
         if(loadId !== ctx.loadId || !res || !applyWeekly(res)) return;
         await fillGapWeeks();
@@ -3123,6 +3138,9 @@
       if(nfl && applyNfl(nfl)) changed = true;
       const wk = await weeklyP;
       if(loadId !== ctx.loadId) return;
+      await Promise.all([loadRankings(true), loadFantasyCalc(!!opts.manual)]);
+      if(loadId !== ctx.loadId) return;
+      changed = true;
       if(wk && applyWeekly(wk)) changed = true;
       if(await fillGapWeeks(!!opts.manual)) changed = true;
       if(loadId !== ctx.loadId) return;
@@ -3248,6 +3266,87 @@
     if(ctx.lastRefresh && Date.now() - ctx.lastRefresh > (isGameDay(Date.now()) ? GAME_DAY_MIN_GAP : HOUR)) refreshData();
   }, 30 * 1000);
 
+
+
+  // ============ rankings & values (rankings.json from the GitHub Action + FantasyCalc) ============
+  // rankings.json (build_rankings.py): FantasyPros expert consensus rankings via the DynastyProcess mirror (this week:
+  // updated ~twice a day; rest of season: weekly), Boris Chen tiers (weekly), ESPN weekly projections (raw stats, scored
+  // here with the league's settings). FantasyCalc trade values are fetched straight from FantasyCalc (browser requests
+  // allowed, cached 20 min by them) with THIS league's size / QB format / PPR. Nothing stale or unmatched is shown:
+  // each source has its own freshness rule below, and a player without a value shows nothing (rows) or "unavailable".
+  const RANKINGS_URL = 'rankings.json';
+  const FC_URL = 'https://api.fantasycalc.com/values/current';
+  ctx.rk = null; ctx.fc = null;
+  function srcAge(s){ const t = s ? Date.parse(/^\d{4}-\d{2}-\d{2}$/.test(s) ? s + 'T12:00:00Z' : s) : NaN; return isNaN(t) ? Infinity : (Date.now() - t) / 86400000; }
+  async function loadRankings(force){
+    if(!force){ const c = await idbGet('rankings'); if(c && c.season === ctx.season && !ctx.rk) ctx.rk = c; }
+    try{
+      const res = await fetch(RANKINGS_URL, { cache: 'no-cache' });
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      const d = await res.json();
+      if(d.season !== ctx.season) throw new Error('rankings.json is for ' + d.season);
+      ctx.rk = d; idbSet('rankings', d);
+    }catch(e){ console.warn('Rankings unavailable:', e.message); }
+    plReset && plReset();
+    return ctx.rk;
+  }
+  function fcParams(){
+    const L = ctx.league || {}, rp = L.roster_positions || [], sc = L.scoring_settings || {};
+    const qbs = rp.indexOf('SUPER_FLEX') !== -1 || rp.filter(function(x){ return x === 'QB'; }).length > 1 ? 2 : 1;
+    const ppr = sc.rec >= 0.75 ? 1 : sc.rec >= 0.25 ? 0.5 : 0;
+    return { isDynasty: 'false', numQbs: qbs, numTeams: L.total_rosters || (ctx.lastRosters || []).length || 12, ppr: ppr };
+  }
+  async function loadFantasyCalc(force){
+    if(!ctx.league) return null;
+    const q = fcParams(), key = 'rv-fc:' + JSON.stringify(q);
+    if(!force){ try{ const c = JSON.parse(localStorage.getItem(key) || 'null'); if(c && Date.now() - c.ts < 60 * 60 * 1000){ ctx.fc = c; return c; } }catch(e){} }
+    try{
+      const arr = await fetchJSON(FC_URL + '?' + Object.keys(q).map(function(k){ return k + '=' + q[k]; }).join('&'));
+      const map = {};
+      (arr || []).forEach(function(e){ const sid = e.player && e.player.sleeperId; if(sid) map[sid] = { v: e.value, r: e.overallRank, pr: e.positionRank, tr: e.trend30Day }; });
+      ctx.fc = { ts: Date.now(), q: q, players: map };
+      try{ localStorage.setItem(key, JSON.stringify(ctx.fc)); }catch(e){}
+    }catch(e){ console.warn('FantasyCalc values unavailable:', e.message); if(ctx.fc && Date.now() - ctx.fc.ts > 24 * 3600 * 1000) ctx.fc = null; }
+    plReset && plReset();
+    return ctx.fc;
+  }
+  // this week's consensus rank, if the mirror is for this week (or next, once it has moved on) and at most 4 days old
+  function rkWeek(){
+    const s = ctx.rk && ctx.rk.sources && ctx.rk.sources.weekly;
+    return s && (s.week === ctx.week || s.week === ctx.week + 1) && srcAge(s.scraped) <= 4 ? s.week : null;
+  }
+  function ecrWeek(pid){ const w = rkWeek(); const e = w && ctx.rk.weekly[pid]; return e ? Object.assign({ week: w }, e) : null; }
+  function ecrRos(pid){ const s = ctx.rk && ctx.rk.sources && ctx.rk.sources.ros; return s && srcAge(s.scraped) <= 10 ? ctx.rk.ros[pid] || null : null; }
+  function tierOf(pid){ const s = ctx.rk && ctx.rk.sources && ctx.rk.sources.tiers, w = rkWeek(); return s && w && s.week === w && srcAge(s.modified) <= 8 ? (ctx.rk.tiers[pid] || null) : null; }
+  function fcValue(pid){ return ctx.fc && ctx.fc.players ? ctx.fc.players[pid] || null : null; }
+  function espnProj(pid){
+    const e = ctx.rk && ctx.rk.espn && ctx.rk.espn[String(ctx.week)];
+    if(!e || srcAge(ctx.rk.generated) > 2 || !e[pid]) return null;
+    return calcPoints(e[pid], ctx.league.scoring_settings || {});
+  }
+  function fmtSrcDay(s){ const t = Date.parse(/^\d{4}-\d{2}-\d{2}$/.test(s || '') ? s + 'T12:00:00Z' : s); return isNaN(t) ? '—' : new Date(t).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }); }
+  // Small chip in list rows: this week's positional consensus rank + tier. Nothing when unavailable.
+  function ecrChipHTML(pid){
+    const e = ecrWeek(pid);
+    if(!e || !e.pr || e.rk === null) return '';
+    const t = tierOf(pid);
+    return '<span class="ecr-chip" title="FantasyPros consensus rank, week ' + e.week + ': ' + escapeHTML(e.pr) + ' (avg ' + e.ecr + ', best ' + e.best + ', worst ' + e.worst + ')' + (t ? '. Boris Chen tier ' + t : '') + '">' + escapeHTML(e.pr) + (t ? '<i>T' + t + '</i>' : '') + '</span>';
+  }
+  const RK_CREDIT = 'Rankings: FantasyPros expert consensus (via DynastyProcess) · Tiers: Boris Chen · Values: FantasyCalc · Projection: ESPN';
+  // Player sheet / Player Analysis block. Each line says "unavailable" rather than showing an old or guessed value.
+  function rankingsHTML(pid){
+    const p = ctx.players[pid]; if(!p) return '';
+    const e = ecrWeek(pid), r = ecrRos(pid), t = tierOf(pid), f = fcValue(pid), ep = p.position === 'K' || p.position === 'DEF' ? undefined : espnProj(pid);
+    const na = '<span class="dim">unavailable</span>';
+    const row = function(k, v){ return '<div class="rk-row"><span class="rk-k">' + k + '</span><span class="rk-v">' + v + '</span></div>'; };
+    const rs = ctx.rk && ctx.rk.sources || {};
+    return '<div class="rk-block">' +
+      row(e ? 'Wk ' + e.week + ' rank' : 'This week’s rank', e ? '<b>' + escapeHTML(e.pr) + '</b>' + (t ? ' · tier ' + t : '') + ' <small>avg ' + e.ecr + ' · best ' + e.best + ' · worst ' + e.worst + '</small>' : na) +
+      row('Rest of season', r ? '<b>' + escapeHTML(r.pr || '') + '</b> <small>best ' + r.best + ' · worst ' + r.worst + ' · as of ' + escapeHTML(fmtSrcDay(rs.ros && rs.ros.scraped)) + '</small>' : na) +
+      row('Trade value', f ? '<b>' + f.v.toLocaleString() + '</b> <small>#' + f.r + ' overall · ' + escapeHTML(p.position) + f.pr + (f.tr ? ' · ' + (f.tr > 0 ? '▲' : '▼') + Math.abs(f.tr) + ' in 30 days' : '') + '</small>' : na) +
+      (ep === undefined ? '' : row('ESPN projection', ep !== null ? '<b>' + fmtPts(ep) + '</b> <small>your scoring · Sleeper ' + fmtPts(ctx.projections[pid]) + '</small>' : na)) +
+      '<div class="rk-src">' + RK_CREDIT + '</div></div>';
+  }
 
   // ============ live scoring ============
   // Points: Sleeper's league matchups (/league/{id}/matchups/{week}): players_points and points are already scored with
@@ -3776,6 +3875,15 @@
           '<div class="tr-line"><span>Per week</span><b>' + signed(r.weeks.length ? r.total / r.weeks.length : 0) + '</b></div>' +
           '<div class="tr-line"><span>Playoffs (wk ' + r.ps + '–' + lastWeek + ')</span><b class="' + tone(r.playoffs).trim() + '">' + signed(r.playoffs) + '</b></div>' +
           '<div class="tr-cap">Change in your best starting lineup’s points, summed over the remaining weeks (byes included).</div></div>' +
+        (function(){
+          if(!ctx.fc) return '<div class="card tr-card tr-fc"><div class="eyebrow">Trade value · FantasyCalc</div><div class="tr-cap">Unavailable right now.</div></div>';
+          const sum = function(ids){ let v = 0, miss = 0; ids.forEach(function(pid){ const f = fcValue(pid); if(f) v += f.v; else miss++; }); return { v: v, miss: miss }; };
+          const g = sum(t.get), gv = sum(t.give), q = ctx.fc.q, miss = g.miss + gv.miss;
+          return '<div class="card tr-card tr-fc"><div class="eyebrow">Trade value · FantasyCalc</div>' +
+            '<div class="tr-big' + tone((g.v - gv.v) / 300) + '">' + (g.v - gv.v >= 0 ? '+' : '−') + Math.abs(g.v - gv.v).toLocaleString() + '</div>' +
+            '<div class="tr-line"><span>You get</span><b>' + g.v.toLocaleString() + '</b></div><div class="tr-line"><span>You give</span><b>' + gv.v.toLocaleString() + '</b></div>' +
+            '<div class="tr-cap">Market value from real trades in ' + q.numTeams + '-team, ' + q.numQbs + '-QB, ' + (q.ppr === 1 ? 'PPR' : q.ppr ? 'half-PPR' : 'standard') + ' leagues.' + (miss ? ' ' + miss + ' player' + (miss > 1 ? 's have' : ' has') + ' no value there and count as 0.' : '') + '</div></div>';
+        })() +
       '</div>' +
       '<details class="tr-weeks" open><summary>Week by week (your starting lineup)</summary>' +
         r.weeks.map(function(x){
@@ -4426,6 +4534,19 @@
         '<br>ESPN · ' + (!ctx.espn ? (ctx.espnFailed ? 'unavailable' : 'loading') : Object.keys(ctx.espn.players).length + ' matched' + (eu && eu.length ? '; <b>' + eu.length + ' not matched:</b> ' + list(eu) : ', none unmatched') +
           (ctx.espn.via === 'espn' ? ' (fetched from ESPN directly)' : ''));
     }
+    const rkEl = document.getElementById('rk-status');
+    if(rkEl){
+      const S = ctx.rk && ctx.rk.sources || {}, U = ctx.rk && ctx.rk.unmatched || {};
+      const un = function(k){ const u = U[k] || []; return u.length ? '; <b>' + u.length + ' not matched:</b> ' + u.map(function(x){ return escapeHTML(x.n) + (x.pos ? ' (' + escapeHTML([x.t, x.pos].filter(Boolean).join(' ')) + ')' : ''); }).join(', ') : ', none unmatched'; };
+      const w = S.weekly, r = S.ros, t = S.tiers, e = S.espn;
+      rkEl.innerHTML = !ctx.rk ? 'Not loaded' :
+        'FantasyPros consensus, this week · ' + (w ? 'week ' + w.week + ', as of ' + escapeHTML(fmtSrcDay(w.scraped)) + (rkWeek() ? '' : ' <b>(not shown: out of date)</b>') + ' · ' + w.n + ' players' + un('weekly') : 'unavailable') +
+        '<br>FantasyPros consensus, rest of season · ' + (r ? 'as of ' + escapeHTML(fmtSrcDay(r.scraped)) + (srcAge(r.scraped) <= 10 ? '' : ' <b>(not shown: out of date)</b>') + ' · ' + r.n + ' players' + un('ros') : 'unavailable') +
+        '<br>Tiers (Boris Chen) · ' + (t ? 'week ' + t.week + ', ' + escapeHTML(fmtSrcDay(t.modified)) + (tierOf && rkWeek() && t.week === rkWeek() && srcAge(t.modified) <= 8 ? '' : ' <b>(not shown: not for this week)</b>') + ' · ' + t.n + ' players' + un('tiers') : 'unavailable') +
+        '<br>ESPN projections · ' + (e ? 'weeks ' + e.weeks.join(', ') + ', fetched ' + escapeHTML(fmtSrcDay(e.fetched)) + un('espn') : 'unavailable') +
+        '<br>FantasyCalc trade values · ' + (ctx.fc ? Object.keys(ctx.fc.players).length + ' players, ' + ctx.fc.q.numTeams + '-team ' + ctx.fc.q.numQbs + '-QB ' + (ctx.fc.q.ppr === 1 ? 'PPR' : ctx.fc.q.ppr ? 'half-PPR' : 'standard') + ', updated ' + new Date(ctx.fc.ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : 'unavailable') +
+        '<br><span class="dim">Data from FantasyPros (expert consensus rankings, via the DynastyProcess mirror), Boris Chen (borischen.co), FantasyCalc and ESPN.</span>';
+    }
     renderLeagues();
     setLeagueAvatar(ctx.league);
     if(els.setTeam){
@@ -4520,7 +4641,7 @@
         '<div class="slot-tag" style="color:' + color + '; border-color:' + color + ';">' + escapeHTML(slotLabel || pos) + '</div>' +
         '<img class="avatar" src="' + avatarUrl + '" loading="lazy" onerror="this.style.visibility=\'hidden\'" style="--team:' + teamColor(p.team) + '"' + (ro ? '' : analyzeAttr(playerId)) + '>' +
         '<div class="player-info">' +
-          '<div class="player-name">' + (ro ? escapeHTML(name) : analyzeName(playerId, name)) + byeChip + statusChip + newChip + '</div>' +
+          '<div class="player-name">' + (ro ? escapeHTML(name) : analyzeName(playerId, name)) + ecrChipHTML(playerId) + byeChip + statusChip + newChip + '</div>' +
           '<div class="player-meta">' + escapeHTML(pos) + ' · ' + escapeHTML(team) + '<span class="m-opp">' + matchupHTML(p.team) + ' ' + dvpChipHTML(playerId) + '</span><span class="m-opp-c">' + oppCompactHTML(playerId) + '</span> ' + depthChipHTML(playerId) + '</div>' +
           (keyStats ? '<div class="key-stats">' + keyStats + '</div>' : '') +
           signalsHTML(playerId, false) +
@@ -4875,6 +4996,11 @@
     tgt:  { label: 'Target share', short: 'Tgt', pct: true, get: function(pid){ return seasonShare(pid, 't'); } },
     air:  { label: 'Air yards share', short: 'Air', pct: true, get: function(pid){ return seasonShare(pid, 'a'); } },
     gp:   { label: 'Games played', short: 'Games', unit: '', actual: true, get: function(pid){ const h = hist(pid); return h ? h.length : null; } },
+    ecrw: { label: 'Rank this week (FantasyPros consensus)', short: 'Rank', unit: '', low: true, get: function(pid){ const e = ecrWeek(pid); return e ? e.rk : null; } },
+    ecrr: { label: 'Rank rest of season (FantasyPros)', short: 'ROS rank', unit: '', low: true, get: function(pid){ const r = ecrRos(pid); return r && r.pr ? Number(r.pr.replace(/\D+/g, '')) : null; } },
+    tier: { label: 'Tier this week (Boris Chen)', short: 'Tier', unit: '', low: true, get: function(pid){ return tierOf(pid); } },
+    fcv:  { label: 'Trade value (FantasyCalc)', short: 'Value', unit: '', get: function(pid){ const f = fcValue(pid); return f ? f.v : null; } },
+    espn: { label: 'ESPN projection (this week)', short: 'ESPN', unit: 'pts', get: function(pid){ return espnProj(pid); } },
     tgts: { label: 'Targets (season)', short: 'Tgts', unit: '', actual: true, pos: ['RB', 'WR', 'TE'], get: function(pid){ return seasonStat(pid, 'rec_tgt'); } },
     rec:  { label: 'Receptions (season)', short: 'Rec', unit: '', actual: true, pos: ['RB', 'WR', 'TE'], get: function(pid){ return seasonStat(pid, 'rec'); } },
     recyd:{ label: 'Receiving yards (season)', short: 'Rec yd', unit: '', actual: true, pos: ['RB', 'WR', 'TE'], get: function(pid){ return seasonStat(pid, 'rec_yd'); } },
@@ -4973,7 +5099,7 @@
   function setSort(key){
     const st = ctx.pl;
     if(st.sort === key) st.dir = st.dir === 'asc' ? 'desc' : 'asc';
-    else { st.sort = key; st.dir = key === 'name' ? 'asc' : 'desc'; }
+    else { st.sort = key; st.dir = key === 'name' || (PL_METRICS[key] && PL_METRICS[key].low) ? 'asc' : 'desc'; }   // ranks / tiers: best first
     ctx.faLimit = PL_PAGE;
     if((key === 'ros' && !ctx.ros) || (PL_METRICS[key] && PL_METRICS[key].actual && !ctx.weekly)) loadPlayersData();
   }
@@ -5081,7 +5207,7 @@
         '<div class="slot-tag" style="color:' + color + '; border-color:' + color + ';">' + escapeHTML(p.position) + '</div>' +
         '<img class="avatar" src="' + escapeHTML(playerImageUrl(pid)) + '" loading="lazy" onerror="this.style.visibility=\'hidden\'" style="--team:' + teamColor(p.team) + '"' + analyzeAttr(pid) + '>' +
         '<div class="player-info">' +
-          '<div class="player-name">' + analyzeName(pid, playerName(p)) + injuryChip(p.injury_status) + '</div>' +
+          '<div class="player-name">' + analyzeName(pid, playerName(p)) + ecrChipHTML(pid) + injuryChip(p.injury_status) + '</div>' +
           '<div class="player-meta">' + escapeHTML(p.position) + ' · ' + escapeHTML(p.team || 'FA') +
             (tc != null ? ' · <span class="tr-count ' + ctx.pl.trendKind + '">' + (ctx.pl.trendKind === 'add' ? '+' : '−') + fmtCount(tc) + '</span>' : '') +
             '<span class="m-opp">' + matchupHTML(p.team) + ' ' + dvpChipHTML(pid) + '</span> ' + depthChipHTML(pid) + '</div>' +
@@ -5151,7 +5277,8 @@
     renderPlayers(true);
   });
   document.getElementById('pl-sort').addEventListener('change', function(e){
-    ctx.pl.sort = e.target.value; ctx.pl.dir = e.target.value === 'name' ? 'asc' : 'desc'; ctx.faLimit = PL_PAGE;
+    const k = e.target.value;
+    ctx.pl.sort = k; ctx.pl.dir = k === 'name' || (PL_METRICS[k] && PL_METRICS[k].low) ? 'asc' : 'desc'; ctx.faLimit = PL_PAGE;   // ranks / tiers: best first
     if((ctx.pl.sort === 'ros' && !ctx.ros) || (PL_METRICS[ctx.pl.sort] && PL_METRICS[ctx.pl.sort].actual && !ctx.weekly)) loadPlayersData();
     renderPlayers(true);
   });
@@ -5340,6 +5467,7 @@
       ['Season total', pending || fmtPts(seasonTotalPts(playerId))],
     ]).map(function(pair){ return '<div class="hs-block' + (pair[2] || '') + '"><div class="hs-label">' + pair[0] + '</div><div class="hs-val">' + pair[1] + '</div>' + (pair[3] ? '<div class="hs-sub">' + pair[3] + '</div>' : '') + '</div>'; }).join('');
 
+    els.heroStats.innerHTML += rankingsHTML(playerId);
     // Season stats: the most important few here; everything else lives on the Analysis screen.
     const raw = aggregatedRaw(playerId, 'season') || {};
     const grouped = statsForPosition(player.position, Object.keys(raw).filter(function(k){ return raw[k] !== 0; }));
@@ -5910,7 +6038,16 @@
       if(!main.length && !moreN) stats = '<div class="empty-state">No stats yet this season.</div>';
     }
 
-    const body = sec('This week', week) + sec('Fantasy points <span class="eyebrow">league scoring</span>', fp) +
+    let rk = '';
+    { const ea = ecrWeek(a), eb = ecrWeek(b), ra = ecrRos(a), rb = ecrRos(b), same = pa.position === pb.position;
+      const rn = function(r){ return r && r.pr ? Number(r.pr.replace(/\D+/g, '')) : null; };
+      if(ea || eb) rk += same ? row('Rank this week', ea ? ea.rk : null, eb ? eb.rk : null, function(v){ return pa.position + v; }, 'low') : textRow('Rank this week', ea && escapeHTML(ea.pr), eb && escapeHTML(eb.pr));
+      if(ra || rb) rk += same ? row('Rank rest of season', rn(ra), rn(rb), function(v){ return pa.position + v; }, 'low') : textRow('Rank rest of season', ra && escapeHTML(ra.pr), rb && escapeHTML(rb.pr));
+      const ta = tierOf(a), tb = tierOf(b); if(ta || tb) rk += same ? row('Tier (Boris Chen)', ta, tb, fmtStat, 'low') : textRow('Tier (Boris Chen)', ta && String(ta), tb && String(tb));
+      const fa = fcValue(a), fb = fcValue(b); if(fa || fb) rk += row('Trade value (FantasyCalc)', fa ? fa.v : null, fb ? fb.v : null, function(v){ return v.toLocaleString(); }, 'high');
+      const xa = espnProj(a), xb = espnProj(b); if(xa !== null || xb !== null) rk += row('ESPN projection', xa, xb, fmtPts, 'high');
+    }
+    const body = sec('This week', week) + sec('Rankings &amp; value <span class="eyebrow">FantasyPros · Boris Chen · FantasyCalc · ESPN</span>', rk) + sec('Fantasy points <span class="eyebrow">league scoring</span>', fp) +
       sec('Usage <span class="eyebrow">nflverse</span>', usage) +
       sec('Season stats <span class="eyebrow">totals</span>', stats + (moreN ? '<details class="h2h-more"><summary>More stats (' + moreN + ')</summary>' + more + '</details>' : ''));
 
@@ -6014,7 +6151,7 @@
         '<div class="mx-count">' + all.length + ' player' + (all.length === 1 ? '' : 's') + (chips ? '' : '') + '</div></div>' +
       (chips ? '<div class="pl-active mx-active">' + chips + '</div>' : '') +
       '<div class="mx-scroll"><table class="mx-tbl"><thead><tr>' + th('Player', 'name', 'l') + th('Opp', null, 'l') + th('Snap by week', 'snap') +
-      th('Tgt share', 'tgt') + th('Air share', 'air') + th('Proj', 'proj') +
+      th('Rank', 'ecrw') + th('Value', 'fcv') + th('Tgt share', 'tgt') + th('Air share', 'air') + th('Proj', 'proj') +
       (weekStarted() ? th('Wk ' + ctx.week, 'wk') : '') + th('Last', 'last') + th('L3', 'l3') + th('Avg', 'avg') + th('Total', 'tot') + th('Key stats (season)', null, 'l') +
       '<th class="l" style="padding-left:20px">' + (st.view !== 'avail' ? 'Team / vs yours' : ctx.faPos === 'FLEX' ? 'vs your FLEX' : 'vs your weakest') + '</th><th><span class="sr-only">Compare</span></th></tr></thead><tbody class="stagger">' +
       list.map(function(pid, i){
@@ -6022,7 +6159,9 @@
         const vs = v ? (v.txt ? '<b class="' + (v.cls === 'flat' ? 'dim' : 'trend ' + v.cls) + '">' + v.txt + '</b> ' : '') + '<span class="muted">' + escapeHTML(v.who) + '</span>'
           : '<span class="muted">' + (isMine(pid) ? 'On your team' : ownerOf(pid) !== undefined ? escapeHTML(rosterName(ownerOf(pid))) : '—') + '</span>';
         const c = catcher(pid);
+        const ew = ecrWeek(pid), fv = fcValue(pid), tr = tierOf(pid);
         return '<tr style="--i:' + i + '" data-open="' + escapeHTML(pid) + '"><td class="l">' + mxWho(pid) + '</td><td class="l">' + oppCell(pid) + '</td><td>' + snapByWeek(pid) + '</td>' +
+          '<td>' + (ew ? escapeHTML(ew.pr) + (tr ? ' <span class="dim">T' + tr + '</span>' : '') : '<span class="dim">—</span>') + '</td><td class="muted">' + (fv ? fv.v.toLocaleString() : '<span class="dim">—</span>') + '</td>' +
           '<td class="muted">' + (c ? pct(seasonShare(pid, 't')) : '<span class="dim">—</span>') + '</td><td class="muted">' + (c ? airPct(seasonShare(pid, 'a')) : '<span class="dim">—</span>') + '</td>' +
           '<td><span class="proj">' + fmtPts(proj) + '</span></td>' +
           (weekStarted() ? (function(){ const wa = weekActual(pid); return '<td class="' + (wa === null ? 'dim' : 'act-live') + '">' + (wa === null ? '—' : fmtPts(wa)) + '</td>'; })() : '') +
@@ -6087,7 +6226,7 @@
     left = left ? '<div class="card pf-card">' + left + '</div>' : '<div></div>';
     const dvp = dvpInfo(pid);
     const context = rangeDetailHTML(pid) + (dvp ? '<div class="dvp-line"><span class="dvp-chip ' + (dvp.early ? 'early' : dvp.tone) + '">Matchup</span> ' + escapeHTML(dvpSentence(dvp)) + '</div>' : '');
-    return byeCallouts([pid]) + hero + injurySourcesHTML(pid) + (loading ? '' : context) + weekCard + logCard + '<div class="pf-grid">' + left + '<div class="card pf-card">' + maxSideHTML(pid) + '</div></div>';
+    return byeCallouts([pid]) + hero + injurySourcesHTML(pid) + (loading ? '' : context) + '<div class="card pf-card pf-rk"><div class="pf-sec"><h3>Rankings &amp; value</h3><span class="eyebrow">consensus · market</span></div>' + rankingsHTML(pid) + '</div>' + weekCard + logCard + '<div class="pf-grid">' + left + '<div class="card pf-card">' + maxSideHTML(pid) + '</div></div>';
   }
 
   // The last two header cards depend on the position, so there's never a card that can't apply (no "snap %" for a kicker).

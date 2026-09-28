@@ -698,6 +698,30 @@ def main():
     except Exception as e:
         print('  (ESPN injuries unavailable, keeping the previous espn.json:', e, ')', file=sys.stderr)
 
+    # rankings.json: FantasyPros consensus rankings (DynastyProcess mirror), Boris Chen tiers, ESPN projections. Each
+    # source keeps its own date; the file is only rewritten when the data changed (not just the fetch time).
+    rankings_path = os.path.join(os.path.dirname(os.path.abspath(args.out)), 'rankings.json')
+    try:
+        from build_rankings import build_rankings
+        if 'sleeper_full' not in locals():
+            sleeper_full = json.loads(get(SOURCES['sleeper_players']))
+        rk = build_rankings(sleeper_full, out.get('kick') or {}, args.season, cur_week)
+        old_rk = load_previous(rankings_path)
+        def strip(d):   # everything but the fetch times
+            d = json.loads(json.dumps(d or {}))
+            d.pop('generated', None)
+            d.get('sources', {}).get('espn', {}).pop('fetched', None)
+            return d
+        same = bool(old_rk) and strip(old_rk) == strip(rk)
+        if not same:
+            with open(rankings_path, 'w', encoding='utf-8') as f:
+                json.dump(rk, f, separators=(',', ':'))
+            print(f'Wrote {rankings_path} ({os.path.getsize(rankings_path):,} bytes).', file=sys.stderr)
+        else:
+            print('No rankings changes; rankings.json left as is.', file=sys.stderr)
+    except Exception as e:
+        print('  (rankings unavailable, keeping the previous rankings.json:', e, ')', file=sys.stderr)
+
     ros_path = os.path.join(os.path.dirname(os.path.abspath(args.out)), 'ros.json')
     try:
         ros = build_ros(args.season, cur_week) if cur_week <= LAST_FANTASY_WEEK else {}
