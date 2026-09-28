@@ -1,0 +1,22 @@
+# FantasyPros API probe: run by hand (Actions -> "FantasyPros probe" -> Run workflow). Uses the FANTASYPROS_API_KEY
+# repository secret, makes at most 10 API calls (the key allows 100 a day), prints what came back and writes nothing
+# to the repo. The scheduled snapshot comes later, once this shows the data is real and matches fantasypros.com.
+name: FantasyPros probe
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - run: python fantasypros_probe.py
+        env:
+          FANTASYPROS_API_KEY: ${{ secrets.FANTASYPROS_API_KEY }}
