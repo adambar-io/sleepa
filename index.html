@@ -1764,6 +1764,8 @@
   .zn-ref span{ font-variant-numeric: tabular-nums; font-weight: 500; }
   .zn-ref.busy svg{ animation: znSpin 1s linear infinite; }
   .zn-ref.stale{ color: var(--warn); }
+  .zn-photos[aria-pressed="true"]{ color: var(--text); }
+  .zn-photos[aria-pressed="false"] svg{ opacity: .45; }
   @keyframes znSpin{ to{ transform: rotate(360deg); } }
   .zm-dt{ display: none !important; }
   .zn-main{ position: relative; min-height: 0; }
@@ -1880,10 +1882,15 @@
     .zn-top .zn-ico{ order: 1; }
     .zn-wk{ order: 2; }
     .zn-top [data-zn-mode]{ display: none; }
+    .zn-photos{ order: 3; }
+    .zn-photos span{ display: none; }
     .zn-ref{ order: 4; margin-left: auto; }
   }
   @container zn (min-width: 900px){
     .zn-bot-mode{ display: none; }
+    .zn .zn-gbar{ display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .zn-tile .zt-cbtn{ display: inline-grid; place-items: center; width: 28px; height: 28px; margin: -4px -6px -4px 4px; padding: 0; border-radius: 8px; background: none; color: var(--text-3); }
+    .zn-tile .zt-cbtn:hover{ color: var(--text); background: var(--surface-2); }
     .zn.alt .zn-bot{ display: none; }
     .zm-ph{ display: none !important; }
     .zm-dt{ display: inline-flex !important; }
@@ -1916,7 +1923,40 @@
   .zn-car.ring .zn-card:not(.on) .zn-card-in{ pointer-events: none; }
   .zn-car.ring:not(.flat) .zp-x{ display: block; }
   .zn-car.ring:not(.flat) .zp-sc{ display: inline; }
-  @container zt (min-width: 700px){ .zn-tile.open{ grid-column: span 2; } }
+  /* grid toolbar (desktop grid only) */
+  .zn-gcol{ min-width: 0; }
+  .zn-gbar{ display: none; }
+  .zn-gtip{ margin-left: auto; font-size: 11.5px; color: var(--text-3); }
+  .zn-dense button{ padding: 5px 12px; min-height: 30px; font-size: 12.5px; }
+  .zt-cbtn{ display: none; }
+  .zt-cbtn svg{ width: 16px; height: 16px; transition: transform .25s var(--ease); }
+  .zt-cbtn.shut svg{ transform: rotate(-90deg); }
+  .zt-cbtn[hidden]{ display: none !important; }
+  /* focus: one league forward, the rest dimmed behind */
+  .zn-tiles > .zn-tile, .zt-ph{ transition: opacity .35s var(--ease), filter .35s var(--ease), transform .35s var(--ease), border-color .2s; }
+  .zt-ph{ border-radius: var(--radius-lg); border: 1px dashed color-mix(in srgb, var(--text) 14%, transparent); }
+  .zn-tiles.focusing > .zn-tile:not(.focus), .zn-tiles.focusing > .zt-ph{ opacity: .28; filter: blur(1.5px) saturate(.7); transform: scale(.97); }
+  .zn-tile.focus{ position: fixed; z-index: 6; overflow-y: auto; overscroll-behavior: contain; background: var(--surface); box-shadow: var(--shadow-lg);
+    border-color: color-mix(in srgb, var(--text) 16%, transparent); padding: 20px 24px 14px; }
+  .zn-tile.focus .zt-side b{ font-size: 46px; }
+  .zn-tile.focus .zt-top{ font-size: 13.5px; }
+  .zn-tile.focus .zt-open{ color: var(--text-2); }
+  /* photos off */
+  .zn.no-photos .zh{ display: none; }
+  .zn.no-photos .zg-r{ grid-template-columns: 38px minmax(0, 1fr) auto; }
+  /* card cells: photo on the outer edge */
+  .zp-i{ grid-area: i; width: 28px; height: 28px; align-self: center; }
+  .zn:not(.no-photos) .zp:not(.empty){ grid-template-columns: 28px minmax(0, 1fr) auto; grid-template-areas: "i t v" "i m c" "x x x"; column-gap: 7px; }
+  .zn:not(.no-photos) .zp.them:not(.empty){ grid-template-columns: auto minmax(0, 1fr) 28px; grid-template-areas: "v t i" "c m i" "x x x"; }
+  /* phones: narrow cells, so with photos the name gets its own line beside the photo, points under it, game line below */
+  .zn:not(.no-photos) .zn-car.flat .zp:not(.empty){ grid-template-columns: 24px auto minmax(0, 1fr); grid-template-areas: "i t t" "i v c" "m m m"; column-gap: 6px; }
+  .zn:not(.no-photos) .zn-car.flat .zp.them:not(.empty){ grid-template-columns: minmax(0, 1fr) auto 24px; grid-template-areas: "t t i" "c v i" "m m m"; }
+  .zn:not(.no-photos) .zn-car.flat .zp-i{ width: 24px; height: 24px; }
+  .zn:not(.no-photos) .zn-car.flat .zp-c{ align-self: center; text-align: left; }
+  .zn:not(.no-photos) .zn-car.flat .zp.them .zp-c{ text-align: right; }
+  .zn:not(.no-photos) .zn-car.flat .zp-v{ text-align: left; }
+  .zn:not(.no-photos) .zn-car.flat .zp.them .zp-v{ text-align: right; }
+  .zn:not(.no-photos) .zn-car.flat .zp-m{ margin-top: 2px; }
   .zt-full{ display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 16px; }
   .zt-full:empty{ display: none; }
   .zt-col .zt-h{ border-top: 0; padding-top: 4px; }
@@ -8122,8 +8162,15 @@
   const ZONE_SKIP_SLOTS = { BN: 1, IR: 1, TAXI: 1 };
   const ZONE_RZ_POS = { QB: 1, RB: 1, WR: 1, TE: 1, K: 1 };   // offensive players: "in the red zone" means their team has the ball inside the 20
   ctx.zone = { open: false, week: 0, mode: 'car', idx: 0, leagues: [], meta: {}, games: null, gamesWeek: 0, gamesTs: 0, scores: null, scoresWeek: 0, scoresTs: 0,
-    projRaw: null, projWeek: 0, projTs: 0, ts: 0, busy: false, failed: false, loadId: 0, built: false, expanded: {} };
-  try{ ctx.zone.expanded = JSON.parse(localStorage.getItem('rv-zone-open') || '{}') || {}; }catch(e){}
+    projRaw: null, projWeek: 0, projTs: 0, ts: 0, busy: false, failed: false, loadId: 0, built: false,
+    dense: 'detailed', collapsed: {}, photos: true, focus: null };
+  // grid detail level, leagues whose players are hidden, photos on/off: remembered on this device
+  try{
+    ctx.zone.dense = localStorage.getItem('rv-zone-dense') === 'condensed' ? 'condensed' : 'detailed';
+    ctx.zone.collapsed = JSON.parse(localStorage.getItem('rv-zone-collapsed') || '{}') || {};
+    ctx.zone.photos = localStorage.getItem('rv-zone-photos') !== 'off';
+  }catch(e){}
+  function zSave(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
 
   // ---- week: Sleeper's week, except Tuesday keeps last week's finals up (Sleeper moves on Tuesday; the Zone on Wednesday) ----
   function zoneWeekKicked(w){
@@ -8422,6 +8469,7 @@
     const m = matchup(r.team, week), sc = zScore(r), full = (m && !m.bye ? m.text + ' · ' : '') + zGameText(r, week) + (sc ? ' ' + sc : '');
     const line = zStatLine(r);
     return '<div class="zp ' + (side === 'opp' ? 'them' : side) + ' s-' + r.state + (st && st.out ? ' out' : '') + '" style="--pc:' + posColor(r.p.position) + '" title="' + escapeHTML(playerName(r.p) + ' · ' + full) + '">' +
+      zImg(r, 'zp-i') +
       '<div class="zp-t"><span class="zp-n">' + escapeHTML(zName(r)) + '</span>' + (r.rz ? '<span class="zn-rz" title="Their team is in the red zone">RZ</span>' : '') + '</div>' +
       '<div class="zp-m"><span style="color:' + posColor(r.p.position) + '">' + escapeHTML(r.p.position || '') + '</span> · ' + (r.state === 'in' ? '<span class="live-dot"></span>' : '') + escapeHTML(zGameText(r, week)) +
         (sc ? '<span class="zp-sc"> ' + sc + '</span>' : '') + (st ? ' ' + injuryChip(r.st) : '') + '</div>' +
@@ -8454,7 +8502,7 @@
     const m = matchup(r.team, week), sc = zScore(r);
     return (r.team || '') + (m && !m.bye ? ' ' + m.text : '') + ' · ' + zGameText(r, week) + (sc ? ' · ' + sc : '');
   }
-  function zImg(r){ return '<img class="zh" src="' + escapeHTML(playerImageUrl(r.pid)) + '" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">'; }
+  function zImg(r, cls){ return '<img class="zh' + (cls ? ' ' + cls : '') + '" src="' + escapeHTML(playerImageUrl(r.pid)) + '" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">'; }
   function zLast(r){ return r.p.position === 'DEF' ? (r.team || r.pid) + ' D/ST' : (r.p.last_name || playerName(r.p) || r.pid); }
   function zRichHTML(rows, week, lid){
     return rows.map(function(r){
@@ -8502,6 +8550,7 @@
     list: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="4" y="4" width="16" height="5" rx="1.5"/><rect x="4" y="11" width="16" height="4" rx="1.5"/><rect x="4" y="17" width="16" height="3" rx="1.5"/></svg>',
     grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>',
     cards: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="6" y="4" width="12" height="16" rx="2"/><path d="M3 7v10M21 7v10"/></svg>',
+    photo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="9" r="3.5"/><path d="M5 20c1.2-3.6 4-5.5 7-5.5s5.8 1.9 7 5.5"/></svg>',
   };
   const CHEV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 10l4 4 4-4"/></svg>';
   const CHEV_UP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 14l4-4 4 4"/></svg>';
@@ -8513,11 +8562,15 @@
         '<div class="zn-title"><b>' + ZONE_NAME + '</b><span id="zn-sub"></span></div>' +
         '<div class="wk-seg zn-wk" role="group" aria-label="Week"><button type="button" data-zn-wk="-1" aria-label="Previous week">‹</button><span id="zn-wk-l"></span><button type="button" data-zn-wk="1" aria-label="Next week">›</button></div>' +
         '<button type="button" class="zn-btn" data-zn-mode aria-pressed="false"></button>' +
+        '<button type="button" class="zn-btn zn-photos" data-zn-photos aria-pressed="true">' + ICO.photo + '<span>Photos</span></button>' +
         '<button type="button" class="zn-btn zn-ref" data-zn-ref aria-label="Refresh scores">' + ICO.ref + '<span data-zn-ago></span></button>' +
         '<button type="button" class="zn-btn zn-ico" data-zone-guide aria-label="How ' + ZONE_NAME + ' reads the game">' + ICO.info + '</button>' +
       '</header>' +
       '<main class="zn-main"><div class="zn-car" tabindex="-1"></div>' +
-        '<div class="zn-alt" hidden><div class="zn-tiles"></div>' +
+        '<div class="zn-alt" hidden><div class="zn-gcol">' +
+          '<div class="zn-gbar"><div class="wk-seg zn-dense" role="group" aria-label="Detail"><button type="button" data-zn-dense="detailed">Detailed</button><button type="button" data-zn-dense="condensed">Condensed</button></div>' +
+          '<button type="button" class="zn-btn" data-zn-hideall></button><span class="zn-gtip">Click a league’s header to focus on it</span></div>' +
+          '<div class="zn-tiles"></div></div>' +
           '<aside class="zn-feedph" aria-label="Live feed"><b>Live feed</b><p>Coming next: every play involving your starters and your opponents’ starters, across all your leagues, colored by what it does to you.</p></aside>' +
         '</div></main>' +
       '<div class="zn-bot"><nav class="zn-dots" aria-label="Leagues"></nav><button type="button" class="zn-btn zn-bot-mode" data-zn-mode aria-pressed="false"></button></div>' +
@@ -8542,7 +8595,7 @@
       car.appendChild(L.card);
       L.tile = document.createElement('div');
       L.tile.className = 'zn-tile'; L.tile.setAttribute('data-zid', L.id); L.tile.setAttribute('role', 'button'); L.tile.tabIndex = 0; L.tile.setAttribute('aria-label', L.name + ': open its card');
-      L.tile.innerHTML = '<div class="zt-top"><span class="zt-lg">' + escapeHTML(L.name) + '</span><span class="zt-st" data-st></span><span class="zt-open" aria-hidden="true"></span></div>' +
+      L.tile.innerHTML = '<div class="zt-top"><span class="zt-lg">' + escapeHTML(L.name) + '</span><span class="zt-st" data-st></span><span class="zt-open" aria-hidden="true"></span><button type="button" class="zt-cbtn" data-zt-collapse>' + CHEV + '</button></div>' +
         '<div class="zt-score"><span class="zt-side"><small data-tm="me"></small><b data-n="me">—</b></span><span class="zt-dash">–</span><span class="zt-side them"><small data-tm="opp"></small><b data-n="opp">—</b></span></div>' +
         '<div class="zt-proj" data-proj></div>' +
         '<div class="zt-detail"><div data-compact></div><div class="zt-full" data-full></div></div>';
@@ -8573,6 +8626,7 @@
     const live = models.filter(function(M){ return M.live; }).length;
     sub.innerHTML = 'Week ' + z.week + ' · ' + (live ? '<span class="live-dot"></span>' + live + ' live' : models.every(function(M){ return M.kind !== 'ok' || M.allFinal; }) && models.some(function(M){ return M.allFinal; }) ? 'Final' : models.length + ' leagues');
     document.getElementById('zn-wk-l').textContent = 'Wk ' + z.week;
+    zoneRenderBar();
     zoneView.querySelector('[data-zn-wk="-1"]').disabled = z.week <= 1;
     zoneView.querySelector('[data-zn-wk="1"]').disabled = z.week >= MAX_PLAN_WEEK;
     zoneRenderAgo();
@@ -8628,17 +8682,79 @@
     // desktop grid: every starter, with their game and stat line (only built while the grid is what you're looking at)
     if(z.mode === 'alt' && zoneWide() && M.kind === 'ok'){
       const set = function(sel, h){ const el = tile.querySelector(sel); if(el._h !== h){ el.innerHTML = h; el._h = h; } };
-      const open = !!z.expanded[L.id];
-      tile.classList.toggle('open', open);
-      tile.setAttribute('aria-expanded', String(open)); tile.setAttribute('aria-label', L.name + (open ? ': show less' : ': show details'));
-      tile.querySelector('.zt-open').innerHTML = open ? 'Less ' + CHEV_UP : 'Details ' + CHEV;
-      if(open){
+      const focus = z.focus === L.id, hide = !!z.collapsed[L.id] && !focus, detailed = focus || z.dense !== 'condensed';
+      tile.classList.toggle('collapsed', hide);
+      tile.setAttribute('aria-label', L.name + (focus ? ': back to the grid' : ': focus on this league'));
+      tile.querySelector('.zt-open').textContent = focus ? 'Close ×' : 'Focus';
+      const cb = tile.querySelector('[data-zt-collapse]');
+      cb.hidden = focus; cb.classList.toggle('shut', hide);
+      cb.setAttribute('aria-label', (hide ? 'Show ' : 'Hide ') + L.name + ' players'); cb.title = hide ? 'Show players' : 'Hide players';
+      if(hide){ set('[data-compact]', ''); set('[data-full]', ''); }
+      else if(detailed){
         const col = function(t, rows){ return '<div class="zt-col"><div class="zt-h">' + escapeHTML(t ? t.name : '') + '</div><div class="zg-rows">' + zRichHTML(rows, M.week, L.id) + '</div></div>'; };
         set('[data-full]', col(M.me, M.my.rows) + (M.opp ? col(M.oppTeam, M.opp.rows) : ''));
         set('[data-compact]', '');
       }else{ set('[data-compact]', zCompactHTML(M)); set('[data-full]', ''); }
     }
     tile.classList.toggle('has-detail', M.kind === 'ok');
+  }
+  function zoneRenderBar(){
+    const z = ctx.zone;
+    zoneView.querySelectorAll('[data-zn-dense]').forEach(function(b){ b.setAttribute('aria-pressed', String(b.getAttribute('data-zn-dense') === z.dense)); });
+    const all = z.leagues.length && z.leagues.every(function(L){ return z.collapsed[L.id]; });
+    const h = zoneView.querySelector('[data-zn-hideall]');
+    if(h) h.innerHTML = (all ? 'Show all players' : 'Hide all players');
+    zoneView.classList.toggle('no-photos', !z.photos);
+    const ph = zoneView.querySelector('[data-zn-photos]');
+    if(ph){ ph.setAttribute('aria-pressed', String(z.photos)); ph.title = z.photos ? 'Hide player photos' : 'Show player photos'; }
+  }
+  // Focus (desktop grid): the league lifts forward, centered over the grid in full detail (both teams side by side); the
+  // others dim behind it; the live feed stays put. A placeholder keeps its spot so nothing reflows. Click its header again,
+  // anywhere else in the grid, or Esc to put it back. The lift and return animate from / to its spot (FLIP).
+  function zFlipFrom(el, r0){
+    const r1 = el.getBoundingClientRect();
+    if(!r1.width || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    el.style.transformOrigin = 'top left'; el.style.transition = 'none';
+    el.style.transform = 'translate(' + (r0.left - r1.left) + 'px,' + (r0.top - r1.top) + 'px) scale(' + (r0.width / r1.width) + ')';
+    void el.offsetWidth;
+    el.style.transition = 'transform .45s var(--ease)'; el.style.transform = '';
+    setTimeout(function(){ el.style.transition = ''; el.style.transformOrigin = ''; }, 500);
+  }
+  function zonePlaceFocus(){
+    const z = ctx.zone, L = z.focus && zLeague(z.focus);
+    if(!L) return;
+    const wrap = zoneView.querySelector('.zn-tiles'), alt = zoneView.querySelector('.zn-alt'), el = L.tile;
+    const wr = wrap.getBoundingClientRect(), ar = alt.getBoundingClientRect(), zr = zoneView.getBoundingClientRect();
+    const w = Math.min(wr.width, 1040);
+    el.style.left = (wr.left - zr.left + (wr.width - w) / 2) + 'px';
+    el.style.top = (ar.top - zr.top + 16) + 'px';
+    el.style.width = w + 'px';
+    el.style.maxHeight = (ar.height - 32) + 'px';
+  }
+  function zoneFocus(id){
+    const z = ctx.zone, wrap = zoneView.querySelector('.zn-tiles');
+    if(!wrap) return;
+    const cur = z.focus && zLeague(z.focus);
+    if(cur){
+      const el = cur.tile, r0 = el.getBoundingClientRect();
+      z.focus = null;
+      el.classList.remove('focus'); ['left', 'top', 'width', 'maxHeight'].forEach(function(k){ el.style[k] = ''; });
+      const ph = wrap.querySelector('.zt-ph'); if(ph) ph.remove();
+      wrap.classList.remove('focusing');
+      zoneRender(false);
+      if(!id) zFlipFrom(el, r0);
+    }
+    const L = id && zLeague(id);
+    if(!L) return;
+    const el = L.tile, r0 = el.getBoundingClientRect();
+    const ph = document.createElement('div'); ph.className = 'zt-ph'; ph.style.height = r0.height + 'px';
+    wrap.insertBefore(ph, el);
+    z.focus = id;
+    el.classList.add('focus'); wrap.classList.add('focusing');
+    zonePlaceFocus();
+    zoneRender(false);
+    el.scrollTop = 0;
+    zFlipFrom(el, r0);
   }
   function zFlip(card, tile){
     if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -8649,13 +8765,16 @@
   function zoneSortTiles(models, anim){
     const wrap = zoneView.querySelector('.zn-tiles');
     const order = models.map(function(M, i){ return { M: M, i: i }; }).sort(function(x, y){ return (x.M.group - y.M.group) || (x.i - y.i); });
-    const cur = Array.prototype.slice.call(wrap.children);
+    const cur = Array.prototype.filter.call(wrap.children, function(el){ return el.classList.contains('zn-tile'); });
     if(order.every(function(o, i){ return cur[i] === o.M.L.tile; })) return;
     const moving = anim && !wrap.closest('[hidden]') && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const before = moving ? cur.map(function(el){ return el.getBoundingClientRect(); }) : null;
     order.forEach(function(o){ wrap.appendChild(o.M.L.tile); });
+    const ph = wrap.querySelector('.zt-ph'), fl = ctx.zone.focus && zLeague(ctx.zone.focus);
+    if(ph && fl) wrap.insertBefore(ph, fl.tile);
     if(!moving) return;
     cur.forEach(function(el, i){
+      if(el.classList.contains('focus')) return;
       const r = el.getBoundingClientRect(), dx = before[i].left - r.left, dy = before[i].top - r.top;
       if(!dx && !dy) return;
       el.style.transition = 'none'; el.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
@@ -8785,7 +8904,9 @@
     if(!ctx.zone.open || window.innerWidth === zLastW) return;
     zLastW = window.innerWidth;
     zoneApplyRing(); closeBreakdown();
+    if(ctx.zone.focus && !zoneWide()) zoneFocus(null);
   });
+  window.addEventListener('resize', function(){ if(ctx.zone.open && ctx.zone.focus) zonePlaceFocus(); });
 
   // ---- point breakdown: tap an actual score → each stat × this league's scoring (Sleeper's per-player stats, 60 s cache) ----
   const zBdCache = {};
@@ -8838,6 +8959,7 @@
   }
   function zoneSetMode(mode){
     const z = ctx.zone;
+    if(z.focus && mode !== 'alt') zoneFocus(null);
     z.mode = mode === 'alt' ? 'alt' : 'car';
     zoneView.classList.toggle('alt', z.mode === 'alt');
     zoneView.querySelector('.zn-car').hidden = z.mode === 'alt';
@@ -8861,7 +8983,7 @@
       const old = z.leagues.find(function(L){ return L.id === l.league_id; });
       return { id: l.league_id, name: l.name, src: l, mu: old && old.mu, muWeek: old && old.muWeek, muTs: old && old.muTs, pp: {} };
     });
-    z.prev = {};
+    z.prev = {}; z.focus = null;
     zoneSources.forEach(function(s){ s.ts = 0; s.week = 0; });
     z.idx = Math.max(0, z.leagues.findIndex(function(L){ return ctx.league && L.id === ctx.league.league_id; }));
     z.open = true;
@@ -8923,14 +9045,24 @@
     const wk = t.closest('[data-zn-wk]');
     if(wk){ zoneSetWeek(ctx.zone.week + Number(wk.getAttribute('data-zn-wk'))); return; }
     if(t.closest('[data-zn-mode]')){ zoneSetMode(ctx.zone.mode === 'alt' ? 'car' : 'alt'); return; }
+    if(t.closest('[data-zn-photos]')){ ctx.zone.photos = !ctx.zone.photos; zSave('rv-zone-photos', ctx.zone.photos ? 'on' : 'off'); zoneRenderBar(); return; }
+    const dn = t.closest('[data-zn-dense]');
+    if(dn){ ctx.zone.dense = dn.getAttribute('data-zn-dense'); zSave('rv-zone-dense', ctx.zone.dense); zoneRender(false); return; }
+    if(t.closest('[data-zn-hideall]')){
+      const z = ctx.zone, all = z.leagues.every(function(L){ return z.collapsed[L.id]; });
+      z.collapsed = {}; if(!all) z.leagues.forEach(function(L){ z.collapsed[L.id] = true; });
+      zSave('rv-zone-collapsed', JSON.stringify(z.collapsed)); zoneRender(false); return;
+    }
+    // while a league is in focus, a click anywhere else in the grid puts it back
+    if(ctx.zone.focus && t.closest('.zn-gcol') && !t.closest('.zn-tile.focus, .zn-gbar')){ zoneFocus(null); return; }
     const tile = t.closest('.zn-tile, .zn-dot');
-    if(tile && tile.classList.contains('zn-tile') && zoneWide()){   // desktop grid: the panel's header opens / closes its detail in place
-      if(t.closest('.zt-top, .zt-score, .zt-proj')){
-        const id = tile.getAttribute('data-zid'), ex = ctx.zone.expanded;
-        if(ex[id]) delete ex[id]; else ex[id] = true;
-        try{ localStorage.setItem('rv-zone-open', JSON.stringify(ex)); }catch(err){}
-        zoneRender(false);
+    if(tile && tile.classList.contains('zn-tile') && zoneWide()){   // desktop grid: the header focuses the league; the chevron hides its players
+      const id = tile.getAttribute('data-zid'), z = ctx.zone;
+      if(t.closest('[data-zt-collapse]')){
+        if(z.collapsed[id]) delete z.collapsed[id]; else z.collapsed[id] = true;
+        zSave('rv-zone-collapsed', JSON.stringify(z.collapsed)); zoneRender(false); return;
       }
+      if(t.closest('.zt-top, .zt-score, .zt-proj')) zoneFocus(z.focus === id ? null : id);
       return;
     }
     if(tile){
@@ -8952,6 +9084,7 @@
       e.preventDefault(); e.stopImmediatePropagation();
       const bd = zoneView.querySelector('.zbd');
       if(bd && !bd.hidden){ closeBreakdown(); return; }
+      if(ctx.zone.focus){ zoneFocus(null); return; }
       zoneClose(); return;
     }
     if((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('zn-tile')){ e.preventDefault(); e.target.click(); return; }
@@ -8981,8 +9114,10 @@
     { t: 'Point breakdown', b: [
       'Tap any actual score next to a player to see how it adds up: each stat times your league’s scoring for it, biggest first, and the total. It uses Sleeper’s stats for that player, which update about every minute; if they’re a moment behind the live score, it says so.'] },
     { t: 'Grid view and stat lines (desktop)', b: [
-      'The grid shows every league at once, stretched to fill the screen next to the live feed. Each league starts condensed: both teams side by side, slot by slot, with photo, last name and points (actual once they’ve played, projection before).',
-      'Click a league’s header for its details, in place: both teams’ starters with their NFL game (kickoff, quarter and clock, or final, with the score) and a short stat line once they’ve played, like “20/24, 246 yd, 2 TD” or “6 tkl · 1 sk”. Stat lines come from Sleeper’s weekly stats and refresh about every 3 minutes, so they can trail the points slightly. Click the header again for less. Sleepa remembers which leagues you left open.',
+      'The grid shows every league at once, stretched to fill the screen next to the live feed. Detailed (the default) lists both teams’ starters with their NFL game (kickoff, quarter and clock, or final, with the score) and a short stat line once they’ve played, like “20/24, 246 yd, 2 TD” or “6 tkl · 1 sk”. Stat lines come from Sleeper’s weekly stats and refresh about every 3 minutes, so they can trail the points slightly.',
+      'Condensed puts both teams side by side, slot by slot: photo, last name and points (actual once they’ve played, projection before). The chevron on a league hides its players (just the score); “Hide all players” does every league. Sleepa remembers these choices.',
+      'Click a league’s header to focus on it: it comes forward, centered, with both teams side by side in full detail, while the others dim behind it and the live feed stays on the right. Click its header again, anywhere else, or press Esc to put it back.',
+      'Photos turns player pictures on or off in both the cards and the grid.',
       'Each player has their own tile with a stripe in their position’s color, and slots are numbered (WR1, WR2, FLEX1) so you can spot your WR1 or tight end at a glance.'] },
     { t: 'Lead change', b: [
       'When a refresh flips who’s ahead in a league, that card’s border glows softly for a moment and a small “Lead change” label fades in and out. Only actual scores count, not projections.'] },
