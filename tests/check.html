@@ -122,6 +122,24 @@
   check('ordinals (1st, 2nd, 3rd, 11th, 22nd)', ['1st', '2nd', '3rd', '11th', '22nd'].join() === [1, 2, 3, 11, 22].map(g.ordinal).join());
 
   // ---- 3c. actuals: which weeks count as games, and how much of a live game is left ----
+  section('Optimal lineup: dual-eligible players (IDP LB/DL, WR/RB)');
+  {
+    const osrc = ['function hungarianMax(', 'function assignDedicated('].map(extract).join('\n');
+    const elig = { X: ['LB', 'DL'], Y: ['DL'], Z: ['LB'], A: ['WR', 'RB'], B: ['RB'], C: ['WR'] };
+    const proj = { X: 15, Y: 10, Z: 6, A: 20, B: 18, C: 5 };
+    const canFill = function(pid, slot){ return (elig[pid] || []).indexOf(slot) !== -1; };
+    const o = new Function('canFill', osrc + '; return { assignDedicated };')(canFill);
+    const pj = function(pid){ return proj[pid]; };
+    const r1 = o.assignDedicated([0, 1], ['DL', 'LB'], ['X', 'Y', 'Z'], pj, null);
+    check('LB/DL goes where the lineup scores most: Y at DL, X at LB (25, not 21)', r1[0] === 'Y' && r1[1] === 'X', JSON.stringify(r1));
+    const r2 = o.assignDedicated([0, 1], ['RB', 'WR'], ['A', 'B', 'C'], pj, null);
+    check('WR/RB the same way: B at RB, A at WR (38, not 25)', r2[0] === 'B' && r2[1] === 'A', JSON.stringify(r2));
+    const r3 = o.assignDedicated([0, 1, 2], ['DL', 'LB', 'LB'], ['X', 'Y'], pj, null);
+    check('every slot gets someone it can be filled with; an unfillable slot stays empty', r3[0] === 'Y' && (r3[1] === 'X' || r3[2] === 'X') && Object.keys(r3).length === 2, JSON.stringify(r3));
+    const r4 = o.assignDedicated([0, 1], ['LB', 'LB'], ['X', 'Z'], pj, ['Z', 'X']);
+    check('two identical slots: nobody moves for nothing', r4[0] === 'Z' && r4[1] === 'X', JSON.stringify(r4));
+  }
+
   section('Actuals: games played and live game clock');
   const asrc = ['const NON_STAT_KEY', 'const GAME_LENGTH', 'function playedWeek(', 'function remainingFrac('].map(extract).join('\n');
   const a = new Function(asrc + '; return { playedWeek, remainingFrac };')();

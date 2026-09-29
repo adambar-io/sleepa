@@ -25,9 +25,10 @@ BORIS_FILES = {'QB': 'QB', 'RB': 'RB-PPR', 'WR': 'WR-PPR', 'TE': 'TE-PPR', 'K': 
 ESPN = ('https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/{season}/segments/0/leaguedefaults/3'
         '?view=kona_player_info')
 TEAM = {'JAC': 'JAX', 'LA': 'LAR', 'WSH': 'WAS', 'OAK': 'LV', 'SD': 'LAC', 'STL': 'LAR'}
-WEEKLY_PAGES = {'qb': 'QB', 'ppr-rb': 'RB', 'ppr-wr': 'WR', 'ppr-te': 'TE', 'k': 'K', 'dst': 'DEF'}
+WEEKLY_PAGES = {'qb': 'QB', 'ppr-rb': 'RB', 'ppr-wr': 'WR', 'ppr-te': 'TE', 'k': 'K', 'dst': 'DEF', 'dl': 'DL', 'lb': 'LB', 'db': 'DB'}
 ROS_PAGES = {'/nfl/rankings/ros-qb.php': 'QB', '/nfl/rankings/ros-ppr-rb.php': 'RB', '/nfl/rankings/ros-ppr-wr.php': 'WR',
-             '/nfl/rankings/ros-ppr-te.php': 'TE', '/nfl/rankings/ros-k.php': 'K', '/nfl/rankings/ros-dst.php': 'DEF'}
+             '/nfl/rankings/ros-ppr-te.php': 'TE', '/nfl/rankings/ros-k.php': 'K', '/nfl/rankings/ros-dst.php': 'DEF',
+             '/nfl/rankings/ros-dl.php': 'DL', '/nfl/rankings/ros-lb.php': 'LB', '/nfl/rankings/ros-db.php': 'DB'}
 ESPN_POS = {1: 'QB', 2: 'RB', 3: 'WR', 4: 'TE'}
 ESPN_TEAMS = {1: 'ATL', 2: 'BUF', 3: 'CHI', 4: 'CIN', 5: 'CLE', 6: 'DAL', 7: 'DEN', 8: 'DET', 9: 'GB', 10: 'TEN', 11: 'IND',
               12: 'KC', 13: 'LV', 14: 'LAR', 15: 'MIA', 16: 'MIN', 17: 'NE', 18: 'NO', 19: 'NYG', 20: 'NYJ', 21: 'PHI',
@@ -77,8 +78,9 @@ class Matcher:
         self.espn_sl = {str(p['espn_id']): sid for sid, p in sleeper.items() if p.get('espn_id')}
         self.by_ntp = {}
         for sid, p in sleeper.items():
-            if p.get('position') in ('QB', 'RB', 'WR', 'TE', 'K'):
-                self.by_ntp.setdefault((norm(p.get('full_name')), p.get('team'), p.get('position')), []).append(sid)
+            for pos in set([p.get('position')] + (p.get('fantasy_positions') or [])):   # IDP: DE is listed as DL, CB as DB
+                if pos in ('QB', 'RB', 'WR', 'TE', 'K', 'DL', 'LB', 'DB'):
+                    self.by_ntp.setdefault((norm(p.get('full_name')), p.get('team'), pos), []).append(sid)
 
     def _pos_ok(self, sid, pos):
         p = self.sleeper.get(sid)
@@ -103,6 +105,26 @@ class Matcher:
                 return sid, how
         sid = self._name(name, team, pos)
         return (sid, 'name+team') if sid else (None, None)
+
+
+def own_group(player):
+    """A player's own position group (offense/K/DEF as is; defenders DL / LB / DB, their Sleeper position first)."""
+    pos = (player or {}).get('position')
+    if pos in ('DL', 'LB', 'DB') or pos in ('QB', 'RB', 'WR', 'TE', 'K', 'DEF'):
+        return pos
+    for g in ('DL', 'LB', 'DB'):
+        if g in ((player or {}).get('fantasy_positions') or []):
+            return g
+    return pos
+
+
+def keep_rank(out, sid, rec, pos, sleeper):
+    """A dual-eligible player (LB/DL) can be on two FantasyPros pages: keep the page of his own position."""
+    rec['p'] = pos
+    prev = out.get(sid)
+    if prev and prev.get('p') == own_group(sleeper.get(sid)) and pos != prev.get('p'):
+        return
+    out[sid] = rec
 
 
 def week_of_kickoff(ts, team, kick):
@@ -135,7 +157,7 @@ def fp_weekly(m, kick):
         rec = {'pr': r.get('pos_rank'), 'rk': num(r.get('rank')), 'ecr': num(r.get('ecr')), 'sd': num(r.get('sd')),
                'best': num(r.get('best')), 'worst': num(r.get('worst'))}
         if sid:
-            out[sid] = rec
+            keep_rank(out, sid, rec, pos, m.sleeper)
         else:
             unmatched.append({'n': r.get('player_name'), 't': team, 'pos': pos, 'fpid': r.get('fantasypros_id'), 'pr': r.get('pos_rank')})
     week = max(weeks, key=weeks.get) if weeks else None
@@ -157,7 +179,7 @@ def fp_ros(m):
             sid, how = m.fp_player(r.get('id'), r.get('player'), team, pos)
             rec = {'pr': pos + str(i + 1), 'ecr': num(r.get('ecr')), 'sd': num(r.get('sd')), 'best': num(r.get('best')), 'worst': num(r.get('worst'))}
             if sid:
-                out[sid] = rec
+                keep_rank(out, sid, rec, pos, m.sleeper)
             else:
                 unmatched.append({'n': r.get('player'), 't': team, 'pos': pos, 'fpid': r.get('id'), 'pr': rec['pr']})
     return {'scraped': max(scraped) if scraped else None, 'players': out, 'unmatched': unmatched}

@@ -39,10 +39,24 @@ PLAYER_FIELDS = ['full_name', 'first_name', 'last_name', 'position', 'fantasy_po
 # Sleeper stat/projection keys that never score (the app scores with the league's own settings).
 NON_SCORING = re.compile(r'^(pts_(std|ppr|half_ppr|idp)$|pos_rank|rank_|adp_|pos_adp|gp$|gs$|gms_active$|tm_|off_snp$|def_snp$|st_snp$|cmp_pct$|.*_(ypa|ypc|ypr|ypt|pct|rtg|lng|avg)$)')
 DVP_POS = ('QB', 'RB', 'WR', 'TE', 'K')
+IDP_POS = ('DL', 'LB', 'DB')    # Sleeper's IDP slot groups (players are DE / DT / CB / S / …; fantasy_positions carries the group)
+
+
+def pos_group(player):
+    """The position a player counts as: his own for offense / K / DEF, else his IDP group from fantasy_positions."""
+    pos = (player or {}).get('position')
+    if pos in DVP_POS or pos == 'DEF':
+        return pos
+    if pos in IDP_POS:
+        return pos                 # an LB who is also DL-eligible counts as an LB
+    for g in IDP_POS:
+        if g in ((player or {}).get('fantasy_positions') or []):
+            return g
+    return pos
 # weekly.json keeps every stat the app can show or score: counts, bonus buckets and "long" plays. Dropped: Sleeper's own
 # points/ranks, games flags, team snap counts and per-attempt rates (the app works rates out from the counts).
 WEEKLY_DROP = re.compile(r'^(pts_(std|ppr|half_ppr|idp)$|pos_rank|rank_|adp_|pos_adp|gp$|gs$|gms_active$|tm_|off_snp$|def_snp$|st_snp$|cmp_pct$|fan_pts_allow|.*_(ypa|ypc|ypr|ypt|pct|rtg|avg)$)')
-ROS_POS = ('QB', 'RB', 'WR', 'TE', 'K', 'DEF')
+ROS_POS = ('QB', 'RB', 'WR', 'TE', 'K', 'DEF', 'DL', 'LB', 'DB')
 LAST_FANTASY_WEEK = 17   # rest-of-season sums run through the usual fantasy championship week
 PRACTICE = {'Did Not Participate In Practice': 'DNP', 'Limited Participation in Practice': 'LP', 'Full Participation in Practice': 'FP'}
 
@@ -153,8 +167,9 @@ def build_dvp(season, through_week, weekly=None):
     dvp = {}
     for week in range(1, through_week + 1):
         print(f'  sleeper stats week {week} (defense vs position, weekly actuals)', file=sys.stderr)
-        for e in sleeper_weekly('stats', season, week, DVP_POS + ('DEF',)):
-            pos, opp = (e.get('player') or {}).get('position'), team(e.get('opponent') or '')
+        for e in sleeper_weekly('stats', season, week, DVP_POS + ('DEF',) + IDP_POS):
+            # IDP: "opponent" is the offense the defender faced, so dvp[offense][DB] = what DBs score against that offense
+            pos, opp = pos_group(e.get('player')), team(e.get('opponent') or '')
             raw = e.get('stats') or {}
             st = scoring_stats(raw)
             if weekly is not None and (raw.get('gp') or 0) > 0:
@@ -163,7 +178,7 @@ def build_dvp(season, through_week, weekly=None):
                 weekly.setdefault(str(e['player_id']), {})[str(week)] = g
             if not st:
                 continue
-            if pos not in DVP_POS or not opp:
+            if (pos not in DVP_POS and pos not in IDP_POS) or not opp:
                 continue
             d = dvp.setdefault(opp, {}).setdefault(pos, {'g': [], 's': {}})
             if week not in d['g']:
@@ -206,7 +221,8 @@ def build_ros(season, from_week, last_week=LAST_FANTASY_WEEK):
             for k, v in st.items():
                 r['s'][k] = round(r['s'].get(k, 0) + v, 2)
     # keep fantasy-relevant players only (more than a token projection)
-    return {pid: r for pid, r in ros.items() if r['s'].get('rec', 0) + r['s'].get('rush_yd', 0) + r['s'].get('pass_yd', 0) + r['s'].get('fgm', 0) + r['s'].get('xpm', 0) + r['w'] * (1 if pid.isalpha() else 0) > 1}
+    return {pid: r for pid, r in ros.items() if r['s'].get('rec', 0) + r['s'].get('rush_yd', 0) + r['s'].get('pass_yd', 0) + r['s'].get('fgm', 0) + r['s'].get('xpm', 0) + r['w'] * (1 if pid.isalpha() else 0) > 1
+            or r['s'].get('idp_tkl', 0) + r['s'].get('idp_sack', 0) * 3 > 10}   # IDP: more than a token role
 
 
 def build_espn(sleeper):
@@ -674,11 +690,32 @@ def main():
         out['dvp_through'] = through
     except Exception as e:
         print('  (defense vs position unavailable:', e, ')', file=sys.stderr)
-    # weekly.json: every fantasy player's stats for each completed game (QB/RB/WR/TE/K/DEF), so the app can show last
+    # Sleeper's projections for the last 3 completed weeks, for players who played them: the app compares actual with
+    # projected points (league scoring) to find players beating expectations ("Rising", incl. IDP, where Sleeper's
+    # trending list has almost no defenders).
+    proj_recent = {}
+    try:
+        for w in range(max(1, through - 2), through + 1):
+            wk = {}
+            for e in sleeper_weekly('projections', args.season, w, DVP_POS + ('DEF',) + IDP_POS):
+                sid = str(e.get('player_id'))
+                st = scoring_stats(e.get('stats'))
+                if st and str(w) in weekly.get(sid, {}):
+                    wk[sid] = {k: compact_num(v) for k, v in st.items()}
+            proj_recent[str(w)] = wk
+    except Exception as e:
+        print('  (past projections unavailable:', e, ')', file=sys.stderr)
+    # weekly.json: every fantasy player's stats for each completed game (QB/RB/WR/TE/K/DEF + IDP), so the app can show last
     # game / season / recent form for anyone (free agents, other teams, defenses) and score it with the league's settings.
     weekly_path = os.path.join(os.path.dirname(os.path.abspath(args.out)), 'weekly.json')
     old_weekly = load_previous(weekly_path)
-    if weekly and (old_weekly.get('players') != weekly or old_weekly.get('through_week') != through):
+    # recent_proj.json (own file, loaded by the app only for the Players tab's "Rising" view / sort, so weekly.json stays small)
+    rp_path = os.path.join(os.path.dirname(os.path.abspath(args.out)), 'recent_proj.json')
+    if proj_recent and load_previous(rp_path).get('weeks') != proj_recent:
+        with open(rp_path, 'w', encoding='utf-8') as f:
+            json.dump({'season': args.season, 'generated': out['generated'], 'weeks': proj_recent}, f, separators=(',', ':'))
+        print(f'Wrote {rp_path} ({os.path.getsize(rp_path):,} bytes).', file=sys.stderr)
+    if weekly and (old_weekly.get('players') != weekly or old_weekly.get('through_week') != through or 'proj' in old_weekly):
         with open(weekly_path, 'w', encoding='utf-8') as f:
             json.dump({'season': args.season, 'generated': out['generated'], 'through_week': through, 'players': weekly}, f, separators=(',', ':'))
         print(f'Wrote {weekly_path} ({os.path.getsize(weekly_path):,} bytes, {len(weekly):,} players).', file=sys.stderr)

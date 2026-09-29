@@ -40,6 +40,7 @@
     --shadow-lg:0 24px 60px rgba(40,32,18,0.20);
     --scrim:rgba(40,34,24,0.35);
     --pos-QB:#2F6BD6; --pos-RB:#18814E; --pos-WR:#C2700A; --pos-TE:#8A44C8; --pos-K:#75726A; --pos-DEF:#0A86AB;
+    --pos-DL:#B8456B; --pos-LB:#9A6B1E; --pos-DB:#3E7F86; --pos-IDP_FLEX:#8B5A74;
     --mark-body:#27272a; --mark-ear:#3f3f46; --mark-visor:#09090b;
     color-scheme: light;
   }
@@ -52,7 +53,7 @@
       --warn:#FFB340; --warn-soft:rgba(255,179,64,0.15);
       --shadow:none; --shadow-lg:0 24px 60px rgba(0,0,0,0.5);
       --scrim:rgba(0,0,0,0.55);
-      --pos-QB:#6EA1FF; --pos-RB:#3DD68C; --pos-WR:#FFB340; --pos-TE:#C58BFF; --pos-K:#A1A1AA; --pos-DEF:#5AD2F4;
+      --pos-QB:#6EA1FF; --pos-RB:#3DD68C; --pos-WR:#FFB340; --pos-TE:#C58BFF; --pos-K:#A1A1AA; --pos-DEF:#5AD2F4; --pos-DL:#FF7EA8; --pos-LB:#E8B45A; --pos-DB:#6FD3DB; --pos-IDP_FLEX:#D59ABB;
       --mark-body:#f4f4f5; --mark-ear:#d4d4d8; --mark-visor:#0e0e10;
       color-scheme: dark;
     }
@@ -65,7 +66,7 @@
     --warn:#FFB340; --warn-soft:rgba(255,179,64,0.15);
     --shadow:none; --shadow-lg:0 24px 60px rgba(0,0,0,0.5);
     --scrim:rgba(0,0,0,0.55);
-    --pos-QB:#6EA1FF; --pos-RB:#3DD68C; --pos-WR:#FFB340; --pos-TE:#C58BFF; --pos-K:#A1A1AA; --pos-DEF:#5AD2F4;
+    --pos-QB:#6EA1FF; --pos-RB:#3DD68C; --pos-WR:#FFB340; --pos-TE:#C58BFF; --pos-K:#A1A1AA; --pos-DEF:#5AD2F4; --pos-DL:#FF7EA8; --pos-LB:#E8B45A; --pos-DB:#6FD3DB; --pos-IDP_FLEX:#D59ABB;
     --mark-body:#f4f4f5; --mark-ear:#d4d4d8; --mark-visor:#0e0e10;
     color-scheme: dark;
   }
@@ -208,6 +209,8 @@
   /* compact name line: the name keeps room first, then injury / bye flags; the rank chip gives way (tier in details) */
   /* compact: this week's consensus rank ("wk RB4", which includes the position) replaces the plain position on line 2 */
   .m-rk{ display: none; }
+  .m-elig{ display: none; font-size: 10px; font-weight: 700; color: var(--text-3); margin-left: 3px; }
+  html:not(.cards-detailed) :is(#starters-list, #bench-list) .m-elig{ display: inline; }
   html:not(.cards-detailed) :is(#starters-list, #bench-list) .player-name .ecr-chip, html:not(.cards-detailed) :is(#starters-list, #bench-list) .m-pos{ display: none; }
   html:not(.cards-detailed) :is(#starters-list, #bench-list) .m-rk{ display: inline; }
   html:not(.cards-detailed) :is(#starters-list, #bench-list) .m-rk .ecr-chip{ display: inline; padding: 0 4px; font-size: 10px; vertical-align: 1px; }
@@ -237,6 +240,10 @@
   .ecr-chip{ flex: none; display: inline-flex; align-items: baseline; gap: 3px; padding: 1px 6px; border-radius: 6px; background: var(--surface-2);
     box-shadow: inset 0 0 0 1px var(--hair); color: var(--text-2); font-size: 10.5px; font-weight: 700; letter-spacing: .02em; font-variant-numeric: tabular-nums; }
   .ecr-chip i{ font-style: normal; font-weight: 600; color: var(--text-3); }
+  .fmt-badge{ display: inline-block; margin-left: 4px; padding: 1px 6px; border-radius: 6px; font-size: 10px; letter-spacing: .05em; background: var(--surface-2); color: var(--text-2); box-shadow: inset 0 0 0 1px var(--hair); vertical-align: 1px; }
+  .fmt-badge.idp{ color: var(--pos-DL); }
+  .rg-idp{ margin: 6px 2px 10px; font-size: 12px; line-height: 1.45; color: var(--text-3); }
+  .rg-idp.hi b{ color: var(--warn); }
   .ecr-chip s{ text-decoration: none; font-weight: 600; font-size: 9px; text-transform: uppercase; color: var(--text-3); margin-right: 1px; }
   /* rankings table in the player views: THIS WEEK row vs REST OF SEASON row */
   .rk-tbl-wrap{ overflow-x: auto; margin: 0 -2px; }
@@ -1081,6 +1088,7 @@
   .own-tag{ font-size: 12px; font-weight: 600; color: var(--text-2); }
   .own-tag.mine{ color: var(--accent); }
   .tr-count{ font-weight: 700; } .tr-count.add{ color: var(--accent); } .tr-count.drop{ color: var(--danger); }
+  .tr-count.rise{ color: var(--accent); font-weight: 600; font-size: 11.5px; } .tr-count.rise.down{ color: var(--danger); }
   @media (max-width: 560px){
     .pl-views{ width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); }
     .pl-custom{ grid-template-columns: 1fr 1fr; }
@@ -1568,7 +1576,7 @@
               <label class="pl-sort"><span>Sort</span><select id="pl-sort" aria-label="Sort players"></select></label>
               <button type="button" class="pl-dir" id="pl-dir">↓</button>
               <button type="button" class="pl-filter-btn" id="pl-filter-btn" aria-expanded="false">Filters</button>
-              <div class="seg pl-trendkind" id="pl-trendkind" hidden><button type="button" data-trend-kind="add">Most added</button><button type="button" data-trend-kind="drop">Most dropped</button></div>
+              <div class="seg pl-trendkind" id="pl-trendkind" hidden><button type="button" data-trend-kind="add">Most added</button><button type="button" data-trend-kind="drop">Most dropped</button><button type="button" data-trend-kind="rise" title="Available players beating their projections (sleepa)">Rising</button></div>
             </div>
             <div class="pl-builder card" id="pl-builder" hidden></div>
             <div class="pl-active" id="pl-active"></div>
@@ -1638,6 +1646,7 @@
               <div class="set-row"><span>Team</span><b id="set-team">—</b></div>
               <div class="set-row"><span>League</span><b id="set-league">—</b></div>
               <div class="set-row"><span>Season · week</span><b id="set-week">—</b></div>
+              <div class="set-row"><span>Format</span><b id="set-format">—</b></div>
               <button class="quiet-btn" id="back-btn">Use a different Sleeper account</button>
               <p class="set-sub" style="margin:10px 0 0">sleepa remembers your username and league on this device and opens straight to your team. Switch leagues above; this button signs out.</p>
             </div>
@@ -1779,6 +1788,9 @@
     TE:  [['rec_tgt','TGT'],['rec','REC'],['rec_yd','YD'],['rec_td','TD']],
     K:   [['fgm','FG'],['fga','FGA'],['xpm','XP']],
     DEF: [['sack','SACK'],['int','INT'],['fum_rec','FR'],['def_td','TD']],
+    DL:  [['idp_tkl','TKL'],['idp_sack','SACK'],['idp_tkl_loss','TFL'],['idp_qb_hit','QBH']],
+    LB:  [['idp_tkl','TKL'],['idp_sack','SACK'],['idp_int','INT'],['idp_pass_def','PD']],
+    DB:  [['idp_tkl','TKL'],['idp_int','INT'],['idp_pass_def','PD'],['idp_ff','FF']],
   };
 
   const els = {
@@ -2028,7 +2040,44 @@
   }
 
   const FANTASY_POSITIONS = ['QB','RB','WR','TE','K','DEF'];
-  function positionQuery(){ return FANTASY_POSITIONS.map(function(p){ return 'position[]=' + p; }).join('&'); }
+  const IDP_GROUPS = ['DL','LB','DB'];   // Sleeper's IDP slot groups; players are DE / DT / CB / S / … with the group in fantasy_positions
+  // The positions THIS league starts (flex slots expanded), in display order. Offense-only leagues: the usual six.
+  // IDP leagues add DL / LB / DB (and usually have no team DEF). Everything position-based follows this list.
+  function leaguePositions(){
+    const rp = ctx.rosterPositions || [], set = {};
+    rp.forEach(function(sl){ (FLEX_GROUPS[sl] || [sl]).forEach(function(x){ set[x] = true; }); });
+    const out = FANTASY_POSITIONS.concat(IDP_GROUPS).filter(function(x){ return set[x]; });
+    return out.length ? out : FANTASY_POSITIONS.slice();
+  }
+  // "PPR · IDP", "Half PPR · Superflex", …: the league's format at a glance (header eyebrow + Settings)
+  function leagueFormat(){
+    const L = ctx.league || {}, sc = L.scoring_settings || {}, rp = ctx.rosterPositions || [], bits = [];
+    bits.push(sc.rec >= 0.75 ? 'PPR' : sc.rec >= 0.25 ? 'Half PPR' : 'Standard');
+    if(rp.indexOf('SUPER_FLEX') !== -1 || rp.filter(function(x){ return x === 'QB'; }).length > 1) bits.push('Superflex');
+    if(isIdpLeague()) bits.push('IDP');
+    return bits.join(' · ');
+  }
+  // Short slot labels for the narrow slot column (the full name is the tooltip)
+  const SLOT_SHORT = { IDP_FLEX: 'IDP', SUPER_FLEX: 'SF', WRRB_FLEX: 'W/R', REC_FLEX: 'W/T', WRRB: 'W/R', WR_TE: 'W/T', QB_FLEX: 'QB/F' };
+  function slotShort(sl){ return SLOT_SHORT[sl] || sl; }
+  // Everything a player can be slotted at in THIS league, main group first: "LB/DL", "WR/RB". Same as the position
+  // when there's only one.
+  function eligLabel(pid){
+    const lp = leaguePositions(), g = posGroup(pid);
+    const all = [g].concat(fantasyPositions(pid)).filter(function(x, i, arr){ return x && arr.indexOf(x) === i && (x === g || lp.indexOf(x) !== -1); });
+    return all.join('/');
+  }
+  function isIdpLeague(){ return leaguePositions().some(function(x){ return IDP_GROUPS.indexOf(x) !== -1; }); }
+  // The position a player counts as: his own for offense / K / DEF, else his IDP group (DE → DL, CB / S → DB).
+  function posGroup(pid){
+    const p = ctx.players[pid];
+    if(!p) return '';
+    if(FANTASY_POSITIONS.indexOf(p.position) !== -1) return p.position;
+    if(IDP_GROUPS.indexOf(p.position) !== -1) return p.position;   // an LB who is also DL-eligible ranks as an LB
+    const fp = p.fantasy_positions || [];
+    return IDP_GROUPS.find(function(g){ return fp.indexOf(g) !== -1; }) || p.position;
+  }
+  function positionQuery(){ return (ctx.rosterPositions ? leaguePositions() : FANTASY_POSITIONS).map(function(p){ return 'position[]=' + p; }).join('&'); }
   function arrayToPlayerDict(arr){
     const out = {};
     if(!Array.isArray(arr)) return out;
@@ -2319,7 +2368,7 @@
   // Compact actuals under a player's name: this week's stat line once their game has started ("WK 3 ..."), otherwise
   // the position's key season totals. Actual results; season avg / last-3 avg sit on the signals line (formHTML).
   function keyStatsLine(pid, pos){
-    const defs = POSITION_KEY_STATS[pos];
+    const defs = POSITION_KEY_STATS[pos] || POSITION_KEY_STATS[posGroup(pid)];
     const wr = weekActual(pid) !== null ? weekRaw(pid) : null;
     const raw = wr || aggregatedRaw(pid, 'season');
     let out = wr ? '<span class="kw">WK ' + ctx.week + '</span>' : '';
@@ -2333,6 +2382,9 @@
 
   // Order here is also the game-log column order; unlisted keys follow alphabetically.
   const STAT_LABELS = {
+    idp_tkl:'Tackles', idp_tkl_solo:'Solo Tackles', idp_tkl_ast:'Assisted Tackles', idp_tkl_loss:'Tackles for Loss', idp_sack:'Sacks',
+    idp_sack_yd:'Sack Yards', idp_qb_hit:'QB Hits', idp_int:'Interceptions', idp_int_ret_yd:'INT Return Yds', idp_pass_def:'Passes Defended',
+    idp_ff:'Forced Fumbles', idp_fum_rec:'Fumble Recoveries', idp_fum_ret_yd:'Fumble Return Yds', idp_def_td:'Defensive TD', idp_safe:'Safeties', idp_blk_kick:'Blocked Kicks',
     pass_cmp:'Completions', pass_att:'Pass Att', pass_yd:'Pass Yards', pass_td:'Pass TD', pass_int:'Interceptions Thrown',
     pass_sack:'Sacks Taken', pass_2pt:'Pass 2PT', pass_fd:'Pass 1st Downs',
     rush_att:'Rush Att', rush_yd:'Rush Yards', rush_td:'Rush TD', rush_2pt:'Rush 2PT', rush_fd:'Rush 1st Downs',
@@ -2584,6 +2636,51 @@
   // position, then flex slots (most restrictive first) via pickFlex's WR/RB/TE preference. out: slots already filled
   // (locked players) or null; pool: who may start; projOf(pid): points; keep: current lineup, so ties and placements
   // don't move anyone for nothing (null = no preference). Fills out in place; returns the flex notes.
+  // Maximum-weight assignment (Hungarian method, O(n³)); w is a square matrix of weights, returns row -> column.
+  function hungarianMax(w){
+    const n = w.length, INF = 1e18, u = new Array(n + 1).fill(0), v = new Array(n + 1).fill(0), pp = new Array(n + 1).fill(0), way = new Array(n + 1).fill(0);
+    for(let i = 1; i <= n; i++){
+      pp[0] = i; let j0 = 0;
+      const minv = new Array(n + 1).fill(INF), usedC = new Array(n + 1).fill(false);
+      do{
+        usedC[j0] = true;
+        const i0 = pp[j0]; let delta = INF, j1 = 0;
+        for(let j = 1; j <= n; j++) if(!usedC[j]){
+          const cur = -w[i0 - 1][j - 1] - u[i0] - v[j];
+          if(cur < minv[j]){ minv[j] = cur; way[j] = j0; }
+          if(minv[j] < delta){ delta = minv[j]; j1 = j; }
+        }
+        for(let j = 0; j <= n; j++){ if(usedC[j]){ u[pp[j]] += delta; v[j] -= delta; } else minv[j] -= delta; }
+        j0 = j1;
+      }while(pp[j0] !== 0);
+      do{ const j1 = way[j0]; pp[j0] = pp[j1]; j0 = j1; }while(j0);
+    }
+    const res = new Array(n);
+    for(let j = 1; j <= n; j++) if(pp[j]) res[pp[j] - 1] = j - 1;
+    return res;
+  }
+  // Best players for the single-position slots together (max total projection), so a dual-eligible player (an LB who
+  // can also play DL, a WR/RB) lands where the lineup scores most instead of in whichever slot is filled first.
+  // Ties keep the current lineup (tiny bonus for a player already in that slot).
+  function assignDedicated(idx, slots, pool, projOf, keep){
+    const players = pool.filter(function(pid){ return idx.some(function(i){ return canFill(pid, slots[i]); }); });
+    const n = Math.max(idx.length, players.length), NO = -1e9, res = {};
+    if(!idx.length || !players.length) return res;
+    const pts = function(pid){ const x = projOf(pid); return typeof x === 'number' && isFinite(x) ? x : -1; };
+    const w = [];
+    for(let r = 0; r < n; r++){
+      const row = [];
+      for(let c = 0; c < n; c++){
+        if(r >= idx.length || c >= players.length){ row.push(0); continue; }
+        const i = idx[r], pid = players[c];
+        row.push(canFill(pid, slots[i]) ? pts(pid) + 1000 + (keep && keep[i] === pid ? 1e-4 : 0) : NO);   // +1000: filling a slot beats leaving it empty
+      }
+      w.push(row);
+    }
+    const a = hungarianMax(w);
+    idx.forEach(function(i, r){ const c = a[r]; if(c < players.length && w[r][c] > NO / 2) res[i] = players[c]; });
+    return res;
+  }
   function fillLineup(slots, out, pool, projOf, keep, locked){
     const used = new Set();
     const inKeep = function(pid){ return keep ? keep.indexOf(pid) !== -1 : false; };
@@ -2594,18 +2691,10 @@
       if(keep) idx.forEach(function(i){ const k = rest.indexOf(keep[i]); if(k !== -1){ out[i] = rest[k]; rest.splice(k, 1); } });
       idx.forEach(function(i){ if(!out[i] && rest.length) out[i] = rest.shift(); });
     };
-    const dedicated = {};
-    slots.forEach(function(label, i){
-      if(out[i] || isFlexSlot(label)) return;
-      const pos = groupForSlot(label, null)[0];
-      (dedicated[pos] = dedicated[pos] || []).push(i);
-    });
-    Object.keys(dedicated).forEach(function(pos){
-      const idx = dedicated[pos];
-      const chosen = pool.filter(function(pid){ return !used.has(pid) && fantasyPositions(pid).indexOf(pos) !== -1; }).sort(byProj).slice(0, idx.length);
-      chosen.forEach(function(pid){ used.add(pid); });
-      place(idx, chosen);
-    });
+    const dedIdx = [];
+    slots.forEach(function(label, i){ if(!out[i] && !isFlexSlot(label)) dedIdx.push(i); });
+    const asg = assignDedicated(dedIdx, slots, pool.filter(function(pid){ return out.indexOf(pid) === -1; }), projOf, keep);
+    Object.keys(asg).forEach(function(i){ out[i] = asg[i]; used.add(asg[i]); });
     const notes = [];
     slots.map(function(l, i){ return i; })
       .filter(function(i){ return !out[i] && isFlexSlot(slots[i]); })
@@ -3380,14 +3469,15 @@
   // Consensus = average of the source ranks a player has (2 or more needed), re-ranked within the position; ties go to
   // FantasyPros' order. Equal weights. Boris Chen tiers are shown but not counted: they're a clustering of the
   // FantasyPros order, so counting them would count FantasyPros twice. Each source obeys its own freshness rule.
-  const RANK_POS = ['QB', 'RB', 'WR', 'TE', 'K', 'DEF'];
+  const RANK_POS = ['QB', 'RB', 'WR', 'TE', 'K', 'DEF', 'DL', 'LB', 'DB'];
   let rankMemo = null;
   function rankByValue(values){ // {pid: points} -> {pid: rank within the player's position, 1 = most}
     const byPos = {}, out = {};
     for(const pid in values){
       const p = ctx.players[pid];
-      if(!p || RANK_POS.indexOf(p.position) === -1 || !(values[pid] > 0)) continue;
-      (byPos[p.position] = byPos[p.position] || []).push(pid);
+      const g = posGroup(pid);
+      if(!p || RANK_POS.indexOf(g) === -1 || !(values[pid] > 0)) continue;
+      (byPos[g] = byPos[g] || []).push(pid);
     }
     for(const pos in byPos) byPos[pos].sort(function(a, b){ return values[b] - values[a]; }).forEach(function(pid, i){ out[pid] = i + 1; });
     return out;
@@ -3400,7 +3490,7 @@
       const v = srcs.map(function(sr){ return sr[pid]; }).filter(function(x){ return typeof x === 'number'; });
       if(v.length >= 2) avg[pid] = v.reduce(function(a, b){ return a + b; }, 0) / v.length;
     }
-    for(const pid in avg){ const p = ctx.players[pid]; if(p) (byPos[p.position] = byPos[p.position] || []).push(pid); }
+    for(const pid in avg){ const g = posGroup(pid); if(g) (byPos[g] = byPos[g] || []).push(pid); }
     for(const pos in byPos) byPos[pos].sort(function(a, b){ return avg[a] - avg[b] || (srcs[0][a] || 999) - (srcs[0][b] || 999); })
       .forEach(function(pid, i){ out[pid] = i + 1; });
     return { rank: out, avg: avg };
@@ -3409,11 +3499,13 @@
     if(rankMemo) return rankMemo;
     const sc = (ctx.league && ctx.league.scoring_settings) || {}, fresh = ctx.rk && srcAge(ctx.rk.generated) <= 2;
     const fpW = {}, esWv = {}, fpR = {}, esRv = {}, slRv = {}, fcR = {};
-    if(rkWeek() === ctx.week) for(const pid in ctx.rk.weekly){ if(ctx.rk.weekly[pid].rk) fpW[pid] = ctx.rk.weekly[pid].rk; }
+    // FantasyPros ranks count only for the position group they're from (a dual LB/DL ranked on the DL page isn't an LB rank)
+    const sameGroup = function(pid, rec){ return !rec.p || rec.p === posGroup(pid); };
+    if(rkWeek() === ctx.week) for(const pid in ctx.rk.weekly){ const e = ctx.rk.weekly[pid]; if(e.rk && sameGroup(pid, e)) fpW[pid] = e.rk; }
     const ew = fresh && ctx.rk.espn && ctx.rk.espn[String(ctx.week)];
     if(ew) for(const pid in ew) esWv[pid] = calcPoints(ew[pid], sc);
     const rs = ctx.rk && ctx.rk.sources && ctx.rk.sources.ros;
-    if(rs && srcAge(rs.scraped) <= 10) for(const pid in ctx.rk.ros){ const n = posNum(ctx.rk.ros[pid].pr); if(n) fpR[pid] = n; }
+    if(rs && srcAge(rs.scraped) <= 10) for(const pid in ctx.rk.ros){ const e = ctx.rk.ros[pid], n = posNum(e.pr); if(n && sameGroup(pid, e)) fpR[pid] = n; }
     const er = fresh && ctx.rk.espn_ros;
     if(er && er.from === ctx.week) for(const pid in er.players) esRv[pid] = calcPoints(er.players[pid], sc);
     if(ctx.ros && ctx.ros.players && ctx.ros.from_week === ctx.week) for(const pid in ctx.ros.players){ const r = rosValue(pid); if(r) slRv[pid] = r.pts; }
@@ -3434,7 +3526,7 @@
       r: { cons: R.r.cons.rank[pid] || null, avg: R.r.cons.avg[pid], fp: R.r.fp[pid] || null, sl: R.r.sl[pid] || null, es: R.r.es[pid] || null, fc: R.r.fc[pid] || null },
     };
   }
-  function posLabel(pid){ const p = ctx.players[pid]; return p ? (p.position === 'DEF' ? 'DEF' : p.position) : ''; }
+  function posLabel(pid){ return posGroup(pid); }
   function rkTxt(pid, n){ return n ? posLabel(pid) + n : '—'; }
   function rosSpan(){ const R = buildRanks(); return 'wk ' + R.rosFrom + '–' + R.rosTo; }
   // Grouped columns for the full-screen tables: THIS WEEK (consensus, FantasyPros, Sleeper, ESPN, tier) and REST OF
@@ -3460,7 +3552,7 @@
   // Player sheet / Player Analysis block. Each line says "unavailable" rather than showing an old or guessed value.
   function rankingsHTML(pid){
     const p = ctx.players[pid]; if(!p) return '';
-    const e = ecrWeek(pid), r = ecrRos(pid), t = tierOf(pid), f = fcValue(pid), ep = p.position === 'K' || p.position === 'DEF' ? undefined : espnProj(pid);
+    const e = ecrWeek(pid), r = ecrRos(pid), t = tierOf(pid), f = fcValue(pid), ep = ['K', 'DEF'].concat(IDP_GROUPS).indexOf(posGroup(pid)) !== -1 ? undefined : espnProj(pid);
     const na = '<span class="dim">unavailable</span>';
     const row = function(k, v){ return '<div class="rk-row"><span class="rk-k">' + k + '</span><span class="rk-v">' + v + '</span></div>'; };
     const rs = ctx.rk && ctx.rk.sources || {}, R = ranksOf(pid), c = function(n){ return n ? rkTxt(pid, n) : '<span class="dim">—</span>'; };
@@ -3832,7 +3924,7 @@
     return '<div class="vs-cell ' + side + (hole ? ' hole' : '') + st + '" data-open="' + escapeHTML(pid) + '" role="button" tabindex="0">' +
       avatarTag(pid, 'vs-av') +
       '<div class="vs-who"><div class="vs-nm">' + escapeHTML(playerName(p)) + '</div>' +
-        '<div class="vs-mt">' + escapeHTML(p.position || '') + ' · ' + escapeHTML(p.team || 'FA') + (gs ? ' · ' + gs : m ? ' · ' + (m.bye ? 'BYE' : escapeHTML(m.text)) : '') + ' ' + injuryChip(effectiveStatus(pid)) + '</div></div>' +
+        '<div class="vs-mt">' + escapeHTML(eligLabel(pid)) + ' · ' + escapeHTML(p.team || 'FA') + (gs ? ' · ' + gs : m ? ' · ' + (m.bye ? 'BYE' : escapeHTML(m.text)) : '') + ' ' + injuryChip(effectiveStatus(pid)) + '</div></div>' +
       '<div class="vs-pts' + tone + (live && wa === null ? ' pre' : '') + '">' + pts + '</div></div>';
   }
   function oppHTML(){
@@ -3855,7 +3947,7 @@
       const w = h2hCompare(typeof pa === 'number' ? pa : 0, typeof pb === 'number' ? pb : 0, fmtPts, 'high');
       if(w === 'a') myWins++; else if(w === 'b') oppWins++;
       return '<div class="vs-row">' + vsCell(a, 'me', w === 'a' ? ' win' : w === 'b' ? ' lose' : '', mh[i], !!live) +
-        '<div class="vs-slot">' + escapeHTML(label) + '</div>' + vsCell(b, 'opp', w === 'b' ? ' win' : w === 'a' ? ' lose' : '', oh[i], !!live) + '</div>';
+        '<div class="vs-slot" title="' + escapeHTML(label) + '">' + escapeHTML(slotShort(label)) + '</div>' + vsCell(b, 'opp', w === 'b' ? ' win' : w === 'a' ? ' lose' : '', oh[i], !!live) + '</div>';
     }).join('');
     const holesCallout = function(who, h){
       return h.length ? '<div class="callout"><b>' + who + ': ' + h.length + ' hole' + (h.length > 1 ? 's' : '') + '</b>&nbsp;' + h.map(function(x){ return x.text; }).join('; ') + '.</div>' : '';
@@ -4158,14 +4250,15 @@
   function computeFreeAgents(rosters){
     const rostered = new Set();
     rosters.forEach(function(r){ (r.players || []).forEach(function(pid){ rostered.add(pid); }); });
-    const byPos = {};
-    FANTASY_POSITIONS.forEach(function(pos){ byPos[pos] = []; });
+    const byPos = {}, list = leaguePositions();
+    list.forEach(function(pos){ byPos[pos] = []; });
     for(const pid in ctx.players){
       const p = ctx.players[pid];
-      if(rostered.has(pid) || !p.team || !byPos[p.position]) continue;
-      byPos[p.position].push(pid);
+      if(rostered.has(pid) || !p.team) continue;
+      const gs = [posGroup(pid)].concat(fantasyPositions(pid)).filter(function(x, i, arr){ return byPos[x] && arr.indexOf(x) === i; });
+      gs.forEach(function(g){ byPos[g].push(pid); });   // an LB/DL counts as an available DL and LB
     }
-    FANTASY_POSITIONS.forEach(function(pos){
+    list.forEach(function(pos){
       byPos[pos].sort(function(a, b){
         const pa = ctx.projections[a], pb = ctx.projections[b];
         return (typeof pb === 'number' ? pb : -Infinity) - (typeof pa === 'number' ? pa : -Infinity);
@@ -4684,6 +4777,12 @@
       els.setTeam.textContent = els.teamName.textContent;
       els.setLeague.textContent = ctx.league ? ctx.league.name : '—';
       els.setWeek.textContent = ctx.season + ' · week ' + ctx.week;
+      const sf = document.getElementById('set-format');
+      if(sf && ctx.league){
+        const counts = {};
+        ctx.rosterPositions.forEach(function(x){ counts[x] = (counts[x] || 0) + 1; });
+        sf.textContent = (ctx.league.total_rosters || '') + ' teams · ' + leagueFormat() + ' · starts ' + Object.keys(counts).map(function(x){ return (counts[x] > 1 ? counts[x] + ' ' : '') + x.replace('_', ' '); }).join(', ');
+      }
     }
   }
 
@@ -4752,9 +4851,9 @@
     }
 
     const name = p.full_name || ((p.first_name || '') + ' ' + (p.last_name || ''));
-    const pos = p.position || '';
+    const pos = posGroup(playerId) || p.position || '';   // defenders: DL / LB / DB (their slot group), not DE / CB / S
     const team = p.team || 'FA';
-    const color = posColor(pos);
+    const color = posColor(slotLabel && FLEX_GROUPS[slotLabel] ? pos : (slotLabel || pos));
     const isNewHere = !ro && slotIndex !== undefined && ctx.originalStarters[slotIndex] !== ctx.draftStarters[slotIndex];
     const statusChip = injuryChip(p.injury_status);
     const newChip = (isNewHere ? '<span class="status-chip new-tag">New</span>' : '') +
@@ -4769,11 +4868,11 @@
     return '' +
       '<div class="slot-row' + (isNewHere ? ' swapped' : '') + (byeStarter ? ' bye-start' : '') + '" ' +
         (ro ? 'data-open="' + escapeHTML(playerId) + '"' : 'data-player-id="' + escapeHTML(playerId) + '" data-slot-index="' + (slotIndex !== undefined ? slotIndex : '') + '"') + '>' +
-        '<div class="slot-tag" style="color:' + color + '; border-color:' + color + ';">' + escapeHTML(slotLabel || pos) + '</div>' +
+        '<div class="slot-tag" style="color:' + color + '; border-color:' + color + ';" title="' + escapeHTML(slotLabel || pos) + '">' + escapeHTML(slotShort(slotLabel || pos)) + '</div>' +
         '<img class="avatar" src="' + avatarUrl + '" loading="lazy" onerror="this.style.visibility=\'hidden\'" style="--team:' + teamColor(p.team) + '"' + (ro ? '' : analyzeAttr(playerId)) + '>' +
         '<div class="player-info">' +
           '<div class="player-name">' + (ro ? '<span class="pn">' + escapeHTML(name) + '</span>' : analyzeName(playerId, name)) + byeChip + statusChip + newChip + ecrChipHTML(playerId) + '</div>' +
-          '<div class="player-meta"><span class="m-pos">' + escapeHTML(pos) + '</span><span class="m-rk">' + (ecrChipHTML(playerId) || escapeHTML(pos)) + '</span> · ' + escapeHTML(team) + '<span class="m-opp">' + matchupHTML(p.team) + ' ' + dvpChipHTML(playerId) + '</span><span class="m-opp-c">' + oppCompactHTML(playerId) + '</span> ' + depthChipHTML(playerId) + '</div>' +
+          '<div class="player-meta"><span class="m-pos">' + escapeHTML(eligLabel(playerId)) + '</span><span class="m-rk">' + (ecrChipHTML(playerId) || escapeHTML(eligLabel(playerId))) + '</span>' + (eligLabel(playerId).indexOf('/') !== -1 ? '<span class="m-elig" title="Eligible at ' + escapeHTML(eligLabel(playerId)) + '">+' + escapeHTML(eligLabel(playerId).split('/').slice(1).join('/')) + '</span>' : '') + ' · ' + escapeHTML(team) + '<span class="m-opp">' + matchupHTML(p.team) + ' ' + dvpChipHTML(playerId) + '</span><span class="m-opp-c">' + oppCompactHTML(playerId) + '</span> ' + depthChipHTML(playerId) + '</div>' +
           (keyStats ? '<div class="key-stats">' + keyStats + '</div>' : '') +
           signalsHTML(playerId, false) +
         '</div>' +
@@ -4965,7 +5064,7 @@
     els.lineupTop.style.display = view === 'roster' ? '' : 'none';
     els.panes.classList.toggle('solo', view === 'compare' || view === 'settings' || view === 'resources' || view === 'league');
 
-    els.pageEyebrow.textContent = 'Week ' + ctx.week + ' · ' + (ctx.league ? ctx.league.name : '');
+    els.pageEyebrow.innerHTML = 'Week ' + ctx.week + ' · ' + escapeHTML(ctx.league ? ctx.league.name : '') + (ctx.league ? ' <span class="fmt-badge' + (isIdpLeague() ? ' idp' : '') + '" title="League format">' + escapeHTML(leagueFormat()) + '</span>' : '');
     els.pageTitle.textContent = VIEW_TITLES[view];
     const st = ctx.myRoster ? (ctx.myRoster.settings || {}) : {};
     els.pageSub.textContent = view === 'roster' ? els.teamName.textContent + (typeof st.wins === 'number' ? ' · ' + st.wins + '–' + st.losses + (st.ties ? '–' + st.ties : '') : '')
@@ -5089,7 +5188,7 @@
   // ---- trending on Sleeper (official /players/nfl/trending/{add|drop}, last 24 hours), cached 30 min ----
   async function loadTrending(){
     if(ctx.trending && Date.now() - ctx.trending.ts < 30 * 60 * 1000) return ctx.trending;
-    const get = function(kind){ return fetchJSON(API + '/players/nfl/trending/' + kind + '?lookback_hours=24&limit=50').catch(function(e){ console.warn('Trending ' + kind + ' unavailable', e); return null; }); };
+    const get = function(kind){ return fetchJSON(API + '/players/nfl/trending/' + kind + '?lookback_hours=24&limit=' + (isIdpLeague() ? 200 : 50)).catch(function(e){ console.warn('Trending ' + kind + ' unavailable', e); return null; }); };
     const both = await Promise.all([get('add'), get('drop')]);
     ctx.trending = { ts: Date.now(), add: both[0], drop: both[1] };
     return ctx.trending;
@@ -5133,6 +5232,7 @@
     esw:  { label: 'This week · ESPN projection rank', short: 'Wk ESPN', unit: '', low: true, get: function(pid){ return ranksOf(pid).w.es; } },
     tier: { label: 'This week · tier (Boris Chen)', short: 'Wk tier', unit: '', low: true, get: function(pid){ return tierOf(pid); } },
     espn: { label: 'This week · ESPN projection (pts)', short: 'Wk ESPN pts', unit: 'pts', get: function(pid){ return espnProj(pid); } },
+    rise: { label: 'Recent · points vs projection per game (last 3)', short: 'vs proj', unit: 'pts', actual: true, get: function(pid){ const r = risingInfo(pid); return r ? r.avg : null; } },
     cr:   { label: 'Rest of season · consensus rank', short: 'ROS rank', unit: '', low: true, get: function(pid){ return ranksOf(pid).r.cons; } },
     ecrr: { label: 'Rest of season · FantasyPros rank', short: 'ROS FP', unit: '', low: true, get: function(pid){ return ranksOf(pid).r.fp; } },
     slr:  { label: 'Rest of season · Sleeper projection rank', short: 'ROS Sleeper', unit: '', low: true, get: function(pid){ return ranksOf(pid).r.sl; } },
@@ -5187,21 +5287,64 @@
   // Each view's starting pool, built once per data load and sorted by projection.
   function plPool(){
     const v = ctx.pl.view;
+    if(v === 'trend' && ctx.pl.trendKind === 'rise'){
+      // available players beating their projections: 2+ of their last games, ahead on average; biggest margin first
+      if(plMemo.pool_rise) return plMemo.pool_rise;
+      const avail = [].concat.apply([], leaguePositions().map(function(pos){ return ctx.freeAgents[pos] || []; })).filter(function(pid, i, arr){ return arr.indexOf(pid) === i; });
+      return (plMemo.pool_rise = avail.filter(function(pid){ const r = risingInfo(pid); return r && r.avg > 0 && r.beat >= 2; })
+        .sort(function(a, b){ return risingInfo(b).avg - risingInfo(a).avg; }));
+    }
     if(v === 'trend'){
       const t = ctx.trending && ctx.trending[ctx.pl.trendKind];
-      return (t || []).map(function(x){ return x.player_id; }).filter(function(pid){ return ctx.players[pid]; });
+      const lp = leaguePositions();   // this league's positions only (IDP leagues include defenders)
+      return (t || []).map(function(x){ return x.player_id; }).filter(function(pid){ return ctx.players[pid] && lp.indexOf(posGroup(pid)) !== -1; });
     }
     const key = 'pool_' + v;
     if(plMemo[key]) return plMemo[key];
     let list;
     if(v === 'all'){
-      list = Object.keys(ctx.players).filter(function(pid){ const p = ctx.players[pid]; return PL_POS.indexOf(p.position) !== -1 && (p.team || ownerOf(pid) !== undefined); });
+      const lp = leaguePositions();
+      list = Object.keys(ctx.players).filter(function(pid){ const p = ctx.players[pid]; return lp.indexOf(posGroup(pid)) !== -1 && (p.team || ownerOf(pid) !== undefined); });
     }else{
-      list = [].concat.apply([], PL_POS.map(function(pos){ return ctx.freeAgents[pos] || []; }));
+      list = [].concat.apply([], leaguePositions().map(function(pos){ return ctx.freeAgents[pos] || []; })).filter(function(pid, i, arr){ return arr.indexOf(pid) === i; });
     }
     return (plMemo[key] = list.sort(byProjDesc));
   }
+  // ---- Rising: players beating Sleeper's projection in their recent games (sleepa's own trend; any position, incl. IDP) ----
+  // weekly.json 'proj' = Sleeper's projections for the last 3 completed weeks (raw stats, scored here with the league's
+  // settings). Per player: actual minus projected points per game over those games (2+ needed), how many he beat, and
+  // for defenders a role signal (tackles last game vs the games before). Sleeper publishes no ownership / start %, and
+  // its trending list has almost no defenders, so this is the free signal that works for IDP.
+  function risingInfo(pid){
+    const W = ctx.recentProj && ctx.recentProj.weeks;
+    if(!W || !ctx.league) return null;
+    const memo = plMemo.rise || (plMemo.rise = {});
+    if(pid in memo) return memo[pid];
+    const sc = ctx.league.scoring_settings || {}, games = [];
+    (hist(pid) || []).forEach(function(g){
+      const pr = W[String(g.week)] && W[String(g.week)][pid];
+      if(!pr) return;
+      const p = calcPoints(pr, sc);
+      if(typeof p === 'number') games.push({ w: g.week, act: g.pts, proj: p, d: g.pts - p, tkl: (g.raw && g.raw.idp_tkl) || 0 });
+    });
+    if(games.length < 2) return (memo[pid] = null);
+    const avg = games.reduce(function(a, b){ return a + b.d; }, 0) / games.length;
+    let role = null;
+    if(IDP_GROUPS.indexOf(posGroup(pid)) !== -1){
+      const last = games[games.length - 1].tkl, before = games.slice(0, -1).reduce(function(a, b){ return a + b.tkl; }, 0) / (games.length - 1);
+      role = last - before >= 2 ? 'up' : before - last >= 2 ? 'down' : 'flat';
+    }
+    return (memo[pid] = { avg: avg, beat: games.filter(function(x){ return x.d > 0; }).length, n: games.length, role: role });
+  }
+  function risingHTML(pid){
+    const r = risingInfo(pid);
+    if(!r) return '';
+    return ' · <span class="tr-count rise' + (r.avg >= 0 ? '' : ' down') + '" title="Actual minus Sleeper projection, per game, last ' + r.n + ' games (your scoring)">' +
+      (r.avg >= 0 ? '+' : '−') + Math.abs(r.avg).toFixed(2) + '/gm vs proj · beat ' + r.beat + ' of ' + r.n +
+      (r.role === 'up' ? ' · TKL ↑' : r.role === 'down' ? ' · TKL ↓' : '') + '</span>';
+  }
   function trendCount(pid){
+    if(ctx.pl.trendKind === 'rise') return null;
     const t = ctx.trending && ctx.trending[ctx.pl.trendKind];
     if(!t) return null;
     if(!plMemo.trendIdx || plMemo.trendIdxKind !== ctx.pl.trendKind){ plMemo.trendIdx = {}; plMemo.trendIdxKind = ctx.pl.trendKind; t.forEach(function(x){ plMemo.trendIdx[x.player_id] = x.count; }); }
@@ -5209,7 +5352,8 @@
   }
   // pool -> positions -> search -> stat filters -> sort
   function plList(){
-    const st = ctx.pl;
+    const st = ctx.pl, lpos = leaguePositions();
+    st.pos = st.pos.filter(function(x){ return lpos.indexOf(x) !== -1; });
     let list = plPool();
     if(st.pos.length) list = list.filter(function(pid){ return fantasyPositions(pid).some(function(x){ return st.pos.indexOf(x) !== -1; }); });
     const q = normName(st.q).trim();
@@ -5248,19 +5392,21 @@
   function sortAria(key){ const c = sortedClass(key); return c ? (c.indexOf('asc') !== -1 ? 'ascending' : 'descending') : 'none'; }
   // Position chips (shared by the Players tab and its full-screen view).
   function posChipsHTML(){
-    const st = ctx.pl, flexOn = ['RB', 'WR', 'TE'].every(function(x){ return st.pos.indexOf(x) !== -1; });
+    const st = ctx.pl, lp = leaguePositions(), flexOn = ['RB', 'WR', 'TE'].every(function(x){ return st.pos.indexOf(x) !== -1; });
+    const hasFlex = ['RB', 'WR', 'TE'].every(function(x){ return lp.indexOf(x) !== -1; }), idpOn = IDP_GROUPS.every(function(x){ return st.pos.indexOf(x) !== -1; });
     return '<button type="button" class="pos-pill' + (st.pos.length ? '' : ' active') + '" data-pl-pos="ALL" aria-pressed="' + !st.pos.length + '">All</button>' +
-      PL_POS.map(function(pos){
+      lp.map(function(pos){
         const on = st.pos.indexOf(pos) !== -1;
         return '<button type="button" class="pos-pill' + (on ? ' active' : '') + '" data-pl-pos="' + pos + '" aria-pressed="' + on + '" style="--pill-color:' + posColor(pos) + ';">' + pos + '</button>';
       }).join('') +
-      '<button type="button" class="pos-pill flex-pill' + (flexOn ? ' active' : '') + '" data-pl-pos="FLEX" aria-pressed="' + flexOn + '" title="RB + WR + TE">FLEX</button>';
+      (hasFlex ? '<button type="button" class="pos-pill flex-pill' + (flexOn ? ' active' : '') + '" data-pl-pos="FLEX" aria-pressed="' + flexOn + '" title="RB + WR + TE">FLEX</button>' : '') +
+      (isIdpLeague() ? '<button type="button" class="pos-pill flex-pill' + (idpOn ? ' active' : '') + '" data-pl-pos="IDP" aria-pressed="' + idpOn + '" title="All defensive players: DL + LB + DB">IDP</button>' : '');
   }
   function togglePos(pos){
     const st = ctx.pl;
     if(pos === 'ALL') st.pos = [];
-    else if(pos === 'FLEX'){
-      const trio = ['RB', 'WR', 'TE'], on = trio.every(function(x){ return st.pos.indexOf(x) !== -1; });
+    else if(pos === 'FLEX' || pos === 'IDP'){
+      const trio = pos === 'IDP' ? IDP_GROUPS : ['RB', 'WR', 'TE'], on = trio.every(function(x){ return st.pos.indexOf(x) !== -1; });
       st.pos = on ? st.pos.filter(function(x){ return trio.indexOf(x) === -1; }) : st.pos.concat(trio.filter(function(x){ return st.pos.indexOf(x) === -1; }));
     }
     else st.pos = st.pos.indexOf(pos) !== -1 ? st.pos.filter(function(x){ return x !== pos; }) : st.pos.concat([pos]);
@@ -5277,8 +5423,21 @@
     if((f.k === 'ros' && !ctx.ros) || (PL_METRICS[f.k] && PL_METRICS[f.k].actual && !ctx.weekly)) loadPlayersData();
     renderPlayers(true);
   }
+  // Sleeper's projections for the last 3 completed weeks (recent_proj.json), for "Rising": loaded with the Players tab.
+  async function loadRecentProj(){
+    if(ctx.recentProj && ctx.recentProj.season === ctx.season && Date.now() - (ctx.recentProjTs || 0) < 60 * 60 * 1000) return ctx.recentProj;
+    try{
+      const res = await fetch('recent_proj.json', { cache: 'no-cache' });
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      const j = await res.json();
+      if(j.season !== ctx.season) throw new Error('recent_proj.json is for ' + j.season);
+      ctx.recentProj = j; ctx.recentProjTs = Date.now();
+    }catch(e){ console.warn('Recent projections unavailable ("Rising" hidden):', e.message); }
+    return ctx.recentProj || null;
+  }
   function loadPlayersData(){
     const jobs = [];
+    if(!ctx.recentProj || Date.now() - (ctx.recentProjTs || 0) > 60 * 60 * 1000) jobs.push(loadRecentProj());
     if(!ctx.ros) jobs.push(loadRos());
     if(!ctx.weekly) jobs.push(loadSeason());
     if(!ctx.trending || Date.now() - ctx.trending.ts > 30 * 60 * 1000) jobs.push(loadTrending());
@@ -5321,13 +5480,13 @@
       }).join('') + (anything ? '<button type="button" class="pl-clear" data-pl-clear>Clear all</button>' : '');
 
     const all = plList(), shown = all.slice(0, ctx.faLimit);
-    const titles = { avail: 'Available', trend: st.trendKind === 'drop' ? 'Most dropped on Sleeper' : 'Most added on Sleeper', all: 'All players' };
+    const titles = { avail: 'Available', trend: st.trendKind === 'rise' ? 'Rising · beating projections' : st.trendKind === 'drop' ? 'Most dropped on Sleeper' : 'Most added on Sleeper', all: 'All players' };
     document.getElementById('pl-title').textContent = titles[st.view];
     document.getElementById('fa-sub').textContent = '— ' + all.length + ' player' + (all.length === 1 ? '' : 's') +
-      (st.view === 'trend' ? ' · last 24 hours' : st.view === 'all' ? ' · owner shown' : '');
+      (st.view === 'trend' ? (st.trendKind === 'rise' ? ' · available, last 3 games vs Sleeper’s projections' : ' · last 24 hours') : st.view === 'all' ? ' · owner shown' : '');
     const vsHead = document.querySelector('#fa-view .h-vs');
     if(vsHead) vsHead.textContent = st.view === 'avail' ? (ctx.faPos === 'FLEX' ? 'vs your FLEX' : 'vs your weakest') : 'Team / vs yours';
-    const loadingTrend = st.view === 'trend' && !ctx.trending;
+    const loadingTrend = st.view === 'trend' && st.trendKind !== 'rise' && !ctx.trending;
     els.faList.innerHTML = loadingTrend ? '<div class="empty-state">Loading Sleeper’s trending players…</div>'
       : shown.map(plRowHTML).join('') || '<div class="empty-state">No players match' + (anything ? '. <button type="button" class="quiet-btn" data-pl-clear>Clear filters</button>' : '.') + '</div>';
     const remaining = all.length - shown.length;
@@ -5337,17 +5496,18 @@
     markSelected();
   }
   function plRowHTML(pid){
-    const p = ctx.players[pid], color = posColor(p.position), avail = isAvailable(pid), mine = isMine(pid), owner = ownerOf(pid);
+    const p = ctx.players[pid], color = posColor(posGroup(pid)), avail = isAvailable(pid), mine = isMine(pid), owner = ownerOf(pid);
     const who = avail ? faVsLine(pid, p.position)
       : '<div class="fa-vs"><span class="own-tag' + (mine ? ' mine' : '') + '">' + (mine ? 'On your team' : owner !== undefined ? escapeHTML(rosterName(owner)) : 'Not on an NFL team') + '</span></div>';
     const tc = ctx.pl.view === 'trend' ? trendCount(pid) : null;
     return '<div class="slot-row" data-fa-id="' + escapeHTML(pid) + '">' +
-        '<div class="slot-tag" style="color:' + color + '; border-color:' + color + ';">' + escapeHTML(p.position) + '</div>' +
+        '<div class="slot-tag" style="color:' + color + '; border-color:' + color + ';">' + escapeHTML(posGroup(pid)) + '</div>' +
         '<img class="avatar" src="' + escapeHTML(playerImageUrl(pid)) + '" loading="lazy" onerror="this.style.visibility=\'hidden\'" style="--team:' + teamColor(p.team) + '"' + analyzeAttr(pid) + '>' +
         '<div class="player-info">' +
           '<div class="player-name">' + analyzeName(pid, playerName(p)) + ecrChipHTML(pid) + injuryChip(p.injury_status) + '</div>' +
-          '<div class="player-meta">' + escapeHTML(p.position) + ' · ' + escapeHTML(p.team || 'FA') +
+          '<div class="player-meta">' + escapeHTML(eligLabel(pid)) + ' · ' + escapeHTML(p.team || 'FA') +
             (tc != null ? ' · <span class="tr-count ' + ctx.pl.trendKind + '">' + (ctx.pl.trendKind === 'add' ? '+' : '−') + fmtCount(tc) + '</span>' : '') +
+            (ctx.pl.view === 'trend' && ctx.pl.trendKind === 'rise' ? risingHTML(pid) : '') +
             '<span class="m-opp">' + matchupHTML(p.team) + ' ' + dvpChipHTML(pid) + '</span> ' + depthChipHTML(pid) + '</div>' +
           (function(){ const k = keyStatsLine(pid, p.position); return k ? '<div class="key-stats">' + k + '</div>' : ''; })() +
           who + signalsHTML(pid, true) +
@@ -5590,7 +5750,7 @@
     hv.hidden = false; hv.setAttribute('data-vs', playerId); hv.setAttribute('aria-label', 'Compare ' + playerName(player) + ' head-to-head');
     syncVsButtons();
     els.heroName.innerHTML = analyzeName(playerId, playerName(player));
-    els.heroMeta.textContent = (player.position || '') + ' · ' + (player.team || 'FA') + (player.injury_status && player.injury_status !== 'Healthy' ? ' · ' + player.injury_status : '');
+    els.heroMeta.textContent = eligLabel(playerId) + (eligLabel(playerId).indexOf('/') !== -1 ? ' (eligible at both)' : '') + ' · ' + (player.team || 'FA') + (player.injury_status && player.injury_status !== 'Healthy' ? ' · ' + player.injury_status : '');
 
     const pending = loadingHistory ? '…' : null;
     const wa = weekActual(playerId), wg = gameOf(player.team);
@@ -5974,6 +6134,21 @@
       r.floor.toFixed(2) + '–' + r.ceil.toFixed(2) + '</div>';
   }
   // Player page: bad week — projection — good week on one bar.
+  // How much a player's own weekly scores swing (std-dev / mean, 3+ games). Used to flag volatile IDP scorers.
+  function volatility(pid){
+    const h = (hist(pid) || []).map(function(w){ return w.pts; });
+    if(h.length < 3) return null;
+    const m = h.reduce(function(a, b){ return a + b; }, 0) / h.length;
+    if(m <= 0) return null;
+    const sd = Math.sqrt(h.reduce(function(a, b){ return a + (b - m) * (b - m); }, 0) / h.length);
+    return sd / m;
+  }
+  function idpRangeNote(pid){
+    if(IDP_GROUPS.indexOf(posGroup(pid)) === -1) return '';
+    const v = volatility(pid), hi = v !== null && v >= 0.45;
+    return '<div class="rg-idp' + (hi ? ' hi' : '') + '">' + (hi ? '<b>High variance.</b> ' : '') + 'Defensive scoring is built on tackles and big plays (sacks, turnovers), so it swings more week to week than most offense' +
+      (v !== null ? ': this player’s weekly scores vary by ' + Math.round(v * 100) + '% of his average.' : '.') + '</div>';
+  }
   function rangeDetailHTML(pid){
     const r = weekRange(pid), proj = ctx.projections[pid];
     if(!r) return '';
@@ -5990,7 +6165,7 @@
   // ---- matchup difficulty: points each defense allows to a position this season, in this league's scoring ----
   // From nflverse.json dvp (raw stats allowed, summed; scoring is linear so the league's settings apply exactly).
   // Rank 1 = most points allowed (easiest). Under DVP_MIN_GAMES games the ranking is shown greyed and labeled early.
-  const DVP_MIN_GAMES = 4, DVP_POS = ['QB', 'RB', 'WR', 'TE', 'K'];
+  const DVP_MIN_GAMES = 4, DVP_POS = ['QB', 'RB', 'WR', 'TE', 'K', 'DL', 'LB', 'DB'];
   let dvpMemo = {};
   function dvpTable(pos){
     const nfl = ctx.nfl;
@@ -6010,12 +6185,13 @@
   function ordinal(n){ const v = n % 100; return n + (v >= 11 && v <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th'); }
   function dvpInfo(pid){
     const p = ctx.players[pid];
-    if(!p || DVP_POS.indexOf(p.position) === -1) return null;
-    const opp = oppCode(p.team, ctx.week), t = dvpTable(p.position);
+    const pos = posGroup(pid);
+    if(!p || DVP_POS.indexOf(pos) === -1) return null;
+    const opp = oppCode(p.team, ctx.week), t = dvpTable(pos);
     const e = t && opp && t[opp];
     if(!e) return null;
     const most = e.rank <= e.of / 2;
-    return Object.assign({ pos: p.position, early: e.g < DVP_MIN_GAMES, most: most, n: most ? e.rank : e.of - e.rank + 1,
+    return Object.assign({ pos: pos, early: e.g < DVP_MIN_GAMES, most: most, n: most ? e.rank : e.of - e.rank + 1,
       tone: e.rank <= 8 ? 'easy' : e.rank > e.of - 8 ? 'hard' : 'mid' }, e);
   }
   function dvpLabel(i, short){ return ordinal(i.n) + '-' + (i.most ? 'most' : 'fewest') + (short ? '' : ' to ' + i.pos + 's'); }
@@ -6332,7 +6508,7 @@
     ]).concat(positionCards(pid, p.position, loading, tr));
     const hero = '<div class="pf-hero" style="--team:' + teamColor(p.team) + '">' + avatarTag(pid, 'mx-av') +
       '<div><div class="pf-name">' + escapeHTML(playerName(p)) + '</div>' +
-      '<div class="pf-meta">' + escapeHTML(p.position || '') + ' · ' + escapeHTML(p.team || 'FA') +
+      '<div class="pf-meta">' + escapeHTML(eligLabel(pid)) + (eligLabel(pid).indexOf('/') !== -1 ? ' <span class="dim">(eligible at both)</span>' : '') + ' · ' + escapeHTML(p.team || 'FA') +
         injuryChip(p.injury_status) + depthChip(pid) + '<span>· ' + (onRoster ? 'On your roster' : 'Available') + '</span></div>' + gameLineHTML(pid) + playerLinksHTML(pid) + '</div>' +
       '<div class="pf-stats stagger">' + stats.map(function(s, i){ return '<div class="pf-stat' + (s[2] || '') + '" style="--i:' + i + '"><div class="v">' + s[0] + '</div><div class="k">' + escapeHTML(s[1]) + '</div>' + (s[3] ? '<div class="k sub">' + escapeHTML(s[3]) + '</div>' : '') + '</div>'; }).join('') + '</div></div>';
 
@@ -6366,7 +6542,7 @@
     }
     left = left ? '<div class="card pf-card">' + left + '</div>' : '<div></div>';
     const dvp = dvpInfo(pid);
-    const context = rangeDetailHTML(pid) + (dvp ? '<div class="dvp-line"><span class="dvp-chip ' + (dvp.early ? 'early' : dvp.tone) + '">Matchup</span> ' + escapeHTML(dvpSentence(dvp)) + '</div>' : '');
+    const context = rangeDetailHTML(pid) + idpRangeNote(pid) + (dvp ? '<div class="dvp-line"><span class="dvp-chip ' + (dvp.early ? 'early' : dvp.tone) + '">Matchup</span> ' + escapeHTML(dvpSentence(dvp)) + '</div>' : '');
     return byeCallouts([pid]) + hero + injurySourcesHTML(pid) + (loading ? '' : context) + '<div class="card pf-card pf-rk"><div class="pf-sec"><h3>Rankings &amp; value</h3><span class="eyebrow">consensus · market</span></div>' + rankingsHTML(pid) + '</div>' + weekCard + logCard + '<div class="pf-grid">' + left + '<div class="card pf-card">' + maxSideHTML(pid) + '</div></div>';
   }
 
