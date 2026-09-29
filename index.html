@@ -204,16 +204,26 @@
   .opp.mt-easy{ color: var(--accent); font-weight: 600; } .opp.mt-mid{ color: var(--warn); font-weight: 600; } .opp.mt-hard{ color: var(--danger); font-weight: 600; }
   .snap-flag{ margin-left: 4px; font-size: 13px; font-weight: 700; }
   .snap-flag.up{ color: var(--accent); } .snap-flag.down{ color: var(--danger); }
-  html:not(.cards-detailed) :is(#starters-list, #bench-list) .slot-row :is(.m-opp, .key-stats, .sig, .depth-chip, .lock-tag){ display: none; }
+  html:not(.cards-detailed) :is(#starters-list, #bench-list) .slot-row :is(.m-opp, .key-stats, .sig, .depth-chip, .lock-tag, .te-flex-tag){ display: none; }
+  /* compact name line: the name keeps room first, then injury / bye flags; the rank chip gives way (tier in details) */
+  /* compact: this week's consensus rank ("wk RB4", which includes the position) replaces the plain position on line 2 */
+  .m-rk{ display: none; }
+  html:not(.cards-detailed) :is(#starters-list, #bench-list) .player-name .ecr-chip, html:not(.cards-detailed) :is(#starters-list, #bench-list) .m-pos{ display: none; }
+  html:not(.cards-detailed) :is(#starters-list, #bench-list) .m-rk{ display: inline; }
+  html:not(.cards-detailed) :is(#starters-list, #bench-list) .m-rk .ecr-chip{ display: inline; padding: 0 4px; font-size: 10px; vertical-align: 1px; }
+  html:not(.cards-detailed) :is(#starters-list, #bench-list) .m-rk .ecr-chip i{ display: none; }   /* tier: player sheet / detailed cards */
   html:not(.cards-detailed) :is(#starters-list, #bench-list) .slot-row .m-opp-c{ display: inline; }
   html:not(.cards-detailed) :is(#starters-list, #bench-list) .slot-row .player-meta{ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   html:not(.cards-detailed) :is(#starters-list, #bench-list) .slot-row{ padding-top: 9px; padding-bottom: 9px; }
   @container list (max-width: 599px){ /* card layout only; the table layout keeps its column widths so headers line up */
     html:not(.cards-detailed) :is(#starters-list, #bench-list) .slot-row{ gap: 8px; }
-    html:not(.cards-detailed) :is(#starters-list, #bench-list) .slot-tag{ width: 32px; }
-    html:not(.cards-detailed) :is(#starters-list, #bench-list) .avatar{ width: 36px; height: 36px; }
-    html:not(.cards-detailed) :is(#starters-list, #bench-list) .stat-col{ width: 44px; }
-    html:not(.cards-detailed) :is(#starters-list, #bench-list) .stat-col + .stat-col{ width: 40px; }
+    html:not(.cards-detailed) :is(#starters-list, #bench-list) .slot-tag{ width: 28px; }
+    html:not(.cards-detailed) :is(#starters-list, #bench-list) .avatar{ width: 34px; height: 34px; }
+    html:not(.cards-detailed) :is(#starters-list, #bench-list) .stat-col{ width: 50px; }
+    html:not(.cards-detailed) :is(#starters-list, #bench-list) .stat-col + .stat-col{ width: 42px; }
+    html:not(.cards-detailed) :is(#starters-list, #bench-list) .stat-col .val{ font-size: 16px; }
+    html:not(.cards-detailed) :is(#starters-list, #bench-list) .stat-col + .stat-col .val{ font-size: 12.5px; }
+    html:not(.cards-detailed) :is(#starters-list, #bench-list) .rng{ display: none; }   /* ###.##–###.## doesn't fit; shown in the detail views */
     html:not(.cards-detailed) :is(#starters-list, #bench-list) .gs{ padding: 1px 4px; }
     html:not(.cards-detailed) :is(#starters-list, #bench-list) .slot-row + .slot-row::before{ left: 88px; }
   }
@@ -278,6 +288,8 @@
   .stat-col.act-main.act-live .cap::before{ width: 5px; height: 5px; margin-right: 3px; }
   /* compact cards: the game chip is plain inline text so a long line trims the score, not the whole chip */
   html:not(.cards-detailed) :is(#starters-list, #bench-list) .m-opp-c .gs{ display: inline; }
+  html:not(.cards-detailed) :is(#starters-list, #bench-list) .m-opp-c .gs{ font-size: 9.5px; letter-spacing: 0; padding: 1px 3px; }
+  html:not(.cards-detailed) :is(#starters-list, #bench-list) .player-meta{ font-size: 11.5px; }
   html:not(.cards-detailed) :is(#starters-list, #bench-list) .m-opp-c .gs.live::before{ display: none; }
   .cs.dimmed .cv{ color: var(--text-3); font-weight: 500; }
   .hs-sub{ font-size: 11.5px; color: var(--text-3); margin-top: 1px; }
@@ -327,6 +339,7 @@
   .trend.flat{ color: var(--text-3); }
 
   .stat-col{ width: 58px; text-align: right; flex-shrink: 0; }
+  #fa-view .stat-col .val{ font-size: 16px; }   /* ##.## fits the Players column */
   .stat-col .val{ font-size: 18px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
   .stat-col + .stat-col .val{ font-size: 14px; font-weight: 500; color: var(--text-2); }
   .stat-col .cap{ color: var(--text-3); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; margin-top: 1px; }
@@ -1116,7 +1129,7 @@
   }
 
   /* ---- floor/ceiling, matchup difficulty, bye planner ---- */
-  .rng{ font-size: 10.5px; font-weight: 600; color: var(--text-3); font-variant-numeric: tabular-nums; white-space: nowrap; margin-top: 1px; }
+  .rng{ font-size: 9.5px; font-weight: 600; color: var(--text-3); font-variant-numeric: tabular-nums; white-space: nowrap; margin-top: 1px; }
   .rng.early{ font-style: italic; }
   .dvp-chip{ display: inline-block; font-size: 10.5px; font-weight: 600; padding: 1px 6px; border-radius: 6px; white-space: nowrap; vertical-align: 1px;
     background: var(--surface-2); color: var(--text-2); cursor: help; }
@@ -2150,7 +2163,7 @@
     }
     return any ? total : (Object.keys(rawStats).length ? 0 : null);
   }
-  function fmtPts(v){ return (v === null || v === undefined || isNaN(v)) ? '—' : v.toFixed(1); }
+  function fmtPts(v){ return (v === null || v === undefined || isNaN(v)) ? '—' : v.toFixed(2); }
 
   // ---- stat aggregation (season totals for the main table, full set for the focus panel) ----
   // Keys that aren't stats: Sleeper's own generic fantasy points (we score with the league's settings instead),
@@ -2718,7 +2731,7 @@
     const li = res.notes.map(function(n){
       const margin = n.over.pos === 'TE' ? FLEX_PREFERENCE.TE_OVER_WR_RB : FLEX_PREFERENCE.RB_OVER_WR;
       return escapeHTML(n.slot) + ': chose ' + n.pick.pos + ' ' + nm(n.pick.pid) + ' over ' + n.over.pos + ' ' + nm(n.over.pid) + ', ' +
-        (n.over.proj - n.pick.proj).toFixed(1) + '-pt difference (' + n.over.pos + 's need +' + margin.toFixed(1) + ').';
+        (n.over.proj - n.pick.proj).toFixed(2) + '-pt difference (' + n.over.pos + 's need +' + margin.toFixed(2) + ').';
     });
     teInFlex(res.starters).forEach(function(i){
       li.push('<span class="warn-txt">Heads-up: ' + nm(res.starters[i]) + ' (TE) is in your ' + escapeHTML(ctx.rosterPositions[i]) + '.</span>');
@@ -2754,8 +2767,8 @@
     [els.kpiProj, els.kpiDelta].forEach(function(el){ el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); });
     const orig = sumProj(ctx.originalStarters), now = sumProj(best), d = now - orig;
     showOptNote('<span class="on-txt"><b>Optimal lineup set</b> · ' + changed.length + ' slot' + (changed.length > 1 ? 's' : '') + ' changed. ' +
-      'Sleeper lineup ' + orig.toFixed(1) + ' → <b>' + now.toFixed(1) + '</b> ' +
-      '<span class="' + (d > 0.05 ? 'up' : '') + '">(' + (Math.abs(d) < 0.05 ? '±0.0' : (d > 0 ? '+' : '−') + Math.abs(d).toFixed(1)) + ')</span>' +
+      'Sleeper lineup ' + orig.toFixed(2) + ' → <b>' + now.toFixed(2) + '</b> ' +
+      '<span class="' + (d > 0.005 ? 'up' : '') + '">(' + (Math.abs(d) < 0.005 ? '±0.00' : (d > 0 ? '+' : '−') + Math.abs(d).toFixed(2)) + ')</span>' +
       stillEmptyNote(best) + '</span>' + why, before);
     // keep the side panel honest: show whoever is now in the slot it was showing
     const f = ctx.focus;
@@ -3057,7 +3070,7 @@
       ctx.matchups = await matchupsP;
       ctx.focus = null;
       els.rosterScreen.classList.remove('is-loading');
-      els.kpiProj.textContent = '0.0'; // so the total counts up on first load
+      els.kpiProj.textContent = '0.00'; // so the total counts up on first load
       // If the app-open animation is still playing, hold the total at 0 and skip the row fade-in for now;
       // both play once, after it lands (ctx.afterVt below). Otherwise they'd run twice.
       ctx.deferEntrance = !!ctx.vtRunning;
@@ -3080,7 +3093,7 @@
       if(ctx.deferEntrance) ctx.afterVt = function(){
         ctx.deferEntrance = false;
         staggerIn(els.startersList); staggerIn(els.benchList);
-        els.kpiProj.textContent = '0.0'; countTo(els.kpiProj, sumProj(ctx.draftStarters));
+        els.kpiProj.textContent = '0.00'; countTo(els.kpiProj, sumProj(ctx.draftStarters));
       };
 
       nflPromise.then(function(res){
@@ -3459,7 +3472,7 @@
       '</tbody></table></div>' +
       '<div class="rk-note">Consensus = average of the sources’ positional ranks (2+ needed), re-ranked. Sleeper and ESPN are ranked by their projections in your scoring. Tiers aren’t counted (they follow FantasyPros’ order).</div>' +
       row('This week', (e ? 'FantasyPros avg <b>' + e.ecr + '</b> <small>best ' + e.best + ' · worst ' + e.worst + '</small> · ' : '') + 'Proj: Sleeper <b>' + fmtPts(ctx.projections[pid]) + '</b>' + (ep === undefined ? '' : ' · ESPN <b>' + (ep !== null ? fmtPts(ep) : '—') + '</b>')) +
-      row('Rest of season', (r ? 'FantasyPros avg <b>' + r.ecr + '</b> <small>best ' + r.best + ' · worst ' + r.worst + '</small> · ' : '') + (ros ? 'Sleeper <b>' + ros.pts.toFixed(0) + '</b> pts · ' : '') +
+      row('Rest of season', (r ? 'FantasyPros avg <b>' + r.ecr + '</b> <small>best ' + r.best + ' · worst ' + r.worst + '</small> · ' : '') + (ros ? 'Sleeper <b>' + ros.pts.toFixed(2) + '</b> pts · ' : '') +
         (f ? 'Trade value <b>' + f.v.toLocaleString() + '</b> <small>#' + f.r + ' overall' + (f.tr ? ' · ' + (f.tr > 0 ? '▲' : '▼') + Math.abs(f.tr) + ' in 30 days' : '') + '</small>' : 'Trade value ' + na)) +
       '<div class="rk-src">' + RK_CREDIT + '</div></div>';
   }
@@ -3628,7 +3641,8 @@
   function gameStatusHTML(team, compact){
     const g = gameOf(team), txt = gameStateText(g);
     if(!txt) return null;
-    if(compact){ // compact lineup card: state + score only
+    if(compact){ // compact lineup card: state + score only; a final game just the score (the number beside it says "final")
+      if(g.state === 'post' && g.src === 'espn') return '<span class="opp" title="Final">' + g.us + '–' + g.them + '</span>';
       const cls = g.state === 'in' ? 'live' : g.state === 'post' ? 'final' : 'off';
       return '<span class="gs ' + cls + (g.src !== 'espn' ? ' est' : '') + '">' + escapeHTML(txt) + '</span>' + (g.src === 'espn' ? ' <span class="opp">' + g.us + '–' + g.them + '</span>' : '');
     }
@@ -3729,7 +3743,7 @@
     const roster = (ctx.lastRosters || []).find(function(r){ return r.roster_id === opp.roster_id; }) || {};
     return { rosterId: opp.roster_id, name: rosterName(opp.roster_id), starters: starters, players: roster.players || [], roster: roster };
   }
-  function marginText(d){ return Math.abs(d) < 0.05 ? 'dead even' : (d > 0 ? 'ahead by ' : 'behind by ') + Math.abs(d).toFixed(1); }
+  function marginText(d){ return Math.abs(d) < 0.005 ? 'dead even' : (d > 0 ? 'ahead by ' : 'behind by ') + Math.abs(d).toFixed(2); }
   // Projected totals use the same league-scored projections as everything else.
   function matchupCardHTML(){
     const mu = myMatchup();
@@ -3738,14 +3752,14 @@
     const sleeperTotal = sumProj(ctx.originalStarters), planTotal = sumProj(ctx.draftStarters), oppTotal = sumProj(mu.starters);
     const dirty = JSON.stringify(ctx.draftStarters) !== JSON.stringify(ctx.originalStarters);
     const mine = dirty ? planTotal : sleeperTotal, d = mine - oppTotal;
-    const tone = Math.abs(d) < 0.05 ? '' : d > 0 ? ' up' : ' down';
+    const tone = Math.abs(d) < 0.005 ? '' : d > 0 ? ' up' : ' down';
     return '<button type="button" class="mu-card" data-open-opp aria-label="This week’s matchup. Compare your lineup with ' + escapeHTML(mu.name) + '’s">' +
       '<div class="mu-head"><span class="eyebrow">Week ' + ctx.week + ' matchup · projected</span><span class="mu-link">Compare lineups ›</span></div>' +
       '<div class="mu-row">' +
-        '<div class="mu-side"><div class="mu-name">' + escapeHTML(els.teamName.textContent || 'You') + '</div><div class="mu-pts num' + tone + '">' + mine.toFixed(1) + '</div>' +
-          (dirty ? '<div class="mu-sub">Your plan · Sleeper lineup ' + sleeperTotal.toFixed(1) + '</div>' : '<div class="mu-sub">Your Sleeper lineup</div>') + '</div>' +
+        '<div class="mu-side"><div class="mu-name">' + escapeHTML(els.teamName.textContent || 'You') + '</div><div class="mu-pts num' + tone + '">' + mine.toFixed(2) + '</div>' +
+          (dirty ? '<div class="mu-sub">Your plan · Sleeper lineup ' + sleeperTotal.toFixed(2) + '</div>' : '<div class="mu-sub">Your Sleeper lineup</div>') + '</div>' +
         '<div class="mu-vs" aria-hidden="true">vs</div>' +
-        '<div class="mu-side opp"><div class="mu-name">' + escapeHTML(mu.name) + '</div><div class="mu-pts num">' + oppTotal.toFixed(1) + '</div><div class="mu-sub">Their Sleeper lineup</div></div>' +
+        '<div class="mu-side opp"><div class="mu-name">' + escapeHTML(mu.name) + '</div><div class="mu-pts num">' + oppTotal.toFixed(2) + '</div><div class="mu-sub">Their Sleeper lineup</div></div>' +
       '</div>' +
       '<div class="mu-foot' + tone + '">' + (dirty
         ? 'With your changes you’re ' + marginText(planTotal - oppTotal) + ' <span class="dim">(Sleeper lineup: ' + marginText(sleeperTotal - oppTotal) + ')</span>'
@@ -3764,19 +3778,19 @@
     if(!me || !op) return null;
     const done = !(me.pre + me.inG + op.pre + op.inG);
     const d = done ? me.pts - op.pts : me.fin - op.fin, now = me.pts - op.pts;
-    const tone = Math.abs(d) < 0.05 ? '' : d > 0 ? ' up' : ' down', nowTone = Math.abs(now) < 0.05 ? '' : now > 0 ? ' up' : ' down';
+    const tone = Math.abs(d) < 0.005 ? '' : d > 0 ? ' up' : ' down', nowTone = Math.abs(now) < 0.005 ? '' : now > 0 ? ' up' : ' down';
     const on = me.inG + op.inG > 0 || liveWindow();
     const dirty = JSON.stringify(ctx.draftStarters) !== JSON.stringify(ctx.originalStarters);
     const side = function(cls, name, t, tn){
-      return '<div class="mu-side' + cls + '"><div class="mu-name">' + escapeHTML(name) + '</div><div class="mu-pts num' + tn + '">' + t.pts.toFixed(1) + '</div>' +
-        '<div class="mu-sub">' + (done ? 'Final' : 'Proj. final <b>' + t.fin.toFixed(1) + '</b>') + '</div><div class="mu-left">' + playsLeftText(t) + '</div></div>';
+      return '<div class="mu-side' + cls + '"><div class="mu-name">' + escapeHTML(name) + '</div><div class="mu-pts num' + tn + '">' + t.pts.toFixed(2) + '</div>' +
+        '<div class="mu-sub">' + (done ? 'Final' : 'Proj. final <b>' + t.fin.toFixed(2) + '</b>') + '</div><div class="mu-left">' + playsLeftText(t) + '</div></div>';
     };
     const est = me.est || op.est;
     return '<button type="button" class="mu-card live" data-open-opp aria-label="This week’s matchup, live. Compare your lineup with ' + escapeHTML(mu.name) + '’s">' +
       '<div class="mu-head"><span class="eyebrow">Week ' + ctx.week + ' · ' + (done ? 'final' : on ? '<span class="live-dot"></span>live' : 'in progress') + '</span><span class="mu-link">Compare lineups ›</span></div>' +
       '<div class="mu-row">' + side('', els.teamName.textContent || 'You', me, nowTone) + '<div class="mu-vs" aria-hidden="true">vs</div>' + side(' opp', mu.name, op, '') + '</div>' +
-      '<div class="mu-foot' + tone + '">' + (done ? (Math.abs(d) < 0.05 ? 'Tied' : d > 0 ? 'You won by ' + d.toFixed(1) : 'You lost by ' + (-d).toFixed(1))
-        : 'Projected to ' + (Math.abs(d) < 0.05 ? 'finish dead even' : (d > 0 ? 'win' : 'lose') + ' by ' + Math.abs(d).toFixed(1))) +
+      '<div class="mu-foot' + tone + '">' + (done ? (Math.abs(d) < 0.005 ? 'Tied' : d > 0 ? 'You won by ' + d.toFixed(2) : 'You lost by ' + (-d).toFixed(2))
+        : 'Projected to ' + (Math.abs(d) < 0.005 ? 'finish dead even' : (d > 0 ? 'win' : 'lose') + ' by ' + Math.abs(d).toFixed(2))) +
         '<span class="mu-ago" data-live-ago>Updated ' + liveAgoText() + '</span></div>' +
       '<div class="mu-note">Actual points from Sleeper in your league’s scoring. Proj. final = points so far + projection for the rest of each game' +
         (est ? ' (no game clock available, so time left is estimated from kickoff)' : '') + '.' +
@@ -3853,20 +3867,20 @@
         .map(function(pid){ const p = ctx.players[pid], wa = weekActual(pid); return '<div class="vs-bench-row" data-open="' + escapeHTML(pid) + '"><span style="color:' + posColor(p.position) + '">' + escapeHTML(p.position) + '</span> ' + escapeHTML(playerName(p)) + '<b' + (wa !== null ? ' class="act-live" title="Actual points this week"' : ' title="Projection"') + '>' + fmtPts(wa !== null ? wa : ctx.projections[pid]) + (wa !== null ? '' : ' <small>proj</small>') + '</b></div>'; })
         .join('') || '<div class="vs-bench-row dim">Empty</div>';
     };
-    const tone = Math.abs(d) < 0.05 ? '' : d > 0 ? ' up' : ' down';
+    const tone = Math.abs(d) < 0.005 ? '' : d > 0 ? ' up' : ' down';
     return '<div class="vs-view">' +
       '<div class="vs-head">' +
         (live
-          ? '<div class="vs-team me"><div class="vs-tn">' + escapeHTML(els.teamName.textContent || 'You') + '</div><div class="vs-tp num">' + live.me.pts.toFixed(1) + '</div>' +
-              '<div class="vs-ts">Proj. final <b>' + live.me.fin.toFixed(1) + '</b> · ' + playsLeftText(live.me) + '</div></div>' +
+          ? '<div class="vs-team me"><div class="vs-tn">' + escapeHTML(els.teamName.textContent || 'You') + '</div><div class="vs-tp num">' + live.me.pts.toFixed(2) + '</div>' +
+              '<div class="vs-ts">Proj. final <b>' + live.me.fin.toFixed(2) + '</b> · ' + playsLeftText(live.me) + '</div></div>' +
             '<div class="vs-mid"><span>vs</span><small>Wk ' + ctx.week + (liveWindow() ? ' <span class="live-dot" title="Games in progress"></span>' : '') + '</small></div>' +
-            '<div class="vs-team opp"><div class="vs-tn">' + escapeHTML(mu.name) + '</div><div class="vs-tp num">' + live.op.pts.toFixed(1) + '</div><div class="vs-ts">Proj. final <b>' + live.op.fin.toFixed(1) + '</b> · ' + playsLeftText(live.op) + '</div></div>'
-          : '<div class="vs-team me"><div class="vs-tn">' + escapeHTML(els.teamName.textContent || 'You') + '</div><div class="vs-tp num' + tone + '">' + myTotal.toFixed(1) + '</div>' +
-              '<div class="vs-ts">' + (dirty ? 'Your plan · Sleeper ' + sumProj(ctx.originalStarters).toFixed(1) : 'Your Sleeper lineup') + '</div></div>' +
+            '<div class="vs-team opp"><div class="vs-tn">' + escapeHTML(mu.name) + '</div><div class="vs-tp num">' + live.op.pts.toFixed(2) + '</div><div class="vs-ts">Proj. final <b>' + live.op.fin.toFixed(2) + '</b> · ' + playsLeftText(live.op) + '</div></div>'
+          : '<div class="vs-team me"><div class="vs-tn">' + escapeHTML(els.teamName.textContent || 'You') + '</div><div class="vs-tp num' + tone + '">' + myTotal.toFixed(2) + '</div>' +
+              '<div class="vs-ts">' + (dirty ? 'Your plan · Sleeper ' + sumProj(ctx.originalStarters).toFixed(2) : 'Your Sleeper lineup') + '</div></div>' +
             '<div class="vs-mid"><span>vs</span><small>Wk ' + ctx.week + '</small></div>' +
-            '<div class="vs-team opp"><div class="vs-tn">' + escapeHTML(mu.name) + '</div><div class="vs-tp num">' + oppTotal.toFixed(1) + '</div><div class="vs-ts">Their Sleeper lineup</div></div>') +
+            '<div class="vs-team opp"><div class="vs-tn">' + escapeHTML(mu.name) + '</div><div class="vs-tp num">' + oppTotal.toFixed(2) + '</div><div class="vs-ts">Their Sleeper lineup</div></div>') +
       '</div>' +
-      '<div class="vs-sum' + tone + '">' + (Math.abs(d) < 0.05 ? (live ? 'Projected to finish dead even' : 'Dead even') : live ? 'Projected to ' + (d > 0 ? 'win' : 'lose') + ' by ' + Math.abs(d).toFixed(1) : 'You’re projected ' + marginText(d)) + ' · you win ' + myWins + ' of ' + ctx.rosterPositions.length + ' slots, they win ' + oppWins +
+      '<div class="vs-sum' + tone + '">' + (Math.abs(d) < 0.005 ? (live ? 'Projected to finish dead even' : 'Dead even') : live ? 'Projected to ' + (d > 0 ? 'win' : 'lose') + ' by ' + Math.abs(d).toFixed(2) : 'You’re projected ' + marginText(d)) + ' · you win ' + myWins + ' of ' + ctx.rosterPositions.length + ' slots, they win ' + oppWins +
         (live ? ' <span class="mu-ago" data-live-ago>Updated ' + liveAgoText() + '</span>' : '') + '</div>' +
       (live ? '<div class="vs-legend" aria-hidden="true"><span><i class="st-post"></i>Played</span><span><i class="st-in"></i>Playing</span><span><i class="st-pre"></i>Yet to play</span></div>' : '') +
       holesCallout('You', myHoles) + holesCallout(escapeHTML(mu.name), oppHoles) +
@@ -3924,7 +3938,7 @@
     const r = (ctx.lastRosters || []).find(function(x){ return x.roster_id === rosterId; });
     return r ? (r.players || []) : [];
   }
-  function signed(v, d){ return (Math.abs(v) < 0.05 ? '±' : v > 0 ? '+' : '−') + Math.abs(v).toFixed(d == null ? 1 : d); }
+  function signed(v, d){ return (Math.abs(v) < 0.005 ? '±' : v > 0 ? '+' : '−') + Math.abs(v).toFixed(d == null ? 2 : d); }
   // Full name, plus last name only for narrow phone columns (CSS picks which one shows; the position sits next to it).
   function tradeName(p){
     const full = playerName(p), short = p.position === 'DEF' ? (p.team || full) : (p.last_name || full);
@@ -3953,7 +3967,7 @@
             '<span class="tr-pos" style="color:' + posColor(p.position) + '">' + escapeHTML(p.position) + '</span>' +
             '<span class="tr-who"><span class="tr-nm">' + tradeName(p) + ' ' + injuryChip(p.injury_status) + '</span>' +
               '<span class="tr-sub">' + escapeHTML(p.team || 'FA') + (byeText(pid) ? ' · ' + byeText(pid) : '') + '</span></span>' +
-            '<span class="tr-ros"><b>' + (v ? v.pts.toFixed(0) : '—') + '</b><small>ROS</small></span></button>' +
+            '<span class="tr-ros"><b>' + (v ? v.pts.toFixed(2) : '—') + '</b><small>ROS</small></span></button>' +
             '<button type="button" class="tr-info" data-open="' + escapeHTML(pid) + '" aria-label="' + escapeHTML(playerName(p)) + ': full details">›</button></div>';
         }).join('') || '<div class="empty-state">No players.</div>';
     };
@@ -3964,8 +3978,8 @@
     const mini = function(pid){
       if(!pid) return '<div class="ts-cell empty"></div>';
       const p = ctx.players[pid], v = rosValue(pid);
-      return '<button type="button" class="ts-cell" data-open="' + escapeHTML(pid) + '" aria-label="' + escapeHTML(playerName(p)) + ', ' + escapeHTML(p.position) + ', ' + (v ? v.pts.toFixed(0) : 'no') + ' rest-of-season points. Full details">' +
-        '<span class="tr-pos" style="color:' + posColor(p.position) + '">' + escapeHTML(p.position) + '</span><span class="ts-nm">' + tradeName(p) + '</span><b>' + (v ? v.pts.toFixed(0) : '—') + '</b></button>';
+      return '<button type="button" class="ts-cell" data-open="' + escapeHTML(pid) + '" aria-label="' + escapeHTML(playerName(p)) + ', ' + escapeHTML(p.position) + ', ' + (v ? v.pts.toFixed(2) : 'no') + ' rest-of-season points. Full details">' +
+        '<span class="tr-pos" style="color:' + posColor(p.position) + '">' + escapeHTML(p.position) + '</span><span class="ts-nm">' + tradeName(p) + '</span><b>' + (v ? v.pts.toFixed(2) : '—') + '</b></button>';
     };
     let pairs = '';
     for(let i = 0; i < n; i++){
@@ -3976,15 +3990,15 @@
       '<div class="ts-head"><span class="eyebrow">You send</span><b>' + escapeHTML(els.teamName.textContent || 'You') + '</b></div>' +
       '<div class="ts-head them"><span class="eyebrow">They send</span><b>' + escapeHTML(rosterName(t.team)) + '</b></div>' +
       pairs +
-      '<div class="ts-tot"><b>' + r.rosGive.toFixed(0) + '</b><span>ROS pts</span></div><div class="ts-tot them"><b>' + r.rosGet.toFixed(0) + '</b><span>ROS pts</span></div>' +
+      '<div class="ts-tot"><b>' + r.rosGive.toFixed(2) + '</b><span>ROS pts</span></div><div class="ts-tot them"><b>' + r.rosGet.toFixed(2) + '</b><span>ROS pts</span></div>' +
       '</div>';
     const tone = function(v){ return Math.abs(v) < 0.5 ? '' : v > 0 ? ' up' : ' down'; };
     const maxAbs = Math.max.apply(null, r.weeks.map(function(x){ return Math.abs(x.d); }).concat([1]));
     const results = !any ? '<p class="tr-intro">Tick players on each side to see the numbers.</p>' :
       '<div class="tr-results">' +
         '<div class="card tr-card"><div class="eyebrow">Rest-of-season points</div>' +
-          '<div class="tr-big' + tone(r.rosGet - r.rosGive) + '">' + signed(r.rosGet - r.rosGive, 0) + '</div>' +
-          '<div class="tr-line"><span>You get</span><b>' + r.rosGet.toFixed(0) + '</b></div><div class="tr-line"><span>You give</span><b>' + r.rosGive.toFixed(0) + '</b></div>' +
+          '<div class="tr-big' + tone(r.rosGet - r.rosGive) + '">' + signed(r.rosGet - r.rosGive) + '</div>' +
+          '<div class="tr-line"><span>You get</span><b>' + r.rosGet.toFixed(2) + '</b></div><div class="tr-line"><span>You give</span><b>' + r.rosGive.toFixed(2) + '</b></div>' +
           '<div class="tr-cap">Total projected points of the players on each side, weeks ' + (r.weeks[0] ? r.weeks[0].w : ctx.week) + '–' + lastWeek + ', whether or not they’d start for you.</div></div>' +
         '<div class="card tr-card"><div class="eyebrow">Lineup impact</div>' +
           '<div class="tr-big' + tone(r.total) + '">' + signed(r.total) + '</div>' +
@@ -4006,7 +4020,7 @@
           const w = Math.abs(x.d) / maxAbs * 50;
           return '<div class="tw-row' + (x.w >= r.ps ? ' po' : '') + '"><span class="tw-wk">Wk ' + x.w + (x.w >= r.ps ? '<i>PO</i>' : '') + '</span>' +
             '<span class="tw-bar"><span class="tw-fill' + tone(x.d) + '" style="' + (x.d >= 0 ? 'left:50%;' : 'right:50%;') + 'width:' + w.toFixed(1) + '%"></span></span>' +
-            '<span class="tw-val' + tone(x.d) + '">' + signed(x.d) + '</span><span class="tw-tot">' + x.before.toFixed(1) + ' → ' + x.after.toFixed(1) + '</span></div>';
+            '<span class="tw-val' + tone(x.d) + '">' + signed(x.d) + '</span><span class="tw-tot">' + x.before.toFixed(2) + ' → ' + x.after.toFixed(2) + '</span></div>';
         }).join('') + '</details>';
     return '<div class="trade">' + pick + summary + results +
       '<p class="tr-note"><b>Estimates, not a verdict.</b> Sleeper’s weekly projections scored with your league’s settings. Future weeks use each player’s average projected week, with zero on byes and weeks they aren’t projected to play. Your lineup each week follows the same rules as Optimal Lineup (FLEX preferences included). Roster limits, waivers and the other team’s side aren’t considered.</p>' +
@@ -4088,7 +4102,7 @@
           '<span class="st-rank">' + (i + 1) + '</span>' +
           '<span class="st-team">' + escapeHTML(r.name) + (divs && r.div ? '<span class="st-div">Div ' + r.div + '</span>' : '') + '</span>' +
           '<span class="st-rec">' + r.w + '-' + r.l + (hasTies ? '-' + r.t : '') + '</span>' +
-          '<span class="st-num">' + r.pf.toFixed(1) + '</span><span class="st-num">' + r.pa.toFixed(1) + '</span></div>' +
+          '<span class="st-num">' + r.pf.toFixed(2) + '</span><span class="st-num">' + r.pa.toFixed(2) + '</span></div>' +
           (cut ? '<div class="st-cutline"><span>Playoff line · top ' + n + '</span></div>' : '');
       }).join('');
     const notes = [];
@@ -4283,8 +4297,8 @@
   function formHTML(pid){
     const a = seasonAvgPts(pid), l3 = last3Avg(pid), n = (hist(pid) || []).length;
     if(a === null) return '';
-    return '<span class="sig-item" title="Season average, actual points"><span class="sig-k">Avg</span> ' + a.toFixed(1) + '</span>' +
-      (n > 1 ? '<span class="sig-item" title="Average of the last ' + Math.min(3, n) + ' games, actual points"><span class="sig-k">L' + Math.min(3, n) + '</span> ' + l3.toFixed(1) + '</span>' : '');
+    return '<span class="sig-item" title="Season average, actual points"><span class="sig-k">Avg</span> ' + a.toFixed(2) + '</span>' +
+      (n > 1 ? '<span class="sig-item" title="Average of the last ' + Math.min(3, n) + ' games, actual points"><span class="sig-k">L' + Math.min(3, n) + '</span> ' + l3.toFixed(2) + '</span>' : '');
   }
   function signalsHTML(pid, withShares){
     const p = ctx.players[pid];
@@ -4527,8 +4541,8 @@
 
   // Signed difference (+ / −) with the matching up/down/flat color class.
   function setDiff(el, diff){
-    const flat = Math.abs(diff) < 0.05;
-    el.textContent = flat ? '0.0' : ((diff > 0 ? '+' : '−') + Math.abs(diff).toFixed(1));
+    const flat = Math.abs(diff) < 0.005;
+    el.textContent = flat ? '0.00' : ((diff > 0 ? '+' : '−') + Math.abs(diff).toFixed(2));
     el.className = 'lc-diff ' + (flat ? 'flat' : (diff > 0 ? 'up' : 'down'));
   }
 
@@ -4541,11 +4555,11 @@
     els.compareBtn.classList.toggle('is-hidden', !isDirty);
 
     const total = sumProj(ctx.draftStarters), diff = total - sumProj(ctx.originalStarters);
-    if(ctx.deferEntrance) els.kpiProj.textContent = '0.0'; else countTo(els.kpiProj, total);
+    if(ctx.deferEntrance) els.kpiProj.textContent = '0.00'; else countTo(els.kpiProj, total);
     setDiff(els.kpiDelta, diff);
     els.kpiDelta.className = 'kpi-mid num ' + els.kpiDelta.className.replace('lc-diff', '').trim();
     const changed = ctx.draftStarters.filter(function(pid, i){ return pid !== ctx.originalStarters[i]; }).length;
-    els.kpiDeltaCap.textContent = changed ? changed + ' slot' + (changed > 1 ? 's' : '') + ' changed · was ' + sumProj(ctx.originalStarters).toFixed(1) : 'No changes yet';
+    els.kpiDeltaCap.textContent = changed ? changed + ' slot' + (changed > 1 ? 's' : '') + ' changed · was ' + sumProj(ctx.originalStarters).toFixed(2) : 'No changes yet';
 
     const filled = ctx.draftStarters.filter(function(pid){ return pid && pid !== '0' && ctx.players[pid]; });
     const bye = filled.filter(isOnBye).length;
@@ -4561,7 +4575,7 @@
 
     const st = ctx.myRoster.settings || {};
     els.kpiRecord.textContent = typeof st.wins === 'number' ? st.wins + '–' + st.losses + (st.ties ? '–' + st.ties : '') : '—';
-    els.kpiRecordCap.textContent = typeof st.fpts === 'number' ? (st.fpts + (st.fpts_decimal || 0) / 100).toFixed(1) + ' points for' : '';
+    els.kpiRecordCap.textContent = typeof st.fpts === 'number' ? (st.fpts + (st.fpts_decimal || 0) / 100).toFixed(2) + ' points for' : '';
 
     const problemCount = bye + (slots - filled.length);
     document.querySelectorAll('[data-bye-badge]').forEach(function(b){ b.hidden = !problemCount; b.textContent = problemCount; });
@@ -4571,17 +4585,17 @@
   function countTo(el, to){
     const from = parseFloat(el.textContent);
     // No animation frames run in a background tab, so just show the number.
-    if(isNaN(from) || document.hidden || window.matchMedia('(prefers-reduced-motion: reduce)').matches || Math.abs(from - to) < 0.05){ el._countRun = (el._countRun || 0) + 1; el.textContent = to.toFixed(1); return; }
+    if(isNaN(from) || document.hidden || window.matchMedia('(prefers-reduced-motion: reduce)').matches || Math.abs(from - to) < 0.005){ el._countRun = (el._countRun || 0) + 1; el.textContent = to.toFixed(2); return; }
     // Only the newest count on this element may write (quick taps overlap), and a timer lands the final number
     // even if the browser pauses animation frames part-way (backgrounded tab, iOS Low Power Mode).
     const run = el._countRun = (el._countRun || 0) + 1;
     const t0 = performance.now(), dur = 650;
     clearTimeout(el._countEnd);
-    el._countEnd = setTimeout(function(){ if(el._countRun === run) el.textContent = to.toFixed(1); }, dur + 120);
+    el._countEnd = setTimeout(function(){ if(el._countRun === run) el.textContent = to.toFixed(2); }, dur + 120);
     (function tick(now){
       if(el._countRun !== run) return;
       const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
-      el.textContent = (from + (to - from) * e).toFixed(1);
+      el.textContent = (from + (to - from) * e).toFixed(2);
       if(k < 1) requestAnimationFrame(tick);
     })(t0);
   }
@@ -4700,8 +4714,8 @@
 
     const origTotal = sumProj(ctx.originalStarters);
     const newTotal = sumProj(ctx.draftStarters);
-    els.cmpOrigTotal.textContent = origTotal.toFixed(1);
-    els.cmpNewTotal.textContent = newTotal.toFixed(1);
+    els.cmpOrigTotal.textContent = origTotal.toFixed(2);
+    els.cmpNewTotal.textContent = newTotal.toFixed(2);
     setDiff(els.cmpDiff, newTotal - origTotal);
   }
 
@@ -4758,8 +4772,8 @@
         '<div class="slot-tag" style="color:' + color + '; border-color:' + color + ';">' + escapeHTML(slotLabel || pos) + '</div>' +
         '<img class="avatar" src="' + avatarUrl + '" loading="lazy" onerror="this.style.visibility=\'hidden\'" style="--team:' + teamColor(p.team) + '"' + (ro ? '' : analyzeAttr(playerId)) + '>' +
         '<div class="player-info">' +
-          '<div class="player-name">' + (ro ? escapeHTML(name) : analyzeName(playerId, name)) + ecrChipHTML(playerId) + byeChip + statusChip + newChip + '</div>' +
-          '<div class="player-meta">' + escapeHTML(pos) + ' · ' + escapeHTML(team) + '<span class="m-opp">' + matchupHTML(p.team) + ' ' + dvpChipHTML(playerId) + '</span><span class="m-opp-c">' + oppCompactHTML(playerId) + '</span> ' + depthChipHTML(playerId) + '</div>' +
+          '<div class="player-name">' + (ro ? '<span class="pn">' + escapeHTML(name) + '</span>' : analyzeName(playerId, name)) + byeChip + statusChip + newChip + ecrChipHTML(playerId) + '</div>' +
+          '<div class="player-meta"><span class="m-pos">' + escapeHTML(pos) + '</span><span class="m-rk">' + (ecrChipHTML(playerId) || escapeHTML(pos)) + '</span> · ' + escapeHTML(team) + '<span class="m-opp">' + matchupHTML(p.team) + ' ' + dvpChipHTML(playerId) + '</span><span class="m-opp-c">' + oppCompactHTML(playerId) + '</span> ' + depthChipHTML(playerId) + '</div>' +
           (keyStats ? '<div class="key-stats">' + keyStats + '</div>' : '') +
           signalsHTML(playerId, false) +
         '</div>' +
@@ -5046,8 +5060,8 @@
     const item = function(pid, mine){
       const p = ctx.players[pid], v = rosValue(pid), tr = recentTrend(pid), r = weekRange(pid), bye = isOnBye(pid);
       const bits = [];
-      bits.push(v ? '<b>' + v.pts.toFixed(0) + '</b> pts rest of season · ' + v.weeks + ' wk' + (v.weeks === 1 ? '' : 's') : '<b>—</b> no projection left');
-      if(tr) bits.push('last 3: ' + tr.last3.toFixed(1) + ' <span class="trend ' + tr.dir + '">' + { up: '↑', down: '↓', flat: '→' }[tr.dir] + '</span> vs ' + tr.avg.toFixed(1) + ' avg');
+      bits.push(v ? '<b>' + v.pts.toFixed(2) + '</b> pts rest of season · ' + v.weeks + ' wk' + (v.weeks === 1 ? '' : 's') : '<b>—</b> no projection left');
+      if(tr) bits.push('last 3: ' + tr.last3.toFixed(2) + ' <span class="trend ' + tr.dir + '">' + { up: '↑', down: '↓', flat: '→' }[tr.dir] + '</span> vs ' + tr.avg.toFixed(2) + ' avg');
       else if(hist(pid)) bits.push((hist(pid).length || 0) + ' game' + (hist(pid).length === 1 ? '' : 's') + ' played');
       if(r && r.ok) bits.push('range ' + Math.round(r.floor) + '–' + Math.round(r.ceil) + (r.early ? ' (early)' : ''));
       return '<div class="ad-item" ' + (mine ? 'data-player-id-open="' + escapeHTML(pid) + '"' : 'data-fa-open="' + escapeHTML(pid) + '"') + ' role="button" tabindex="0">' +
@@ -5061,8 +5075,8 @@
       // Only call it when it's worth roughly a point a week: small rest-of-season gaps are projection noise.
       const d = val(best) - val(worst), bar = Math.max(AD_MIN_GAIN, val(worst) * 0.08);
       verdict = d >= bar
-        ? '<div class="ad-verdict up">Adding <b>' + escapeHTML(playerName(ctx.players[best])) + '</b> for <b>' + escapeHTML(playerName(ctx.players[worst])) + '</b> projects <b>+' + d.toFixed(0) + '</b> points over the rest of the season.</div>'
-        : '<div class="ad-verdict">No clear upgrade: the best available ' + label + ' is within ' + Math.abs(d).toFixed(0) + ' pts of your weakest bench ' + label + ' over the rest of the season, which is inside projection noise.</div>';
+        ? '<div class="ad-verdict up">Adding <b>' + escapeHTML(playerName(ctx.players[best])) + '</b> for <b>' + escapeHTML(playerName(ctx.players[worst])) + '</b> projects <b>+' + d.toFixed(2) + '</b> points over the rest of the season.</div>'
+        : '<div class="ad-verdict">No clear upgrade: the best available ' + label + ' is within ' + Math.abs(d).toFixed(2) + ' pts of your weakest bench ' + label + ' over the rest of the season, which is inside projection noise.</div>';
     }
     el.innerHTML = '<div class="section-title">Add / drop · ' + escapeHTML(label) + ' <span style="opacity:0.7;">— rest-of-season outlook</span></div>' +
       '<div class="card ad-card">' + verdict +
@@ -5478,10 +5492,10 @@
   function faVsParts(pid){
     const c = faCompare(pid), proj = ctx.projections[pid];
     if(typeof proj !== 'number') return { cls: 'flat', txt: '', who: 'No projection this week' };
-    if(c.empty) return { cls: 'up', txt: '+' + proj.toFixed(1), who: 'fills your empty ' + c.slot };
+    if(c.empty) return { cls: 'up', txt: '+' + proj.toFixed(2), who: 'fills your empty ' + c.slot };
     if(!c.pid) return { cls: 'flat', txt: '', who: 'No ' + ctx.players[pid].position + ' with a projection on your roster' };
-    const diff = proj - ctx.projections[c.pid], flat = Math.abs(diff) < 0.05;
-    return { cls: flat ? 'flat' : diff > 0 ? 'up' : 'down', txt: flat ? '±0.0' : (diff > 0 ? '+' : '−') + Math.abs(diff).toFixed(1), who: 'vs ' + c.prefix + playerName(ctx.players[c.pid]) };
+    const diff = proj - ctx.projections[c.pid], flat = Math.abs(diff) < 0.005;
+    return { cls: flat ? 'flat' : diff > 0 ? 'up' : 'down', txt: flat ? '±0.00' : (diff > 0 ? '+' : '−') + Math.abs(diff).toFixed(2), who: 'vs ' + c.prefix + playerName(ctx.players[c.pid]) };
   }
   function faVsLine(pid){
     const v = faVsParts(pid);
@@ -5725,15 +5739,15 @@
     const worst = weakestRostered(p.position);
     const proj = ctx.projections[pid], flexCmp = ctx.faPos === 'FLEX' && ctx.view === 'fa' ? faCompare(pid) : null;
     if(flexCmp && flexCmp.slot && typeof proj === 'number'){
-      if(flexCmp.empty) els.heroSlotNote.textContent = 'Available. Your ' + flexCmp.slot + ' slot is empty. Picking this player up adds ' + proj.toFixed(1) + ' projected points.';
+      if(flexCmp.empty) els.heroSlotNote.textContent = 'Available. Your ' + flexCmp.slot + ' slot is empty. Picking this player up adds ' + proj.toFixed(2) + ' projected points.';
       else{
         const d = proj - (ctx.projections[flexCmp.pid] || 0);
-        els.heroSlotNote.textContent = 'Available. Projects ' + (Math.abs(d) < 0.05 ? 'even with' : Math.abs(d).toFixed(1) + (d > 0 ? ' more than' : ' less than')) +
+        els.heroSlotNote.textContent = 'Available. Projects ' + (Math.abs(d) < 0.005 ? 'even with' : Math.abs(d).toFixed(2) + (d > 0 ? ' more than' : ' less than')) +
           ' your ' + flexCmp.slot + ', ' + playerName(ctx.players[flexCmp.pid]) + '.';
       }
     }else if(worst && typeof proj === 'number'){
       const diff = proj - ctx.projections[worst];
-      els.heroSlotNote.textContent = 'Available. Projects ' + (Math.abs(diff) < 0.05 ? 'even with' : (Math.abs(diff).toFixed(1) + (diff > 0 ? ' more than' : ' less than'))) +
+      els.heroSlotNote.textContent = 'Available. Projects ' + (Math.abs(diff) < 0.005 ? 'even with' : (Math.abs(diff).toFixed(2) + (diff > 0 ? ' more than' : ' less than'))) +
         ' your lowest-projected ' + p.position + ', ' + playerName(ctx.players[worst]) + '.';
     }else{
       els.heroSlotNote.textContent = 'Available, not on any roster in this league.';
@@ -5956,8 +5970,8 @@
   function rangeCellHTML(pid){
     const r = weekRange(pid);
     if(!r || !r.ok) return '';
-    return '<div class="rng' + (r.early ? ' early' : '') + '" title="Typical week: ' + r.floor.toFixed(1) + ' to ' + r.ceil.toFixed(1) + ' pts. ' + rangeBasis(r) + '">' +
-      Math.round(r.floor) + '–' + Math.round(r.ceil) + '</div>';
+    return '<div class="rng' + (r.early ? ' early' : '') + '" title="Typical week: ' + r.floor.toFixed(2) + ' to ' + r.ceil.toFixed(2) + ' pts. ' + rangeBasis(r) + '">' +
+      r.floor.toFixed(2) + '–' + r.ceil.toFixed(2) + '</div>';
   }
   // Player page: bad week — projection — good week on one bar.
   function rangeDetailHTML(pid){
@@ -5969,8 +5983,8 @@
     return '<div class="range-card"><div class="rg-head"><span class="eyebrow">Typical week</span><span class="rg-basis">' + rangeBasis(r) + '</span></div>' +
       '<div class="rg-bar"><div class="rg-fill" style="left:' + at(r.floor) + ';right:calc(100% - ' + at(r.ceil) + ')"></div>' +
         (typeof proj === 'number' ? '<div class="rg-proj" style="left:' + at(proj) + '" title="This week’s projection"></div>' : '') + '</div>' +
-      '<div class="rg-legend"><span>Bad week <b>' + r.floor.toFixed(1) + '</b></span>' + (typeof proj === 'number' ? '<span class="rg-p">Proj <b>' + proj.toFixed(1) + '</b></span>' : '') +
-      '<span>Good week <b>' + r.ceil.toFixed(1) + '</b></span></div></div>';
+      '<div class="rg-legend"><span>Bad week <b>' + r.floor.toFixed(2) + '</b></span>' + (typeof proj === 'number' ? '<span class="rg-p">Proj <b>' + proj.toFixed(2) + '</b></span>' : '') +
+      '<span>Good week <b>' + r.ceil.toFixed(2) + '</b></span></div></div>';
   }
 
   // ---- matchup difficulty: points each defense allows to a position this season, in this league's scoring ----
@@ -6006,7 +6020,7 @@
   }
   function dvpLabel(i, short){ return ordinal(i.n) + '-' + (i.most ? 'most' : 'fewest') + (short ? '' : ' to ' + i.pos + 's'); }
   function dvpSentence(i){
-    return i.team + ' has allowed the ' + dvpLabel(i, true) + ' points to ' + i.pos + 's in your scoring (' + i.per.toFixed(1) + ' per game over ' + i.g + ' game' + (i.g > 1 ? 's' : '') + ')' +
+    return i.team + ' has allowed the ' + dvpLabel(i, true) + ' points to ' + i.pos + 's in your scoring (' + i.per.toFixed(2) + ' per game over ' + i.g + ' game' + (i.g > 1 ? 's' : '') + ')' +
       (i.early ? ': early season, so this ranking will move a lot' : '') + '.';
   }
   function dvpChipHTML(pid, short){
