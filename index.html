@@ -816,6 +816,42 @@
   /* a swapped-in row slides into place */
   @keyframes swapIn{ 0%{ opacity: 0; transform: translateX(-16px); } 100%{ opacity: 1; transform: none; } }
   .slot-row.just-swapped{ animation: swapIn .55s var(--spring); }
+
+  /* ---- Lineup view switch: Quick Swap (list) / Power Rank (position-by-position card placement) ---- */
+  .lu-mode{ display: inline-flex; gap: 2px; padding: 3px; margin: 0 2px 16px; border-radius: 999px; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--hair); }
+  .lu-mode button{ display: inline-flex; align-items: center; gap: 6px; background: none; color: var(--text-2); padding: 7px 14px; min-height: 34px; font-size: 13px; font-weight: 600; border-radius: 999px; transition: background .2s var(--ease), color .2s var(--ease); }
+  .lu-mode button svg{ width: 15px; height: 15px; }
+  .lu-mode button[aria-pressed="true"]{ background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.14); }
+  html.lu-pr #roster-view .starters > :not(.opt-note), html.lu-pr #roster-view .bench-section{ display: none; }
+  html.lu-pr .kpis{ display: none; }   /* Power Rank carries its own live total */
+
+  /* ---- Power Rank ---- */
+  .pr{ --pr-c: var(--accent); }
+  .pr-top{ position: sticky; top: calc(env(safe-area-inset-top) + 8px); z-index: 5; display: flex; align-items: center; gap: 14px; padding: 12px 14px; margin: 0 0 12px;
+    background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow), inset 0 0 0 1px var(--hair); }
+  .pr-total{ display: flex; flex-direction: column; min-width: 0; }
+  .pr-total .eyebrow{ margin: 0; }
+  .pr-total-row{ display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 10px; }
+  .pr-delta{ white-space: nowrap; }
+  .pr-total-num{ font-size: 30px; font-weight: 650; letter-spacing: -0.03em; line-height: 1.05; font-variant-numeric: tabular-nums; }
+  .pr-delta{ font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--text-3); }
+  .pr-delta.up{ color: var(--accent); } .pr-delta.down{ color: var(--danger); }
+  .pr-top .opt-btn{ margin-left: auto; }
+  .pr-tabs{ display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding: 2px 2px 12px; margin: 0 -2px; }
+  .pr-tabs::-webkit-scrollbar{ display: none; }
+  .pr-tab{ --c: var(--text-2); position: relative; flex: 1 0 auto; display: inline-flex; flex-direction: column; align-items: flex-start; gap: 1px; min-width: 58px; padding: 8px 10px 9px;
+    border-radius: 14px; background: var(--surface); color: var(--text); box-shadow: inset 0 0 0 1px var(--hair); text-align: left;
+    transition: transform .18s var(--spring), box-shadow .2s var(--ease), background .2s var(--ease); }
+  .pr-tab:active{ transform: scale(.96); }
+  .pr-tab b{ font-size: 14px; font-weight: 700; letter-spacing: .02em; color: var(--c); }
+  .pr-tab small{ font-size: 11.5px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+  .pr-tab[aria-selected="true"]{ background: color-mix(in srgb, var(--c) 12%, var(--surface)); box-shadow: inset 0 0 0 1.5px var(--c); }
+  .pr-tab .pr-dot{ position: absolute; top: 7px; right: 8px; width: 7px; height: 7px; border-radius: 50%; background: var(--danger); }
+  .pr-stage{ animation: viewIn .28s var(--ease); }
+  .pr-sec{ display: flex; align-items: baseline; gap: 8px; margin: 4px 2px 10px; }
+  .pr-sec h3{ margin: 0; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-2); }
+  .pr-sec span{ font-size: 12.5px; color: var(--text-3); }
+  .pr-empty{ padding: 18px; border-radius: var(--radius); background: var(--surface); color: var(--text-3); font-size: 13.5px; text-align: center; }
   @keyframes bump{ 0%{ transform: scale(1); } 40%{ transform: scale(1.06); } 100%{ transform: scale(1); } }
   .bump{ display: inline-block; transform-origin: left center; animation: bump .45s var(--spring); }
 
@@ -1558,6 +1594,11 @@
     <div class="panes" id="panes">
       <div class="pane-main">
         <section class="view" id="roster-view">
+          <div class="lu-mode" role="group" aria-label="Lineup view">
+            <button type="button" data-lu-mode="list" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>Quick Swap</button>
+            <button type="button" data-lu-mode="pr" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="7" height="10" rx="1.5"/><rect x="14" y="4" width="7" height="10" rx="1.5"/><path d="M6 18h12"/></svg>Power Rank</button>
+          </div>
+          <div id="pr-view" class="pr" hidden></div>
           <div class="starters">
             <div class="section-title">Starters <span class="st-hint" style="opacity:0.7;">— <span class="hint-mouse">click</span><span class="hint-touch">tap</span> a player to compare &amp; swap</span><button class="opt-btn" id="opt-btn" title="Fill your starters with the highest projected lineup"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9zM19 14l.9 2.6 2.6.9-2.6.9L19 21l-.9-2.6-2.6-.9 2.6-.9z"/></svg>Optimal lineup</button><button class="xbtn" data-expand="roster" aria-label="Expand lineup to full screen" title="Expand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M10 20H4v-6M20 4l-6.5 6.5M4 20l6.5-6.5"/></svg></button></div>
             <div class="opt-note" id="opt-note" role="status" aria-live="polite" hidden></div>
@@ -2508,12 +2549,15 @@
     if(!saved || !Array.isArray(saved.draft)) return '';
     const clear = function(msg){ try{ localStorage.removeItem(draftKey()); }catch(e){ console.warn(e); } return msg; };
     if(saved.week !== ctx.week || saved.season !== ctx.season) return clear('<b>New week:</b> your saved lineup changes from week ' + saved.week + ' were cleared.');
-    if(JSON.stringify(saved.sleeper) !== JSON.stringify(ctx.originalStarters)) return clear('<b>Your lineup changed in Sleeper</b> since you planned, so your saved changes were cleared.');
     if(saved.draft.length !== ctx.originalStarters.length) return clear('<b>Your league’s lineup slots changed</b>, so your saved changes were cleared.');
+    // The plan is yours until you press Reset: a lineup change made in Sleeper doesn't wipe it (it's flagged instead).
+    const sleeperMoved = JSON.stringify(saved.sleeper) !== JSON.stringify(ctx.originalStarters);
     const onRoster = new Set(ctx.myRoster.players || []);
     ctx.draftStarters = saved.draft.map(function(pid){ return pid && pid !== '0' && !onRoster.has(pid) ? '0' : pid; });
     const n = ctx.draftStarters.filter(function(pid, i){ return pid !== ctx.originalStarters[i]; }).length;
-    return n ? '<b>Welcome back:</b> your planned lineup (' + n + ' change' + (n > 1 ? 's' : '') + ') is still here. Reset goes back to your Sleeper lineup.' : '';
+    if(!n) return sleeperMoved ? '<b>Your Sleeper lineup now matches your plan.</b>' : '';
+    return sleeperMoved ? '<b>Your lineup changed in Sleeper</b> since you planned. Your plan is kept (' + n + ' slot' + (n > 1 ? 's' : '') + ' differ); Reset makes it match Sleeper.'
+      : '<b>Welcome back:</b> your planned lineup (' + n + ' change' + (n > 1 ? 's' : '') + ') is still here. Reset goes back to your Sleeper lineup.';
   }
 
   // ---- remember the last username + league: open straight to the team next time ----
@@ -3320,17 +3364,19 @@
     ctx.league = bundle.league; ctx.myRoster = my; ctx.lastRosters = bundle.rosters; ctx.users = bundle.users; ctx.rosterPositions = positions;
     if(weekRolled){ ctx.week = bundle.week; ctx.weekRolled = true; ctx.live.games = null; ctx.live.stats = null; ctx.live.ts = 0; ctx.live.gamesTs = ctx.live.statsTs = 0; histReset(); }
     const sleeperChanged = JSON.stringify(orig) !== JSON.stringify(ctx.originalStarters);
-    if(!dirty || weekRolled || layoutChanged || sleeperChanged){
+    // A Sleeper-side change keeps a hand-made plan (only Reset goes back to Sleeper); with no plan, just follow Sleeper.
+    if(!dirty || weekRolled || layoutChanged){
       ctx.draftStarters = orig.slice();
       if(dirty){
         ctx.draftNote = weekRolled ? '<b>New week:</b> your planned lineup changes from week ' + (bundle.week - 1) + ' were cleared.'
-          : sleeperChanged ? '<b>Your lineup changed in Sleeper</b>, so your planned changes were cleared.'
           : '<b>Your league’s lineup slots changed</b>, so your planned changes were cleared.';
       }
     }
     else {
       const onRoster = new Set(my.players || []);
       ctx.draftStarters = ctx.draftStarters.map(function(pid){ return pid && pid !== '0' && !onRoster.has(pid) ? '0' : pid; });
+      if(sleeperChanged) ctx.draftNote = JSON.stringify(ctx.draftStarters) === JSON.stringify(orig) ? '<b>Your Sleeper lineup now matches your plan.</b>'
+        : '<b>Your lineup changed in Sleeper.</b> Your plan is kept; Reset makes it match Sleeper.';
     }
     ctx.originalStarters = orig;
     // A failed projections call comes back empty: keep the ones we have rather than zeroing the lineup.
@@ -4995,7 +5041,114 @@
     renderLineupCompare();
     renderByePlan();
     markSelected();
+    if(luMode() === 'pr') renderPowerRank();
   }
+
+  // ============ Power Rank view: set the lineup one position at a time, then the flex ============
+  // Same plan as the list view (ctx.draftStarters, saved per league and week); only the way you edit it differs.
+  // Tabs come from the league's own slots, so a league without a TE slot has no TE tab. v1 covers position players;
+  // K / DEF / IDP slots are simply not shown here (the list view still has them), and adding them later is a matter
+  // of listing them in PR_POS / PR_FLEX.
+  const PR_POS = ['QB', 'RB', 'WR', 'TE'];
+  const PR_FLEX = ['FLEX', 'WRRB_FLEX', 'REC_FLEX', 'WRRB', 'WR_TE', 'SUPER_FLEX', 'QB_FLEX'];
+  const LU_MODE_KEY = 'rv-lu-mode';
+  ctx.luMode = (function(){ try{ return localStorage.getItem(LU_MODE_KEY) === 'pr' ? 'pr' : 'list'; }catch(e){ return 'list'; } })();
+  ctx.prTab = null;
+  function luMode(){ return ctx.luMode; }
+  function setLuMode(mode){
+    ctx.luMode = mode === 'pr' ? 'pr' : 'list';
+    try{ localStorage.setItem(LU_MODE_KEY, ctx.luMode); }catch(e){ /* per-device convenience only */ }
+    applyLuMode();
+    if(ctx.myRoster && ctx.luMode === 'pr') renderPowerRank();
+  }
+  function applyLuMode(){
+    const pr = ctx.luMode === 'pr';
+    document.documentElement.classList.toggle('lu-pr', pr);
+    document.querySelectorAll('[data-lu-mode]').forEach(function(b){ b.setAttribute('aria-pressed', String(b.getAttribute('data-lu-mode') === ctx.luMode)); });
+    const view = document.getElementById('pr-view'), note = document.getElementById('opt-note');
+    view.hidden = !pr;
+    // the optimizer's result note (with Undo) sits under whichever view is showing
+    if(pr) view.parentNode.insertBefore(note, view);
+    else document.querySelector('#roster-view .starters .section-title').after(note);
+  }
+  document.querySelector('.lu-mode').addEventListener('click', function(e){
+    const b = e.target.closest('[data-lu-mode]');
+    if(b && b.getAttribute('data-lu-mode') !== ctx.luMode) setLuMode(b.getAttribute('data-lu-mode'));
+  });
+  applyLuMode();
+
+  // Power Rank slots: [{ i: index in the lineup, label, tab, name }] — "RB1", "RB2", a lone "QB", "FLEX1"/"FLEX2", "SF".
+  function prSlots(){
+    const total = {}, seen = {};
+    ctx.rosterPositions.forEach(function(l){ total[l] = (total[l] || 0) + 1; });
+    return ctx.rosterPositions.map(function(label, i){
+      const tab = PR_POS.indexOf(label) !== -1 ? label : PR_FLEX.indexOf(label) !== -1 ? 'FLEX' : null;
+      seen[label] = (seen[label] || 0) + 1;
+      return { i: i, label: label, tab: tab, name: slotShort(label) + (total[label] > 1 ? seen[label] : '') };
+    }).filter(function(s){ return s.tab; });
+  }
+  function prTabs(){
+    const slots = prSlots();
+    return PR_POS.concat(['FLEX']).filter(function(t){ return slots.some(function(s){ return s.tab === t; }); });
+  }
+  // Players who could go in this tab's slots: on the roster, not parked on IR / taxi.
+  function prPool(tab){
+    const parked = new Set([].concat(ctx.myRoster.reserve || [], ctx.myRoster.taxi || []));
+    const slots = prSlots().filter(function(s){ return s.tab === tab; });
+    return (ctx.myRoster.players || []).filter(function(pid){
+      return ctx.players[pid] && !parked.has(pid) && slots.some(function(s){ return canFill(pid, s.label); });
+    }).sort(function(a, b){ return (ctx.projections[b] || -1) - (ctx.projections[a] || -1); });
+  }
+  // A slot that won't score: empty, or its player is on a bye or ruled out.
+  function prSlotProblem(pid){ return !pid || pid === '0' || !ctx.players[pid] || isOnBye(pid) || cantPlay(effectiveStatus(pid)); }
+
+  function renderPowerRank(){
+    const view = document.getElementById('pr-view');
+    if(!view || !ctx.myRoster || !ctx.rosterPositions) return;
+    const tabs = prTabs();
+    if(!tabs.length){ view.innerHTML = '<div class="pr-empty">Your league has no QB / RB / WR / TE slots to set here.</div>'; return; }
+    if(tabs.indexOf(ctx.prTab) === -1) ctx.prTab = tabs[0];
+    const slots = prSlots();
+    const total = sumProj(ctx.draftStarters), diff = total - sumProj(ctx.originalStarters);
+    const tabHTML = tabs.map(function(t){
+      const ts = slots.filter(function(s){ return s.tab === t; });
+      const filled = ts.filter(function(s){ const pid = ctx.draftStarters[s.i]; return pid && pid !== '0'; }).length;
+      const bad = ts.some(function(s){ return prSlotProblem(ctx.draftStarters[s.i]); });
+      return '<button type="button" class="pr-tab" role="tab" data-pr-tab="' + t + '" aria-selected="' + (t === ctx.prTab) + '" style="--c:' + posColor(t) + '">' +
+        '<b>' + t + '</b><small>' + filled + '/' + ts.length + ' set</small>' + (bad ? '<span class="pr-dot" title="A slot here won’t score"></span>' : '') + '</button>';
+    }).join('');
+    const top = view.querySelector('.pr-top');
+    if(!top){
+      view.innerHTML = '<div class="pr-top"><div class="pr-total" title="All your starters, including any slots set in Quick Swap (K, DEF, defenders)"><div class="eyebrow">Projected lineup</div><div class="pr-total-row"><span class="pr-total-num" id="pr-total">0.00</span><span class="pr-delta" id="pr-delta"></span></div></div>' +
+        '<button type="button" class="opt-btn" data-pr-opt title="Fill your starters with the highest projected lineup"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9zM19 14l.9 2.6 2.6.9-2.6.9L19 21l-.9-2.6-2.6-.9 2.6-.9z"/></svg>Optimize</button></div>' +
+        '<div class="pr-tabs" role="tablist" aria-label="Positions"></div><div class="pr-body"></div>';
+    }
+    countTo(document.getElementById('pr-total'), total);   // tweens from the last total
+    const d = document.getElementById('pr-delta'), flat = Math.abs(diff) < 0.005;
+    d.textContent = flat ? 'same as Sleeper' : (diff > 0 ? '+' : '−') + Math.abs(diff).toFixed(2) + ' vs Sleeper';
+    d.className = 'pr-delta' + (flat ? '' : diff > 0 ? ' up' : ' down');
+    view.querySelector('.pr-tabs').innerHTML = tabHTML;
+    view.querySelector('.pr-body').innerHTML = prStageHTML(ctx.prTab, slots);
+  }
+  // One position: its slots on top, everyone eligible below. (Shell: read-only; cards and placement come next.)
+  function prStageHTML(tab, slots){
+    const ts = slots.filter(function(s){ return s.tab === tab; });
+    const inSlot = {};
+    ctx.draftStarters.forEach(function(pid, i){ if(pid && pid !== '0') inSlot[pid] = i; });
+    const pool = prPool(tab);
+    const name = function(pid){ return escapeHTML(playerName(ctx.players[pid])); };
+    return '<div class="pr-stage" style="--pr-c:' + posColor(tab) + '">' +
+      '<div class="pr-sec"><h3>' + (tab === 'FLEX' ? 'Flex' : tab) + ' slots</h3><span>' + ts.length + ' to fill</span></div>' +
+      '<div class="pr-empty">' + ts.map(function(s){ const pid = ctx.draftStarters[s.i]; return '<b>' + escapeHTML(s.name) + '</b> ' + (pid && pid !== '0' && ctx.players[pid] ? name(pid) : 'empty'); }).join(' · ') + '</div>' +
+      '<div class="pr-sec" style="margin-top:18px"><h3>Your ' + (tab === 'FLEX' ? 'flex-eligible players' : tab + 's') + '</h3><span>' + pool.length + '</span></div>' +
+      '<div class="pr-empty">' + (pool.map(function(pid){ return name(pid) + (pid in inSlot ? ' (' + escapeHTML(slotShort(ctx.rosterPositions[inSlot[pid]])) + ')' : ''); }).join(' · ') || 'No one on your roster can play here.') + '</div></div>';
+  }
+  document.getElementById('pr-view').addEventListener('click', function(e){
+    const t = e.target.closest('[data-pr-tab]');
+    if(t){ ctx.prTab = t.getAttribute('data-pr-tab'); renderPowerRank(); return; }
+    if(e.target.closest('[data-pr-opt]')) runOptimal();
+  });
+
   els.byeAlert.addEventListener('click', function(e){
     const b = e.target.closest('[data-fix-slot]');
     if(!b) return;
