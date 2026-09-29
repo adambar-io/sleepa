@@ -1740,6 +1740,193 @@
   @keyframes rmFade{ from{ opacity: 0; } to{ opacity: 1; } }
   .vt-debug{ position: fixed; z-index: 200; left: 12px; right: 12px; bottom: calc(90px + env(safe-area-inset-bottom)); margin: 0 auto; max-width: 520px;
     background: var(--text); color: var(--bg); font-size: 12px; line-height: 1.4; padding: 10px 12px; border-radius: 12px; box-shadow: var(--shadow-lg); white-space: pre-wrap; }
+
+  /* ============ Sleepa Zone: every league at once ============ */
+  /* Impact colors (Phase 2 feed): always the effect on ME. Soft versions of the existing palette. */
+  :root{ --impact-pos: var(--accent); --impact-neg: var(--danger); --impact-mixed: var(--warn); --impact-neutral: var(--text-3); }
+  .zn{ position: fixed; inset: 0; z-index: 48; background: var(--bg); display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; container-type: inline-size; container-name: zn; }
+  .zn[hidden]{ display: none; }
+  html.zone-open, html.zone-open body{ overflow: hidden; }
+  html.zone-open .zn{ animation: prOpen .3s var(--ease); }
+  .zn-top{ display: flex; align-items: center; gap: 10px; padding: calc(env(safe-area-inset-top) + 10px) 20px 10px; border-bottom: 1px solid var(--hair); }
+  .zn-title{ display: flex; flex-direction: column; line-height: 1.15; min-width: 0; margin-right: auto; }
+  .zn-title b{ font-size: 16px; font-weight: 700; letter-spacing: -0.01em; }
+  .zn-title span{ font-size: 12px; color: var(--text-3); white-space: nowrap; }
+  .zn-wk{ align-items: center; }
+  .zn-wk button{ padding: 4px 11px; min-height: 30px; font-size: 16px; line-height: 1; }
+  .zn-wk button:disabled{ opacity: .3; }
+  .zn-wk span{ font-size: 13px; font-weight: 600; min-width: 42px; text-align: center; font-variant-numeric: tabular-nums; }
+  .zn-btn{ display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border-radius: 999px; background: var(--surface-2); color: var(--text-2); font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+  .zn-btn svg{ width: 16px; height: 16px; flex-shrink: 0; }
+  .zn-btn span{ display: inline-flex; align-items: center; gap: 6px; }
+  .zn-btn:active{ transform: scale(.96); }
+  .zn-ico{ padding: 0; width: 36px; justify-content: center; }
+  .zn-ref span{ font-variant-numeric: tabular-nums; font-weight: 500; }
+  .zn-ref.busy svg{ animation: znSpin 1s linear infinite; }
+  .zn-ref.stale{ color: var(--warn); }
+  @keyframes znSpin{ to{ transform: rotate(360deg); } }
+  .zm-dt{ display: none !important; }
+  .zn-main{ position: relative; min-height: 0; }
+
+  /* carousel: native scroll-snap, one league per card */
+  .zn-car{ height: 100%; display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none; outline: none; }
+  .zn-car::-webkit-scrollbar{ display: none; }
+  .zn-car[hidden]{ display: none; }
+  .zn-card{ flex: 0 0 100%; height: 100%; box-sizing: border-box; padding: 14px 16px 10px; scroll-snap-align: center; scroll-snap-stop: always; }
+  .zn-card-in{ max-height: 100%; box-sizing: border-box; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; background: var(--surface); border-radius: var(--radius-lg);
+    box-shadow: var(--shadow); padding: 16px 16px 12px; }
+  .zn-lg{ display: flex; align-items: center; gap: 10px; }
+  .zn-lg .league-ico{ width: 32px; height: 32px; border-radius: 9px; }
+  .zn-lg-t{ display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
+  .zn-lg-t b{ font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .zn-lg-t span{ font-size: 12px; color: var(--text-2); }
+  .zn-rzc{ margin-left: auto; flex-shrink: 0; font-size: 11px; font-weight: 600; color: var(--danger); background: var(--danger-soft); padding: 3px 9px; border-radius: 999px; }
+  .zn-board{ display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: start; gap: 8px; margin: 22px 0 14px; }
+  .zn-side{ min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+  .zn-side.them{ align-items: flex-end; text-align: right; }
+  .zn-team{ display: flex; align-items: center; gap: 7px; min-width: 0; max-width: 100%; font-size: 13px; color: var(--text-2); font-weight: 600; }
+  .zn-side.them .zn-team{ flex-direction: row-reverse; }
+  .zn-team span{ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .zn-team img{ width: 24px; height: 24px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: var(--surface-2); }
+  .zn-num{ font-size: clamp(30px, 10cqw, 46px); font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; font-variant-numeric: tabular-nums; color: var(--text-2); margin-top: 4px; transition: color .4s; }
+  .zn-side.lead .zn-num{ color: var(--text); }
+  .zn-num.proj{ font-weight: 600; color: var(--text-3); }
+  .zn-cap{ font-size: 11px; color: var(--text-3); font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+  .zn-sub{ font-size: 12px; color: var(--text-2); }
+  .zn-sub:empty, .zn-cap:empty{ display: none; }
+  .zn-mid{ display: flex; flex-direction: column; align-items: center; gap: 6px; padding-top: 30px; }
+  .zn-vs{ font-size: 12px; color: var(--text-3); font-weight: 600; }
+  .zn-lc{ font-size: 10.5px; font-weight: 600; color: var(--accent); background: var(--accent-soft); padding: 2px 8px; border-radius: 999px; opacity: 0; white-space: nowrap; }
+  .zn-note{ font-size: 12.5px; line-height: 1.45; color: var(--text-2); background: var(--surface-2); border-radius: 12px; padding: 9px 12px; margin-bottom: 10px; }
+  .zn-note[hidden]{ display: none; }
+  .zn-retry{ display: inline-flex; margin-left: 6px; min-height: 30px; padding: 0 12px; border-radius: 999px; background: var(--surface); color: var(--text); font-size: 12px; font-weight: 600; }
+  /* lead change: a soft ring and label that fade over about a second */
+  .zn-card.flip .zn-card-in, .zn-tile.flip{ animation: znFlip 1.5s var(--ease); }
+  .zn-card.flip .zn-lc{ animation: znLc 1.5s var(--ease); }
+  @keyframes znFlip{ 0%{ box-shadow: var(--shadow), inset 0 0 0 1.5px var(--accent); } 60%{ box-shadow: var(--shadow), inset 0 0 0 1.5px color-mix(in srgb, var(--accent) 45%, transparent); } 100%{ box-shadow: var(--shadow), inset 0 0 0 1.5px transparent; } }
+  @keyframes znLc{ 0%, 100%{ opacity: 0; transform: translateY(2px); } 20%, 70%{ opacity: 1; transform: none; } }
+
+  /* starters: my side | slot | their side, collapsed by default */
+  .zn-starters{ border-top: 1px solid var(--hair); }
+  .zn-starters summary{ list-style: none; display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; font-size: 13px; font-weight: 600; color: var(--text-2); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .zn-starters summary::-webkit-details-marker{ display: none; }
+  .zn-starters summary svg{ width: 16px; height: 16px; transition: transform .25s var(--ease); }
+  .zn-starters[open] summary svg{ transform: rotate(180deg); }
+  .zn-rows{ display: grid; grid-template-columns: minmax(0, 1fr) 30px minmax(0, 1fr); gap: 3px 0; padding-bottom: 8px; }
+  .zn-rows.solo{ grid-template-columns: minmax(0, 1fr) 30px 0; }
+  .zs{ align-self: center; text-align: center; font-size: 10px; font-weight: 700; color: var(--text-3); letter-spacing: .02em; }
+  .zp{ min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "t v" "m c"; column-gap: 5px; padding: 7px 7px; border-radius: 10px; background: var(--surface-2); }
+  .zp.them{ grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "v t" "c m"; text-align: right; }
+  .zp-t{ grid-area: t; display: flex; align-items: center; gap: 5px; min-width: 0; }
+  .zp.them .zp-t{ flex-direction: row-reverse; }
+  .zp-n{ font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .zp-m{ grid-area: m; font-size: 10.5px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+  .zp-m .live-dot{ width: 5px; height: 5px; margin-right: 3px; }
+  .zp-m .status-chip{ font-size: 9.5px; padding: 0 4px; vertical-align: 1px; }
+  .zp-m .chip-full{ display: none; }
+  .zp-v{ grid-area: v; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
+  .zp.them .zp-v{ text-align: left; }
+  .zp-v.live{ color: var(--accent); }
+  .zp-v.proj{ color: var(--text-3); font-weight: 600; }
+  .zp-c{ grid-area: c; font-size: 10px; color: var(--text-3); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .zp.them .zp-c{ text-align: left; }
+  .zp.s-bye, .zp.empty, .zp.out{ opacity: .55; }
+  .zp.empty .zp-n{ color: var(--text-3); font-weight: 500; }
+  .zn-feeds{ display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .zn-feeds[hidden]{ display: none; }
+  /* red zone: a small soft pill with a very slow pulse */
+  .zn-rz{ flex-shrink: 0; font-size: 9px; font-weight: 700; letter-spacing: .05em; color: var(--danger); background: var(--danger-soft); padding: 1px 5px; border-radius: 999px; animation: znRz 2.8s ease-in-out infinite; }
+  @keyframes znRz{ 50%{ opacity: .55; } }
+
+  /* league indicators */
+  .zn-dots{ display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 8px 16px calc(env(safe-area-inset-bottom) + 10px); justify-content: safe center; }
+  .zn-dots::-webkit-scrollbar{ display: none; }
+  .zn.alt .zn-dots{ display: none; }
+  .zn-dot{ flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; max-width: 46vw; min-height: 34px; padding: 0 12px; border-radius: 999px; background: none; color: var(--text-3); font-size: 12.5px; font-weight: 600; }
+  .zn-dot[aria-current="true"]{ background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+  .zd-n{ font-variant-numeric: tabular-nums; opacity: .7; }
+  .zd-t{ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .zd-live{ display: none; width: 6px; height: 6px; border-radius: 50%; background: var(--danger); animation: livePulse 1.6s ease-in-out infinite; }
+  .zn-dot.live .zd-live{ display: inline-block; }
+
+  /* compact list (phone) and grid (desktop): live first */
+  .zn-alt{ height: 100%; overflow-y: auto; overscroll-behavior: contain; padding: 14px 16px calc(env(safe-area-inset-bottom) + 20px); box-sizing: border-box; }
+  .zn-alt[hidden]{ display: none; }
+  .zn-tiles{ display: grid; gap: 10px; align-content: start; }
+  .zn-feedph{ display: none; }
+  .zn-tile{ display: block; width: 100%; text-align: left; font-weight: 400; color: var(--text); background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow); padding: 12px 14px 12px; }
+  .zn-tile:active{ transform: scale(.985); }
+  .zt-top{ display: flex; align-items: center; gap: 8px; font-size: 12px; }
+  .zt-lg{ font-weight: 600; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .zt-st{ margin-left: auto; color: var(--text-3); white-space: nowrap; }
+  .zt-score{ display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: end; gap: 8px; margin: 8px 0 4px; }
+  .zt-side{ display: flex; flex-direction: column; min-width: 0; }
+  .zt-side.them{ align-items: flex-end; text-align: right; }
+  .zt-side small{ font-size: 11.5px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .zt-side b{ font-size: 28px; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .zt-score.pre b{ color: var(--text-3); font-weight: 600; }
+  .zt-score.has-lead .zt-side:not(.lead) b{ color: var(--text-2); }
+  .zt-dash{ color: var(--text-3); padding-bottom: 6px; }
+  .zt-proj{ font-size: 11px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+  .zt-lbl{ font-size: 9.5px; font-weight: 700; letter-spacing: .08em; }
+
+  @container zn (max-width: 600px){
+    .zn-top{ flex-wrap: wrap; padding: calc(env(safe-area-inset-top) + 8px) 12px 8px; gap: 8px; row-gap: 8px; }
+    .zn-top .pr-exit span{ display: none; }
+    .zn-top .pr-exit{ padding: 7px 10px; }
+    .zn-title{ order: 0; }
+    .zn-top .zn-ico{ order: 1; }
+    .zn-wk{ order: 2; }
+    .zn-top [data-zn-mode]{ order: 3; }
+    .zn-ref{ order: 4; margin-left: auto; }
+  }
+  @container zn (min-width: 900px){
+    .zm-ph{ display: none !important; }
+    .zm-dt{ display: inline-flex !important; }
+    .zn-top{ padding-left: 24px; padding-right: 24px; }
+    /* lazy Susan: cards turn and recede with their distance from the center (--d, set on scroll) */
+    .zn-car{ padding: 0 calc(50% - 280px); }
+    .zn-card{ flex-basis: 560px; padding: max(28px, 7vh) 12px 16px; transform: perspective(1800px) translateZ(calc(var(--ad, 0) * -140px)) rotateY(calc(var(--d, 0) * -26deg));
+      opacity: calc(1 - var(--ad, 0) * .45); cursor: pointer; }
+    .zn-card.on{ cursor: auto; }
+    .zn-card:not(.on) .zn-card-in{ pointer-events: none; }
+    .zn-alt{ display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 18px; align-items: start; padding: 22px 24px; }
+    .zn-tiles{ grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px; }
+    .zn-tile{ box-shadow: none; border: 1px solid var(--hair); padding: 16px 18px; transition: border-color .2s; }
+    .zn-tile:hover{ border-color: color-mix(in srgb, var(--text) 18%, transparent); }
+    .zn-tile.is-live{ border-color: color-mix(in srgb, var(--danger) 30%, transparent); }
+    .zt-side b{ font-size: 32px; }
+    .zn-feedph{ display: block; position: sticky; top: 0; border: 1px dashed color-mix(in srgb, var(--text) 18%, transparent); border-radius: var(--radius-lg); padding: 18px; color: var(--text-3); }
+    .zn-feedph b{ font-size: 13px; color: var(--text-2); }
+    .zn-feedph p{ font-size: 12.5px; line-height: 1.5; margin: 6px 0 0; }
+  }
+  @media (hover: hover){ .zn-btn:hover{ color: var(--text); } .zn-dot:not([aria-current]):hover{ color: var(--text-2); } }
+  @media (prefers-reduced-motion: reduce){
+    .zn-card{ transform: none !important; }
+    .zn-rz, .zd-live, .zn-card.flip .zn-card-in, .zn-tile.flip, .zn-card.flip .zn-lc, .zn-ref.busy svg{ animation: none !important; }
+  }
+
+  /* the guide: condensed accordions */
+  .zg-back{ position: fixed; inset: 0; z-index: 120; background: var(--scrim); display: flex; align-items: flex-end; justify-content: center; animation: fadeIn .18s var(--ease); }
+  .zg-back[hidden]{ display: none; }
+  .zg{ width: min(560px, 100%); max-height: 86vh; max-height: 86svh; overflow-y: auto; overscroll-behavior: contain; background: var(--surface); border-radius: 22px 22px 0 0; padding: 6px 20px calc(env(safe-area-inset-bottom) + 18px); box-shadow: var(--shadow-lg); }
+  .zg-head{ position: sticky; top: -6px; display: flex; align-items: center; gap: 10px; background: var(--surface); padding: 14px 0 10px; }
+  .zg-head h2{ font-size: 17px; margin: 0; letter-spacing: -0.01em; }
+  .zg-x{ margin-left: auto; width: 34px; height: 34px; padding: 0; border-radius: 50%; background: var(--surface-2); color: var(--text-2); font-size: 20px; line-height: 1; }
+  .zg-s{ border-top: 1px solid var(--hair); }
+  .zg-s summary{ list-style: none; padding: 13px 0; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; }
+  .zg-s summary::-webkit-details-marker{ display: none; }
+  .zg-s summary::after{ content: '+'; margin-left: auto; color: var(--text-3); font-weight: 400; font-size: 18px; }
+  .zg-s[open] summary::after{ content: '–'; }
+  .zg-s p{ font-size: 13.5px; line-height: 1.55; color: var(--text-2); margin: 0 0 10px; }
+  @media (min-width: 700px){ .zg-back{ align-items: center; } .zg{ border-radius: 22px; } }
+  /* entries: logo menu, sidebar league menu, Settings */
+  .zn-entry{ display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; margin-bottom: 4px; border-radius: 12px; background: var(--surface-2); color: var(--text); font-size: 14px; font-weight: 600; text-align: left; }
+  .zn-entry svg{ width: 18px; height: 18px; color: var(--accent); flex-shrink: 0; }
+  .zn-entry small{ margin-left: auto; font-size: 11.5px; font-weight: 500; color: var(--text-3); }
+  .zn-entry:active{ transform: scale(.985); }
+  .zn-set-btns{ display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .set-card .zn-set-btns .quiet-btn{ margin-top: 0; }
 </style>
 </head>
 <body>
@@ -1797,7 +1984,7 @@
         <span class="league-av"></span><div class="league-txt"><b id="team-name">—</b><span><span id="league-name">—</span> · <span id="team-record"></span></span></div>
         <svg class="league-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 10l4 4 4-4"/></svg>
       </button>
-      <div class="league-menu" id="league-menu" role="menu" hidden><div class="league-menu-head">Your leagues</div><div class="league-list" data-league-list></div></div>
+      <div class="league-menu" id="league-menu" role="menu" hidden><div class="league-menu-head">Your leagues</div><button type="button" class="zn-entry" role="menuitem" data-zone-open><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg><span data-zone-name>Sleepa Zone</span><small>all leagues</small></button><div class="league-list" data-league-list></div></div>
     </div>
     <nav class="nav" id="side-nav" aria-label="Sections">
       <span class="nav-thumb"></span>
@@ -1850,6 +2037,7 @@
           </div>
           </div>
           <div id="pr-view" class="pr" hidden></div>
+          <div id="zone-view" class="zn" hidden></div>
           <div class="starters">
             <div class="section-title">Starters <span class="st-hint" style="opacity:0.7;">— <span class="hint-mouse">click</span><span class="hint-touch">tap</span> a player to compare &amp; swap</span><button class="opt-btn" id="opt-btn" title="Fill your starters with the highest projected lineup"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9zM19 14l.9 2.6 2.6.9-2.6.9L19 21l-.9-2.6-2.6-.9 2.6-.9z"/></svg>Optimal lineup</button><button class="xbtn" data-expand="roster" aria-label="Expand lineup to full screen" title="Expand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M10 20H4v-6M20 4l-6.5 6.5M4 20l6.5-6.5"/></svg></button></div>
             <div class="opt-note" id="opt-note" role="status" aria-live="polite" hidden></div>
@@ -1941,6 +2129,7 @@
             <div class="card set-card"><h3>Appearance</h3><p class="set-sub">Auto follows your device's light or dark setting.</p><div class="theme-seg" role="group" aria-label="Theme"><button type="button" data-theme-opt="system">Auto</button><button type="button" data-theme-opt="light">Light</button><button type="button" data-theme-opt="dark">Dark</button></div></div>
             <div class="card set-card"><h3>Lineup cards</h3><p class="set-sub">Compact shows what you need to set a lineup: projection, last game, opponent colored by matchup (green easy, amber average, red tough), injury or bye flags, and an arrow when snap share jumped or dropped. Tap a player for season stats, snaps, depth chart and the full matchup ranking. Detailed puts all of it on the card.</p><div class="cards-seg" role="group" aria-label="Lineup cards"><button type="button" data-cards-opt="compact">Compact</button><button type="button" data-cards-opt="detailed">Detailed</button></div></div>
             <div class="card set-card"><h3>Your leagues</h3><p class="set-sub">Tap a league to switch to it.</p><div class="league-list" data-league-list></div></div>
+            <div class="card set-card"><h3 data-zone-name>Sleepa Zone</h3><p class="set-sub">Every league at once: your team against each opponent, with live scores while games are on.</p><div class="zn-set-btns"><button type="button" class="quiet-btn" data-zone-open>Open <span data-zone-name>Sleepa Zone</span></button><button type="button" class="quiet-btn" data-zone-guide>How <span data-zone-name>Sleepa Zone</span> reads the game</button></div></div>
             <div class="card set-card"><h3>Current team</h3>
               <div class="set-row"><span>Team</span><b id="set-team">—</b></div>
               <div class="set-row"><span>League</span><b id="set-league">—</b></div>
@@ -3935,16 +4124,17 @@
       const c = (ev.competitions || [])[0] || {}, st = ev.status || c.status || {}, ty = st.type || {};
       const teams = (c.competitors || []).map(function(x){
         const ab = x.team && x.team.abbreviation;
-        return { t: ESPN_ABBR[ab] || ab, score: Number(x.score) || 0, home: x.homeAway === 'home' };
+        return { t: ESPN_ABBR[ab] || ab, id: x.team && x.team.id, score: Number(x.score) || 0, home: x.homeAway === 'home' };
       });
       if(teams.length !== 2) return;
-      const off = /POSTPONED|CANCELED|CANCELLED|SUSPENDED/.test(ty.name || '');
+      const off = /POSTPONED|CANCELED|CANCELLED|SUSPENDED/.test(ty.name || ''), sit = c.situation || null;
       teams.forEach(function(me, i){
         const them = teams[1 - i];
         out[me.t] = {
           state: off ? 'off' : (ty.state || 'pre'), name: ty.name || '', period: st.period || 0, clock: typeof st.clock === 'number' ? st.clock : null,
           displayClock: st.displayClock || '', detail: ty.shortDetail || '', kick: Date.parse(ev.date) || null,
           us: me.score, them: them.score, opp: them.t, home: me.home, src: 'espn',
+          poss: !!(sit && sit.possession && String(sit.possession) === String(me.id)), rz: !!(sit && sit.isRedZone && String(sit.possession) === String(me.id)),
         };
       });
     });
@@ -5071,14 +5261,14 @@
   }
 
   // Animate a number from what's showing now to its new value.
-  function countTo(el, to){
+  function countTo(el, to, durMs){
     const from = parseFloat(el.textContent);
     // No animation frames run in a background tab, so just show the number.
     if(isNaN(from) || document.hidden || window.matchMedia('(prefers-reduced-motion: reduce)').matches || Math.abs(from - to) < 0.005){ el._countRun = (el._countRun || 0) + 1; el.textContent = to.toFixed(2); return; }
     // Only the newest count on this element may write (quick taps overlap), and a timer lands the final number
     // even if the browser pauses animation frames part-way (backgrounded tab, iOS Low Power Mode).
     const run = el._countRun = (el._countRun || 0) + 1;
-    const t0 = performance.now(), dur = 650;
+    const t0 = performance.now(), dur = durMs || 650;
     clearTimeout(el._countEnd);
     el._countEnd = setTimeout(function(){ if(el._countRun === run) el.textContent = to.toFixed(2); }, dur + 120);
     (function tick(now){
@@ -5152,7 +5342,8 @@
   function renderBrandMenu(){
     const leagues = ctx.pendingLeagues || [];
     const sortable = ctx.leagueOrderBy !== 'sleeper' && leagues.length > 1;
-    brandMenu.innerHTML = '<div class="league-menu-head">Your leagues' + (sortable ? '<span class="lm-hint">Drag to reorder</span>' : '') + '</div><div class="league-list">' +
+    brandMenu.innerHTML = '<div class="league-menu-head">Your leagues' + (sortable ? '<span class="lm-hint">Drag to reorder</span>' : '') + '</div>' +
+      '<button type="button" class="zn-entry" role="menuitem" data-zone-open><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg><span>' + ZONE_NAME + '</span><small>all leagues</small></button><div class="league-list">' +
       (leagues.map(function(l){
         return sortable ? '<div class="lm-row" data-lm-id="' + escapeHTML(l.league_id) + '">' + leagueItemHTML(l, true) +
           '<button type="button" class="lm-grip" data-lm-grip aria-label="Move ' + escapeHTML(l.name) + ' (arrow keys)">' + GRIP_SVG + '</button></div>' : leagueItemHTML(l, true);
@@ -5204,7 +5395,7 @@
       saveBrandOrder();
       return;
     }
-    const items = Array.prototype.slice.call(brandMenu.querySelectorAll('.league-item'));
+    const items = Array.prototype.slice.call(brandMenu.querySelectorAll('.zn-entry, .league-item'));
     if(!items.length) return;
     const i = items.indexOf(document.activeElement);
     let to = -1;
@@ -7812,6 +8003,630 @@
   }
 
   autoOpen(); // remembered login: straight to the team
+
+  // ============ Sleepa Zone: my team in every league at once ============
+  // Phase 1 = scores (this section). Phase 2 = the live play feed: it plugs in as one more entry in zoneSources, fills
+  // the [data-zone-feed] slots in each card's starters section and the grid's feed column, and uses zImpact() plus the
+  // --impact-* color tokens. Nothing here touches ctx.league / ctx.week, so every other view is unaffected.
+  // Data: league + rosters + users per league (cached, refreshed at most every 6 h), matchups per league (points already
+  // scored with that league's settings), one projections call for all leagues (scored per league with calcPoints),
+  // ESPN's scoreboard for game state/clock (fetchGames) and Sleeper's scores for red zone (undocumented; wrapped).
+  const ZONE_NAME = 'Sleepa Zone';
+  const ZONE_POLL = 30 * 1000, ZONE_PROJ_GAP = 10 * 60 * 1000, ZONE_META_TTL = 6 * HOUR, ZONE_STALE = 3 * 60 * 1000;
+  const ZONE_SKIP_SLOTS = { BN: 1, IR: 1, TAXI: 1 };
+  const ZONE_RZ_POS = { QB: 1, RB: 1, WR: 1, TE: 1, K: 1 };   // offensive players: "in the red zone" means their team has the ball inside the 20
+  ctx.zone = { open: false, week: 0, mode: 'car', idx: 0, leagues: [], meta: {}, games: null, gamesWeek: 0, gamesTs: 0, scores: null, scoresWeek: 0, scoresTs: 0,
+    projRaw: null, projWeek: 0, projTs: 0, ts: 0, busy: false, failed: false, loadId: 0, built: false };
+
+  // ---- week: Sleeper's week, except Tuesday keeps last week's finals up (Sleeper moves on Tuesday; the Zone on Wednesday) ----
+  function zoneWeekKicked(w){
+    const k = ctx.nfl && ctx.nfl.kick, now = Date.now();
+    if(!k) return false;
+    for(const t in k){ const x = Date.parse(k[t][String(w)]); if(!isNaN(x) && x <= now) return true; }
+    return false;
+  }
+  function zoneDefaultWeek(state){
+    let w = Number(state && state.week) || ctx.sleeperWeek || ctx.week || 1;
+    if(etInfo(Date.now()).dow === 'Tue' && w > 1 && !zoneWeekKicked(w)) w -= 1;
+    return Math.max(1, Math.min(w, MAX_PLAN_WEEK));
+  }
+
+  // ---- data ----
+  function zUserAvatar(u){
+    if(!u) return '';
+    if(u.metadata && /^https:\/\//.test(u.metadata.avatar || '')) return u.metadata.avatar;
+    return u.avatar ? 'https://sleepercdn.com/avatars/thumbs/' + encodeURIComponent(u.avatar) : '';
+  }
+  function zTeam(meta, rosterId){
+    const r = (meta.rosters || []).find(function(x){ return x.roster_id === rosterId; });
+    const u = r && (meta.users || []).find(function(x){ return x.user_id === r.owner_id; });
+    return { name: (u && u.metadata && u.metadata.team_name) || (u && u.display_name) || 'Team ' + rosterId, av: zUserAvatar(u) };
+  }
+  async function zoneMeta(l, force){
+    const id = l.league_id, have = ctx.zone.meta[id];
+    if(have && !force && Date.now() - have.ts < ZONE_META_TTL) return have;
+    let league, rosters, users;
+    if(!force && ctx.league && ctx.league.league_id === id && ctx.lastRosters && ctx.users){ league = ctx.league; rosters = ctx.lastRosters; users = ctx.users; }
+    else [league, rosters, users] = await Promise.all([fetchJSON(API + '/league/' + id), fetchJSON(API + '/league/' + id + '/rosters'), fetchJSON(API + '/league/' + id + '/users')]);
+    const mine = (rosters || []).find(function(r){ return r.owner_id === ctx.userId || (r.co_owners || []).indexOf(ctx.userId) !== -1; });
+    const meta = { ts: Date.now(), league: league, rosters: rosters || [], users: users || [], rosterId: mine ? mine.roster_id : null, roster: mine || null,
+      slots: (league.roster_positions || []).filter(function(s){ return !ZONE_SKIP_SLOTS[s]; }) };
+    ctx.zone.meta[id] = meta;
+    return meta;
+  }
+  function zonePositions(){
+    const set = {};
+    ctx.zone.leagues.forEach(function(L){ const m = ctx.zone.meta[L.id]; (m ? m.slots : []).forEach(function(sl){ (FLEX_GROUPS[sl] || [sl]).forEach(function(x){ set[x] = true; }); }); });
+    const out = FANTASY_POSITIONS.concat(IDP_GROUPS).filter(function(x){ return set[x]; });
+    return out.length ? out : FANTASY_POSITIONS.slice();
+  }
+  // Sleeper's scores (undocumented): per team, is its offense in the red zone right now. Uses the red_zone field when it is
+  // set (a team, true or "1"); otherwise the ball position (the team with the ball inside the other team's 20).
+  async function zoneFetchScores(week){
+    const arr = await fetchJSON(UNOFFICIAL + '/scores/nfl/regular/' + ctx.season + '/' + week);
+    const out = {};
+    (Array.isArray(arr) ? arr : []).forEach(function(g){
+      const m = g && g.metadata || {}, live = !!m.is_in_progress, poss = m.possession || '', raw = m.red_zone;
+      let rzTeam = '';
+      if(typeof raw === 'string' && raw && (raw === m.home_team || raw === m.away_team)) rzTeam = raw;
+      else if(raw === true || raw === 1 || (typeof raw === 'string' && /^(true|1|yes)$/i.test(raw))) rzTeam = poss;
+      else{ const yl = Number(m.yard_line), terr = m.yard_line_territory; if(poss && terr && terr !== poss && yl > 0 && yl <= 20) rzTeam = poss; }
+      [m.home_team, m.away_team].forEach(function(t){ if(t) out[t] = { live: live, poss: poss === t, rz: live && rzTeam === t }; });
+    });
+    return out;
+  }
+  async function zoneFetchProj(week){
+    const raw = await fetchJSON(UNOFFICIAL + '/projections/nfl/' + ctx.season + '/' + week + '?season_type=regular&' + zonePositions().map(function(p){ return 'position[]=' + p; }).join('&'));
+    return arrayToPlayerDict(raw);
+  }
+  // The refresh pipeline. Each source runs when forced, when the week changed, or when its gap has passed.
+  // Phase 2 adds { name: 'plays', gap: …, run: …, apply: … } here.
+  const zoneSources = [
+    { name: 'matchups', gap: 0, run: function(week){
+        return Promise.all(ctx.zone.leagues.map(function(L){
+          if(!ctx.zone.meta[L.id]) return null;
+          return fetchJSON(API + '/league/' + L.id + '/matchups/' + week).then(function(m){ return { id: L.id, mu: Array.isArray(m) ? m : [] }; }, function(e){ console.warn('Sleepa Zone: matchups failed for', L.name, e); return { id: L.id, err: true }; });
+        }));
+      },
+      apply: function(res, week){
+        let ok = 0;
+        res.forEach(function(r){ if(!r) return; const L = zLeague(r.id); if(!L) return; if(r.err){ L.muErr = true; return; } L.mu = r.mu; L.muWeek = week; L.muErr = false; L.muTs = Date.now(); ok++; });
+        return ok > 0 || !res.some(Boolean);
+      } },
+    { name: 'games', gap: 0, run: function(week){ return fetchGames(week); },
+      apply: function(g, week){ ctx.zone.games = g; ctx.zone.gamesWeek = week; ctx.zone.gamesTs = Date.now(); return true; } },
+    { name: 'scores', gap: 0, run: zoneFetchScores,
+      apply: function(s, week){ ctx.zone.scores = s; ctx.zone.scoresWeek = week; ctx.zone.scoresTs = Date.now(); return true; } },
+    { name: 'projections', gap: ZONE_PROJ_GAP, run: zoneFetchProj,
+      apply: function(p, week){ ctx.zone.projRaw = p; ctx.zone.projWeek = week; ctx.zone.projTs = Date.now(); ctx.zone.leagues.forEach(function(L){ L.pp = {}; }); return true; } },
+  ];
+  function zLeague(id){ return ctx.zone.leagues.find(function(L){ return L.id === id; }); }
+
+  async function zoneRefresh(opts){
+    opts = opts || {};
+    const z = ctx.zone;
+    if(z.busy || !z.open) return;
+    z.busy = true; zoneRenderAgo();
+    const week = z.week, loadId = z.loadId;
+    try{
+      await Promise.all(z.leagues.map(function(L){
+        return zoneMeta(L.src, !!opts.meta).then(function(){ L.metaErr = false; }, function(e){ console.warn('Sleepa Zone: league data failed for', L.name, e); L.metaErr = true; });
+      }));
+      if(loadId !== z.loadId) return;
+      const now = Date.now();
+      const due = zoneSources.filter(function(s){ return opts.force || !s.week || s.week !== week || now - (s.ts || 0) >= s.gap; });
+      const res = await Promise.all(due.map(function(s){ return Promise.resolve().then(function(){ return s.run(week); }).catch(function(e){ console.warn('Sleepa Zone: ' + s.name + ' unavailable', e); return undefined; }); }));
+      if(loadId !== z.loadId || week !== z.week) return;
+      let failed = false;
+      due.forEach(function(s, i){
+        if(res[i] === undefined){ if(s.name !== 'scores') failed = true; return; }   // red zone is extra: its failure doesn't mark the view as failed
+        if(s.apply(res[i], week) === false) failed = true;
+        s.ts = Date.now(); s.week = week;
+      });
+      z.failed = failed;
+      if(!failed || z.leagues.some(function(L){ return L.muTs && L.muWeek === week; })) z.ts = Date.now();
+      zoneRender(true);
+    }finally{
+      z.busy = false;
+      zoneRenderAgo();
+    }
+  }
+
+  // ---- the model: one card per league ----
+  function zGame(team, week){
+    if(!team) return null;
+    const z = ctx.zone, g = z.games && z.gamesWeek === week ? z.games[team] : null;
+    if(g && (g.state === 'post' || Date.now() - z.gamesTs < 10 * 60 * 1000)) return g;
+    const m = matchup(team, week);
+    if(m && m.bye) return null;
+    const k = kickoff(team, week), now = Date.now();
+    if(!k) return { state: 'pre', kick: null, src: 'none' };
+    return { state: now < k ? 'pre' : now < k + GAME_LENGTH ? 'in' : 'post', kick: k, src: 'estimate' };
+  }
+  function zRedZone(team, week){
+    const z = ctx.zone;
+    const s = z.scores && z.scoresWeek === week && Date.now() - z.scoresTs < 5 * 60 * 1000 ? z.scores[team] : null;
+    const g = z.games && z.gamesWeek === week && Date.now() - z.gamesTs < 5 * 60 * 1000 ? z.games[team] : null;
+    return !!((s && s.rz) || (g && g.rz));
+  }
+  function zProj(L, meta, pid){
+    if(!ctx.zone.projRaw || ctx.zone.projWeek !== ctx.zone.week) return null;
+    L.pp = L.pp || {};
+    if(!(pid in L.pp)){ const r = ctx.zone.projRaw[pid]; L.pp[pid] = r ? calcPoints(r, meta.league.scoring_settings || {}) : null; }
+    return L.pp[pid];
+  }
+  // One starter: actual (Sleeper, league-scored), projection, game state, and projected final (the same rule as the
+  // lineup's projFinal: final = actual, not started = projection, live = actual + projection × share of game left).
+  function zPlayer(L, meta, entry, pid, i, week){
+    if(!pid || pid === '0') return { empty: true };
+    const p = ctx.players[pid] || { full_name: pid, position: /^[A-Z]{2,3}$/.test(pid) ? 'DEF' : '', team: /^[A-Z]{2,3}$/.test(pid) ? pid : null };
+    const team = p.team || (p.position === 'DEF' ? pid : null);
+    const g = zGame(team, week);
+    const pp = entry && entry.players_points || {};
+    const pts = typeof pp[pid] === 'number' ? pp[pid] : (entry && entry.starters_points && typeof entry.starters_points[i] === 'number' ? entry.starters_points[i] : null);
+    const proj = zProj(L, meta, pid);
+    let state, fin, est = false;
+    if(!g){ state = 'bye'; fin = 0; }
+    else if(g.state === 'off'){ state = 'off'; fin = 0; }
+    else if(g.state === 'pre'){ state = 'pre'; fin = proj || 0; }
+    else if(g.state === 'post'){ state = 'post'; fin = pts || 0; est = g.src === 'estimate'; }
+    else{ const r = remainingFrac(g); state = 'in'; fin = (pts || 0) + (proj || 0) * r.f; est = r.est; }
+    return { pid: pid, p: p, team: team, g: g, pts: pts, proj: proj, state: state, fin: fin, est: est, st: effectiveStatus(pid),
+      rz: state === 'in' && !!ZONE_RZ_POS[p.position] && zRedZone(team, week) };
+  }
+  function zSide(L, meta, entry, week){
+    const starters = entry.starters || [];
+    const rows = meta.slots.map(function(sl, i){ return Object.assign({ slot: sl }, zPlayer(L, meta, entry, starters[i], i, week)); });
+    const s = { rows: rows, fin: 0, proj: 0, pre: 0, inG: 0, post: 0, rz: 0, est: false, hasProj: false };
+    let sum = 0;
+    rows.forEach(function(r){
+      if(r.empty) return;
+      s.fin += r.fin; if(typeof r.proj === 'number'){ s.proj += r.proj; s.hasProj = true; } if(r.est) s.est = true;
+      if(r.state === 'pre') s.pre++; else if(r.state === 'in') s.inG++; else if(r.state === 'post') s.post++;
+      if(r.rz) s.rz++;
+      if(typeof r.pts === 'number') sum += r.pts;
+    });
+    s.pts = typeof entry.points === 'number' ? entry.points : sum;
+    s.started = s.inG + s.post > 0;
+    s.allFinal = s.pre === 0 && s.inG === 0;
+    return s;
+  }
+  function zModel(L){
+    const z = ctx.zone, week = z.week, meta = z.meta[L.id];
+    const M = { L: L, meta: meta, week: week };
+    if(!meta){ M.kind = L.metaErr ? 'error' : 'loading'; M.group = 1; return M; }
+    M.me = zTeam(meta, meta.rosterId);
+    if(meta.rosterId === null){ M.kind = 'noteam'; M.group = 2; return M; }
+    const mu = L.muWeek === week ? L.mu : null;
+    if(!mu){ M.kind = L.muErr ? 'error' : 'loading'; M.group = 1; return M; }
+    let entry = mu.find(function(m){ return m.roster_id === meta.rosterId; });
+    M.kind = 'ok';
+    if(!entry){ M.note = mu.length ? 'No matchup for your team this week.' : 'No matchups yet for week ' + week + '. Showing your current lineup, projected.'; entry = { starters: meta.roster && meta.roster.starters || [], points: null, players_points: {} }; M.noMu = true; }
+    M.my = zSide(L, meta, entry, week);
+    const opp = !M.noMu && entry.matchup_id != null ? mu.find(function(m){ return m.matchup_id === entry.matchup_id && m.roster_id !== meta.rosterId; }) : null;
+    if(opp){ M.opp = zSide(L, meta, opp, week); M.oppTeam = zTeam(meta, opp.roster_id); }
+    else if(!M.noMu){
+      const ps = meta.league.settings && meta.league.settings.playoff_week_start;
+      M.note = 'No opponent this week' + (ps && week >= ps ? ' (playoffs)' : '') + '. Your score is shown as if you played.';
+    }
+    if(meta.league.settings && meta.league.settings.league_average_match && mu.length > 2){   // median leagues: a second result against the league median
+      const pts = mu.map(function(m){ return m.points || 0; }).sort(function(a, b){ return a - b; }), n = pts.length;
+      M.median = n % 2 ? pts[(n - 1) / 2] : (pts[n / 2 - 1] + pts[n / 2]) / 2;
+    }
+    const sides = [M.my, M.opp].filter(Boolean);
+    M.started = sides.some(function(s){ return s.started; });
+    M.live = sides.some(function(s){ return s.inG > 0; });
+    M.allFinal = sides.every(function(s){ return s.allFinal; }) && M.started;
+    M.group = M.live ? 0 : M.allFinal ? 2 : 1;          // live-first: live, then upcoming / in between, then final
+    M.rz = M.my.rz;
+    return M;
+  }
+  // Phase 2 hook: +1 when the player is my starter in this league, -1 when he's my opponent's starter, 0 otherwise.
+  function zImpact(M, pid){
+    const has = function(s){ return !!(s && s.rows.some(function(r){ return r.pid === pid; })); };
+    return has(M.my) ? 1 : has(M.opp) ? -1 : 0;
+  }
+
+  // ---- text ----
+  function zKickText(k){ return k ? new Date(k).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }) : ''; }
+  function zKickShort(k){   // "Sun 1p", "Thu 8:15p": fits a narrow starter row
+    if(!k) return '';
+    const d = new Date(k), h = d.getHours(), m = d.getMinutes();
+    return d.toLocaleDateString([], { weekday: 'short' }) + ' ' + ((h % 12) || 12) + (m ? ':' + String(m).padStart(2, '0') : '') + (h < 12 ? 'a' : 'p');
+  }
+  function zNextKick(M){
+    let best = null;
+    [M.my, M.opp].forEach(function(s){ if(s) s.rows.forEach(function(r){ if(r.state === 'pre' && r.g && r.g.kick && (!best || r.g.kick < best)) best = r.g.kick; }); });
+    return best;
+  }
+  function zStatusHTML(M){
+    if(M.kind !== 'ok') return '';
+    if(M.live){ const n = (M.my ? M.my.inG : 0) + (M.opp ? M.opp.inG : 0); return '<span class="live-dot"></span>Live · ' + n + ' playing'; }
+    if(M.allFinal) return 'Final';
+    const k = zNextKick(M);
+    if(M.started) return 'In progress' + (k ? ' · next ' + escapeHTML(zKickText(k)) : '');
+    return k ? escapeHTML(zKickText(k)) : 'Week ' + M.week;
+  }
+  function zName(r){
+    const p = r.p;
+    if(p.position === 'DEF') return (r.team || r.pid) + ' D/ST';
+    return p.first_name && p.last_name ? p.first_name.charAt(0) + '. ' + p.last_name : (p.full_name || r.pid);
+  }
+  function zGameText(r, week){
+    if(r.state === 'bye') return 'BYE';
+    if(r.state === 'pre') return r.g && r.g.kick ? zKickShort(r.g.kick) : 'Not started';
+    if(r.state === 'in') return (gameStateText(r.g) || 'Live');
+    if(r.state === 'post') return 'Final';
+    return gameStateText(r.g) || '';
+  }
+  function zCellHTML(r, side, week){
+    if(!r || r.empty) return '<div class="zp ' + (side === 'opp' ? 'them' : side) + ' empty"><div class="zp-t"><span class="zp-n">Empty</span></div></div>';
+    const started = r.state === 'in' || r.state === 'post';
+    const v = started ? fmtPts(r.pts || 0) : fmtPts(r.proj), cap = started ? (typeof r.proj === 'number' ? 'proj ' + fmtPts(r.proj) : '') : 'proj';
+    const st = r.state === 'pre' ? statusInfo(r.st) : null;   // injury status is today's: it only means something before kickoff
+    const m = matchup(r.team, week), full = (m && !m.bye ? m.text + ' · ' : '') + zGameText(r, week) + (r.state === 'post' && r.g && r.g.src === 'espn' ? ' ' + r.g.us + '–' + r.g.them : '');
+    return '<div class="zp ' + (side === 'opp' ? 'them' : side) + ' s-' + r.state + (st && st.out ? ' out' : '') + '" title="' + escapeHTML(playerName(r.p) + ' · ' + full) + '">' +
+      '<div class="zp-t"><span class="zp-n">' + escapeHTML(zName(r)) + '</span>' + (r.rz ? '<span class="zn-rz" title="Their team is in the red zone">RZ</span>' : '') + '</div>' +
+      '<div class="zp-m"><span style="color:' + posColor(r.p.position) + '">' + escapeHTML(r.p.position || '') + '</span> · ' + (r.state === 'in' ? '<span class="live-dot"></span>' : '') + escapeHTML(zGameText(r, week)) + (st ? ' ' + injuryChip(r.st) : '') + '</div>' +
+      '<div class="zp-v' + (r.state === 'in' ? ' live' : started ? '' : ' proj') + '">' + v + '</div><div class="zp-c">' + cap + '</div></div>';
+  }
+  function zRowsHTML(M){
+    if(!M.my) return '';
+    const n = M.my.rows.length;
+    let h = '<div class="zn-rows' + (M.opp ? '' : ' solo') + '">';
+    for(let i = 0; i < n; i++){
+      h += zCellHTML(M.my.rows[i], 'me', M.week) + '<div class="zs">' + escapeHTML(slotShort(M.my.rows[i].slot)) + '</div>' + (M.opp ? zCellHTML(M.opp.rows[i], 'opp', M.week) : '<div></div>');
+    }
+    return h + '</div>' +
+      // Phase 2: the live feed goes here, my events under my side and my opponent's under theirs.
+      '<div class="zn-feeds" hidden><div data-zone-feed="me"></div><div data-zone-feed="opp"></div></div>';
+  }
+  // Primary / secondary numbers for a side (spec 4.5): before any game → projection (PROJ); in progress → actual, with the
+  // projected final small underneath; all of this side's starters final → actual only.
+  function zNums(M, s){
+    if(!s) return null;
+    if(!M.started) return { v: s.proj, kind: 'proj', cap: s.hasProj ? 'PROJ' : 'PROJ · not out yet', sub: '' };
+    return { v: s.pts, kind: 'act', cap: s.allFinal ? '' : 'Proj final ' + fmtPts(s.fin) + (s.est ? ' · est' : ''),
+      sub: s.allFinal ? '' : (s.pre ? s.pre + ' yet to play' : 'All playing or done') };
+  }
+
+  // ---- DOM ----
+  const zoneView = document.getElementById('zone-view');
+  document.body.appendChild(zoneView);
+  const ICO = {
+    back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>',
+    info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5v.5"/></svg>',
+    ref: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6"/></svg>',
+    list: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="4" y="4" width="16" height="5" rx="1.5"/><rect x="4" y="11" width="16" height="4" rx="1.5"/><rect x="4" y="17" width="16" height="3" rx="1.5"/></svg>',
+    grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>',
+    cards: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="6" y="4" width="12" height="16" rx="2"/><path d="M3 7v10M21 7v10"/></svg>',
+  };
+  function zoneBuild(){
+    zoneView.innerHTML =
+      '<header class="zn-top">' +
+        '<button type="button" class="pr-exit" data-zn-exit aria-label="Leave ' + ZONE_NAME + '">' + ICO.back + '<span>Back</span></button>' +
+        '<div class="zn-title"><b>' + ZONE_NAME + '</b><span id="zn-sub"></span></div>' +
+        '<div class="wk-seg zn-wk" role="group" aria-label="Week"><button type="button" data-zn-wk="-1" aria-label="Previous week">‹</button><span id="zn-wk-l"></span><button type="button" data-zn-wk="1" aria-label="Next week">›</button></div>' +
+        '<button type="button" class="zn-btn" data-zn-mode aria-pressed="false"></button>' +
+        '<button type="button" class="zn-btn zn-ref" data-zn-ref aria-label="Refresh scores">' + ICO.ref + '<span data-zn-ago></span></button>' +
+        '<button type="button" class="zn-btn zn-ico" data-zone-guide aria-label="How ' + ZONE_NAME + ' reads the game">' + ICO.info + '</button>' +
+      '</header>' +
+      '<main class="zn-main"><div class="zn-car" tabindex="-1"></div>' +
+        '<div class="zn-alt" hidden><div class="zn-tiles"></div>' +
+          '<aside class="zn-feedph" aria-label="Live feed"><b>Live feed</b><p>Coming next: every play involving your starters and your opponents’ starters, across all your leagues, colored by what it does to you.</p></aside>' +
+        '</div></main>' +
+      '<nav class="zn-dots" aria-label="Leagues"></nav>';
+    const car = zoneView.querySelector('.zn-car'), tiles = zoneView.querySelector('.zn-tiles'), dots = zoneView.querySelector('.zn-dots');
+    ctx.zone.leagues.forEach(function(L, i){
+      const ico = leagueAvatarUrl(L.src);
+      L.card = document.createElement('article');
+      L.card.className = 'zn-card'; L.card.setAttribute('data-zid', L.id); L.card.setAttribute('aria-roledescription', 'slide'); L.card.setAttribute('aria-label', L.name);
+      L.card.innerHTML = '<div class="zn-card-in">' +
+        '<div class="zn-lg">' + (ico ? '<img class="league-ico" src="' + escapeHTML(ico) + '" alt="" onerror="this.removeAttribute(\'src\')">' : '<span class="league-ico"></span>') +
+          '<div class="zn-lg-t"><b>' + escapeHTML(L.name) + '</b><span data-st></span></div><span class="zn-rzc" data-rzc hidden></span></div>' +
+        '<div class="zn-board">' +
+          '<div class="zn-side me"><div class="zn-team" data-tm="me"></div><div class="zn-num" data-n="me">—</div><div class="zn-cap" data-c="me"></div><div class="zn-sub" data-s="me"></div></div>' +
+          '<div class="zn-mid"><span class="zn-vs">vs</span><span class="zn-lc" aria-hidden="true">Lead change</span></div>' +
+          '<div class="zn-side them"><div class="zn-team" data-tm="opp"></div><div class="zn-num" data-n="opp">—</div><div class="zn-cap" data-c="opp"></div><div class="zn-sub" data-s="opp"></div></div>' +
+        '</div>' +
+        '<div class="zn-note" data-note hidden></div>' +
+        '<details class="zn-starters"><summary><span>Starters</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 10l4 4 4-4"/></svg></summary><div data-rows></div></details>' +
+      '</div>';
+      car.appendChild(L.card);
+      L.tile = document.createElement('button');
+      L.tile.type = 'button'; L.tile.className = 'zn-tile'; L.tile.setAttribute('data-zid', L.id);
+      L.tile.innerHTML = '<div class="zt-top"><span class="zt-lg">' + escapeHTML(L.name) + '</span><span class="zt-st" data-st></span></div>' +
+        '<div class="zt-score"><span class="zt-side"><small data-tm="me"></small><b data-n="me">—</b></span><span class="zt-dash">–</span><span class="zt-side them"><small data-tm="opp"></small><b data-n="opp">—</b></span></div>' +
+        '<div class="zt-proj" data-proj></div>';
+      tiles.appendChild(L.tile);
+      L.dot = document.createElement('button');
+      L.dot.type = 'button'; L.dot.className = 'zn-dot'; L.dot.setAttribute('data-zid', L.id); L.dot.setAttribute('aria-label', L.name);
+      L.dot.innerHTML = '<span class="zd-live"></span><span class="zd-n">' + (i + 1) + '</span><span class="zd-t">' + escapeHTML(L.name) + '</span>';
+      dots.appendChild(L.dot);
+    });
+    car.addEventListener('scroll', zoneOnScroll, { passive: true });
+    ctx.zone.built = true;
+  }
+  function zSetNum(el, v, anim){
+    if(typeof v !== 'number' || isNaN(v)){ el._countRun = (el._countRun || 0) + 1; el.textContent = '—'; return; }
+    if(anim && el.textContent !== '—') countTo(el, v, 420); else { el._countRun = (el._countRun || 0) + 1; el.textContent = v.toFixed(2); }
+  }
+  function zTeamHTML(t){ return t ? (t.av ? '<img src="' + escapeHTML(t.av) + '" alt="" loading="lazy" onerror="this.remove()">' : '') + '<span>' + escapeHTML(t.name) + '</span>' : ''; }
+  function zoneRender(anim){
+    const z = ctx.zone;
+    if(!z.built) return;
+    const models = z.leagues.map(zModel);
+    z.models = models;
+    models.forEach(function(M){ zPaint(M, anim); });
+    zoneSortTiles(models, anim);
+    const sub = document.getElementById('zn-sub');
+    const live = models.filter(function(M){ return M.live; }).length;
+    sub.innerHTML = 'Week ' + z.week + ' · ' + (live ? '<span class="live-dot"></span>' + live + ' live' : models.every(function(M){ return M.kind !== 'ok' || M.allFinal; }) && models.some(function(M){ return M.allFinal; }) ? 'Final' : models.length + ' leagues');
+    document.getElementById('zn-wk-l').textContent = 'Wk ' + z.week;
+    zoneView.querySelector('[data-zn-wk="-1"]').disabled = z.week <= 1;
+    zoneView.querySelector('[data-zn-wk="1"]').disabled = z.week >= MAX_PLAN_WEEK;
+    zoneRenderAgo();
+  }
+  function zPaint(M, anim){
+    const L = M.L, card = L.card, tile = L.tile, z = ctx.zone;
+    const status = M.kind === 'ok' ? zStatusHTML(M) : M.kind === 'loading' ? 'Loading…' : M.kind === 'noteam' ? 'You don’t have a team here' : 'Couldn’t load';
+    card.querySelector('[data-st]').innerHTML = status; tile.querySelector('[data-st]').innerHTML = status;
+    L.dot.classList.toggle('live', !!M.live);
+    card.classList.toggle('is-live', !!M.live);
+    tile.classList.toggle('is-live', !!M.live);
+    const rzc = card.querySelector('[data-rzc]');
+    rzc.hidden = !M.rz; if(M.rz) rzc.textContent = M.rz + ' in red zone';
+    const note = card.querySelector('[data-note]');
+    let noteHTML = M.note ? escapeHTML(M.note) : '';
+    if(M.kind === 'error') noteHTML = 'Couldn’t reach Sleeper for this league. <button type="button" class="zn-retry" data-zn-ref>Try again</button>';
+    if(M.kind === 'noteam') noteHTML = 'Your Sleeper account has no team in this league.';
+    if(typeof M.median === 'number' && M.started) noteHTML += (noteHTML ? '<br>' : '') + 'League median ' + fmtPts(M.median) + ' · you’re ' + (M.my.pts >= M.median ? 'above' : 'below') + ' it';
+    note.hidden = !noteHTML; note.innerHTML = noteHTML;
+    const a = zNums(M, M.my), b = zNums(M, M.opp);
+    const prev = z.prev[L.id], same = prev && prev.week === M.week && prev.kind === (a && a.kind);
+    ['me', 'opp'].forEach(function(side){
+      const n = side === 'me' ? a : b, t = side === 'me' ? M.me : M.oppTeam;
+      const cardTm = card.querySelector('[data-tm="' + side + '"]'), html = side === 'opp' && !M.opp && M.kind === 'ok' ? '<span>No opponent</span>' : zTeamHTML(t);
+      if(cardTm.innerHTML !== html) cardTm.innerHTML = html;
+      tile.querySelector('[data-tm="' + side + '"]').textContent = side === 'opp' && !M.opp ? (M.kind === 'ok' ? 'No opponent' : '') : (t ? t.name : '');
+      [card.querySelector('[data-n="' + side + '"]'), tile.querySelector('[data-n="' + side + '"]')].forEach(function(el){
+        el.classList.toggle('proj', !!(n && n.kind === 'proj'));
+        zSetNum(el, n ? n.v : NaN, anim && same);
+      });
+      card.querySelector('[data-c="' + side + '"]').textContent = n ? n.cap : '';
+      card.querySelector('[data-s="' + side + '"]').textContent = n ? n.sub : '';
+    });
+    // who's ahead (actuals only), and a soft flash when it flips between refreshes
+    const lead = a && b && a.kind === 'act' ? (a.v > b.v + 0.004 ? 1 : b.v > a.v + 0.004 ? -1 : 0) : 0;
+    card.querySelector('.zn-side.me').classList.toggle('lead', lead === 1);
+    card.querySelector('.zn-side.them').classList.toggle('lead', lead === -1);
+    const ts = tile.querySelectorAll('.zt-side');
+    ts[0].classList.toggle('lead', lead === 1); ts[1].classList.toggle('lead', lead === -1);
+    tile.querySelector('.zt-score').classList.toggle('has-lead', lead !== 0);
+    if(anim && same && prev.lead && lead && prev.lead !== lead) zFlip(card, tile);
+    z.prev[L.id] = { week: M.week, kind: a && a.kind, lead: lead || (prev && same ? prev.lead : 0) };
+    tile.querySelector('.zt-score').classList.toggle('pre', !!(a && a.kind === 'proj'));
+    const pj = tile.querySelector('[data-proj]');
+    pj.innerHTML = !a ? '' : a.kind === 'proj' ? '<span class="zt-lbl">PROJ</span> before kickoff' + (M.my.pre ? ' · ' + M.my.pre + ' to play' : '')
+      : M.allFinal ? (M.opp ? (lead === 1 ? 'Won' : lead === -1 ? 'Lost' : 'Tied') : 'Final')
+      : '<span class="zt-lbl">PROJ</span> ' + fmtPts(M.my.fin) + (M.opp ? ' – ' + fmtPts(M.opp.fin) : '') + (M.my.est || (M.opp && M.opp.est) ? ' est' : '') + ' · ' + M.my.pre + ' yet to play';
+    const rows = card.querySelector('[data-rows]'), rh = M.kind === 'ok' ? zRowsHTML(M) : '';
+    if(rows._h !== rh){ rows.innerHTML = rh; rows._h = rh; }
+  }
+  function zFlip(card, tile){
+    if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    [card, tile].forEach(function(el){ el.classList.remove('flip'); void el.offsetWidth; el.classList.add('flip'); });
+    setTimeout(function(){ card.classList.remove('flip'); tile.classList.remove('flip'); }, 1600);
+  }
+  // Compact list / grid: live first, then upcoming, then final; stable (league order) within each group. Moves animate (FLIP).
+  function zoneSortTiles(models, anim){
+    const wrap = zoneView.querySelector('.zn-tiles');
+    const order = models.map(function(M, i){ return { M: M, i: i }; }).sort(function(x, y){ return (x.M.group - y.M.group) || (x.i - y.i); });
+    const cur = Array.prototype.slice.call(wrap.children);
+    if(order.every(function(o, i){ return cur[i] === o.M.L.tile; })) return;
+    const moving = anim && !wrap.closest('[hidden]') && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const before = moving ? cur.map(function(el){ return el.getBoundingClientRect(); }) : null;
+    order.forEach(function(o){ wrap.appendChild(o.M.L.tile); });
+    if(!moving) return;
+    cur.forEach(function(el, i){
+      const r = el.getBoundingClientRect(), dx = before[i].left - r.left, dy = before[i].top - r.top;
+      if(!dx && !dy) return;
+      el.style.transition = 'none'; el.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){ el.style.transition = 'transform .5s var(--ease)'; el.style.transform = ''; }); });
+      setTimeout(function(){ el.style.transition = ''; }, 600);
+    });
+  }
+  function zoneRenderAgo(){
+    const z = ctx.zone, el = zoneView.querySelector('[data-zn-ago]'), btn = zoneView.querySelector('[data-zn-ref]');
+    if(!el) return;
+    btn.classList.toggle('busy', !!z.busy);
+    const live = z.models && z.models.some(function(M){ return M.live; });
+    const stale = !!z.ts && live && Date.now() - z.ts > ZONE_STALE;
+    btn.classList.toggle('stale', stale || (!!z.failed && !z.busy));
+    el.textContent = z.busy && !z.ts ? 'Loading…' : z.failed && !z.busy ? 'Couldn’t update · retry' : z.ts ? 'Updated ' + (Date.now() - z.ts < 10000 ? 'just now' : agoText(z.ts).replace(/^at /, '')) : '';
+  }
+
+  // ---- carousel ----
+  let zScrollRaf = 0, zScrollEnd = 0;
+  function zoneOnScroll(){
+    if(!zScrollRaf) zScrollRaf = requestAnimationFrame(function(){ zScrollRaf = 0; zoneDepth(); });
+    clearTimeout(zScrollEnd);
+    zScrollEnd = setTimeout(zoneSettle, 90);
+  }
+  // lazy Susan: each card's distance from the center (in card widths) drives its rotation and depth in CSS (desktop only)
+  function zoneDepth(){
+    const car = zoneView.querySelector('.zn-car');
+    if(!car) return;
+    const mid = car.scrollLeft + car.clientWidth / 2;
+    ctx.zone.leagues.forEach(function(L){
+      const c = L.card, d = (c.offsetLeft + c.offsetWidth / 2 - mid) / (c.offsetWidth || 1), cl = Math.max(-2, Math.min(2, d));
+      c.style.setProperty('--d', cl.toFixed(3)); c.style.setProperty('--ad', Math.min(1, Math.abs(cl)).toFixed(3));
+    });
+  }
+  function zoneNearest(){
+    const car = zoneView.querySelector('.zn-car'), mid = car.scrollLeft + car.clientWidth / 2;
+    let best = 0, bd = Infinity;
+    ctx.zone.leagues.forEach(function(L, i){ const d = Math.abs(L.card.offsetLeft + L.card.offsetWidth / 2 - mid); if(d < bd){ bd = d; best = i; } });
+    return best;
+  }
+  function zoneSettle(){ zoneMark(zoneNearest()); }
+  function zoneMark(i){
+    ctx.zone.idx = i;
+    ctx.zone.leagues.forEach(function(L, j){ if(j === i) L.dot.setAttribute('aria-current', 'true'); else L.dot.removeAttribute('aria-current'); L.card.classList.toggle('on', j === i); });
+    const d = ctx.zone.leagues[i] && ctx.zone.leagues[i].dot;
+    if(d) d.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
+  function zoneGo(i, instant){
+    const L = ctx.zone.leagues[i], car = zoneView.querySelector('.zn-car');
+    if(!L || !car) return;
+    const left = L.card.offsetLeft - (car.clientWidth - L.card.offsetWidth) / 2;
+    car.scrollTo({ left: left, behavior: instant || window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    if(instant){ zoneDepth(); zoneMark(i); }
+  }
+  function zoneSetMode(mode){
+    const z = ctx.zone;
+    z.mode = mode === 'alt' ? 'alt' : 'car';
+    zoneView.classList.toggle('alt', z.mode === 'alt');
+    zoneView.querySelector('.zn-car').hidden = z.mode === 'alt';
+    zoneView.querySelector('.zn-alt').hidden = z.mode !== 'alt';
+    const b = zoneView.querySelector('[data-zn-mode]');
+    b.setAttribute('aria-pressed', String(z.mode === 'alt'));
+    b.innerHTML = z.mode === 'alt' ? ICO.cards + '<span>Cards</span>' : '<span class="zm-ph">' + ICO.list + '<span>List</span></span><span class="zm-dt">' + ICO.grid + '<span>Grid</span></span>';
+    try{ localStorage.setItem('rv-zone-mode', z.mode); }catch(e){}
+    if(z.mode === 'car') zoneGo(z.idx, true);   // measuring forces layout, so this lands before the first paint
+  }
+
+  // ---- open / close ----
+  async function zoneOpen(){
+    if(!ctx.myRoster || !ctx.pendingLeagues) return;
+    const z = ctx.zone;
+    closeBrandMenu(); toggleLeagueMenu(false);
+    z.loadId++;
+    z.leagues = ctx.pendingLeagues.map(function(l){
+      const old = z.leagues.find(function(L){ return L.id === l.league_id; });
+      return { id: l.league_id, name: l.name, src: l, mu: old && old.mu, muWeek: old && old.muWeek, muTs: old && old.muTs, pp: {} };
+    });
+    z.prev = {};
+    zoneSources.forEach(function(s){ s.ts = 0; s.week = 0; });
+    z.idx = Math.max(0, z.leagues.findIndex(function(L){ return ctx.league && L.id === ctx.league.league_id; }));
+    z.open = true;
+    let st = null;
+    try{ st = await fetchJSON(API + '/state/nfl'); }catch(e){ console.warn('Sleepa Zone: NFL state unavailable, using the app\'s week', e); }
+    z.week = zoneDefaultWeek(st);
+    zoneBuild();
+    zoneView.hidden = false;
+    document.documentElement.classList.add('zone-open');
+    let mode = 'car'; try{ mode = localStorage.getItem('rv-zone-mode') || 'car'; }catch(e){}
+    zoneSetMode(mode);
+    zoneRender(false);
+    zoneGo(z.idx, true);
+    zoneView.querySelector('[data-zn-exit]').focus({ preventScroll: true });
+    await zoneRefresh({ force: true });
+  }
+  function zoneClose(){
+    const z = ctx.zone;
+    if(!z.open) return;
+    z.open = false; z.loadId++;
+    zoneView.hidden = true;
+    document.documentElement.classList.remove('zone-open');
+  }
+  function zoneSetWeek(w){
+    const z = ctx.zone;
+    w = Math.max(1, Math.min(MAX_PLAN_WEEK, w));
+    if(w === z.week) return;
+    z.week = w; z.loadId++; z.busy = false; z.ts = 0; z.prev = {};
+    zoneRender(false);
+    zoneRefresh({ force: true });
+  }
+  // live-only auto refresh: a game on (or kicking off within a minute) among my or my opponents' starters, tab visible
+  function zoneLive(){
+    const now = Date.now();
+    return !!(ctx.zone.models && ctx.zone.models.some(function(M){
+      return M.live || [M.my, M.opp].some(function(s){ return s && s.rows.some(function(r){ return r.state === 'pre' && r.g && r.g.kick && r.g.kick - now < 60 * 1000; }); });
+    }));
+  }
+  setInterval(function(){
+    const z = ctx.zone;
+    if(!z.open || document.visibilityState !== 'visible') return;
+    if(!z.busy && zoneLive() && Date.now() - z.ts >= ZONE_POLL - 2000) zoneRefresh();
+    else zoneRenderAgo();
+  }, 5 * 1000);
+  document.addEventListener('visibilitychange', function(){ if(ctx.zone.open && document.visibilityState === 'visible' && zoneLive()) zoneRefresh(); });
+
+  zoneView.addEventListener('click', function(e){
+    const t = e.target;
+    if(t.closest('[data-zn-exit]')){ zoneClose(); return; }
+    if(t.closest('[data-zn-ref]')){ zoneRefresh({ force: true }); return; }
+    const wk = t.closest('[data-zn-wk]');
+    if(wk){ zoneSetWeek(ctx.zone.week + Number(wk.getAttribute('data-zn-wk'))); return; }
+    if(t.closest('[data-zn-mode]')){ zoneSetMode(ctx.zone.mode === 'alt' ? 'car' : 'alt'); return; }
+    const tile = t.closest('.zn-tile, .zn-dot');
+    if(tile){
+      const i = ctx.zone.leagues.findIndex(function(L){ return L.id === tile.getAttribute('data-zid'); });
+      if(tile.classList.contains('zn-tile')){ ctx.zone.idx = i; zoneSetMode('car'); }
+      else zoneGo(i);
+      return;
+    }
+    const card = t.closest('.zn-card');
+    if(card && !card.classList.contains('on') && !t.closest('summary')){   // a side card on desktop: bring it to the front
+      const i = ctx.zone.leagues.findIndex(function(L){ return L.card === card; });
+      if(i !== ctx.zone.idx){ e.preventDefault(); zoneGo(i); }
+    }
+  });
+  document.addEventListener('keydown', function(e){
+    if(!ctx.zone.open) return;
+    if(e.key === 'Escape'){
+      if(!zoneGuide.hidden) return;   // the guide closes itself first
+      e.preventDefault(); e.stopImmediatePropagation(); zoneClose(); return;
+    }
+    if(ctx.zone.mode !== 'car' || !zoneGuide.hidden || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') || e.altKey || e.metaKey || e.ctrlKey) return;
+    if(document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) return;
+    e.preventDefault();
+    zoneGo(Math.max(0, Math.min(ctx.zone.leagues.length - 1, zoneNearest() + (e.key === 'ArrowRight' ? 1 : -1))));
+  }, true);
+  document.addEventListener('click', function(e){
+    const b = e.target.closest && e.target.closest('[data-zone-open]');
+    if(b){ e.preventDefault(); zoneOpen(); }
+  });
+
+  // ---- the guide: "How Sleepa Zone reads the game" (Settings + the Zone header). Add a section = add an entry. ----
+  const ZONE_GUIDE = [
+    { t: 'Actual vs projected', b: [
+      'Before any of the week’s games involving your starters kick off, the big number is the <b>projection</b>, labeled <b>PROJ</b> and shown in a lighter color.',
+      'Once a game starts, the big bold number is the <b>actual</b> score, straight from Sleeper (your league’s scoring). Underneath, small and gray, is the <b>projected final</b>: finished players count their actual points, players yet to play count their projection, and players in a live game count their points so far plus their projection times the share of the game left. It’s an estimate, marked “est” when the game clock isn’t available.',
+      'When all of a side’s starters are done, only the final score shows. Points always have two decimals, like Sleeper.'] },
+    { t: 'Game status and “yet to play”', b: [
+      'Each starter shows their game: kickoff time before it starts, quarter and clock while it’s live (from ESPN’s scoreboard), and Final after. “N yet to play” counts starters whose games haven’t kicked off. A bye shows BYE; an empty slot shows Empty.'] },
+    { t: 'Red zone badge', b: [
+      'A small <span class="zn-rz">RZ</span> next to a player means his team has the ball inside the opponent’s 20 right now. It goes away when the drive ends. The card header counts how many of your players are there. It’s for offensive players and kickers only, and comes from Sleeper’s live scores with ESPN as a backup.'] },
+    { t: 'Live dot and live-first sorting', b: [
+      'A pulsing dot marks leagues and games that are live. In the list (phone) and grid (desktop), live leagues float to the top, then leagues still to play, then finished ones. Inside each group the order stays the same as your league order, so nothing jumps around. The swipeable cards always keep your league order.'] },
+    { t: 'Lead change', b: [
+      'When a refresh flips who’s ahead in a league, that card’s border glows softly for a moment and a small “Lead change” label fades in and out. Only actual scores count, not projections.'] },
+    { t: 'Refresh and update timing', b: [
+      'While at least one of your or your opponents’ starters is playing, scores update about every 30 seconds, and only while the app is on screen. When everything is final, updates stop. The refresh button always works.',
+      'A refresh pulls only what changes during games: each league’s matchup scores, the game clock and red zone status. Projections update every 10 minutes (Sleeper’s own cache). League settings, rosters and players aren’t reloaded. Sleeper can take up to a minute to publish new points.'] },
+    { t: 'Week rollover', b: [
+      'Sleepa Zone follows Sleeper’s current week, except on Tuesdays: Sleeper moves to the new week on Tuesday, but the Zone keeps last week’s final scores up until Wednesday. Use ‹ › to look at other weeks; future weeks show projections, or say when there are no matchups yet.'] },
+    // Phase 2: the impact color system, MINE / OPP / multi-league chips, and how the live feed works.
+  ];
+  const zoneGuide = document.createElement('div');
+  zoneGuide.className = 'zg-back'; zoneGuide.hidden = true;
+  zoneGuide.innerHTML = '<div class="zg" role="dialog" aria-modal="true" aria-labelledby="zg-t"><div class="zg-head"><h2 id="zg-t">How ' + ZONE_NAME + ' reads the game</h2>' +
+    '<button type="button" class="zg-x" data-zg-close aria-label="Close">×</button></div><div class="zg-body">' +
+    ZONE_GUIDE.map(function(s){ return '<details class="zg-s"><summary>' + s.t + '</summary>' + s.b.map(function(p){ return '<p>' + p + '</p>'; }).join('') + '</details>'; }).join('') +
+    '</div></div>';
+  document.body.appendChild(zoneGuide);
+  let zgFrom = null;
+  function zoneGuideOpen(from){ zgFrom = from || null; zoneGuide.hidden = false; zoneGuide.querySelector('[data-zg-close]').focus(); }
+  function zoneGuideClose(){ zoneGuide.hidden = true; if(zgFrom && zgFrom.focus) zgFrom.focus(); }
+  document.addEventListener('click', function(e){
+    const b = e.target.closest && e.target.closest('[data-zone-guide]');
+    if(b){ e.preventDefault(); zoneGuideOpen(b); return; }
+    if(!zoneGuide.hidden && (e.target === zoneGuide || e.target.closest('[data-zg-close]'))) zoneGuideClose();
+  });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && !zoneGuide.hidden){ e.preventDefault(); e.stopImmediatePropagation(); zoneGuideClose(); } }, true);
+  document.querySelectorAll('[data-zone-name]').forEach(function(el){ el.textContent = ZONE_NAME; });
 })();
 </script>
 
