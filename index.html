@@ -1568,7 +1568,29 @@
   [data-home][role="button"]{ border-radius: 12px; transition: transform .3s var(--spring), opacity .2s; }
   [data-home][role="button"]:active{ transform: scale(.94); opacity: .8; }
   [data-home][role="button"]:focus-visible{ outline: 2px solid var(--accent); outline-offset: 4px; }
-  .m-brand[data-home]{ align-self: flex-start; padding: 6px 8px 6px 0; margin-top: -6px; min-height: 36px; } /* bigger tap target */
+  .m-brand[data-home]{ align-self: flex-start; width: fit-content; padding: 6px 8px 6px 0; margin-top: -6px; min-height: 36px; } /* bigger tap target */
+  /* on the Lineup page the logo opens the league switcher instead (small chevron says so) */
+  .brand-chev{ height: 14px; margin-left: -2px; color: var(--text-3); flex-shrink: 0; opacity: 0; width: 0; transition: transform .25s var(--ease), opacity .2s; }
+  .on-lineup [data-brand] .brand-chev{ opacity: .85; width: 14px; }
+  [data-brand][aria-expanded="true"] .brand-chev{ transform: rotate(180deg); }
+  .brand-menu{ position: absolute; z-index: 46; width: 300px; max-height: min(60vh, 460px); overflow-y: auto; overscroll-behavior: contain; background: var(--surface); border-radius: var(--radius); padding: 6px;
+    box-shadow: var(--shadow-lg), inset 0 0 0 1px var(--hair); transform-origin: top left; animation: menuIn .22s var(--ease); }
+  .brand-menu .league-menu-head{ display: flex; align-items: baseline; gap: 8px; position: sticky; top: -6px; z-index: 1; margin: -6px -6px 0; padding: 12px 14px 8px; background: var(--surface); }
+  .brand-menu .lm-hint{ margin-left: auto; font-size: 10.5px; font-weight: 500; letter-spacing: 0; text-transform: none; }
+  .brand-menu .league-item{ padding: 8px; gap: 10px; }
+  .brand-menu .league-ico{ width: 30px; height: 30px; border-radius: 8px; }
+  .league-item .li-check{ width: 18px; height: 18px; color: var(--accent); flex-shrink: 0; }
+  .lm-row{ display: flex; align-items: center; border-radius: 12px; }
+  .lm-row .league-item{ flex: 1; min-width: 0; }
+  .lm-grip{ display: grid; place-items: center; width: 30px; min-height: 40px; padding: 0; border: none; background: none; color: var(--text-3); cursor: grab; touch-action: none; flex-shrink: 0; border-radius: 10px; }
+  .lm-grip svg{ width: 16px; height: 16px; }
+  .lm-row.dragging{ position: relative; z-index: 2; background: var(--surface-2); box-shadow: var(--shadow-lg); transition: none; }
+  .lm-row.dragging .lm-grip{ cursor: grabbing; }
+  .lm-row.settle{ transition: transform .18s var(--ease); }
+  @media (max-width: 1023px){
+    /* phone: tucked into the top-left, small, with lots of open page around it to tap away on */
+    .brand-menu{ width: auto; min-width: 220px; max-width: 70vw; max-height: 38vh; max-height: 38svh; }
+  }
   .home-btn{ display: inline-grid; place-items: center; width: 36px; height: 36px; padding: 0; border: none; border-radius: 12px; background: var(--surface-2); transition: transform .3s var(--spring); }
   .home-btn:active{ transform: scale(.9); }
   .home-btn .brand-mark{ width: 22px; height: 22px; }
@@ -1769,7 +1791,7 @@
 <div class="sb-shield" aria-hidden="true"></div>
 <div class="shell" id="roster-screen" style="display:none;">
   <aside class="side">
-    <div class="brand" data-home role="button" tabindex="0" aria-label="sleepa: go to your lineup"><svg class="brand-mark" viewBox="0 0 200 200" aria-hidden="true"><use href="#sleepa-mark"/></svg><span class="wordmark">sleepa</span></div>
+    <div class="brand" data-home role="button" data-brand aria-haspopup="menu" aria-expanded="false" tabindex="0" aria-label="sleepa: go to your lineup"><svg class="brand-mark" viewBox="0 0 200 200" aria-hidden="true"><use href="#sleepa-mark"/></svg><span class="wordmark">sleepa</span><svg class="brand-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 10l4 4 4-4"/></svg></div>
     <div class="league-switch">
       <button type="button" class="league-card" id="league-card" aria-haspopup="true" aria-expanded="false" title="Switch league">
         <span class="league-av"></span><div class="league-txt"><b id="team-name">—</b><span><span id="league-name">—</span> · <span id="team-record"></span></span></div>
@@ -1793,7 +1815,7 @@
   </aside>
 
   <main class="main">
-    <div class="m-brand" data-home role="button" tabindex="0" aria-label="sleepa: go to your lineup"><svg class="brand-mark" viewBox="0 0 200 200" aria-hidden="true"><use href="#sleepa-mark"/></svg><span class="wordmark">sleepa</span></div>
+    <div class="m-brand" data-home role="button" data-brand aria-haspopup="menu" aria-expanded="false" tabindex="0" aria-label="sleepa: go to your lineup"><svg class="brand-mark" viewBox="0 0 200 200" aria-hidden="true"><use href="#sleepa-mark"/></svg><span class="wordmark">sleepa</span><svg class="brand-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 10l4 4 4-4"/></svg></div>
     <header class="page-head">
       <div>
         <div class="eyebrow" id="page-eyebrow"></div>
@@ -2737,7 +2759,7 @@
       }
       if(!leagues.length){ setStatus(''); setError('No leagues found for this username.'); setBusy(false); return; }
 
-      ctx.pendingLeagues = leagues;
+      ctx.pendingLeagues = leagues = orderLeagues(leagues);
       els.leagueSelect.innerHTML = leagues.map(function(l){ return '<option value="' + l.league_id + '">' + escapeHTML(l.name) + '</option>'; }).join('');
       els.leagueField.style.display = 'block';
       els.loadBtn.textContent = 'View team';
@@ -2830,7 +2852,7 @@
         const prev = await fetchLeagues(ctx.userId, ctx.season - 1).catch(function(){ return []; });
         if(prev.some(function(l){ return l.league_id === last.leagueId; })){ ctx.season -= 1; leagues = prev; }
       }
-      ctx.pendingLeagues = leagues;
+      ctx.pendingLeagues = leagues = orderLeagues(leagues);
       els.leagueSelect.innerHTML = leagues.map(function(l){ return '<option value="' + l.league_id + '">' + escapeHTML(l.name) + '</option>'; }).join('');
       els.leagueField.style.display = leagues.length ? 'block' : 'none';
       els.loadBtn.textContent = leagues.length ? 'View team' : 'Load teams';
@@ -2875,12 +2897,16 @@
     const h = e.target.closest('[data-home]');
     if(!h || !ctx.myRoster) return;
     e.preventDefault();
+    if(h.hasAttribute('data-brand') && ctx.view === 'roster'){ toggleBrandMenu(h, e.detail === 0); return; }
     goHome(h);
   });
   document.addEventListener('keydown', function(e){
     if(e.key !== 'Enter' && e.key !== ' ') return;
     const h = e.target.closest && e.target.closest('[data-home]');
-    if(h && ctx.myRoster){ e.preventDefault(); goHome(h); }
+    if(!h || !ctx.myRoster) return;
+    e.preventDefault();
+    if(h.hasAttribute('data-brand') && ctx.view === 'roster'){ if(!e.repeat) toggleBrandMenu(h, true); return; }
+    goHome(h);
   });
 
   function resetLineup(){
@@ -5077,19 +5103,152 @@
     if(l.settings && l.settings.type === 2) bits.push('Dynasty'); else if(l.settings && l.settings.type === 1) bits.push('Keeper');
     return bits.join(' · ');
   }
+  // League order: Sleeper's own (display_order, per user) when you've arranged them there; otherwise the order you
+  // dragged them into here; otherwise A–Z. Sleeper leaves display_order all 0 until you reorder in its app.
+  const LEAGUE_ORDER_KEY = 'rv-league-order:';
+  function sleeperOrdered(leagues){ return new Set(leagues.map(function(l){ return Number(l.display_order) || 0; })).size > 1; }
+  function orderLeagues(leagues){
+    leagues = (leagues || []).slice();
+    const az = function(a, b){ return String(a.name || '').localeCompare(String(b.name || ''), undefined, { sensitivity: 'base' }); };
+    if(sleeperOrdered(leagues)){ ctx.leagueOrderBy = 'sleeper'; return leagues.sort(function(a, b){ return (Number(a.display_order) || 0) - (Number(b.display_order) || 0) || az(a, b); }); }
+    let mine = null;
+    try{ mine = JSON.parse(localStorage.getItem(LEAGUE_ORDER_KEY + ctx.userId) || 'null'); }catch(e){ console.warn('Saved league order unreadable', e); }
+    if(Array.isArray(mine) && mine.length){
+      ctx.leagueOrderBy = 'mine';
+      const at = function(l){ const i = mine.indexOf(l.league_id); return i === -1 ? 1e6 : i; }; // leagues joined since go last, A–Z
+      return leagues.sort(function(a, b){ return at(a) - at(b) || az(a, b); });
+    }
+    ctx.leagueOrderBy = 'az';
+    return leagues.sort(az);
+  }
+  function saveLeagueOrder(ids){
+    try{ localStorage.setItem(LEAGUE_ORDER_KEY + ctx.userId, JSON.stringify(ids)); }catch(e){ console.warn('League order not saved', e); }
+    const by = {}; (ctx.pendingLeagues || []).forEach(function(l){ by[l.league_id] = l; });
+    ctx.pendingLeagues = ids.map(function(id){ return by[id]; }).filter(Boolean);
+    ctx.leagueOrderBy = 'mine';
+    const cur = els.leagueSelect.value;
+    els.leagueSelect.innerHTML = ctx.pendingLeagues.map(function(l){ return '<option value="' + l.league_id + '">' + escapeHTML(l.name) + '</option>'; }).join('');
+    els.leagueSelect.value = cur;
+  }
+  const CHECK_SVG = '<svg class="li-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  const GRIP_SVG = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>';
+  function leagueItemHTML(l, check){
+    const current = ctx.league && l.league_id === ctx.league.league_id;
+    const url = leagueAvatarUrl(l);
+    return '<button type="button" class="league-item' + (current ? ' current' : '') + '" role="menuitem" data-league-id="' + escapeHTML(l.league_id) + '"' + (current ? ' aria-current="true"' : '') + '>' +
+      (url ? '<img class="league-ico" src="' + escapeHTML(url) + '" alt="" loading="lazy" onerror="this.removeAttribute(\'src\')">' : '<span class="league-ico"></span>') +
+      '<span class="li-txt"><span class="li-name">' + escapeHTML(l.name) + '</span><span class="li-meta">' + escapeHTML(leagueMeta(l)) + '</span></span>' +
+      (current ? (check ? CHECK_SVG : '<span class="li-tag">Current</span>') : check ? '' : '<svg class="li-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>') +
+    '</button>';
+  }
   function renderLeagues(){
     const leagues = ctx.pendingLeagues || [];
-    const html = leagues.map(function(l){
-      const current = ctx.league && l.league_id === ctx.league.league_id;
-      const url = leagueAvatarUrl(l);
-      return '<button type="button" class="league-item' + (current ? ' current' : '') + '" role="menuitem" data-league-id="' + escapeHTML(l.league_id) + '"' + (current ? ' aria-current="true"' : '') + '>' +
-        (url ? '<img class="league-ico" src="' + escapeHTML(url) + '" alt="" loading="lazy" onerror="this.removeAttribute(\'src\')">' : '<span class="league-ico"></span>') +
-        '<span class="li-txt"><span class="li-name">' + escapeHTML(l.name) + '</span><span class="li-meta">' + escapeHTML(leagueMeta(l)) + '</span></span>' +
-        (current ? '<span class="li-tag">Current</span>' : '<svg class="li-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>') +
-      '</button>';
-    }).join('') || '<div class="empty-state" style="padding:12px">No other leagues found.</div>';
+    const html = leagues.map(function(l){ return leagueItemHTML(l, false); }).join('') || '<div class="empty-state" style="padding:12px">No other leagues found.</div>';
     document.querySelectorAll('[data-league-list]').forEach(function(el){ el.innerHTML = html; });
   }
+
+  // ---- the logo's league menu (Lineup page): active league checked, Esc / tap away closes, arrows move ----
+  let brandMenu = null, brandFrom = null;
+  function renderBrandMenu(){
+    const leagues = ctx.pendingLeagues || [];
+    const sortable = ctx.leagueOrderBy !== 'sleeper' && leagues.length > 1;
+    brandMenu.innerHTML = '<div class="league-menu-head">Your leagues' + (sortable ? '<span class="lm-hint">Drag to reorder</span>' : '') + '</div><div class="league-list">' +
+      (leagues.map(function(l){
+        return sortable ? '<div class="lm-row" data-lm-id="' + escapeHTML(l.league_id) + '">' + leagueItemHTML(l, true) +
+          '<button type="button" class="lm-grip" data-lm-grip aria-label="Move ' + escapeHTML(l.name) + ' (arrow keys)">' + GRIP_SVG + '</button></div>' : leagueItemHTML(l, true);
+      }).join('') || '<div class="empty-state" style="padding:12px">No leagues found.</div>') + '</div>';
+  }
+  function placeBrandMenu(){
+    const r = brandFrom.getBoundingClientRect(), phone = !window.matchMedia('(min-width: 1024px)').matches;
+    brandMenu.style.left = Math.max(phone ? 12 : 8, r.left + window.scrollX - (phone ? 0 : 4)) + 'px';
+    brandMenu.style.top = (r.bottom + window.scrollY + 6) + 'px';
+  }
+  function toggleBrandMenu(from, viaKeys){
+    if(brandMenu){ closeBrandMenu(viaKeys); return; }
+    brandFrom = from;
+    brandMenu = document.createElement('div');
+    brandMenu.className = 'brand-menu'; brandMenu.id = 'brand-menu';
+    brandMenu.setAttribute('role', 'menu'); brandMenu.setAttribute('aria-label', 'Your leagues');
+    renderBrandMenu();
+    document.body.appendChild(brandMenu);
+    placeBrandMenu();
+    from.setAttribute('aria-expanded', 'true'); from.setAttribute('aria-controls', 'brand-menu');
+    const cur = brandMenu.querySelector('.league-item.current') || brandMenu.querySelector('.league-item');
+    if(cur && viaKeys) cur.focus({ preventScroll: true });
+    if(cur && brandMenu.scrollHeight > brandMenu.clientHeight) brandMenu.scrollTop = Math.max(0, cur.offsetTop - brandMenu.clientHeight / 2);
+  }
+  function closeBrandMenu(refocus){
+    if(!brandMenu) return;
+    brandMenu.remove(); brandMenu = null;
+    if(brandFrom){ brandFrom.setAttribute('aria-expanded', 'false'); if(refocus) brandFrom.focus(); }
+  }
+  document.addEventListener('pointerdown', function(e){ // tap anywhere else closes it, and that tap does nothing else
+    if(!brandMenu || brandMenu.contains(e.target) || (brandFrom && brandFrom.contains(e.target))) return;
+    closeBrandMenu();
+    const swallow = function(ev){ ev.preventDefault(); ev.stopPropagation(); };
+    document.addEventListener('click', swallow, { capture: true, once: true });
+    setTimeout(function(){ document.removeEventListener('click', swallow, true); }, 600);
+  }, true);
+  window.addEventListener('resize', function(){ if(brandMenu) placeBrandMenu(); });
+  document.addEventListener('keydown', function(e){
+    if(!brandMenu) return;
+    if(e.key === 'Escape'){ e.preventDefault(); e.stopPropagation(); closeBrandMenu(true); return; }
+    if(e.key === 'Tab'){ closeBrandMenu(); return; }
+    const grip = e.target.closest && e.target.closest('[data-lm-grip]');
+    if(grip && (e.key === 'ArrowUp' || e.key === 'ArrowDown')){ // keyboard reorder
+      e.preventDefault();
+      const row = grip.parentNode, sib = e.key === 'ArrowUp' ? row.previousElementSibling : row.nextElementSibling;
+      if(!sib) return;
+      row.parentNode.insertBefore(row, e.key === 'ArrowUp' ? sib : sib.nextSibling);
+      grip.focus();
+      saveBrandOrder();
+      return;
+    }
+    const items = Array.prototype.slice.call(brandMenu.querySelectorAll('.league-item'));
+    if(!items.length) return;
+    const i = items.indexOf(document.activeElement);
+    let to = -1;
+    if(e.key === 'ArrowDown') to = i < 0 ? 0 : Math.min(items.length - 1, i + 1);
+    else if(e.key === 'ArrowUp') to = i < 0 ? items.length - 1 : Math.max(0, i - 1);
+    else if(e.key === 'Home') to = 0;
+    else if(e.key === 'End') to = items.length - 1;
+    if(to >= 0){ e.preventDefault(); items[to].focus(); }
+  }, true);
+  function saveBrandOrder(){
+    saveLeagueOrder(Array.prototype.map.call(brandMenu.querySelectorAll('[data-lm-id]'), function(r){ return r.getAttribute('data-lm-id'); }));
+    renderLeagues();
+  }
+  // drag a row by its grip (mouse or touch): the row follows the pointer and the others step aside as it passes them
+  document.addEventListener('pointerdown', function(e){
+    const grip = e.target.closest && e.target.closest('[data-lm-grip]');
+    if(!grip || !brandMenu || !brandMenu.contains(grip) || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    e.preventDefault();
+    const row = grip.parentNode, list = row.parentNode;
+    let lastY = e.clientY, moved = false;
+    row.classList.add('dragging');
+    try{ grip.setPointerCapture(e.pointerId); }catch(err){}
+    function move(ev){
+      if(ev.pointerId !== e.pointerId) return;
+      // swap once the row is dragged past the middle of a neighbour; the neighbours move, never the dragged row (moving it drops the pointer)
+      for(let guard = 0; guard < 50; guard++){
+        const prev = row.previousElementSibling, next = row.nextElementSibling;
+        if(prev && ev.clientY < prev.getBoundingClientRect().top + prev.offsetHeight / 2){ list.insertBefore(prev, row.nextSibling); lastY -= prev.offsetHeight + 4; moved = true; }
+        else if(next && ev.clientY > next.getBoundingClientRect().top + next.offsetHeight / 2){ list.insertBefore(next, row); lastY += next.offsetHeight + 4; moved = true; }
+        else break;
+      }
+      row.style.transform = 'translateY(' + (ev.clientY - lastY) + 'px)';
+      const mr = brandMenu.getBoundingClientRect(); // near the menu's edge: scroll it
+      if(ev.clientY < mr.top + 36) brandMenu.scrollTop -= 8; else if(ev.clientY > mr.bottom - 24) brandMenu.scrollTop += 8;
+    }
+    function up(ev){
+      if(ev.pointerId !== e.pointerId) return;
+      document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up); document.removeEventListener('pointercancel', up);
+      row.classList.add('settle'); row.style.transform = '';
+      setTimeout(function(){ row.classList.remove('dragging', 'settle'); }, 190);
+      if(moved) saveBrandOrder();
+    }
+    document.addEventListener('pointermove', move); document.addEventListener('pointerup', up); document.addEventListener('pointercancel', up);
+  });
   const leagueCard = document.getElementById('league-card'), leagueMenu = document.getElementById('league-menu');
   function toggleLeagueMenu(open){
     open = open === undefined ? leagueMenu.hidden : open;
@@ -5102,10 +5261,10 @@
   document.addEventListener('click', function(e){
     const item = e.target.closest && e.target.closest('[data-league-id]');
     if(!item) return;
-    if(ctx.league && item.getAttribute('data-league-id') === ctx.league.league_id){ toggleLeagueMenu(false); return; }
+    if(ctx.league && item.getAttribute('data-league-id') === ctx.league.league_id){ toggleLeagueMenu(false); closeBrandMenu(); return; }
     els.leagueSelect.value = item.getAttribute('data-league-id'); // keep the setup screen in sync
     loadEverything(item.getAttribute('data-league-id'), item); // measures the tapped item first, so the app grows out of it
-    toggleLeagueMenu(false);
+    toggleLeagueMenu(false); closeBrandMenu();
   });
 
   function renderStatus(){
@@ -6075,6 +6234,9 @@
     els.resourcesView.style.display = view === 'resources' ? '' : 'none';
     els.leagueView.style.display = view === 'league' ? '' : 'none';
     els.lineupTop.style.display = view === 'roster' ? '' : 'none';
+    els.rosterScreen.classList.toggle('on-lineup', view === 'roster');
+    closeBrandMenu();
+    document.querySelectorAll('[data-brand]').forEach(function(b){ b.setAttribute('aria-label', view === 'roster' ? 'sleepa: switch league' : 'sleepa: go to your lineup'); if(view === 'roster') b.setAttribute('aria-haspopup', 'menu'); else b.removeAttribute('aria-haspopup'); });
     els.panes.classList.toggle('solo', view === 'compare' || view === 'settings' || view === 'resources' || view === 'league');
 
     els.pageEyebrow.innerHTML = 'Week ' + ctx.week + (ctx.weekOffset ? ' <span class="wk-preview">preview</span>' : '') + ' · ' + escapeHTML(ctx.league ? ctx.league.name : '') + (ctx.league ? ' <span class="fmt-badge' + (isIdpLeague() ? ' idp' : '') + '" title="League format">' + escapeHTML(leagueFormat()) + '</span>' : '');
