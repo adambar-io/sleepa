@@ -963,6 +963,43 @@
   .pr-ghost.back{ transition: left .25s var(--ease), top .25s var(--ease), transform .25s var(--ease), opacity .25s; transform: none; opacity: 0; }
   .pr-undo{ margin-left: 8px; background: var(--surface-2); color: var(--text); padding: 6px 12px; min-height: 32px; border-radius: 999px; font-size: 12.5px; font-weight: 600; }
   @media (prefers-reduced-motion: reduce){ .pr-card, .pr-slot, .pr-slot.landed .pr-card, .pr-slot.landed::after, .pr-slot.target, .pr-spark{ animation: none !important; transition: none !important; } }
+  /* draft: Save + status in the dock, Clear / Undo in the top bar, toast above the dock, confirm dialog */
+  .pr-dock-top{ display: flex; align-items: center; gap: 14px; flex: none; }
+  .pr-status{ display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--text-3); white-space: nowrap; }
+  .pr-status::before{ content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .pr-status.unsaved{ color: var(--warn); } .pr-status.saved{ color: var(--accent); }
+  .pr-save{ background: var(--accent); color: var(--on-accent); padding: 0 20px; min-height: 40px; border-radius: 999px; font-size: 14px; font-weight: 700;
+    transition: transform .18s var(--spring), opacity .2s, background .2s; }
+  .pr-save:active:not(:disabled){ transform: scale(.95); }
+  .pr-save:disabled{ background: var(--surface-2); color: var(--text-3); opacity: 1; cursor: default; }
+  .pr-clear{ display: inline-flex; align-items: center; gap: 6px; background: var(--surface-2); color: var(--text); padding: 0 12px; min-height: 36px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+  .pr-clear svg{ width: 15px; height: 15px; }
+  .pr-clear:hover{ color: var(--danger); }
+  .pr-tab .pr-dot.todo{ background: transparent; box-shadow: inset 0 0 0 1.5px var(--text-3); }
+  .pr-toast{ position: absolute; left: 50%; bottom: 100px; transform: translateX(-50%); z-index: 5; display: flex; align-items: center; gap: 10px; max-width: min(560px, calc(100% - 24px));
+    padding: 10px 10px 10px 16px; border-radius: 14px; background: var(--surface-3); color: var(--text); font-size: 13px; line-height: 1.35; box-shadow: 0 12px 32px rgba(0,0,0,.3);
+    animation: prToastIn .28s var(--spring); }
+  .pr-toast[hidden]{ display: none; }
+  .pr-toast button{ flex: none; background: var(--surface); color: var(--text); padding: 6px 12px; min-height: 32px; border-radius: 999px; font-size: 12.5px; font-weight: 700; }
+  .pr-toast button.x{ background: none; color: var(--text-3); padding: 6px 8px; }
+  @keyframes prToastIn{ from{ opacity: 0; transform: translate(-50%, 10px); } to{ opacity: 1; transform: translate(-50%, 0); } }
+  .pr-dlg-back{ position: absolute; inset: 0; z-index: 20; display: grid; place-items: center; padding: 20px; background: rgba(0,0,0,.45); animation: fadeIn .18s var(--ease); }
+  .pr-dlg{ width: min(400px, 100%); padding: 20px; border-radius: 20px; background: var(--surface); box-shadow: 0 24px 60px rgba(0,0,0,.45); animation: focusIn .25s var(--ease); }
+  .pr-dlg h3{ margin: 0 0 6px; font-size: 17px; }
+  .pr-dlg p{ margin: 0 0 18px; font-size: 13.5px; line-height: 1.45; color: var(--text-2); }
+  .pr-dlg-btns{ display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+  .pr-dlg-btns button{ padding: 0 16px; min-height: 40px; border-radius: 999px; font-size: 13.5px; font-weight: 700; background: var(--surface-2); color: var(--text); }
+  .pr-dlg-btns button.dang{ color: var(--danger); }
+  .pr-dlg-btns button.pri{ background: var(--accent); color: var(--on-accent); }
+  .pr-dlg-btns button.pri.dang{ background: var(--danger); color: #fff; }
+  .pr-start{ display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin: 0 0 18px; padding: 14px 16px; border-radius: 16px; font-size: 13.5px; color: var(--text-2);
+    background: color-mix(in srgb, var(--accent) 8%, var(--surface)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 25%, transparent); }
+  .pr-start b{ color: var(--text); }
+  .pr-start button{ margin-left: auto; background: var(--surface-2); color: var(--text); padding: 0 14px; min-height: 36px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+  .pr-slot.empty > span:last-child{ display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
+  .pr-slot.empty b{ color: var(--text); font-size: 15px; }
+  .pr-slot.empty small{ font-size: 12px; color: var(--text-3); }
+  .pr-slot.empty svg{ width: 30px; height: 30px; padding: 6px; border-radius: 50%; background: color-mix(in srgb, var(--pr-c) 14%, transparent); color: var(--pr-c); opacity: 1; }
   /* hero slots: the selected position's starters are the big cards; the pool below stays small */
   .pr-slots{ display: flex; flex-wrap: wrap; justify-content: center; gap: 22px; margin: 10px 0 30px; }
   .pr-slot{ flex: 1 1 0; min-width: 260px; max-width: 420px; min-height: 280px; }
@@ -992,7 +1029,18 @@
     .pr-exit span, .pr-title span{ display: none; }
     .pr-title b{ font-size: 15px; }
     .pr-topbar .wk-seg button{ padding: 5px 9px; min-height: 30px; font-size: 12px; }
-    .pr-topbar .opt-btn{ min-height: 34px; padding: 0 11px; font-size: 12.5px; }
+    .pr-topbar .opt-btn, .pr-clear{ min-height: 34px; width: 34px; padding: 0; justify-content: center; }
+    .pr-topbar .opt-btn span, .pr-clear span, .pr-title{ display: none; }   /* icons only; the tabs + dock say where you are */
+    .pr-actions{ gap: 6px; }
+    .pr-undo{ margin-left: 0; padding: 5px 10px; min-height: 30px; font-size: 12px; }
+    .pr-dock-top{ gap: 10px; }
+    .pr-dock-top .pr-total{ flex: 1; min-width: 0; }
+    .pr-total .pr-chg-note{ display: none; }   /* phones: said in the Save toast instead */
+    .pr-status{ font-size: 11.5px; }
+    .pr-save{ min-height: 36px; padding: 0 16px; }
+    .pr-toast{ bottom: 128px; }
+    .pr-start{ padding: 12px; font-size: 12.5px; }
+    .pr-start button{ margin-left: 0; }
     .pr-main{ padding: 16px 12px 20px; }
     .pr-dock{ flex-direction: column; align-items: stretch; gap: 8px; padding: 8px 10px calc(env(safe-area-inset-bottom) + 8px); }
     .pr-total{ flex-direction: row; align-items: baseline; gap: 10px; }
@@ -5277,6 +5325,7 @@
   function setLuMode(mode){
     ctx.luMode = mode === 'pr' ? 'pr' : 'list';
     ctx.prSel = null;
+    if(ctx.luMode === 'pr') ctx.prWork = null;   // (re)read the draft for this league + week when entering
     applyLuMode();
     if(ctx.myRoster && ctx.luMode === 'pr'){ ctx.prEnter = 1; renderPowerRank(); const m = document.querySelector('#pr-view .pr-main'); if(m) m.scrollTop = 0; }
   }
@@ -5346,22 +5395,179 @@
   // A slot that won't score: empty, or its player is on a bye or ruled out.
   function prSlotProblem(pid){ return !pid || pid === '0' || !ctx.players[pid] || isOnBye(pid) || cantPlay(effectiveStatus(pid)); }
 
+  // ---- the Power Rank draft (ctx.prWork) ----
+  // Power Rank edits a draft; Save makes it the saved lineup (ctx.draftStarters: what Quick Swap, Compare and the
+  // totals show, kept per league and week). A league + week you've never saved here opens with its QB/RB/WR/TE/FLEX
+  // slots empty (locked players stay put); K / DEF / defender slots always mirror the saved lineup. Unsaved work is kept
+  // on this device (rv-pr:<league>:<week>) so a reload or iOS closing the app doesn't lose it.
+  //   base = the draft as it was when opened / last saved; dirty = work differs from base.
+  function prKey(){ return 'rv-pr:' + ctx.league.league_id + ':' + ctx.week; }
+  function prStore(){ try{ return JSON.parse(localStorage.getItem(prKey()) || 'null') || {}; }catch(e){ return {}; } }
+  function prWrite(st){ try{ lsSet(prKey(), JSON.stringify(st)); }catch(e){ console.warn('Could not keep your Power Rank draft', e); } }
+  function prIsEmpty(pid){ return !pid || pid === '0' || !ctx.players[pid]; }
+  function prSlotIdx(){ return new Set(prSlots().map(function(s){ return s.i; })); }
+  // this lineup with every unlocked Power Rank slot emptied
+  function prCleared(base){
+    const idx = prSlotIdx();
+    return base.map(function(pid, i){ return idx.has(i) && !(pid && pid !== '0' && ctx.players[pid] && isLocked(pid)) ? '0' : pid; });
+  }
+  // keep the draft honest: players no longer on the roster drop out; non-Power-Rank slots follow the saved lineup
+  function prSanitize(w){
+    const idx = prSlotIdx(), onRoster = new Set(ctx.myRoster.players || []);
+    return ctx.draftStarters.map(function(saved, i){
+      if(!idx.has(i)) return saved;
+      const pid = w[i];
+      return pid && pid !== '0' && onRoster.has(pid) ? pid : '0';
+    });
+  }
+  function prInitWork(){
+    const st = prStore(), n = ctx.draftStarters.length;
+    const fresh = st.saved ? ctx.draftStarters.slice() : prCleared(ctx.draftStarters);
+    const resume = Array.isArray(st.work) && st.work.length === n;
+    ctx.prWork = prSanitize(resume ? st.work : fresh);
+    ctx.prBase = prSanitize(resume && Array.isArray(st.base) && st.base.length === n ? st.base : fresh);
+    ctx.prSaved = !!st.saved;
+    ctx.prWorkFor = prKey(); ctx.prHand = resume; ctx.prUndo = null; ctx.prSel = null;
+  }
+  function prDirty(){ return JSON.stringify(ctx.prWork) !== JSON.stringify(ctx.prBase); }
+  function prPersist(){ const st = prStore(); st.saved = !!ctx.prSaved; st.work = prDirty() ? ctx.prWork : null; st.base = prDirty() ? ctx.prBase : null; prWrite(st); }
+  function prSave(){
+    ctx.draftStarters = ctx.prWork.slice();
+    ctx.prBase = ctx.prWork.slice(); ctx.prSaved = true; ctx.prUndo = null;
+    ctx.handEdited = true; ctx.optUndo = null;
+    prWrite({ saved: true, work: null, base: null });
+    renderAll();   // saved lineup → list view, KPIs, Compare, and the plan store (saveDraft)
+    const nChg = ctx.draftStarters.filter(function(pid, i){ return (pid || '0') !== (ctx.originalStarters[i] || '0'); }).length;
+    prToast('<b>Saved.</b> This is your lineup for week ' + ctx.week + '.' + (nChg ? ' ' + nChg + ' change' + (nChg > 1 ? 's' : '') + ' to make in Sleeper.' : ''));
+  }
+  function prDiscard(){ const st = prStore(); st.work = null; st.base = null; prWrite(st); ctx.prWork = null; ctx.prWorkFor = null; }
+  // Leaving with unsaved changes asks first. then() runs once it's fine to go.
+  function prLeave(then){
+    if(ctx.luMode !== 'pr' || !ctx.prWork || !prDirty()){ then(); return; }
+    prDialog('Save your lineup?', 'You have unsaved changes in Power Rank.', [
+      { k: 'keep', label: 'Keep editing' }, { k: 'discard', label: 'Discard', danger: true }, { k: 'save', label: 'Save', primary: true },
+    ]).then(function(k){
+      if(k === 'save'){ prSave(); then(); }
+      else if(k === 'discard'){ prDiscard(); then(); }
+    });
+  }
+  window.addEventListener('beforeunload', function(e){
+    if(ctx.luMode === 'pr' && ctx.prWork && prDirty()){ e.preventDefault(); e.returnValue = ''; }   // desktop; iOS keeps the draft on the device instead
+  });
+  function prClear(){
+    const unlocked = prSlots().filter(function(s){ return !prIsEmpty(ctx.prWork[s.i]) && !isLocked(ctx.prWork[s.i]); }).length;
+    if(!unlocked){ prToast('Nothing to clear' + (prSlots().some(function(s){ return !prIsEmpty(ctx.prWork[s.i]); }) ? ': the players left have games in progress (locked).' : '.')); return; }
+    prDialog('Clear every slot?', 'Empties ' + unlocked + ' slot' + (unlocked > 1 ? 's' : '') + ' so you can start over with everyone available. Players whose games have started stay. Your saved lineup doesn’t change until you Save.', [
+      { k: 'no', label: 'Cancel' }, { k: 'yes', label: 'Clear', danger: true, primary: true },
+    ]).then(function(k){
+      if(k !== 'yes') return;
+      const before = ctx.prWork.slice();
+      ctx.prWork = prCleared(ctx.prWork); ctx.prSel = null; ctx.prHand = false;
+      ctx.prUndo = { work: before, what: 'Clear' };
+      prPersist(); renderPowerRank();
+      prToast('Cleared ' + unlocked + ' slot' + (unlocked > 1 ? 's' : '') + '.', true);
+    });
+  }
+  function prFromSleeper(){
+    const idx = prSlotIdx(), before = ctx.prWork.slice();
+    ctx.prWork = prSanitize(ctx.prWork.map(function(pid, i){ return idx.has(i) ? ctx.originalStarters[i] : pid; }));
+    ctx.prUndo = { work: before, what: 'Load' }; ctx.prHand = false;
+    ctx.prLanded = prSlots().filter(function(s){ return s.tab === ctx.prTab; }).map(function(s){ return s.i; });
+    prPersist(); renderPowerRank();
+  }
+  // Optimize inside Power Rank fills the draft (same optimizer, locked players stay); Save keeps it.
+  function prOptimize(confirmed){
+    const placed = prSlots().some(function(s){ const p = ctx.prWork[s.i]; return !prIsEmpty(p) && !isLocked(p); });
+    if(!confirmed && ctx.prHand && placed){
+      prDialog('Replace your picks?', 'Optimize fills every slot with the highest projection and may replace players you placed. You can undo it right after.', [
+        { k: 'no', label: 'Cancel' }, { k: 'yes', label: 'Optimize', primary: true },
+      ]).then(function(k){ if(k === 'yes') prOptimize(true); });
+      return;
+    }
+    const keep = ctx.draftStarters; let res;
+    ctx.draftStarters = ctx.prWork;   // the optimizer keeps ties where the draft has them
+    try{ res = optimalStarters(); } finally{ ctx.draftStarters = keep; }
+    const before = ctx.prWork.slice(), next = before.slice(), idx = prSlotIdx();
+    idx.forEach(function(i){ next[i] = res.starters[i]; });
+    const changed = []; idx.forEach(function(i){ if((next[i] || '0') !== (before[i] || '0')) changed.push(i); });
+    if(!changed.length){ prToast('<b>Already optimal.</b> Nothing to change.'); return; }
+    ctx.prWork = prSanitize(next); ctx.prUndo = { work: before, what: 'Optimize' }; ctx.prHand = false; ctx.prSel = null;
+    ctx.prLanded = changed.filter(function(i){ return prSlots().some(function(s){ return s.i === i && s.tab === ctx.prTab; }); });
+    prPersist(); renderPowerRank();
+    const d = sumProj(ctx.prWork) - sumProj(before);
+    prToast('<b>Optimized</b> · ' + changed.length + ' slot' + (changed.length > 1 ? 's' : '') + ' · ' + (d >= 0 ? '+' : '−') + Math.abs(d).toFixed(2) + ' pts. Save to keep it.', true);
+  }
+  function prUndo(){
+    if(!ctx.prUndo) return;
+    ctx.prWork = prSanitize(ctx.prUndo.work); ctx.prUndo = null; ctx.prHand = true; ctx.prSel = null;
+    prPersist(); renderPowerRank(); prToast('Undone.');
+  }
+  // Double-tap / double-click a pool card: into the first empty slot of this tab it fits, else in place of the lowest-
+  // projected unlocked starter there. Position tabs use only that position's own slots (FLEX tab: the flex slots).
+  // Never replaces a locked starter; skips (with a note) when he projects no higher than any of them.
+  function prAutoSwap(pid, el){
+    const tab = ctx.prTab, word = tab === 'FLEX' ? 'flex' : tab;
+    if(isLocked(pid)){ prNudge(el); prToast(escapeHTML(playerName(ctx.players[pid])) + '’s game has started: he’s locked.'); return false; }
+    const ts = prSlots().filter(function(s){ return s.tab === tab && canFill(pid, s.label); });
+    if(!ts.length){ prNudge(el); return false; }
+    let target = ts.find(function(s){ return prIsEmpty(ctx.prWork[s.i]); });
+    if(!target){
+      const open = ts.filter(function(s){ return !prLockedSlot(s.i) && ctx.prWork[s.i] !== pid; })
+        .sort(function(a, b){ return prProjOf(ctx.prWork[a.i]) - prProjOf(ctx.prWork[b.i]); });
+      if(!open.length){ prNudge(el); prToast('Every ' + word + ' starter’s game has started: nothing to swap.'); return false; }
+      target = open[0];
+      if(prProjOf(pid) <= prProjOf(ctx.prWork[target.i])){
+        prNudge(el);
+        prToast(escapeHTML(playerName(ctx.players[pid])) + ' projects below all your ' + word + ' starters. Tap him, then pick a slot, to swap anyway.');
+        return false;
+      }
+    }
+    ctx.prFly = { pid: pid, rect: el.getBoundingClientRect() };
+    return prPlace(target.i, pid);
+  }
+  // Small in-screen dialog; resolves with the chosen button's key (or null when dismissed).
+  function prDialog(title, text, buttons){
+    return new Promise(function(resolve){
+      const back = document.createElement('div');
+      back.className = 'pr-dlg-back';
+      back.innerHTML = '<div class="pr-dlg" role="alertdialog" aria-modal="true" aria-labelledby="pr-dlg-t"><h3 id="pr-dlg-t">' + escapeHTML(title) + '</h3><p>' + escapeHTML(text) + '</p><div class="pr-dlg-btns">' +
+        buttons.map(function(b){ return '<button type="button" data-k="' + b.k + '" class="' + (b.primary ? 'pri ' : '') + (b.danger ? 'dang' : '') + '">' + escapeHTML(b.label) + '</button>'; }).join('') + '</div></div>';
+      const done = function(k){ back.remove(); document.removeEventListener('keydown', esc, true); resolve(k); };
+      const esc = function(e){ if(e.key === 'Escape'){ e.stopPropagation(); done(null); } };
+      back.addEventListener('click', function(e){ const b = e.target.closest('[data-k]'); if(b) done(b.getAttribute('data-k')); else if(e.target === back) done(null); });
+      document.addEventListener('keydown', esc, true);
+      document.getElementById('pr-view').appendChild(back);
+      const pri = back.querySelector('.pri'); if(pri) pri.focus();
+    });
+  }
+  // Toast above the dock; withUndo adds an Undo button (for Clear / Optimize / Load).
+  function prToast(html, withUndo){
+    const t = document.querySelector('#pr-view .pr-toast');
+    if(!t) return;
+    t.innerHTML = '<span>' + html + '</span>' + (withUndo && ctx.prUndo ? '<button type="button" data-pr-undo>Undo</button>' : '') + '<button type="button" class="x" data-pr-toast-x aria-label="Dismiss">✕</button>';
+    t.hidden = false; t.style.animation = 'none'; void t.offsetWidth; t.style.animation = '';
+    clearTimeout(t._t); t._t = setTimeout(function(){ t.hidden = true; }, withUndo ? 9000 : 5000);
+  }
+
   function renderPowerRank(){
     const view = document.getElementById('pr-view');
     if(!view || !ctx.myRoster || !ctx.rosterPositions) return;
+    if(!ctx.prWork || ctx.prWorkFor !== prKey() || ctx.prWork.length !== ctx.rosterPositions.length) prInitWork();
+    else { ctx.prWork = prSanitize(ctx.prWork); ctx.prBase = prSanitize(ctx.prBase); }
     if(prDrag.st && prDrag.st.active){ ctx.prPending = true; return; }   // a live-score refresh mid-drag waits for the drop
     const tabs = prTabs();
     if(!tabs.length){ view.innerHTML = '<div class="pr-empty">Your league has no QB / RB / WR / TE slots to set here.</div>'; return; }
     if(tabs.indexOf(ctx.prTab) === -1) ctx.prTab = tabs[0];
     const slots = prSlots();
-    const total = sumProj(ctx.draftStarters), diff = total - sumProj(ctx.originalStarters);
+    const total = sumProj(ctx.prWork), diff = total - sumProj(ctx.originalStarters);
     const tabHTML = tabs.map(function(t){
       const ts = slots.filter(function(s){ return s.tab === t; });
-      const filled = ts.filter(function(s){ const pid = ctx.draftStarters[s.i]; return pid && pid !== '0'; }).length;
-      const bad = ts.some(function(s){ return prSlotProblem(ctx.draftStarters[s.i]); });
-      const pts = sumProj(ts.map(function(s){ return ctx.draftStarters[s.i]; }));
+      const filled = ts.filter(function(s){ const pid = ctx.prWork[s.i]; return pid && pid !== '0'; }).length;
+      const bad = ts.some(function(s){ const p = ctx.prWork[s.i]; return !prIsEmpty(p) && prSlotProblem(p); });
+      const todo = filled < ts.length;
+      const pts = sumProj(ts.map(function(s){ return ctx.prWork[s.i]; }));
       return '<button type="button" class="pr-tab" role="tab" data-pr-tab="' + t + '" aria-selected="' + (t === ctx.prTab) + '" style="--c:' + posColor(t) + '" title="' + filled + ' of ' + ts.length + ' set · ' + fmtPts(pts) + ' projected">' +
-        '<b>' + t + '</b><small><span class="pr-tf">' + filled + '/' + ts.length + ' · </span>' + fmtPts(pts) + '</small>' + (bad ? '<span class="pr-dot" title="A slot here won’t score"></span>' : '') + '</button>';
+        '<b>' + t + '</b><small><span class="pr-tf">' + filled + '/' + ts.length + ' · </span>' + fmtPts(pts) + '</small>' + (bad ? '<span class="pr-dot" title="A player here won’t score"></span>' : todo ? '<span class="pr-dot todo" title="Slot' + (ts.length - filled > 1 ? 's' : '') + ' to fill"></span>' : '') + '</button>';
     }).join('');
     // Built once; after that only the parts inside are replaced, so the scroll area (.pr-main) never remounts and
     // never loses its place.
@@ -5371,11 +5577,15 @@
           '<button type="button" class="pr-exit" data-pr-exit aria-label="Back to the lineup list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg><span>Lineup</span></button>' +
           '<div class="pr-title"><b>Power Rank</b><span id="pr-sub"></span></div>' +
           '<div class="pr-actions"><div class="wk-seg" role="group" aria-label="Week"><button type="button" data-wk-off="0" data-short></button><button type="button" data-wk-off="1" data-short></button></div>' +
-          '<button type="button" class="opt-btn" data-pr-opt title="Fill your starters with the highest projected lineup"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9zM19 14l.9 2.6 2.6.9-2.6.9L19 21l-.9-2.6-2.6-.9 2.6-.9z"/></svg>Optimize</button></div>' +
+          '<button type="button" class="pr-undo" data-pr-undo hidden>Undo</button>' +
+          '<button type="button" class="pr-clear" data-pr-clear title="Empty every slot and start over" aria-label="Clear lineup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg><span>Clear</span></button>' +
+          '<button type="button" class="opt-btn" data-pr-opt title="Fill your starters with the highest projected lineup" aria-label="Optimize"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9zM19 14l.9 2.6 2.6.9-2.6.9L19 21l-.9-2.6-2.6-.9 2.6-.9z"/></svg><span>Optimize</span></button></div>' +
         '</div>' +
         '<div class="pr-main"><div class="pr-note-slot"></div><div class="pr-body"></div></div>' +
-        '<div class="pr-dock"><div class="pr-total" title="All your starters, including any slots set in Quick Swap (K, DEF, defenders)"><div class="eyebrow">Projected lineup</div>' +
+        '<div class="pr-toast" role="status" aria-live="polite" hidden></div>' +
+        '<div class="pr-dock"><div class="pr-dock-top"><div class="pr-total" title="Your whole lineup as it stands here: filled slots only, plus K / DEF / defenders from your saved lineup"><div class="eyebrow">Projected lineup</div>' +
           '<div class="pr-total-row"><span class="pr-total-num" id="pr-total">0.00</span><span class="pr-delta" id="pr-delta"></span></div><div class="pr-chg-note" id="pr-chg"></div></div>' +
+          '<span class="pr-status" id="pr-status"></span><button type="button" class="pr-save" data-pr-save>Save</button></div>' +
           '<div class="pr-tabs" role="tablist" aria-label="Positions"></div></div>';
       applyLuMode();   // moves the optimizer note into the new slot
     }
@@ -5383,8 +5593,10 @@
     document.getElementById('pr-sub').textContent = (ctx.league ? ctx.league.name + ' · ' : '') + 'Week ' + ctx.week + (ctx.weekOffset ? ' preview' : '');
     countTo(document.getElementById('pr-total'), total);   // tweens from the last total
     const d = document.getElementById('pr-delta'), flat = Math.abs(diff) < 0.005;
-    d.textContent = flat ? 'same as Sleeper' : (diff > 0 ? '+' : '−') + Math.abs(diff).toFixed(2) + ' vs Sleeper';
-    d.className = 'pr-delta' + (flat ? '' : diff > 0 ? ' up' : ' down');
+    const toFill = slots.filter(function(s){ return prIsEmpty(ctx.prWork[s.i]); }).length;
+    // while you're still building, the gap to Sleeper is just the empty slots: say that instead of a big red number
+    d.textContent = toFill ? toFill + ' slot' + (toFill > 1 ? 's' : '') + ' to fill' : flat ? 'same as Sleeper' : (diff > 0 ? '+' : '−') + Math.abs(diff).toFixed(2) + ' vs Sleeper';
+    d.className = 'pr-delta' + (toFill || flat ? '' : diff > 0 ? ' up' : ' down');
     view.querySelector('.pr-tabs').innerHTML = tabHTML;
     // Re-rendering the stage keeps where you are: the vertical scroll lives on .pr-main (not replaced), and each swipe
     // row's horizontal position is carried over when it's the same position's row.
@@ -5392,13 +5604,19 @@
     body.querySelectorAll('.pr-pool[data-row]').forEach(function(r){ rows[r.getAttribute('data-row')] = r.scrollLeft; });
     body.innerHTML = prStageHTML(ctx.prTab, slots);
     body.querySelectorAll('.pr-pool[data-row]').forEach(function(r){ const k = r.getAttribute('data-row'); if(rows[k]) r.scrollLeft = rows[k]; });
-    // Undo stays in the bar after an optimize until you change something yourself
-    let undo = view.querySelector('[data-pr-undo]');
-    if(ctx.optUndo && !undo){ undo = document.createElement('button'); undo.type = 'button'; undo.className = 'pr-undo'; undo.setAttribute('data-pr-undo', ''); undo.textContent = 'Undo optimize'; view.querySelector('.pr-actions').insertBefore(undo, view.querySelector('[data-pr-opt]')); }
-    else if(!ctx.optUndo && undo) undo.remove();
-    // Sleepa can't write to Sleeper: say how many slots still need copying over, with a way to the side-by-side list
+    // Undo (Clear / Optimize / Load) stays in the bar until you change something yourself
+    const undo = view.querySelector('.pr-topbar [data-pr-undo]');
+    undo.hidden = !ctx.prUndo;
+    undo.textContent = ctx.prUndo ? 'Undo ' + ctx.prUndo.what.toLowerCase() : 'Undo';
+    // saved / unsaved
+    const dirty = prDirty(), stEl = document.getElementById('pr-status'), save = view.querySelector('[data-pr-save]');
+    stEl.className = 'pr-status ' + (dirty ? 'unsaved' : ctx.prSaved ? 'saved' : 'new');
+    stEl.textContent = dirty ? 'Unsaved changes' : ctx.prSaved ? 'Saved' : 'Not saved yet';
+    save.disabled = !dirty && ctx.prSaved;
+    save.textContent = !dirty && ctx.prSaved ? 'Saved' : 'Save';
+    // Sleepa can't write to Sleeper: how many slots of the SAVED lineup still need copying over, with a way to the list
     const nChg = ctx.draftStarters.filter(function(pid, i){ return (pid || '0') !== (ctx.originalStarters[i] || '0'); }).length;
-    view.querySelector('#pr-chg').innerHTML = nChg ? nChg + ' change' + (nChg > 1 ? 's' : '') + ' to make in Sleeper · <button type="button" data-pr-compare>See them</button>' : '';
+    view.querySelector('#pr-chg').innerHTML = nChg ? 'Saved lineup: ' + nChg + ' change' + (nChg > 1 ? 's' : '') + ' to make in Sleeper · <button type="button" data-pr-compare>See them</button>' : '';
     prPlayFly();
     prPlayLanded();
   }
@@ -5422,7 +5640,7 @@
   };
   ctx.prSel = null;   // { pid }: a card waiting for a slot · { slot }: a slot waiting for a player
   // Locked = that player's game has kicked off (Sleeper won't move them either); a slot holding one is read-only.
-  function prLockedSlot(i){ const pid = ctx.draftStarters[i]; return !!(pid && pid !== '0' && ctx.players[pid] && isLocked(pid)); }
+  function prLockedSlot(i){ const pid = ctx.prWork[i]; return !!(pid && pid !== '0' && ctx.players[pid] && isLocked(pid)); }
   function prCanPlace(pid, i){ return !!ctx.players[pid] && canFill(pid, ctx.rosterPositions[i]) && !isLocked(pid) && !prLockedSlot(i); }
   // Why a player won't score this week ('' = fine): bye, a ruled-out status, or no projection.
   function prUnavail(pid){
@@ -5438,7 +5656,7 @@
   // The card: projection (actual once the game is on), game time + opponent colored by matchup difficulty (the same
   // points-allowed ranking as everywhere else; also the strip on top), injury chip, and last-3 average in league scoring.
   function prCardHTML(pid, where, idx){
-    const p = ctx.players[pid], i = dvpInfo(pid), locked = isLocked(pid), un = prUnavail(pid), at = ctx.draftStarters.indexOf(pid);
+    const p = ctx.players[pid], i = dvpInfo(pid), locked = isLocked(pid), un = prUnavail(pid), at = ctx.prWork.indexOf(pid);
     const wa = weekActual(pid), g = gameOf(p.team), n = (hist(pid) || []).length, l3 = n ? last3Avg(pid) : null;
     const m = matchup(p.team, ctx.week), live = gameStatusHTML(p.team, true);
     const tipOpp = i ? ' title="' + escapeHTML(dvpSentence(i)) + '"' : '';
@@ -5471,13 +5689,13 @@
   // aren't starting at their own position, then the ones who are (moving one in empties or swaps their spot).
   function prStageHTML(tab, slots){
     const ts = slots.filter(function(s){ return s.tab === tab; }), sel = ctx.prSel, selPid = sel && sel.pid;
-    const inTab = function(pid){ return ts.some(function(s){ return ctx.draftStarters[s.i] === pid; }); };
+    const inTab = function(pid){ return ts.some(function(s){ return ctx.prWork[s.i] === pid; }); };
     const slotHTML = ts.map(function(s){
-      const pid = ctx.draftStarters[s.i], has = pid && pid !== '0' && ctx.players[pid];
+      const pid = ctx.prWork[s.i], has = pid && pid !== '0' && ctx.players[pid];
       const target = selPid ? pid !== selPid && prCanPlace(selPid, s.i) : !!(sel && sel.slot === s.i);
       const chg = (pid || '0') !== (ctx.originalStarters[s.i] || '0');   // differs from your Sleeper lineup: a change to copy over
       const lbl = '<span class="pr-slot-lbl' + (chg ? ' chg" title="Changed from your Sleeper lineup' : '') + '">' + escapeHTML(s.name) + '</span>';
-      if(!has) return '<div class="pr-slot empty' + (target ? ' target' : '') + '" data-pr-slot="' + s.i + '" role="button" tabindex="0" aria-label="Empty ' + escapeHTML(s.name) + ' slot">' + lbl + PR_ICON.plus + '<span>' + (selPid ? 'Place here' : 'Empty') + '</span></div>';
+      if(!has) return '<div class="pr-slot empty' + (target ? ' target' : '') + '" data-pr-slot="' + s.i + '" role="button" tabindex="0" aria-label="Empty ' + escapeHTML(s.name) + ' slot">' + lbl + PR_ICON.plus + '<span>' + (selPid ? 'Place here' : '<b>Pick your ' + escapeHTML(s.name) + '</b><small>tap a player below' + (hasFinePointer() ? ' or drag one here' : '') + '</small>') + '</span></div>';
       return '<div class="pr-slot' + (target ? ' target' : '') + (prUnavail(pid) ? ' bad' : '') + '" data-pr-slot="' + s.i + '">' + lbl + prCardHTML(pid, 'slot') +
         (isLocked(pid) ? '<span class="pr-lock" title="Game started: locked">' + PR_ICON.lock + '</span>'
           : '<button type="button" class="pr-rm" data-pr-rm="' + s.i + '" aria-label="Remove ' + escapeHTML(playerName(ctx.players[pid])) + ' from ' + escapeHTML(s.name) + '" title="Remove">' + PR_ICON.x + '</button>') + '</div>';
@@ -5494,7 +5712,7 @@
     };
     let poolHTML;
     if(tab === 'FLEX'){
-      const dedicated = function(pid){ const at = ctx.draftStarters.indexOf(pid); return at !== -1 && !isFlexSlot(ctx.rosterPositions[at]); };
+      const dedicated = function(pid){ const at = ctx.prWork.indexOf(pid); return at !== -1 && !isFlexSlot(ctx.rosterPositions[at]); };
       const left = pool.filter(function(pid){ return !dedicated(pid); }), busy = pool.filter(dedicated);
       poolHTML = row('left', 'Leftovers', left.length + ' competing for flex', left, 'Everyone eligible is already starting.') +
         (busy.length ? '<div style="height:14px"></div>' + row('busy', 'Starting at their position', busy.length + '', busy, '', left.length) : '');
@@ -5503,17 +5721,20 @@
     }
     // deck-builder flow: once this position is set, offer the next one
     const tabs = prTabs(), nextTab = tabs[tabs.indexOf(tab) + 1];
-    const full = ts.every(function(s){ const x = ctx.draftStarters[s.i]; return x && x !== '0'; });
+    const full = ts.every(function(s){ const x = ctx.prWork[s.i]; return x && x !== '0'; });
     const next = full && nextTab ? '<button type="button" class="pr-next" data-pr-tab="' + nextTab + '">Next: ' + (nextTab === 'FLEX' ? 'Flex' : nextTab) + ' ›</button>' : '';
-    const empty = ts.filter(function(s){ const pid = ctx.draftStarters[s.i]; return !pid || pid === '0'; });
+    const empty = ts.filter(function(s){ const pid = ctx.prWork[s.i]; return !pid || pid === '0'; });
     const allLocked = ts.every(function(s){ return prLockedSlot(s.i); });
     const hint = allLocked ? 'Games have started: these slots are <b>locked</b>' + (ctx.sleeperWeek && ctx.week === ctx.sleeperWeek && ctx.week < MAX_PLAN_WEEK ? ' · switch to next week to plan ahead' : '')
       : selPid ? 'Pick a slot for <b>' + escapeHTML(playerName(ctx.players[selPid])) + '</b> · tap it again to cancel'
       : sel ? 'Pick a player for <b>' + escapeHTML(prSlotName(sel.slot)) + '</b>'
       : empty.length ? 'Tap a player to fill <b>' + escapeHTML(empty[0].name) + '</b>' + (hasFinePointer() ? ', or drag one onto a slot' : '')
-      : tab === 'FLEX' ? 'Tap a leftover, then the flex spot it should take' : 'Tap a player to swap in' + (hasFinePointer() ? ' or drag onto a slot' : ' (hold to drag)');
+      : (tab === 'FLEX' ? 'Tap a leftover, then the flex spot it should take' : 'Tap a player, then a slot') + ' · <b>double-' + (hasFinePointer() ? 'click' : 'tap') + '</b> to swap in for your lowest starter' + (hasFinePointer() ? ' · or drag' : ' · hold to drag');
+    const blank = prSlots().every(function(s){ const p = ctx.prWork[s.i]; return prIsEmpty(p) || isLocked(p); });
+    const start = blank ? '<div class="pr-start"><div><b>Build your week ' + ctx.week + ' lineup from scratch.</b> Go position by position (' + tabs.join(', ') + '), then Save.</div>' +
+      '<button type="button" data-pr-from-sleeper>Start from my Sleeper lineup</button></div>' : '';
     const enter = ctx.prEnter; ctx.prEnter = null;
-    return '<div class="pr-stage' + (enter ? ' enter' : '') + '" style="--pr-c:' + posColor(tab) + (enter ? ';--dir:' + enter : '') + '">' +
+    return '<div class="pr-stage' + (enter ? ' enter' : '') + '" style="--pr-c:' + posColor(tab) + (enter ? ';--dir:' + enter : '') + '">' + start +
       '<div class="pr-sec"><h3>' + (tab === 'FLEX' ? 'Flex' : tab) + ' slots</h3><span>' + (empty.length ? empty.length + ' empty' : 'all set') + '</span>' + next + '</div>' +
       '<div class="pr-hint">' + hint + '</div><div class="pr-slots' + (ts.length === 1 ? ' one' : '') + '">' + slotHTML + '</div>' + poolHTML + '</div>';
   }
@@ -5522,7 +5743,7 @@
   // ---- placing: every change goes through prPlace / prRemove (one gesture; the old occupant goes back to the pool) ----
   function prPlace(i, pid){
     if(!prCanPlace(pid, i)) return false;
-    const d = ctx.draftStarters, old = d[i], from = d.indexOf(pid);
+    const d = ctx.prWork, old = d[i], from = d.indexOf(pid);
     if(old === pid){ ctx.prSel = null; renderPowerRank(); return true; }
     d[i] = pid;
     // coming from another slot: that slot gets the displaced player if they can play it, otherwise it empties
@@ -5533,24 +5754,39 @@
   }
   function prRemove(i){
     if(prLockedSlot(i)) return;
-    ctx.draftStarters[i] = '0';
+    ctx.prWork[i] = '0';
     prEdited();
   }
+  // A change to the draft: the saved lineup (and the rest of the app) only changes on Save.
   function prEdited(){
-    ctx.prSel = null; ctx.handEdited = true; ctx.optUndo = null;
-    hideOptNote();
-    renderAll();
+    ctx.prSel = null; ctx.prHand = true; ctx.prUndo = null;
+    prPersist();
+    renderPowerRank();
     try{ if(navigator.vibrate) navigator.vibrate(8); }catch(e){}
   }
   function prNudge(el){ if(!el) return; el.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-5px)' }, { transform: 'translateX(5px)' }, { transform: 'translateX(0)' }], { duration: 240, easing: 'ease-out' }); }
   // A pool card was tapped: fill the first empty slot it fits in this tab; otherwise hold it until a slot is picked.
+  // Double-tap is detected here rather than with the browser's dblclick, because the first tap re-renders the stage
+  // (the card element is replaced, and dblclick doesn't reliably fire across that). Second tap on the same player within
+  // PR_DOUBLE ms = auto-swap, and it clears whatever the first tap selected. After a tap that placed a player, taps are
+  // ignored for the same window so a double-tap's second tap can't land on the card that slid into the gap.
+  const PR_DOUBLE = 350;
   function prTapCard(pid, el){
+    const now = Date.now(), last = ctx.prLastTap;
+    ctx.prLastTap = { pid: pid, t: now };
+    if(last && last.pid === pid && now - last.t < PR_DOUBLE){
+      ctx.prLastTap = null; ctx.prSel = null;
+      // skipped (locked / projects lower): still drop the first tap's selection, so nothing is left held
+      if(!prAutoSwap(pid, el)){ renderPowerRank(); prNudge(document.querySelector('#pr-view .pr-pool [data-pr-pid="' + pid + '"]')); }
+      return;
+    }
+    if(now < (ctx.prTapGuard || 0)){ ctx.prLastTap = null; return; }
     const sel = ctx.prSel;
     if(isLocked(pid)){ prNudge(el); return; }
-    const fly = function(){ ctx.prFly = { pid: pid, rect: el.getBoundingClientRect() }; };
-    if(sel && sel.slot != null){ fly(); if(!prPlace(sel.slot, pid)){ ctx.prFly = null; prNudge(el); } return; }
+    const fly = function(){ ctx.prFly = { pid: pid, rect: el.getBoundingClientRect() }; ctx.prTapGuard = now + PR_DOUBLE; };
+    if(sel && sel.slot != null){ fly(); if(!prPlace(sel.slot, pid)){ ctx.prFly = null; ctx.prTapGuard = 0; prNudge(el); } return; }
     if(sel && sel.pid === pid){ ctx.prSel = null; renderPowerRank(); return; }
-    const open = prSlots().filter(function(s){ return s.tab === ctx.prTab; }).find(function(s){ const x = ctx.draftStarters[s.i]; return (!x || x === '0') && prCanPlace(pid, s.i); });
+    const open = prSlots().filter(function(s){ return s.tab === ctx.prTab; }).find(function(s){ const x = ctx.prWork[s.i]; return (!x || x === '0') && prCanPlace(pid, s.i); });
     if(open){ fly(); prPlace(open.i, pid); return; }
     ctx.prSel = { pid: pid }; renderPowerRank();
   }
@@ -5602,14 +5838,18 @@
       prView.querySelector('.pr-main').scrollTop = 0;
       return;
     }
-    if(e.target.closest('[data-pr-exit]')){ setLuMode('list'); return; }
+    if(e.target.closest('[data-pr-exit]')){ prLeave(function(){ setLuMode('list'); }); return; }
     const wk = e.target.closest('[data-wk-off]');
-    if(wk){ if(!wk.disabled) switchWeek(Number(wk.getAttribute('data-wk-off'))); return; }
+    if(wk){ const off = Number(wk.getAttribute('data-wk-off')); if(!wk.disabled && off !== (ctx.weekOffset || 0)) prLeave(function(){ switchWeek(off); }); return; }
+    if(e.target.closest('[data-pr-save]')){ prSave(); renderPowerRank(); return; }
+    if(e.target.closest('[data-pr-clear]')){ prClear(); return; }
+    if(e.target.closest('[data-pr-from-sleeper]')){ prFromSleeper(); return; }
+    if(e.target.closest('[data-pr-toast-x]')){ prView.querySelector('.pr-toast').hidden = true; return; }
     const all = e.target.closest('[data-pr-all]');
     if(all){ const k = ctx.prTab + ':' + all.getAttribute('data-pr-all'); ctx.prAll[k] = !ctx.prAll[k]; renderPowerRank(); return; }
-    if(e.target.closest('[data-pr-opt]')){ runOptimal(); return; }
-    if(e.target.closest('[data-pr-undo]')){ prUndoOptimize(); return; }
-    if(e.target.closest('[data-pr-compare]')){ setLuMode('list'); setView('compare'); return; }
+    if(e.target.closest('[data-pr-opt]')){ prOptimize(false); return; }
+    if(e.target.closest('[data-pr-undo]')){ prUndo(); prView.querySelector('.pr-toast').hidden = true; return; }
+    if(e.target.closest('[data-pr-compare]')){ prLeave(function(){ setLuMode('list'); setView('compare'); }); return; }
     const info = e.target.closest('[data-pr-info]');
     if(info){
       const pid = info.getAttribute('data-pr-info'), at = ctx.draftStarters.indexOf(pid);
@@ -5635,7 +5875,7 @@
   document.addEventListener('keydown', function(e){
     if(e.key !== 'Escape' || ctx.luMode !== 'pr') return;
     if(ctx.prSel){ ctx.prSel = null; renderPowerRank(); return; }
-    if(!maxOpen() && !document.querySelector('.overlay.open')) setLuMode('list');
+    if(!maxOpen() && !document.querySelector('.overlay.open') && !document.querySelector('.pr-dlg-back')) prLeave(function(){ setLuMode('list'); });
   });
 
   // ---- drag: Pointer Events, one code path for mouse and touch ----
