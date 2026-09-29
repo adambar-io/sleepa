@@ -856,7 +856,17 @@
   .pr-tab small{ font-size: 11.5px; color: var(--text-3); font-variant-numeric: tabular-nums; }
   .pr-tab[aria-selected="true"]{ background: color-mix(in srgb, var(--c) 12%, var(--surface)); box-shadow: inset 0 0 0 1.5px var(--c); }
   .pr-tab .pr-dot{ position: absolute; top: 7px; right: 8px; width: 7px; height: 7px; border-radius: 50%; background: var(--danger); }
-  .pr-stage{ animation: viewIn .28s var(--ease); }
+  /* entrance only when the tab changes (not on every tap): slide in from the side you moved toward, cards stagger */
+  .pr-stage.enter{ animation: prStageIn .3s var(--ease); }
+  @keyframes prStageIn{ from{ opacity: 0; transform: translateX(calc(var(--dir, 0) * 18px)); } to{ opacity: 1; transform: none; } }
+  .pr-stage.enter .pr-pool > .pr-card{ animation: rowIn .34s var(--ease) both; animation-delay: calc(var(--i, 0) * 28ms + 60ms); }
+  .pr-sec .pr-next{ margin-left: auto; display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; min-height: 28px; border-radius: 999px; font-size: 12px; font-weight: 700;
+    background: color-mix(in srgb, var(--pr-c) 14%, transparent); color: var(--pr-c); animation: fadeIn .3s var(--ease); }
+  .pr-slot.bad .pr-card{ box-shadow: var(--shadow), inset 0 0 0 1.5px var(--danger); }
+  .pr-slot.bad .pr-tag.bad{ display: inline-block; }
+  .pr-slot-lbl.chg::after{ content: ''; display: inline-block; width: 5px; height: 5px; margin-left: 4px; border-radius: 50%; background: var(--bg); vertical-align: 1px; }
+  .pr-chg-note{ font-size: 12px; color: var(--text-3); }
+  .pr-chg-note button{ background: none; padding: 0; min-height: 0; color: var(--accent); font-weight: 600; font-size: 12px; text-decoration: underline; text-underline-offset: 2px; }
   .pr-sec{ display: flex; align-items: baseline; gap: 8px; margin: 4px 2px 10px; }
   .pr-sec h3{ margin: 0; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-2); }
   .pr-sec span{ font-size: 12.5px; color: var(--text-3); }
@@ -909,7 +919,7 @@
   .pr-game{ display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-2); white-space: nowrap; overflow: hidden; }
   .pr-game .opp{ font-weight: 700; }
   .pr-tag{ position: absolute; top: 8px; right: 34px; font-size: 9.5px; font-weight: 800; letter-spacing: .05em; padding: 1px 6px; border-radius: 999px; background: var(--surface-2); color: var(--text-2); }
-  .pr-slot .pr-tag{ display: none; }
+  .pr-slot .pr-tag{ display: none; right: 30px; }
   .pr-tag.bad{ background: var(--danger-soft); color: var(--danger); }
   .pr-ic{ position: absolute; top: 5px; right: 5px; width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; background: none; color: var(--text-3); padding: 0; min-height: 0; }
   .pr-ic svg{ width: 15px; height: 15px; }
@@ -938,6 +948,7 @@
     .pr-total-num{ font-size: 25px; }
     .pr-top .opt-btn{ min-height: 34px; padding: 0 12px; }
     .pr-tab{ padding: 6px 9px 7px; border-radius: 12px; }
+    .pr-tf{ display: none; }   /* phones: points only; an empty or non-scoring slot still shows the red dot */
     .pr-slots, .pr-pool{ grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
     .pr-card{ padding: 11px 10px 9px; }
     .pr-proj{ font-size: 21px; }
@@ -5190,7 +5201,7 @@
     ctx.luMode = mode === 'pr' ? 'pr' : 'list';
     try{ localStorage.setItem(LU_MODE_KEY, ctx.luMode); }catch(e){ /* per-device convenience only */ }
     applyLuMode();
-    if(ctx.myRoster && ctx.luMode === 'pr') renderPowerRank();
+    if(ctx.myRoster && ctx.luMode === 'pr'){ ctx.prEnter = 1; renderPowerRank(); }
   }
   function applyLuMode(){
     const pr = ctx.luMode === 'pr';
@@ -5256,6 +5267,7 @@
   function renderPowerRank(){
     const view = document.getElementById('pr-view');
     if(!view || !ctx.myRoster || !ctx.rosterPositions) return;
+    if(prDrag.st && prDrag.st.active){ ctx.prPending = true; return; }   // a live-score refresh mid-drag waits for the drop
     const tabs = prTabs();
     if(!tabs.length){ view.innerHTML = '<div class="pr-empty">Your league has no QB / RB / WR / TE slots to set here.</div>'; return; }
     if(tabs.indexOf(ctx.prTab) === -1) ctx.prTab = tabs[0];
@@ -5265,12 +5277,13 @@
       const ts = slots.filter(function(s){ return s.tab === t; });
       const filled = ts.filter(function(s){ const pid = ctx.draftStarters[s.i]; return pid && pid !== '0'; }).length;
       const bad = ts.some(function(s){ return prSlotProblem(ctx.draftStarters[s.i]); });
-      return '<button type="button" class="pr-tab" role="tab" data-pr-tab="' + t + '" aria-selected="' + (t === ctx.prTab) + '" style="--c:' + posColor(t) + '">' +
-        '<b>' + t + '</b><small>' + filled + '/' + ts.length + ' set</small>' + (bad ? '<span class="pr-dot" title="A slot here won’t score"></span>' : '') + '</button>';
+      const pts = sumProj(ts.map(function(s){ return ctx.draftStarters[s.i]; }));
+      return '<button type="button" class="pr-tab" role="tab" data-pr-tab="' + t + '" aria-selected="' + (t === ctx.prTab) + '" style="--c:' + posColor(t) + '" title="' + filled + ' of ' + ts.length + ' set · ' + fmtPts(pts) + ' projected">' +
+        '<b>' + t + '</b><small><span class="pr-tf">' + filled + '/' + ts.length + ' · </span>' + fmtPts(pts) + '</small>' + (bad ? '<span class="pr-dot" title="A slot here won’t score"></span>' : '') + '</button>';
     }).join('');
     const top = view.querySelector('.pr-top');
     if(!top){
-      view.innerHTML = '<div class="pr-sticky"><div class="pr-top"><div class="pr-total" title="All your starters, including any slots set in Quick Swap (K, DEF, defenders)"><div class="eyebrow">Projected lineup</div><div class="pr-total-row"><span class="pr-total-num" id="pr-total">0.00</span><span class="pr-delta" id="pr-delta"></span></div></div>' +
+      view.innerHTML = '<div class="pr-sticky"><div class="pr-top"><div class="pr-total" title="All your starters, including any slots set in Quick Swap (K, DEF, defenders)"><div class="eyebrow">Projected lineup</div><div class="pr-total-row"><span class="pr-total-num" id="pr-total">0.00</span><span class="pr-delta" id="pr-delta"></span></div><div class="pr-chg-note" id="pr-chg"></div></div>' +
         '<button type="button" class="opt-btn" data-pr-opt title="Fill your starters with the highest projected lineup"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9zM19 14l.9 2.6 2.6.9-2.6.9L19 21l-.9-2.6-2.6-.9 2.6-.9z"/></svg>Optimize</button></div>' +
         '<div class="pr-tabs" role="tablist" aria-label="Positions"></div></div><div class="pr-body"></div>';
     }
@@ -5284,7 +5297,25 @@
     let undo = view.querySelector('[data-pr-undo]');
     if(ctx.optUndo && !undo){ undo = document.createElement('button'); undo.type = 'button'; undo.className = 'pr-undo'; undo.setAttribute('data-pr-undo', ''); undo.textContent = 'Undo optimize'; view.querySelector('.pr-top').appendChild(undo); }
     else if(!ctx.optUndo && undo) undo.remove();
+    // Sleepa can't write to Sleeper: say how many slots still need copying over, with a way to the side-by-side list
+    const nChg = ctx.draftStarters.filter(function(pid, i){ return (pid || '0') !== (ctx.originalStarters[i] || '0'); }).length;
+    view.querySelector('#pr-chg').innerHTML = nChg ? nChg + ' change' + (nChg > 1 ? 's' : '') + ' to make in Sleeper · <button type="button" data-pr-compare>See them</button>' : '';
+    prPlayFly();
     prPlayLanded();
+  }
+  // Tapped card flies from the pool into its slot (FLIP: measure before, animate the new element from the old spot).
+  function prPlayFly(){
+    const f = ctx.prFly; ctx.prFly = null;
+    if(!f || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const el = document.querySelector('#pr-view .pr-slots [data-pr-pid="' + f.pid + '"]');
+    if(!el) return;
+    const r = el.getBoundingClientRect(), dx = f.rect.left - r.left, dy = f.rect.top - r.top;
+    if(Math.abs(dx) + Math.abs(dy) < 4) return;
+    el.animate([{ transform: 'translate(' + dx + 'px,' + dy + 'px) scale(.96)', boxShadow: '0 20px 40px rgba(0,0,0,.35)' }, { transform: 'none' }],
+      { duration: 420, easing: 'cubic-bezier(.34,1.3,.5,1)' });
+    // landing out of view (e.g. tapped a card far down on a phone): bring the slot into view
+    const bar = document.querySelector('#pr-view .pr-sticky'), top = bar ? bar.getBoundingClientRect().bottom : 0;
+    if(r.top < top || r.bottom > window.innerHeight - 90) window.scrollBy({ top: r.top - top - 40, behavior: 'smooth' });
   }
   const PR_ICON = {
     info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>',
@@ -5309,7 +5340,7 @@
 
   // The card: projection (actual once the game is on), game time + opponent colored by matchup difficulty (the same
   // points-allowed ranking as everywhere else; also the strip on top), injury chip, and last-3 average in league scoring.
-  function prCardHTML(pid, where){
+  function prCardHTML(pid, where, idx){
     const p = ctx.players[pid], i = dvpInfo(pid), locked = isLocked(pid), un = prUnavail(pid), at = ctx.draftStarters.indexOf(pid);
     const wa = weekActual(pid), g = gameOf(p.team), n = (hist(pid) || []).length, l3 = n ? last3Avg(pid) : null;
     const m = matchup(p.team, ctx.week), live = gameStatusHTML(p.team, true);
@@ -5319,9 +5350,10 @@
     const big = wa !== null
       ? '<div class="pr-proj live">' + fmtPts(wa) + '<small>' + (g && g.state === 'post' ? 'final' : 'live') + ' · proj ' + fmtPts(ctx.projections[pid]) + '</small></div>'
       : '<div class="pr-proj">' + fmtPts(ctx.projections[pid]) + '<small>proj</small></div>';
-    const tag = where === 'pool' ? (un ? '<span class="pr-tag bad">' + escapeHTML(un) + '</span>' : at !== -1 ? '<span class="pr-tag" title="Starting there now">' + escapeHTML(prSlotName(at)) + '</span>' : '') : '';
-    return '<div class="pr-card' + (i ? ' mt-' + i.tone : '') + (un ? ' unavail' : '') + (locked ? ' locked' : '') + (at !== -1 && where === 'pool' ? ' in-slot' : '') +
-        (ctx.prSel && ctx.prSel.pid === pid ? ' sel' : '') + '" data-pr-pid="' + escapeHTML(pid) + '"' + (where === 'pool' ? ' role="button" tabindex="0"' : '') +
+    const tag = un ? '<span class="pr-tag bad" title="Won’t score this week">' + escapeHTML(un) + '</span>'
+      : where === 'pool' && at !== -1 ? '<span class="pr-tag" title="Starting there now">' + escapeHTML(prSlotName(at)) + '</span>' : '';
+    return '<div class="pr-card' + (i ? ' mt-' + i.tone : '') + (un && where === 'pool' ? ' unavail' : '') + (locked ? ' locked' : '') + (at !== -1 && where === 'pool' ? ' in-slot' : '') +
+        (ctx.prSel && ctx.prSel.pid === pid ? ' sel' : '') + '" data-pr-pid="' + escapeHTML(pid) + '"' + (where === 'pool' ? ' role="button" tabindex="0" style="--i:' + (idx || 0) + '"' : '') +
         ' aria-label="' + escapeHTML(playerName(p)) + ', ' + escapeHTML(eligLabel(pid)) + ', projected ' + fmtPts(ctx.projections[pid]) + (locked ? ', locked' : '') + '">' +
       tag + '<button type="button" class="pr-ic" data-pr-info="' + escapeHTML(pid) + '" aria-label="Details for ' + escapeHTML(playerName(p)) + '" title="Details">' + PR_ICON.info + '</button>' +
       '<div class="pr-head"><img class="pr-av" src="' + escapeHTML(playerImageUrl(pid)) + '" alt="" loading="lazy" draggable="false" onerror="this.style.visibility=\'hidden\'" style="--team:' + teamColor(p.team) + '">' +
@@ -5338,9 +5370,10 @@
     const slotHTML = ts.map(function(s){
       const pid = ctx.draftStarters[s.i], has = pid && pid !== '0' && ctx.players[pid];
       const target = selPid ? pid !== selPid && prCanPlace(selPid, s.i) : !!(sel && sel.slot === s.i);
-      const lbl = '<span class="pr-slot-lbl">' + escapeHTML(s.name) + '</span>';
+      const chg = (pid || '0') !== (ctx.originalStarters[s.i] || '0');   // differs from your Sleeper lineup: a change to copy over
+      const lbl = '<span class="pr-slot-lbl' + (chg ? ' chg" title="Changed from your Sleeper lineup' : '') + '">' + escapeHTML(s.name) + '</span>';
       if(!has) return '<div class="pr-slot empty' + (target ? ' target' : '') + '" data-pr-slot="' + s.i + '" role="button" tabindex="0" aria-label="Empty ' + escapeHTML(s.name) + ' slot">' + lbl + PR_ICON.plus + '<span>' + (selPid ? 'Place here' : 'Empty') + '</span></div>';
-      return '<div class="pr-slot' + (target ? ' target' : '') + '" data-pr-slot="' + s.i + '">' + lbl + prCardHTML(pid, 'slot') +
+      return '<div class="pr-slot' + (target ? ' target' : '') + (prUnavail(pid) ? ' bad' : '') + '" data-pr-slot="' + s.i + '">' + lbl + prCardHTML(pid, 'slot') +
         (isLocked(pid) ? '<span class="pr-lock" title="Game started: locked">' + PR_ICON.lock + '</span>'
           : '<button type="button" class="pr-rm" data-pr-rm="' + s.i + '" aria-label="Remove ' + escapeHTML(playerName(ctx.players[pid])) + ' from ' + escapeHTML(s.name) + '" title="Remove">' + PR_ICON.x + '</button>') + '</div>';
     }).join('');
@@ -5351,12 +5384,16 @@
       const dedicated = function(pid){ const at = ctx.draftStarters.indexOf(pid); return at !== -1 && !isFlexSlot(ctx.rosterPositions[at]); };
       const left = pool.filter(function(pid){ return !dedicated(pid); }), busy = pool.filter(dedicated);
       poolHTML = '<div class="pr-sec"><h3>Leftovers</h3><span>' + left.length + ' competing for flex</span></div>' +
-        (left.length ? '<div class="pr-pool">' + left.map(function(pid){ return prCardHTML(pid, 'pool'); }).join('') + '</div>' : '<div class="pr-empty">Everyone eligible is already starting.</div>') +
-        (busy.length ? '<div class="pr-sub">Starting at their position</div><div class="pr-pool">' + busy.map(function(pid){ return prCardHTML(pid, 'pool'); }).join('') + '</div>' : '');
+        (left.length ? '<div class="pr-pool">' + left.map(function(pid, k){ return prCardHTML(pid, 'pool', k); }).join('') + '</div>' : '<div class="pr-empty">Everyone eligible is already starting.</div>') +
+        (busy.length ? '<div class="pr-sub">Starting at their position</div><div class="pr-pool">' + busy.map(function(pid, k){ return prCardHTML(pid, 'pool', left.length + k); }).join('') + '</div>' : '');
     } else {
       poolHTML = '<div class="pr-sec"><h3>Your ' + tab + 's</h3><span>' + pool.length + (pool.length === 1 ? ' option' : ' options') + '</span></div>' +
-        (pool.length ? '<div class="pr-pool">' + pool.map(function(pid){ return prCardHTML(pid, 'pool'); }).join('') + '</div>' : '<div class="pr-empty">No other ' + tab + 's on your roster.</div>');
+        (pool.length ? '<div class="pr-pool">' + pool.map(function(pid, k){ return prCardHTML(pid, 'pool', k); }).join('') + '</div>' : '<div class="pr-empty">No other ' + tab + 's on your roster.</div>');
     }
+    // deck-builder flow: once this position is set, offer the next one
+    const tabs = prTabs(), nextTab = tabs[tabs.indexOf(tab) + 1];
+    const full = ts.every(function(s){ const x = ctx.draftStarters[s.i]; return x && x !== '0'; });
+    const next = full && nextTab ? '<button type="button" class="pr-next" data-pr-tab="' + nextTab + '">Next: ' + (nextTab === 'FLEX' ? 'Flex' : nextTab) + ' ›</button>' : '';
     const empty = ts.filter(function(s){ const pid = ctx.draftStarters[s.i]; return !pid || pid === '0'; });
     const allLocked = ts.every(function(s){ return prLockedSlot(s.i); });
     const hint = allLocked ? 'Games have started: these slots are <b>locked</b>' + (ctx.sleeperWeek && ctx.week === ctx.sleeperWeek && ctx.week < MAX_PLAN_WEEK ? ' · switch to next week to plan ahead' : '')
@@ -5364,8 +5401,9 @@
       : sel ? 'Pick a player for <b>' + escapeHTML(prSlotName(sel.slot)) + '</b>'
       : empty.length ? 'Tap a player to fill <b>' + escapeHTML(empty[0].name) + '</b>' + (hasFinePointer() ? ', or drag one onto a slot' : '')
       : tab === 'FLEX' ? 'Tap a leftover, then the flex spot it should take' : 'Tap a player to swap in' + (hasFinePointer() ? ' or drag onto a slot' : ' (hold to drag)');
-    return '<div class="pr-stage" style="--pr-c:' + posColor(tab) + '">' +
-      '<div class="pr-sec"><h3>' + (tab === 'FLEX' ? 'Flex' : tab) + ' slots</h3><span>' + (empty.length ? empty.length + ' empty' : 'all set') + '</span></div>' +
+    const enter = ctx.prEnter; ctx.prEnter = null;
+    return '<div class="pr-stage' + (enter ? ' enter' : '') + '" style="--pr-c:' + posColor(tab) + (enter ? ';--dir:' + enter : '') + '">' +
+      '<div class="pr-sec"><h3>' + (tab === 'FLEX' ? 'Flex' : tab) + ' slots</h3><span>' + (empty.length ? empty.length + ' empty' : 'all set') + '</span>' + next + '</div>' +
       '<div class="pr-hint">' + hint + '</div><div class="pr-slots">' + slotHTML + '</div>' + poolHTML + '</div>';
   }
   function hasFinePointer(){ return window.matchMedia('(pointer: fine)').matches; }
@@ -5398,15 +5436,21 @@
   function prTapCard(pid, el){
     const sel = ctx.prSel;
     if(isLocked(pid)){ prNudge(el); return; }
-    if(sel && sel.slot != null){ if(!prPlace(sel.slot, pid)) prNudge(el); return; }
+    const fly = function(){ ctx.prFly = { pid: pid, rect: el.getBoundingClientRect() }; };
+    if(sel && sel.slot != null){ fly(); if(!prPlace(sel.slot, pid)){ ctx.prFly = null; prNudge(el); } return; }
     if(sel && sel.pid === pid){ ctx.prSel = null; renderPowerRank(); return; }
     const open = prSlots().filter(function(s){ return s.tab === ctx.prTab; }).find(function(s){ const x = ctx.draftStarters[s.i]; return (!x || x === '0') && prCanPlace(pid, s.i); });
-    if(open){ prPlace(open.i, pid); return; }
+    if(open){ fly(); prPlace(open.i, pid); return; }
     ctx.prSel = { pid: pid }; renderPowerRank();
   }
   function prTapSlot(i, el){
     const sel = ctx.prSel;
-    if(sel && sel.pid){ if(!prPlace(i, sel.pid)) prNudge(el); return; }
+    if(sel && sel.pid){
+      const src = document.querySelector('#pr-view .pr-pool [data-pr-pid="' + sel.pid + '"]');
+      if(src) ctx.prFly = { pid: sel.pid, rect: src.getBoundingClientRect() };
+      if(!prPlace(i, sel.pid)){ ctx.prFly = null; prNudge(el); }
+      return;
+    }
     if(prLockedSlot(i)){ prNudge(el); return; }
     ctx.prSel = sel && sel.slot === i ? null : { slot: i };
     renderPowerRank();
@@ -5438,9 +5482,21 @@
   prView.addEventListener('click', function(e){
     if(prDrag.justDropped){ prDrag.justDropped = false; return; }   // the click that ends a drag
     const t = e.target.closest('[data-pr-tab]');
-    if(t){ ctx.prTab = t.getAttribute('data-pr-tab'); ctx.prSel = null; renderPowerRank(); return; }
+    if(t){
+      const nt = t.getAttribute('data-pr-tab'), tabs = prTabs();
+      if(nt === ctx.prTab) return;
+      ctx.prEnter = tabs.indexOf(nt) > tabs.indexOf(ctx.prTab) ? 1 : -1;
+      ctx.prTab = nt; ctx.prSel = null; renderPowerRank();
+      // from the "Next" button further down: bring the new position's slots up under the sticky bar
+      const body = prView.querySelector('.pr-body'), bar = prView.querySelector('.pr-sticky');
+      if(body && bar && body.getBoundingClientRect().top < bar.getBoundingClientRect().bottom - 4){
+        window.scrollBy({ top: body.getBoundingClientRect().top - bar.getBoundingClientRect().bottom - 6, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+      }
+      return;
+    }
     if(e.target.closest('[data-pr-opt]')){ runOptimal(); return; }
     if(e.target.closest('[data-pr-undo]')){ prUndoOptimize(); return; }
+    if(e.target.closest('[data-pr-compare]')){ setView('compare'); return; }
     const info = e.target.closest('[data-pr-info]');
     if(info){ const pid = info.getAttribute('data-pr-info'), at = ctx.draftStarters.indexOf(pid); openFocus(pid, at === -1 ? null : at); return; }
     const rm = e.target.closest('[data-pr-rm]');
@@ -5509,11 +5565,13 @@
     prDrag.justDropped = true; setTimeout(function(){ prDrag.justDropped = false; }, 50);
     prView.querySelectorAll('.drop-ok, .drop-bad').forEach(function(s){ s.classList.remove('drop-ok', 'drop-bad'); });
     const g = st.ghost;
-    if(!cancel && st.over != null){ g.remove(); prPlace(st.over, st.pid); return; }
+    ctx.prPending = false;
+    if(!cancel && st.over != null){ g.remove(); if(!prPlace(st.over, st.pid)) renderPowerRank(); return; }
     if(!cancel && st.from != null && st.overPool){ g.remove(); prRemove(st.from); return; }
+    ctx.prPending = true;   // snapping back: re-render once it lands (picks up anything that changed mid-drag)
     const r = st.card.getBoundingClientRect();   // snap back
     g.classList.add('back'); g.style.left = r.left + 'px'; g.style.top = r.top + 'px';
-    setTimeout(function(){ g.remove(); st.card.classList.remove('dragging'); }, 260);
+    setTimeout(function(){ g.remove(); st.card.classList.remove('dragging'); if(ctx.prPending){ ctx.prPending = false; renderPowerRank(); } }, 260);
   }
   window.addEventListener('pointermove', function(e){
     const st = prDrag.st;
