@@ -818,7 +818,15 @@
   .slot-row.just-swapped{ animation: swapIn .55s var(--spring); }
 
   /* ---- Lineup view switch: Quick Swap (list) / Power Rank (position-by-position card placement) ---- */
-  .lu-mode{ display: inline-flex; gap: 2px; padding: 3px; margin: 0 2px 16px; border-radius: 999px; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--hair); }
+  .lu-bar{ display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 0 2px 16px; }
+  .wk-seg{ display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--hair); }
+  .wk-seg button{ background: none; color: var(--text-2); padding: 7px 12px; min-height: 34px; font-size: 13px; font-weight: 600; border-radius: 999px; font-variant-numeric: tabular-nums; }
+  .wk-seg button[aria-pressed="true"]{ background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.14); }
+  .wk-seg button[data-wk-off="1"][aria-pressed="true"]{ color: var(--accent); }
+  .wk-seg button:disabled{ opacity: .4; }
+  .wk-preview{ color: var(--accent); font-weight: 700; }
+  html.wk-loading :is(#lineup-top, #pr-view, #roster-view .starters, #roster-view .bench-section){ opacity: .45; pointer-events: none; transition: opacity .2s var(--ease); }
+  .lu-mode{ display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--hair); }
   .lu-mode button{ display: inline-flex; align-items: center; gap: 6px; background: none; color: var(--text-2); padding: 7px 14px; min-height: 34px; font-size: 13px; font-weight: 600; border-radius: 999px; transition: background .2s var(--ease), color .2s var(--ease); }
   .lu-mode button svg{ width: 15px; height: 15px; }
   .lu-mode button[aria-pressed="true"]{ background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.14); }
@@ -827,7 +835,8 @@
 
   /* ---- Power Rank ---- */
   .pr{ --pr-c: var(--accent); }
-  .pr-top{ position: sticky; top: calc(env(safe-area-inset-top) + 8px); z-index: 5; display: flex; align-items: center; gap: 14px; padding: 12px 14px; margin: 0 0 12px;
+  .pr-sticky{ position: sticky; top: env(safe-area-inset-top); z-index: 6; margin: 0 -4px; padding: 8px 4px 0; background: var(--bg); }
+  .pr-top{ display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 10px 14px; margin: 0 0 10px;
     background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow), inset 0 0 0 1px var(--hair); }
   .pr-total{ display: flex; flex-direction: column; min-width: 0; }
   .pr-total .eyebrow{ margin: 0; }
@@ -852,6 +861,89 @@
   .pr-sec h3{ margin: 0; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-2); }
   .pr-sec span{ font-size: 12.5px; color: var(--text-3); }
   .pr-empty{ padding: 18px; border-radius: var(--radius); background: var(--surface); color: var(--text-3); font-size: 13.5px; text-align: center; }
+  .pr-hint{ margin: -4px 2px 12px; font-size: 12.5px; color: var(--text-3); min-height: 18px; }
+  .pr-hint b{ color: var(--pr-c); }
+  /* slots: the "deck" row */
+  .pr-slots{ display: grid; grid-template-columns: repeat(auto-fill, minmax(158px, 1fr)); gap: 10px; margin-bottom: 22px; }
+  .pr-slot{ position: relative; border-radius: 16px; min-height: 150px; display: flex; flex-direction: column; }
+  .pr-slot-lbl{ position: absolute; top: -8px; left: 12px; z-index: 2; padding: 1px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 800; letter-spacing: .06em;
+    background: var(--pr-c); color: var(--bg); box-shadow: 0 0 0 3px var(--bg); }
+  .pr-slot.empty{ align-items: center; justify-content: center; gap: 6px; border: 1.5px dashed color-mix(in srgb, var(--pr-c) 45%, transparent); color: var(--text-3); font-size: 12.5px; cursor: pointer;
+    background: color-mix(in srgb, var(--pr-c) 5%, transparent); transition: background .2s var(--ease), border-color .2s var(--ease), transform .2s var(--spring); }
+  .pr-slot.empty svg{ width: 22px; height: 22px; opacity: .6; }
+  .pr-slot.target{ animation: prBreath 1.4s var(--ease) infinite; }
+  .pr-slot.empty.target{ border-color: var(--pr-c); color: var(--pr-c); background: color-mix(in srgb, var(--pr-c) 10%, transparent); }
+  .pr-slot.drop-ok > *{ pointer-events: none; }
+  .pr-slot.drop-ok{ transform: scale(1.03); }
+  .pr-slot.drop-ok .pr-card, .pr-slot.drop-ok.empty{ box-shadow: 0 0 0 2px var(--pr-c), 0 10px 30px color-mix(in srgb, var(--pr-c) 30%, transparent); }
+  .pr-slot.drop-bad{ opacity: .45; }
+  @keyframes prBreath{ 0%, 100%{ box-shadow: 0 0 0 0 transparent; } 50%{ box-shadow: 0 0 0 4px color-mix(in srgb, var(--pr-c) 22%, transparent); } }
+  /* player card */
+  .pr-pool{ display: grid; grid-template-columns: repeat(auto-fill, minmax(158px, 1fr)); gap: 10px; }
+  .pr-card{ --t: var(--text-3); position: relative; display: flex; flex-direction: column; gap: 6px; padding: 12px 12px 10px; border-radius: 16px; background: var(--surface);
+    box-shadow: var(--shadow), inset 0 0 0 1px var(--hair); cursor: pointer; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: pan-y;
+    transition: transform .22s var(--spring), box-shadow .2s var(--ease), opacity .2s var(--ease); overflow: hidden; flex: 1; min-width: 0; }
+  .pr-slot{ min-width: 0; }
+  .pr-card::before{ content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--t); opacity: .9; }   /* matchup difficulty strip (bottom, so it never reads as the position color) */
+  .pr-card.mt-easy{ --t: var(--accent); } .pr-card.mt-mid{ --t: var(--warn); } .pr-card.mt-hard{ --t: var(--danger); }
+  @media (hover: hover){ .pr-card:not(.locked):hover{ transform: translateY(-2px); box-shadow: var(--shadow), inset 0 0 0 1px color-mix(in srgb, var(--pr-c) 40%, var(--hair)); } }
+  .pr-card:active:not(.locked){ transform: scale(.97); }
+  .pr-card.sel{ transform: translateY(-3px); box-shadow: 0 0 0 2px var(--pr-c), 0 12px 28px color-mix(in srgb, var(--pr-c) 25%, transparent); }
+  .pr-card.in-slot{ background: color-mix(in srgb, var(--pr-c) 7%, var(--surface)); }
+  .pr-slot .pr-card{ padding-top: 16px; box-shadow: var(--shadow), inset 0 0 0 1.5px color-mix(in srgb, var(--pr-c) 55%, transparent); }
+  .pr-card.unavail{ opacity: .55; }
+  .pr-card.locked{ cursor: default; }
+  .pr-card.dragging{ opacity: .3; }
+  .pr-head{ display: flex; align-items: center; gap: 9px; min-width: 0; padding-right: 16px; }
+  .pr-av{ width: 38px; height: 38px; border-radius: 50%; object-fit: cover; object-position: center 15%; background: var(--surface-2); flex: none; box-shadow: 0 0 0 2px var(--team, transparent); }
+  .pr-nm{ min-width: 0; }
+  .pr-nm b{ display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; font-size: 14px; font-weight: 650; line-height: 1.2; overflow: hidden; overflow-wrap: anywhere; }
+  .pr-nm small{ display: flex; align-items: center; gap: 4px; font-size: 11.5px; color: var(--text-2); white-space: nowrap; }
+  .pr-nm .status-chip{ padding: 1px 4px; font-size: 9.5px; } .pr-nm .chip-full{ display: none; } .pr-nm .chip-short{ display: inline; }
+  .pr-nums{ display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
+  .pr-proj{ font-size: 24px; font-weight: 650; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; line-height: 1; }
+  .pr-proj small{ display: block; margin-top: 3px; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
+  .pr-proj.live{ color: var(--accent); }
+  .pr-l3{ text-align: right; font-size: 13px; font-weight: 600; color: var(--text-2); font-variant-numeric: tabular-nums; }
+  .pr-l3 small{ display: block; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
+  .pr-game{ display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-2); white-space: nowrap; overflow: hidden; }
+  .pr-game .opp{ font-weight: 700; }
+  .pr-tag{ position: absolute; top: 8px; right: 34px; font-size: 9.5px; font-weight: 800; letter-spacing: .05em; padding: 1px 6px; border-radius: 999px; background: var(--surface-2); color: var(--text-2); }
+  .pr-slot .pr-tag{ display: none; }
+  .pr-tag.bad{ background: var(--danger-soft); color: var(--danger); }
+  .pr-ic{ position: absolute; top: 5px; right: 5px; width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; background: none; color: var(--text-3); padding: 0; min-height: 0; }
+  .pr-ic svg{ width: 15px; height: 15px; }
+  .pr-ic:hover{ background: var(--surface-2); color: var(--text); }
+  .pr-rm{ position: absolute; top: -9px; right: -7px; z-index: 3; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; padding: 0; min-height: 0;
+    background: var(--surface-3); color: var(--text); box-shadow: 0 0 0 3px var(--bg); transition: transform .18s var(--spring), background .18s; }
+  .pr-rm svg{ width: 12px; height: 12px; }
+  .pr-rm:hover{ background: var(--danger); color: #fff; transform: scale(1.08); }
+  .pr-lock{ position: absolute; top: -9px; right: -7px; z-index: 3; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-3); color: var(--text-2); box-shadow: 0 0 0 3px var(--bg); }
+  .pr-lock svg{ width: 12px; height: 12px; }
+  .pr-sub{ margin: 22px 2px 10px; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
+  /* lock-in: the card lands, the slot flashes and throws a few sparks */
+  @keyframes prLand{ 0%{ transform: scale(.86) translateY(8px); opacity: .4; } 60%{ transform: scale(1.04); opacity: 1; } 100%{ transform: none; } }
+  @keyframes prFlash{ 0%{ box-shadow: 0 0 0 0 color-mix(in srgb, var(--pr-c) 60%, transparent); } 100%{ box-shadow: 0 0 0 14px transparent; } }
+  .pr-slot.landed .pr-card{ animation: prLand .42s var(--spring); }
+  .pr-slot.landed::after{ content: ''; position: absolute; inset: 0; border-radius: 16px; pointer-events: none; animation: prFlash .6s var(--ease); }
+  .pr-spark{ position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; border-radius: 50%; background: var(--pr-c); pointer-events: none; z-index: 4;
+    animation: prSpark .55s var(--ease) forwards; }
+  @keyframes prSpark{ from{ transform: translate(-50%, -50%) scale(1); opacity: 1; } to{ transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(.2); opacity: 0; } }
+  .pr-ghost{ position: fixed; z-index: 90; pointer-events: none; margin: 0; transform: rotate(-2deg) scale(1.05); box-shadow: 0 18px 40px rgba(0,0,0,.35), 0 0 0 2px var(--pr-c);
+    transition: none; }
+  .pr-ghost.back{ transition: left .25s var(--ease), top .25s var(--ease), transform .25s var(--ease), opacity .25s; transform: none; opacity: 0; }
+  .pr-undo{ margin-left: 8px; background: var(--surface-2); color: var(--text); padding: 6px 12px; min-height: 32px; border-radius: 999px; font-size: 12.5px; font-weight: 600; }
+  @media (prefers-reduced-motion: reduce){ .pr-card, .pr-slot, .pr-slot.landed .pr-card, .pr-slot.landed::after, .pr-slot.target, .pr-spark{ animation: none !important; transition: none !important; } }
+  @container list (max-width: 420px){
+    .pr-total-num{ font-size: 25px; }
+    .pr-top .opt-btn{ min-height: 34px; padding: 0 12px; }
+    .pr-tab{ padding: 6px 9px 7px; border-radius: 12px; }
+    .pr-slots, .pr-pool{ grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .pr-card{ padding: 11px 10px 9px; }
+    .pr-proj{ font-size: 21px; }
+    .pr-av{ width: 32px; height: 32px; }
+    .pr-nm b{ font-size: 13.5px; }
+  }
   @keyframes bump{ 0%{ transform: scale(1); } 40%{ transform: scale(1.06); } 100%{ transform: scale(1); } }
   .bump{ display: inline-block; transform-origin: left center; animation: bump .45s var(--spring); }
 
@@ -1594,9 +1686,12 @@
     <div class="panes" id="panes">
       <div class="pane-main">
         <section class="view" id="roster-view">
+          <div class="lu-bar">
+          <div class="wk-seg" role="group" aria-label="Week"><button type="button" data-wk-off="0" aria-pressed="true">This week</button><button type="button" data-wk-off="1" aria-pressed="false">Next week</button></div>
           <div class="lu-mode" role="group" aria-label="Lineup view">
             <button type="button" data-lu-mode="list" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>Quick Swap</button>
             <button type="button" data-lu-mode="pr" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="7" height="10" rx="1.5"/><rect x="14" y="4" width="7" height="10" rx="1.5"/><path d="M6 18h12"/></svg>Power Rank</button>
+          </div>
           </div>
           <div id="pr-view" class="pr" hidden></div>
           <div class="starters">
@@ -1995,6 +2090,7 @@
   async function resolveUser(username){ return fetchJSON(API + '/user/' + encodeURIComponent(username)); }
   async function fetchLeagues(userId, season){ return fetchJSON(API + '/user/' + userId + '/leagues/nfl/' + season); }
   // All four are needed; if any fails, say which one (err.userMessage) so the error isn't a mystery.
+  const MAX_PLAN_WEEK = 18;
   async function fetchLeagueBundle(leagueId){
     const parts = [
       ['league settings', API + '/league/' + leagueId],
@@ -2014,7 +2110,11 @@
     if(!league || !Array.isArray(rosters) || !Array.isArray(users)){
       const err = new Error('Empty league response'); err.userMessage = 'Sleeper sent an empty answer for this league.'; throw err;
     }
-    return { league, rosters, users, week: nflState.week || 1 };
+    // Week preview: the app can be moved one week ahead (like Sleeper's next-week matchup) to plan while this week is
+    // locked. Everything week-based follows ctx.week, so the whole app loads as that week.
+    if(ctx.sleeperWeek && nflState.week && nflState.week !== ctx.sleeperWeek) ctx.weekOffset = 0;   // Sleeper moved on: the preview becomes the real week
+    ctx.sleeperWeek = nflState.week || 1;
+    return { league, rosters, users, week: Math.min(ctx.sleeperWeek + (ctx.weekOffset || 0), MAX_PLAN_WEEK) };
   }
 
   // Returns { ts, data }. A cached copy comes back right away even when it's stale (refreshData replaces it in the
@@ -2533,27 +2633,35 @@
   });
 
   // ---- saved draft lineup: kept per league across closing the app; cleared when the week or the Sleeper lineup changes ----
-  function draftKey(){ return 'rv-draft:' + ctx.league.league_id; }
+  // One plan per league per week, so previewing next week and coming back keeps both.
+  function draftKey(week){ return 'rv-draft:' + ctx.league.league_id + ':' + (week || ctx.week); }
   function saveDraft(){
     if(!ctx.league || !ctx.originalStarters || !ctx.draftStarters) return;
     const dirty = JSON.stringify(ctx.draftStarters) !== JSON.stringify(ctx.originalStarters);
     try{
       if(!dirty) localStorage.removeItem(draftKey());
-      else lsSet(draftKey(), JSON.stringify({ week: ctx.week, season: ctx.season, sleeper: ctx.originalStarters, draft: ctx.draftStarters, ts: Date.now() }));
+      else lsSet(draftKey(), JSON.stringify({ week: ctx.week, season: ctx.season, sleeper: ctx.originalStarters, draft: ctx.draftStarters,
+        hand: !!ctx.handEdited, undo: ctx.optUndo || null, ts: Date.now() }));
     }catch(e){ console.warn('Could not save your lineup plan', e); }
   }
   // Called on load. Returns a message to show (restored or why it was cleared), or '' when nothing was saved.
   function restoreDraft(){
     let saved = null;
-    try{ saved = JSON.parse(localStorage.getItem(draftKey()) || 'null'); }catch(e){ console.warn('Saved lineup plan unreadable', e); }
+    let key = draftKey();
+    try{
+      saved = JSON.parse(localStorage.getItem(key) || 'null');
+      if(!saved){ key = 'rv-draft:' + ctx.league.league_id; saved = JSON.parse(localStorage.getItem(key) || 'null'); }   // pre-per-week plans
+    }catch(e){ console.warn('Saved lineup plan unreadable', e); }
     if(!saved || !Array.isArray(saved.draft)) return '';
-    const clear = function(msg){ try{ localStorage.removeItem(draftKey()); }catch(e){ console.warn(e); } return msg; };
+    const clear = function(msg){ try{ localStorage.removeItem(key); }catch(e){ console.warn(e); } return msg; };
     if(saved.week !== ctx.week || saved.season !== ctx.season) return clear('<b>New week:</b> your saved lineup changes from week ' + saved.week + ' were cleared.');
     if(saved.draft.length !== ctx.originalStarters.length) return clear('<b>Your league’s lineup slots changed</b>, so your saved changes were cleared.');
     // The plan is yours until you press Reset: a lineup change made in Sleeper doesn't wipe it (it's flagged instead).
     const sleeperMoved = JSON.stringify(saved.sleeper) !== JSON.stringify(ctx.originalStarters);
     const onRoster = new Set(ctx.myRoster.players || []);
     ctx.draftStarters = saved.draft.map(function(pid){ return pid && pid !== '0' && !onRoster.has(pid) ? '0' : pid; });
+    ctx.handEdited = saved.hand !== false;   // older saves: assume hand-made
+    ctx.optUndo = Array.isArray(saved.undo) && saved.undo.length === ctx.draftStarters.length ? saved.undo.map(function(pid){ return pid && pid !== '0' && !onRoster.has(pid) ? '0' : pid; }) : null;
     const n = ctx.draftStarters.filter(function(pid, i){ return pid !== ctx.originalStarters[i]; }).length;
     if(!n) return sleeperMoved ? '<b>Your Sleeper lineup now matches your plan.</b>' : '';
     return sleeperMoved ? '<b>Your lineup changed in Sleeper</b> since you planned. Your plan is kept (' + n + ' slot' + (n > 1 ? 's' : '') + ' differ); Reset makes it match Sleeper.'
@@ -2643,6 +2751,7 @@
 
   function resetLineup(){
     ctx.draftStarters = ctx.originalStarters.slice();
+    ctx.handEdited = false; ctx.optUndo = null; ctx.prSel = null;
     hideOptNote();
     renderAll();
   }
@@ -2884,8 +2993,16 @@
     if(!ctx.nfl || !ctx.nfl.kick) li.push('Kickoff times aren’t loaded yet, so no one is treated as locked.');
     return li.length ? '<ul class="opt-why">' + li.map(function(x){ return '<li>' + x + '</li>'; }).join('') + '</ul>' : '';
   }
-  function runOptimal(){
+  // Optimize never silently replaces a lineup you built by hand: it asks first, and Undo stays available (in the
+  // note and, in Power Rank, in the top bar) until you change something yourself.
+  function runOptimal(opts){
     if(!ctx.myRoster || !ctx.rosterPositions) return;
+    const handChanges = ctx.draftStarters.filter(function(pid, i){ return pid !== ctx.originalStarters[i]; }).length;
+    if(!(opts && opts.confirmed) && ctx.handEdited && handChanges){
+      showOptNote('<span class="on-txt"><b>Replace your hand-built lineup?</b> Optimize picks the highest projection and may undo the ' + handChanges + ' change' + (handChanges > 1 ? 's' : '') +
+        ' you made. You can undo it right after.</span><button type="button" data-opt-go>Optimize</button>', null);
+      return;
+    }
     const before = ctx.draftStarters.slice();
     const res = optimalStarters(), best = res.starters, why = optWhyHTML(res);
     const changed = best.map(function(pid, i){ return pid !== before[i] ? i : -1; }).filter(function(i){ return i !== -1; });
@@ -2896,6 +3013,8 @@
       return;
     }
     ctx.draftStarters = best;
+    ctx.optUndo = before; ctx.handEdited = false; ctx.prSel = null;
+    ctx.prLanded = changed.filter(function(i){ return prSlots().some(function(s){ return s.i === i && s.tab === ctx.prTab; }); });
     renderAll();
     changed.forEach(function(i, k){
       const row = els.startersList.querySelector('[data-slot-index="' + i + '"]');
@@ -2927,12 +3046,13 @@
     el.hidden = false;
     el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
     el.onclick = function(e){
-      if(e.target.closest('[data-opt-undo]')){ ctx.draftStarters = undoTo; hideOptNote(); renderAll(); }
+      if(e.target.closest('[data-opt-undo]')){ ctx.optUndo = undoTo; prUndoOptimize(); }
+      else if(e.target.closest('[data-opt-go]')){ hideOptNote(); runOptimal({ confirmed: true }); }
       else if(e.target.closest('[data-opt-close]')) hideOptNote();
     };
   }
   function hideOptNote(){ const el = document.getElementById('opt-note'); if(el) el.hidden = true; }
-  document.getElementById('opt-btn').addEventListener('click', runOptimal);
+  document.getElementById('opt-btn').addEventListener('click', function(){ runOptimal(); });
   els.resetBtn.addEventListener('click', resetLineup);
   els.cmpReset.addEventListener('click', function(){ resetLineup(); setView('roster'); }); // nothing left to compare after a reset
 
@@ -3147,16 +3267,20 @@
     document.getElementById('setup-wrap').style.display = '';
   }
 
-  async function loadEverything(leagueId, fromEl){
+  // opts.quiet: same league, another week (the week switch) — reload in place, no app-open transition or loading shell.
+  async function loadEverything(leagueId, fromEl, opts){
+    const quiet = !!(opts && opts.quiet);
     setBusy(true);
     setError('');
     ctx.loadingLeagueId = leagueId;
     const inApp = els.rosterScreen.style.display !== 'none' && !els.rosterScreen.classList.contains('is-loading');
     // The app grows out of whatever you tapped: the View team button, or a league in Settings / the sidebar menu.
-    const shellReady = switchScreens('enter', showLoadingShell, fromEl || (inApp ? null : els.loadBtn));
+    const shellReady = quiet ? Promise.resolve() : switchScreens('enter', showLoadingShell, fromEl || (inApp ? null : els.loadBtn));
+    if(quiet) document.documentElement.classList.add('wk-loading');
     setStatus('Loading roster…');
+    if(!ctx.league || ctx.league.league_id !== leagueId) ctx.weekOffset = 0;   // another league opens on the current week
     const loadId = ctx.loadId = (ctx.loadId || 0) + 1;
-    ctx.nfl = null;
+    if(!quiet) ctx.nfl = null;   // a week switch keeps the (season-wide) schedule and stats while it reloads
     ctx.h2h = []; renderH2HTray();
     ctx.seedCheck = null;
     const nflPromise = loadNflverse(ctx.season); // in parallel; never blocks the roster
@@ -3186,6 +3310,7 @@
       ctx.originalStarters = (myRoster.starters || []).slice();
       while(ctx.originalStarters.length < ctx.rosterPositions.length) ctx.originalStarters.push('0');
       ctx.draftStarters = ctx.originalStarters.slice();
+      ctx.handEdited = false; ctx.optUndo = null; ctx.prSel = null;
       hideOptNote();
       const draftMsg = restoreDraft();
 
@@ -3259,6 +3384,7 @@
       setError('Couldn’t load that league. ' + whyFailed(err) + ' Check your connection and try again.', function(){ loadEverything(leagueId); });
     }finally{
       setBusy(false);
+      document.documentElement.classList.remove('wk-loading');
     }
   }
 
@@ -3365,12 +3491,16 @@
     if(weekRolled){ ctx.week = bundle.week; ctx.weekRolled = true; ctx.live.games = null; ctx.live.stats = null; ctx.live.ts = 0; ctx.live.gamesTs = ctx.live.statsTs = 0; histReset(); }
     const sleeperChanged = JSON.stringify(orig) !== JSON.stringify(ctx.originalStarters);
     // A Sleeper-side change keeps a hand-made plan (only Reset goes back to Sleeper); with no plan, just follow Sleeper.
-    if(!dirty || weekRolled || layoutChanged){
+    if(weekRolled && !layoutChanged){
+      // plans are per week: pick up the new week's saved plan (e.g. one made while previewing it), else follow Sleeper
+      ctx.originalStarters = orig; ctx.draftStarters = orig.slice();
+      ctx.handEdited = false; ctx.optUndo = null; ctx.prSel = null;
+      const msg = restoreDraft();
+      if(msg) ctx.draftNote = msg;
+    }
+    else if(!dirty || layoutChanged){
       ctx.draftStarters = orig.slice();
-      if(dirty){
-        ctx.draftNote = weekRolled ? '<b>New week:</b> your planned lineup changes from week ' + (bundle.week - 1) + ' were cleared.'
-          : '<b>Your league’s lineup slots changed</b>, so your planned changes were cleared.';
-      }
+      if(dirty) ctx.draftNote = '<b>Your league’s lineup slots changed</b>, so your planned changes were cleared.';
     }
     else {
       const onRoster = new Set(my.players || []);
@@ -5041,6 +5171,7 @@
     renderLineupCompare();
     renderByePlan();
     markSelected();
+    renderWeekSeg();
     if(luMode() === 'pr') renderPowerRank();
   }
 
@@ -5071,6 +5202,26 @@
     if(pr) view.parentNode.insertBefore(note, view);
     else document.querySelector('#roster-view .starters .section-title').after(note);
   }
+  // This week / next week (planning ahead while this week is locked). Reloads the league as that week.
+  function renderWeekSeg(){
+    const real = ctx.sleeperWeek || ctx.week, off = ctx.weekOffset || 0;
+    document.querySelectorAll('[data-wk-off]').forEach(function(b){
+      const o = Number(b.getAttribute('data-wk-off'));
+      b.textContent = (o ? 'Next · Wk ' : 'This week · Wk ') + (real + o);
+      b.setAttribute('aria-pressed', String(o === off));
+      b.disabled = real + o > MAX_PLAN_WEEK;
+    });
+  }
+  document.querySelector('.wk-seg').addEventListener('click', function(e){
+    const b = e.target.closest('[data-wk-off]');
+    if(!b || !ctx.league || b.disabled) return;
+    const off = Number(b.getAttribute('data-wk-off'));
+    if(off === (ctx.weekOffset || 0)) return;
+    saveDraft();
+    ctx.weekOffset = off;
+    document.querySelectorAll('[data-wk-off]').forEach(function(x){ x.setAttribute('aria-pressed', String(x === b)); });
+    loadEverything(ctx.league.league_id, null, { quiet: true });
+  });
   document.querySelector('.lu-mode').addEventListener('click', function(e){
     const b = e.target.closest('[data-lu-mode]');
     if(b && b.getAttribute('data-lu-mode') !== ctx.luMode) setLuMode(b.getAttribute('data-lu-mode'));
@@ -5119,9 +5270,9 @@
     }).join('');
     const top = view.querySelector('.pr-top');
     if(!top){
-      view.innerHTML = '<div class="pr-top"><div class="pr-total" title="All your starters, including any slots set in Quick Swap (K, DEF, defenders)"><div class="eyebrow">Projected lineup</div><div class="pr-total-row"><span class="pr-total-num" id="pr-total">0.00</span><span class="pr-delta" id="pr-delta"></span></div></div>' +
+      view.innerHTML = '<div class="pr-sticky"><div class="pr-top"><div class="pr-total" title="All your starters, including any slots set in Quick Swap (K, DEF, defenders)"><div class="eyebrow">Projected lineup</div><div class="pr-total-row"><span class="pr-total-num" id="pr-total">0.00</span><span class="pr-delta" id="pr-delta"></span></div></div>' +
         '<button type="button" class="opt-btn" data-pr-opt title="Fill your starters with the highest projected lineup"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9zM19 14l.9 2.6 2.6.9-2.6.9L19 21l-.9-2.6-2.6-.9 2.6-.9z"/></svg>Optimize</button></div>' +
-        '<div class="pr-tabs" role="tablist" aria-label="Positions"></div><div class="pr-body"></div>';
+        '<div class="pr-tabs" role="tablist" aria-label="Positions"></div></div><div class="pr-body"></div>';
     }
     countTo(document.getElementById('pr-total'), total);   // tweens from the last total
     const d = document.getElementById('pr-delta'), flat = Math.abs(diff) < 0.005;
@@ -5129,25 +5280,258 @@
     d.className = 'pr-delta' + (flat ? '' : diff > 0 ? ' up' : ' down');
     view.querySelector('.pr-tabs').innerHTML = tabHTML;
     view.querySelector('.pr-body').innerHTML = prStageHTML(ctx.prTab, slots);
+    // Undo stays in the bar after an optimize until you change something yourself
+    let undo = view.querySelector('[data-pr-undo]');
+    if(ctx.optUndo && !undo){ undo = document.createElement('button'); undo.type = 'button'; undo.className = 'pr-undo'; undo.setAttribute('data-pr-undo', ''); undo.textContent = 'Undo optimize'; view.querySelector('.pr-top').appendChild(undo); }
+    else if(!ctx.optUndo && undo) undo.remove();
+    prPlayLanded();
   }
-  // One position: its slots on top, everyone eligible below. (Shell: read-only; cards and placement come next.)
+  const PR_ICON = {
+    info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>',
+    x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+    lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+    plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
+  };
+  ctx.prSel = null;   // { pid }: a card waiting for a slot · { slot }: a slot waiting for a player
+  // Locked = that player's game has kicked off (Sleeper won't move them either); a slot holding one is read-only.
+  function prLockedSlot(i){ const pid = ctx.draftStarters[i]; return !!(pid && pid !== '0' && ctx.players[pid] && isLocked(pid)); }
+  function prCanPlace(pid, i){ return !!ctx.players[pid] && canFill(pid, ctx.rosterPositions[i]) && !isLocked(pid) && !prLockedSlot(i); }
+  // Why a player won't score this week ('' = fine): bye, a ruled-out status, or no projection.
+  function prUnavail(pid){
+    if(isOnBye(pid)) return 'BYE';
+    const st = effectiveStatus(pid);
+    if(cantPlay(st)) return statusInfo(st).short;
+    return typeof ctx.projections[pid] === 'number' ? '' : 'NO PROJ';
+  }
+  function prSlotName(i){ const s = prSlots().find(function(x){ return x.i === i; }); return s ? s.name : slotShort(ctx.rosterPositions[i]); }
+  // "Sun 1:00 PM" in the device's time zone (kickoffs come from the nflverse schedule)
+  function prWhen(t){ return new Date(t).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }); }
+
+  // The card: projection (actual once the game is on), game time + opponent colored by matchup difficulty (the same
+  // points-allowed ranking as everywhere else; also the strip on top), injury chip, and last-3 average in league scoring.
+  function prCardHTML(pid, where){
+    const p = ctx.players[pid], i = dvpInfo(pid), locked = isLocked(pid), un = prUnavail(pid), at = ctx.draftStarters.indexOf(pid);
+    const wa = weekActual(pid), g = gameOf(p.team), n = (hist(pid) || []).length, l3 = n ? last3Avg(pid) : null;
+    const m = matchup(p.team, ctx.week), live = gameStatusHTML(p.team, true);
+    const tipOpp = i ? ' title="' + escapeHTML(dvpSentence(i)) + '"' : '';
+    const game = live ? live : !m ? '<span class="dim">No game info</span>' : m.bye ? '<span class="opp bye">BYE week ' + ctx.week + '</span>'
+      : '<span>' + escapeHTML(kickoff(p.team, ctx.week) ? prWhen(kickoff(p.team, ctx.week)) : 'Time TBD') + '</span><span class="opp' + (i ? ' mt-' + i.tone : '') + '"' + tipOpp + '>' + escapeHTML(m.text) + '</span>';
+    const big = wa !== null
+      ? '<div class="pr-proj live">' + fmtPts(wa) + '<small>' + (g && g.state === 'post' ? 'final' : 'live') + ' · proj ' + fmtPts(ctx.projections[pid]) + '</small></div>'
+      : '<div class="pr-proj">' + fmtPts(ctx.projections[pid]) + '<small>proj</small></div>';
+    const tag = where === 'pool' ? (un ? '<span class="pr-tag bad">' + escapeHTML(un) + '</span>' : at !== -1 ? '<span class="pr-tag" title="Starting there now">' + escapeHTML(prSlotName(at)) + '</span>' : '') : '';
+    return '<div class="pr-card' + (i ? ' mt-' + i.tone : '') + (un ? ' unavail' : '') + (locked ? ' locked' : '') + (at !== -1 && where === 'pool' ? ' in-slot' : '') +
+        (ctx.prSel && ctx.prSel.pid === pid ? ' sel' : '') + '" data-pr-pid="' + escapeHTML(pid) + '"' + (where === 'pool' ? ' role="button" tabindex="0"' : '') +
+        ' aria-label="' + escapeHTML(playerName(p)) + ', ' + escapeHTML(eligLabel(pid)) + ', projected ' + fmtPts(ctx.projections[pid]) + (locked ? ', locked' : '') + '">' +
+      tag + '<button type="button" class="pr-ic" data-pr-info="' + escapeHTML(pid) + '" aria-label="Details for ' + escapeHTML(playerName(p)) + '" title="Details">' + PR_ICON.info + '</button>' +
+      '<div class="pr-head"><img class="pr-av" src="' + escapeHTML(playerImageUrl(pid)) + '" alt="" loading="lazy" draggable="false" onerror="this.style.visibility=\'hidden\'" style="--team:' + teamColor(p.team) + '">' +
+        '<div class="pr-nm"><b>' + escapeHTML(playerName(p)) + '</b><small>' + escapeHTML(eligLabel(pid)) + ' · ' + escapeHTML(p.team || 'FA') + ' ' + injuryChip(effectiveStatus(pid)) + '</small></div></div>' +
+      '<div class="pr-nums">' + big + '<div class="pr-l3">' + (l3 === null ? '—' : fmtPts(l3)) + '<small>' + (n >= 3 || !n ? 'L3 avg' : 'L' + n + ' avg') + '</small></div></div>' +
+      '<div class="pr-game">' + game + '</div></div>';
+  }
+
+  // One position: its slots on top ("the deck"), everyone eligible below. FLEX shows the leftovers: players who
+  // aren't starting at their own position, then the ones who are (moving one in empties or swaps their spot).
   function prStageHTML(tab, slots){
-    const ts = slots.filter(function(s){ return s.tab === tab; });
-    const inSlot = {};
-    ctx.draftStarters.forEach(function(pid, i){ if(pid && pid !== '0') inSlot[pid] = i; });
-    const pool = prPool(tab);
-    const name = function(pid){ return escapeHTML(playerName(ctx.players[pid])); };
+    const ts = slots.filter(function(s){ return s.tab === tab; }), sel = ctx.prSel, selPid = sel && sel.pid;
+    const inTab = function(pid){ return ts.some(function(s){ return ctx.draftStarters[s.i] === pid; }); };
+    const slotHTML = ts.map(function(s){
+      const pid = ctx.draftStarters[s.i], has = pid && pid !== '0' && ctx.players[pid];
+      const target = selPid ? pid !== selPid && prCanPlace(selPid, s.i) : !!(sel && sel.slot === s.i);
+      const lbl = '<span class="pr-slot-lbl">' + escapeHTML(s.name) + '</span>';
+      if(!has) return '<div class="pr-slot empty' + (target ? ' target' : '') + '" data-pr-slot="' + s.i + '" role="button" tabindex="0" aria-label="Empty ' + escapeHTML(s.name) + ' slot">' + lbl + PR_ICON.plus + '<span>' + (selPid ? 'Place here' : 'Empty') + '</span></div>';
+      return '<div class="pr-slot' + (target ? ' target' : '') + '" data-pr-slot="' + s.i + '">' + lbl + prCardHTML(pid, 'slot') +
+        (isLocked(pid) ? '<span class="pr-lock" title="Game started: locked">' + PR_ICON.lock + '</span>'
+          : '<button type="button" class="pr-rm" data-pr-rm="' + s.i + '" aria-label="Remove ' + escapeHTML(playerName(ctx.players[pid])) + ' from ' + escapeHTML(s.name) + '" title="Remove">' + PR_ICON.x + '</button>') + '</div>';
+    }).join('');
+    const rank = function(a, b){ return (!!prUnavail(a) - !!prUnavail(b)) || (ctx.projections[b] || -1) - (ctx.projections[a] || -1); };
+    const pool = prPool(tab).filter(function(pid){ return !inTab(pid); }).sort(rank);
+    let poolHTML;
+    if(tab === 'FLEX'){
+      const dedicated = function(pid){ const at = ctx.draftStarters.indexOf(pid); return at !== -1 && !isFlexSlot(ctx.rosterPositions[at]); };
+      const left = pool.filter(function(pid){ return !dedicated(pid); }), busy = pool.filter(dedicated);
+      poolHTML = '<div class="pr-sec"><h3>Leftovers</h3><span>' + left.length + ' competing for flex</span></div>' +
+        (left.length ? '<div class="pr-pool">' + left.map(function(pid){ return prCardHTML(pid, 'pool'); }).join('') + '</div>' : '<div class="pr-empty">Everyone eligible is already starting.</div>') +
+        (busy.length ? '<div class="pr-sub">Starting at their position</div><div class="pr-pool">' + busy.map(function(pid){ return prCardHTML(pid, 'pool'); }).join('') + '</div>' : '');
+    } else {
+      poolHTML = '<div class="pr-sec"><h3>Your ' + tab + 's</h3><span>' + pool.length + (pool.length === 1 ? ' option' : ' options') + '</span></div>' +
+        (pool.length ? '<div class="pr-pool">' + pool.map(function(pid){ return prCardHTML(pid, 'pool'); }).join('') + '</div>' : '<div class="pr-empty">No other ' + tab + 's on your roster.</div>');
+    }
+    const empty = ts.filter(function(s){ const pid = ctx.draftStarters[s.i]; return !pid || pid === '0'; });
+    const allLocked = ts.every(function(s){ return prLockedSlot(s.i); });
+    const hint = allLocked ? 'Games have started: these slots are <b>locked</b>' + (ctx.sleeperWeek && ctx.week === ctx.sleeperWeek && ctx.week < MAX_PLAN_WEEK ? ' · switch to next week to plan ahead' : '')
+      : selPid ? 'Pick a slot for <b>' + escapeHTML(playerName(ctx.players[selPid])) + '</b> · tap it again to cancel'
+      : sel ? 'Pick a player for <b>' + escapeHTML(prSlotName(sel.slot)) + '</b>'
+      : empty.length ? 'Tap a player to fill <b>' + escapeHTML(empty[0].name) + '</b>' + (hasFinePointer() ? ', or drag one onto a slot' : '')
+      : tab === 'FLEX' ? 'Tap a leftover, then the flex spot it should take' : 'Tap a player to swap in' + (hasFinePointer() ? ' or drag onto a slot' : ' (hold to drag)');
     return '<div class="pr-stage" style="--pr-c:' + posColor(tab) + '">' +
-      '<div class="pr-sec"><h3>' + (tab === 'FLEX' ? 'Flex' : tab) + ' slots</h3><span>' + ts.length + ' to fill</span></div>' +
-      '<div class="pr-empty">' + ts.map(function(s){ const pid = ctx.draftStarters[s.i]; return '<b>' + escapeHTML(s.name) + '</b> ' + (pid && pid !== '0' && ctx.players[pid] ? name(pid) : 'empty'); }).join(' · ') + '</div>' +
-      '<div class="pr-sec" style="margin-top:18px"><h3>Your ' + (tab === 'FLEX' ? 'flex-eligible players' : tab + 's') + '</h3><span>' + pool.length + '</span></div>' +
-      '<div class="pr-empty">' + (pool.map(function(pid){ return name(pid) + (pid in inSlot ? ' (' + escapeHTML(slotShort(ctx.rosterPositions[inSlot[pid]])) + ')' : ''); }).join(' · ') || 'No one on your roster can play here.') + '</div></div>';
+      '<div class="pr-sec"><h3>' + (tab === 'FLEX' ? 'Flex' : tab) + ' slots</h3><span>' + (empty.length ? empty.length + ' empty' : 'all set') + '</span></div>' +
+      '<div class="pr-hint">' + hint + '</div><div class="pr-slots">' + slotHTML + '</div>' + poolHTML + '</div>';
   }
-  document.getElementById('pr-view').addEventListener('click', function(e){
+  function hasFinePointer(){ return window.matchMedia('(pointer: fine)').matches; }
+
+  // ---- placing: every change goes through prPlace / prRemove (one gesture; the old occupant goes back to the pool) ----
+  function prPlace(i, pid){
+    if(!prCanPlace(pid, i)) return false;
+    const d = ctx.draftStarters, old = d[i], from = d.indexOf(pid);
+    if(old === pid){ ctx.prSel = null; renderPowerRank(); return true; }
+    d[i] = pid;
+    // coming from another slot: that slot gets the displaced player if they can play it, otherwise it empties
+    if(from !== -1) d[from] = old && old !== '0' && ctx.players[old] && canFill(old, ctx.rosterPositions[from]) ? old : '0';
+    ctx.prLanded = [i].concat(from !== -1 && d[from] !== '0' ? [from] : []);
+    prEdited();
+    return true;
+  }
+  function prRemove(i){
+    if(prLockedSlot(i)) return;
+    ctx.draftStarters[i] = '0';
+    prEdited();
+  }
+  function prEdited(){
+    ctx.prSel = null; ctx.handEdited = true; ctx.optUndo = null;
+    hideOptNote();
+    renderAll();
+    try{ if(navigator.vibrate) navigator.vibrate(8); }catch(e){}
+  }
+  function prNudge(el){ if(!el) return; el.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-5px)' }, { transform: 'translateX(5px)' }, { transform: 'translateX(0)' }], { duration: 240, easing: 'ease-out' }); }
+  // A pool card was tapped: fill the first empty slot it fits in this tab; otherwise hold it until a slot is picked.
+  function prTapCard(pid, el){
+    const sel = ctx.prSel;
+    if(isLocked(pid)){ prNudge(el); return; }
+    if(sel && sel.slot != null){ if(!prPlace(sel.slot, pid)) prNudge(el); return; }
+    if(sel && sel.pid === pid){ ctx.prSel = null; renderPowerRank(); return; }
+    const open = prSlots().filter(function(s){ return s.tab === ctx.prTab; }).find(function(s){ const x = ctx.draftStarters[s.i]; return (!x || x === '0') && prCanPlace(pid, s.i); });
+    if(open){ prPlace(open.i, pid); return; }
+    ctx.prSel = { pid: pid }; renderPowerRank();
+  }
+  function prTapSlot(i, el){
+    const sel = ctx.prSel;
+    if(sel && sel.pid){ if(!prPlace(i, sel.pid)) prNudge(el); return; }
+    if(prLockedSlot(i)){ prNudge(el); return; }
+    ctx.prSel = sel && sel.slot === i ? null : { slot: i };
+    renderPowerRank();
+  }
+  // after a render: the landing animation + a few sparks on the slot(s) that just changed
+  function prPlayLanded(){
+    const list = ctx.prLanded; ctx.prLanded = null;
+    if(!list || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    list.forEach(function(i, k){
+      const el = document.querySelector('#pr-view [data-pr-slot="' + i + '"]');
+      if(!el) return;
+      el.classList.add('landed');
+      setTimeout(function(){ el.classList.remove('landed'); }, 650);
+      if(k) return;
+      for(let s = 0; s < 8; s++){
+        const sp = document.createElement('span'), a = (s / 8) * Math.PI * 2 + Math.random() * .4, r = 46 + Math.random() * 26;
+        sp.className = 'pr-spark'; sp.style.setProperty('--dx', Math.cos(a) * r + 'px'); sp.style.setProperty('--dy', Math.sin(a) * r + 'px');
+        el.appendChild(sp); setTimeout(function(){ sp.remove(); }, 600);
+      }
+    });
+  }
+  function prUndoOptimize(){
+    if(!ctx.optUndo) return;
+    ctx.draftStarters = ctx.optUndo; ctx.optUndo = null; ctx.handEdited = true;
+    hideOptNote(); renderAll();
+  }
+
+  const prView = document.getElementById('pr-view');
+  prView.addEventListener('click', function(e){
+    if(prDrag.justDropped){ prDrag.justDropped = false; return; }   // the click that ends a drag
     const t = e.target.closest('[data-pr-tab]');
-    if(t){ ctx.prTab = t.getAttribute('data-pr-tab'); renderPowerRank(); return; }
-    if(e.target.closest('[data-pr-opt]')) runOptimal();
+    if(t){ ctx.prTab = t.getAttribute('data-pr-tab'); ctx.prSel = null; renderPowerRank(); return; }
+    if(e.target.closest('[data-pr-opt]')){ runOptimal(); return; }
+    if(e.target.closest('[data-pr-undo]')){ prUndoOptimize(); return; }
+    const info = e.target.closest('[data-pr-info]');
+    if(info){ const pid = info.getAttribute('data-pr-info'), at = ctx.draftStarters.indexOf(pid); openFocus(pid, at === -1 ? null : at); return; }
+    const rm = e.target.closest('[data-pr-rm]');
+    if(rm){ prRemove(Number(rm.getAttribute('data-pr-rm'))); return; }
+    const slot = e.target.closest('[data-pr-slot]');
+    if(slot){ prTapSlot(Number(slot.getAttribute('data-pr-slot')), slot); return; }
+    const card = e.target.closest('.pr-pool [data-pr-pid]');
+    if(card){ prTapCard(card.getAttribute('data-pr-pid'), card); return; }
+    if(ctx.prSel && e.target.closest('.pr-stage')){ ctx.prSel = null; renderPowerRank(); }   // tap on empty space cancels
   });
+  prView.addEventListener('keydown', function(e){
+    if(e.key !== 'Enter' && e.key !== ' ') return;
+    const el = e.target.closest('[data-pr-slot], .pr-pool [data-pr-pid]');
+    if(!el || e.target.closest('button')) return;
+    e.preventDefault(); el.click();
+  });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && ctx.prSel){ ctx.prSel = null; renderPowerRank(); } });
+
+  // ---- drag: Pointer Events, one code path for mouse and touch ----
+  // Mouse: drag starts after moving 5px. Touch: hold ~220ms still, then drag (a quick swipe still scrolls the page).
+  // A floating copy follows the pointer; slots light up green (fits) or fade (can't); drop on a slot = prPlace, drop a
+  // slotted card back on the pool = remove; anywhere else snaps back.
+  const prDrag = { st: null, justDropped: false };
+  prView.addEventListener('pointerdown', function(e){
+    if(e.button !== 0 || e.target.closest('button')) return;
+    const card = e.target.closest('[data-pr-pid]');
+    if(!card || card.classList.contains('locked')) return;
+    const slotEl = card.closest('[data-pr-slot]');
+    const st = prDrag.st = { pid: card.getAttribute('data-pr-pid'), from: slotEl ? Number(slotEl.getAttribute('data-pr-slot')) : null, card: card,
+      x0: e.clientX, y0: e.clientY, id: e.pointerId, touch: e.pointerType !== 'mouse', active: false, timer: null };
+    if(st.touch) st.timer = setTimeout(function(){ if(prDrag.st === st) prDragStart(e.clientX, e.clientY); }, 220);
+  });
+  function prDragStart(x, y){
+    const st = prDrag.st, r = st.card.getBoundingClientRect();
+    st.active = true; st.dx = x - r.left; st.dy = y - r.top;
+    const g = st.ghost = st.card.cloneNode(true);
+    g.classList.add('pr-ghost'); g.classList.remove('sel');
+    g.style.width = r.width + 'px'; g.style.left = r.left + 'px'; g.style.top = r.top + 'px';
+    g.style.setProperty('--pr-c', getComputedStyle(st.card).getPropertyValue('--pr-c'));
+    document.body.appendChild(g);
+    st.card.classList.add('dragging');
+    prView.querySelectorAll('[data-pr-slot]').forEach(function(s){
+      const i = Number(s.getAttribute('data-pr-slot'));
+      if(i !== st.from && !prCanPlace(st.pid, i)) s.classList.add('drop-bad');
+    });
+    try{ if(navigator.vibrate) navigator.vibrate(12); }catch(e){}
+  }
+  function prDragOver(x, y){
+    const st = prDrag.st;
+    st.ghost.style.left = (x - st.dx) + 'px'; st.ghost.style.top = (y - st.dy) + 'px';
+    const under = document.elementFromPoint(x, y), slot = under && under.closest && under.closest('#pr-view [data-pr-slot]');
+    const i = slot ? Number(slot.getAttribute('data-pr-slot')) : null, ok = slot && i !== st.from && prCanPlace(st.pid, i);
+    prView.querySelectorAll('.drop-ok').forEach(function(s){ if(s !== slot) s.classList.remove('drop-ok'); });
+    if(ok) slot.classList.add('drop-ok');
+    st.over = ok ? i : null;
+    st.overPool = !slot && !!(under && under.closest && under.closest('#pr-view .pr-pool, #pr-view .pr-sec, #pr-view .pr-sub'));
+    // edge scroll
+    const edge = 70, h = window.innerHeight;
+    if(y < edge) window.scrollBy(0, -12); else if(y > h - edge) window.scrollBy(0, 12);
+  }
+  function prDragEnd(cancel){
+    const st = prDrag.st; prDrag.st = null;
+    if(!st) return;
+    clearTimeout(st.timer);
+    if(!st.active) return;
+    prDrag.justDropped = true; setTimeout(function(){ prDrag.justDropped = false; }, 50);
+    prView.querySelectorAll('.drop-ok, .drop-bad').forEach(function(s){ s.classList.remove('drop-ok', 'drop-bad'); });
+    const g = st.ghost;
+    if(!cancel && st.over != null){ g.remove(); prPlace(st.over, st.pid); return; }
+    if(!cancel && st.from != null && st.overPool){ g.remove(); prRemove(st.from); return; }
+    const r = st.card.getBoundingClientRect();   // snap back
+    g.classList.add('back'); g.style.left = r.left + 'px'; g.style.top = r.top + 'px';
+    setTimeout(function(){ g.remove(); st.card.classList.remove('dragging'); }, 260);
+  }
+  window.addEventListener('pointermove', function(e){
+    const st = prDrag.st;
+    if(!st || e.pointerId !== st.id) return;
+    const moved = Math.abs(e.clientX - st.x0) + Math.abs(e.clientY - st.y0);
+    if(!st.active){
+      if(st.touch){ if(moved > 10){ clearTimeout(st.timer); prDrag.st = null; } return; }   // moved before the hold: it's a scroll
+      if(moved < 5) return;
+      prDragStart(e.clientX, e.clientY);
+    }
+    e.preventDefault();
+    prDragOver(e.clientX, e.clientY);
+  }, { passive: false });
+  window.addEventListener('pointerup', function(e){ if(prDrag.st && e.pointerId === prDrag.st.id) prDragEnd(false); });
+  window.addEventListener('pointercancel', function(e){ if(prDrag.st && e.pointerId === prDrag.st.id) prDragEnd(true); });
+  // iOS: once a hold-drag is live, stop the page from scrolling under the finger
+  document.addEventListener('touchmove', function(e){ if(prDrag.st && prDrag.st.active) e.preventDefault(); }, { passive: false });
+  prView.addEventListener('contextmenu', function(e){ if(e.target.closest('.pr-card')) e.preventDefault(); });   // long-press menu on Android
 
   els.byeAlert.addEventListener('click', function(e){
     const b = e.target.closest('[data-fix-slot]');
@@ -5277,7 +5661,7 @@
     els.lineupTop.style.display = view === 'roster' ? '' : 'none';
     els.panes.classList.toggle('solo', view === 'compare' || view === 'settings' || view === 'resources' || view === 'league');
 
-    els.pageEyebrow.innerHTML = 'Week ' + ctx.week + ' · ' + escapeHTML(ctx.league ? ctx.league.name : '') + (ctx.league ? ' <span class="fmt-badge' + (isIdpLeague() ? ' idp' : '') + '" title="League format">' + escapeHTML(leagueFormat()) + '</span>' : '');
+    els.pageEyebrow.innerHTML = 'Week ' + ctx.week + (ctx.weekOffset ? ' <span class="wk-preview">preview</span>' : '') + ' · ' + escapeHTML(ctx.league ? ctx.league.name : '') + (ctx.league ? ' <span class="fmt-badge' + (isIdpLeague() ? ' idp' : '') + '" title="League format">' + escapeHTML(leagueFormat()) + '</span>' : '');
     els.pageTitle.textContent = VIEW_TITLES[view];
     const st = ctx.myRoster ? (ctx.myRoster.settings || {}) : {};
     els.pageSub.textContent = view === 'roster' ? els.teamName.textContent + (typeof st.wins === 'number' ? ' · ' + st.wins + '–' + st.losses + (st.ties ? '–' + st.ties : '') : '')
@@ -5926,6 +6310,7 @@
 
   function swapIntoSlot(targetSlotIndex, newPid){
     hideOptNote();
+    ctx.handEdited = true; ctx.optUndo = null;
     const oldPid = ctx.draftStarters[targetSlotIndex];
     const existingIdx = ctx.draftStarters.indexOf(newPid);
     if(existingIdx !== -1 && existingIdx !== targetSlotIndex){
