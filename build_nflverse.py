@@ -174,6 +174,10 @@ def build_dvp(season, through_week, weekly=None):
             st = scoring_stats(raw)
             if weekly is not None and (raw.get('gp') or 0) > 0:
                 keep = {k: compact_num(v) for k, v in raw.items() if isinstance(v, (int, float)) and v and not WEEKLY_DROP.match(k)}
+                if pos in IDP_POS:   # defenders: snaps / team snaps -> snap share in the app (the IDP "is he on the field")
+                    for k in ('def_snp', 'tm_def_snp'):
+                        if raw.get(k):
+                            keep[k] = compact_num(raw[k])
                 g = {'t': team(e.get('team') or ''), 'o': opp, 's': keep}   # home/away comes from the schedule in the app
                 weekly.setdefault(str(e['player_id']), {})[str(week)] = g
             if not st:

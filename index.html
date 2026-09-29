@@ -229,6 +229,13 @@
     html:not(.cards-detailed) :is(#starters-list, #bench-list) .rng{ display: none; }   /* ###.##–###.## doesn't fit; shown in the detail views */
     html:not(.cards-detailed) :is(#starters-list, #bench-list) .gs{ padding: 1px 4px; }
     html:not(.cards-detailed) :is(#starters-list, #bench-list) .slot-row + .slot-row::before{ left: 88px; }
+    /* Players list on phones: two stat columns + the vs button left the name ~70px (the name itself shrank to nothing).
+       The position is already on line 2, so drop the tag, and let the rank chip wrap under a long name. */
+    #fa-list .slot-row{ gap: 8px; }
+    #fa-list .slot-tag{ display: none; }
+    #fa-list .avatar{ width: 34px; height: 34px; }
+    #fa-list .player-name{ flex-wrap: wrap; white-space: normal; row-gap: 2px; }
+    #fa-list .slot-row + .slot-row::before{ left: 56px; }
   }
   .hs-ctx{ grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: 12.5px; color: var(--text-2); }
   .hs-ctx .sig{ margin-top: 0; }
@@ -2217,7 +2224,7 @@
   // ---- stat aggregation (season totals for the main table, full set for the focus panel) ----
   // Keys that aren't stats: Sleeper's own generic fantasy points (we score with the league's settings instead),
   // ranks, ADP, and points-allowed-by-position splits.
-  const NON_STAT_KEY = /^(pts_(std|ppr|half_ppr)|pos_rank_|rank_|adp_|pos_adp_|fan_pts_allow)/;
+  const NON_STAT_KEY = /^(pts_(std|ppr|half_ppr)|pos_rank_|rank_|adp_|pos_adp_|fan_pts_allow|def_snp$|off_snp$|st_snp$|tm_)/;   // snaps feed usage, not stat lists
   // How a stat rolls up across weeks: counts sum, "long" stats take the max, per-play rates can't be summed.
   function statKind(key){
     if(/_lng$/.test(key)) return 'max';
@@ -2233,7 +2240,7 @@
   // My roster still uses the per-player download (ctx.history), which is also the fallback when weekly.json is missing.
   const WEEKLY_URL = 'weekly.json';
   // stats that aren't the player's own counting stats (Sleeper points/ranks, games flags, team snaps, rates)
-  const WEEK_DROP = /^(pts_(std|ppr|half_ppr|idp)$|pos_rank|rank_|adp_|pos_adp|gs$|gms_active$|tm_|off_snp$|def_snp$|st_snp$|cmp_pct$|fan_pts_allow|.*_(ypa|ypc|ypr|ypt|pct|rtg|avg)$)/;
+  const WEEK_DROP = /^(pts_(std|ppr|half_ppr|idp)$|pos_rank|rank_|adp_|pos_adp|gs$|gms_active$|tm_(?!def_snp)|off_snp$|st_snp$|cmp_pct$|fan_pts_allow|.*_(ypa|ypc|ypr|ypt|pct|rtg|avg)$)/;   // keeps def_snp / tm_def_snp (IDP snap share)
   ctx.gapWeeks = {};
   async function loadWeekly(season){
     const cached = await idbGet('weekly');
@@ -2290,8 +2297,8 @@
     if(changed) histReset();
     return changed;
   }
-  let histMemo = {}, aggMemo = {};
-  function histReset(){ histMemo = {}; aggMemo = {}; curMemo = {}; if(typeof plReset === 'function') plReset(); }
+  let histMemo = {}, aggMemo = {}, teamTklMemo = null;
+  function histReset(){ histMemo = {}; aggMemo = {}; curMemo = {}; teamTklMemo = null; if(typeof plReset === 'function') plReset(); }
   function gameEntry(week, g){
     const m = g.t && ctx.nfl && ctx.nfl.sched && ctx.nfl.sched[g.t] ? ctx.nfl.sched[g.t][week] : null;
     const raw = Object.assign({}, g.s || {}); delete raw.gp;   // gp is only used to tell a played game
@@ -4312,11 +4319,59 @@
   function isOnBye(pid){ const p = ctx.players[pid]; const m = p && matchup(p.team, ctx.week); return !!(m && m.bye); }
 
   // Completed weeks of nflverse data for a player: [{week, s, t, a}] ascending. null = no ID match / no data file.
+  // Defenders' usage by week (the IDP counterpart of nflverse's offensive shares), from Sleeper's weekly stats:
+  //   s = snap share (def_snp / tm_def_snp), k = tackle share (his tackles / every defender's tackles for his team that week),
+  //   b = big plays (sacks + INT + forced fumbles + fumble recoveries + defensive TDs), n = tackles.
+  //   (No t / a keys, so target / air-yards share stay empty for defenders.)
+  function weekTeam(pid, week){
+    const e = (ctx.weekly && ctx.weekly.players[pid] && ctx.weekly.players[pid][String(week)]) || (ctx.gapWeeks[week] && ctx.gapWeeks[week][pid]) ||
+      (week === ctx.week && ctx.live && ctx.live.stats && ctx.live.stats[pid]);
+    return (e && e.t) || (ctx.players[pid] && ctx.players[pid].team) || null;
+  }
+  // Every defender's tackles for a team in a week. This week (a final game, via hist) comes from the live stats.
+  let liveTkl = null, liveTklFor = null;
+  function teamTackles(team, week){
+    if(week === ctx.week){
+      const src = ctx.live && ctx.live.stats;
+      if(!src) return null;
+      if(liveTklFor !== src){
+        liveTkl = {}; liveTklFor = src;
+        for(const pid in src){ const g = src[pid]; if(g && g.t && g.s && g.s.idp_tkl) liveTkl[g.t] = (liveTkl[g.t] || 0) + g.s.idp_tkl; }
+      }
+      return liveTkl[team] || null;
+    }
+    if(!teamTklMemo){
+      teamTklMemo = {};
+      const add = function(g, w){ if(g && g.t && g.s && g.s.idp_tkl){ const t = teamTklMemo[g.t] || (teamTklMemo[g.t] = {}); t[w] = (t[w] || 0) + g.s.idp_tkl; } };
+      if(ctx.weekly) for(const pid in ctx.weekly.players){ const pw = ctx.weekly.players[pid]; for(const w in pw) add(pw[w], w); }
+      for(const w in ctx.gapWeeks){ for(const pid in ctx.gapWeeks[w]) add(ctx.gapWeeks[w][pid], w); }
+    }
+    return (teamTklMemo[team] || {})[String(week)] || null;
+  }
+  function isIdp(pid){ return IDP_GROUPS.indexOf(posGroup(pid)) !== -1; }
+  function idpWeeks(pid){
+    return (hist(pid) || []).map(function(g){   // Sleeper stats, so this week counts as soon as the game is final (like the points)
+      const r = g.raw || {}, tt = teamTackles(weekTeam(pid, g.week), g.week);
+      return { week: g.week, n: r.idp_tkl || 0,
+        s: r.def_snp && r.tm_def_snp ? Math.min(1, r.def_snp / r.tm_def_snp) : undefined,
+        k: tt ? (r.idp_tkl || 0) / tt : undefined,
+        b: (r.idp_sack || 0) + (r.idp_int || 0) + (r.idp_ff || 0) + (r.idp_fum_rec || 0) + (r.idp_def_td || 0) };
+    });
+  }
   function nflWeeks(pid){
+    if(isIdp(pid)) return idpWeeks(pid);
     const e = ctx.nfl && ctx.nfl.players ? ctx.nfl.players[pid] : null;
     if(!e) return null;
     return Object.keys(e.w || {}).map(function(w){ return Object.assign({ week: Number(w) }, e.w[w]); })
       .filter(function(x){ return x.week < ctx.week; }).sort(function(a, b){ return a.week - b.week; });
+  }
+  // Snap share applies to offensive skill players and defenders (not K / team DEF).
+  function hasSnaps(pid){ const p = ctx.players[pid]; return !!p && (SKILL_POSITIONS.indexOf(p.position) !== -1 || isIdp(pid)); }
+  // Season per-game average of an idpWeeks key (tackles n, big plays b), over games played.
+  function idpPerGame(pid, key){
+    if(!isIdp(pid)) return null;
+    const w = idpWeeks(pid);
+    return w.length ? meanOf(w.map(function(x){ return x[key]; })) : null;
   }
   function meanOf(vals){ return vals.length ? vals.reduce(function(a, b){ return a + b; }, 0) / vals.length : null; }
   function seasonShare(pid, key){
@@ -4360,7 +4415,7 @@
     return ' · ' + out + snapFlagHTML(pid);
   }
   function snapFlagHTML(pid){
-    const p = ctx.players[pid], tr = p && SKILL_POSITIONS.indexOf(p.position) !== -1 ? snapTrend(pid) : null;
+    const tr = hasSnaps(pid) ? snapTrend(pid) : null;
     if(!tr || tr.base === null || Math.abs(tr.last - tr.base) < 0.15) return '';
     const up = tr.last > tr.base, txt = 'Snap share ' + pct(tr.last) + ', ' + (up ? 'up' : 'down') + ' from ' + pct(tr.base);
     return '<span class="snap-flag ' + (up ? 'up' : 'down') + '" title="' + txt + '" aria-label="' + txt + '">' + (up ? '↑' : '↓') + '</span>';
@@ -4379,8 +4434,7 @@
     return m ? '<span class="opp' + (m.bye ? ' bye' : '') + '">' + escapeHTML(m.text) + '</span>' : '<span class="opp">—</span>';
   }
   function snapCell(pid){
-    const p = ctx.players[pid];
-    if(!p || SKILL_POSITIONS.indexOf(p.position) === -1) return '<span class="opp">—</span>';
+    if(!hasSnaps(pid)) return '<span class="opp">—</span>';
     const tr = snapTrend(pid);
     return tr ? pct(tr.last) + ' <span class="trend ' + tr.dir + '">' + { up: '↑', down: '↓', flat: '→' }[tr.dir] + '</span>' : '<span class="opp">—</span>';
   }
@@ -4396,14 +4450,20 @@
   function signalsHTML(pid, withShares){
     const p = ctx.players[pid];
     if(!p) return '';
-    if(SKILL_POSITIONS.indexOf(p.position) === -1){ const f = formHTML(pid); return f ? '<div class="sig">' + f + '</div>' : ''; }
-    const tr = snapTrend(pid);
+    if(!hasSnaps(pid)){ const f = formHTML(pid); return f ? '<div class="sig">' + f + '</div>' : ''; }
+    const idp = isIdp(pid), tr = snapTrend(pid);
     const arrow = tr ? { up: '↑', down: '↓', flat: '→' }[tr.dir] : '';
     const trendTitle = tr ? tr.recent.map(function(x){ return 'Wk' + x.week + ' ' + pct(x.s); }).join(' → ') : 'No snap data';
     let html = '<div class="sig">' + formHTML(pid) +
-      '<span class="sig-item" title="Offensive snap share, ' + escapeHTML(trendTitle) + '"><span class="sig-k">Snap</span> ' + (tr ? pct(tr.last) : '—') +
+      '<span class="sig-item" title="' + (idp ? 'Defensive' : 'Offensive') + ' snap share, ' + escapeHTML(trendTitle) + '"><span class="sig-k">Snap</span> ' + (tr ? pct(tr.last) : '—') +
         (tr ? ' <span class="trend ' + tr.dir + '">' + arrow + '</span>' : '') + '</span>';
-    if(withShares && p.position !== 'QB'){
+    if(idp){
+      const tpg = idpPerGame(pid, 'n'), bp = idpPerGame(pid, 'b');
+      html += '<span class="sig-item" title="Tackle share: his tackles ÷ his defense&#39;s tackles, season average"><span class="sig-k">Tkl</span> ' + pct(seasonShare(pid, 'k')) + '</span>' +
+        '<span class="sig-item" title="Tackles per game"><span class="sig-k">Tkl/g</span> ' + (tpg === null ? '—' : tpg.toFixed(1)) + '</span>' +
+        (withShares ? '<span class="sig-item" title="Big plays per game: sacks + INT + forced fumbles + fumble recoveries + defensive TDs"><span class="sig-k">Big/g</span> ' + (bp === null ? '—' : bp.toFixed(2)) + '</span>' : '');
+    }
+    else if(withShares && p.position !== 'QB'){
       html += '<span class="sig-item" title="Season avg target share"><span class="sig-k">Tgt</span> ' + pct(seasonShare(pid, 't')) + '</span>' +
               '<span class="sig-item" title="Season avg air-yards share"><span class="sig-k">Air</span> ' + airPct(seasonShare(pid, 'a')) + '</span>';
     }
@@ -5222,9 +5282,13 @@
     l3:   { label: 'Last 3 games avg', short: 'L3', unit: 'pts', actual: true, get: function(pid){ return last3Avg(pid); } },
     avg:  { label: 'Season avg points', short: 'Avg', unit: 'pts', actual: true, get: function(pid){ const v = seasonValue(pid); return v ? v.avg : null; } },
     tot:  { label: 'Season total points', short: 'Total', unit: 'pts', actual: true, get: function(pid){ return seasonTotalPts(pid); } },
-    snap: { label: 'Snap share', short: 'Snap', pct: true, get: function(pid){ return seasonShare(pid, 's'); } },
+    snap: { label: 'Snap share (offense, or defense for defenders)', short: 'Snap', pct: true, get: function(pid){ return seasonShare(pid, 's'); } },
     tgt:  { label: 'Target share', short: 'Tgt', pct: true, get: function(pid){ return seasonShare(pid, 't'); } },
     air:  { label: 'Air yards share', short: 'Air', pct: true, get: function(pid){ return seasonShare(pid, 'a'); } },
+    tkl:  { label: 'Defenders · tackle share', short: 'Tkl share', pct: true, idp: true, get: function(pid){ return seasonShare(pid, 'k'); } },
+    tpg:  { label: 'Defenders · tackles per game', short: 'Tkl/g', unit: '', actual: true, idp: true, get: function(pid){ return idpPerGame(pid, 'n'); } },
+    big:  { label: 'Defenders · big plays per game (sack, INT, FF, FR, TD)', short: 'Big/g', unit: '', actual: true, idp: true, get: function(pid){ return idpPerGame(pid, 'b'); } },
+    use:  { label: 'Target share (offense) / tackle share (defense)', short: 'Tgt/Tkl', pct: true, hidden: true, get: function(pid){ return seasonShare(pid, isIdp(pid) ? 'k' : 't'); } },   // mixed-list column sort only
     gp:   { label: 'Games played', short: 'Games', unit: '', actual: true, get: function(pid){ const h = hist(pid); return h ? h.length : null; } },
     cw:   { label: 'This week · consensus rank', short: 'Wk rank', unit: '', low: true, get: function(pid){ return ranksOf(pid).w.cons; } },
     ecrw: { label: 'This week · FantasyPros rank', short: 'Wk FP', unit: '', low: true, get: function(pid){ return ranksOf(pid).w.fp; } },
@@ -5250,6 +5314,15 @@
   const PL_PRESETS = [
     { k: 'snap', op: '>=', v: 60 }, { k: 'tgt', op: '>=', v: 20 }, { k: 'proj', op: '>=', v: 10 }, { k: 'avg', op: '>=', v: 12 }, { k: 'ros', op: '>=', v: 120 },
   ];
+  function plMetricKeys(){ return Object.keys(PL_METRICS).filter(function(k){ return !PL_METRICS[k].hidden && (!PL_METRICS[k].idp || isIdpLeague()); }); }   // defender stats only in IDP leagues
+  // Share column in the Players list: target share for offense, tackle share for defense; the header follows the position filter.
+  function plShareMode(){
+    const pos = ctx.pl.pos;
+    if(!isIdpLeague()) return 'tgt';
+    if(pos.length && pos.every(function(x){ return IDP_GROUPS.indexOf(x) !== -1; })) return 'tkl';
+    if(pos.length && pos.every(function(x){ return IDP_GROUPS.indexOf(x) === -1; })) return 'tgt';
+    return 'mixed';
+  }
   let plMemo = {}; // derived lists and per-player metric values; cleared when data changes
   function plReset(){ plMemo = {}; rankMemo = null; }
   function metric(key, pid){
@@ -5257,6 +5330,7 @@
     if(k in m) return m[k];
     const def = PL_METRICS[key], p = ctx.players[pid];
     if(def.pos && (!p || def.pos.indexOf(p.position) === -1)) return (m[k] = null);
+    if(def.idp && !isIdp(pid)) return (m[k] = null);
     const v = def.get(pid);
     return (m[k] = (typeof v === 'number' && !isNaN(v)) ? v : null);
   }
@@ -5456,7 +5530,7 @@
       els.faPosFilter.innerHTML = posChipsHTML();
       const sortSel = document.getElementById('pl-sort');
       sortSel.innerHTML = '<option value="default">' + (st.view === 'trend' ? 'Trending' : 'Projection') + '</option>' +
-        Object.keys(PL_METRICS).filter(function(k){ return st.view === 'trend' || k !== 'proj'; }).map(function(k){ return '<option value="' + k + '">' + PL_METRICS[k].label + '</option>'; }).join('') +
+        plMetricKeys().concat(PL_METRICS[st.sort] && PL_METRICS[st.sort].hidden ? [st.sort] : []).filter(function(k){ return st.view === 'trend' || k !== 'proj'; }).map(function(k){ return '<option value="' + k + '">' + PL_METRICS[k].label + '</option>'; }).join('') +
         '<option value="name">Name</option>';
       sortSel.value = st.sort === 'proj' && st.view !== 'trend' ? 'default' : st.sort;
       const q = document.getElementById('pl-q');
@@ -5466,6 +5540,13 @@
     const dirBtn = document.getElementById('pl-dir');
     dirBtn.textContent = st.dir === 'asc' ? '↑' : '↓';
     dirBtn.setAttribute('aria-label', st.dir === 'asc' ? 'Sorted low to high. Switch to high to low' : 'Sorted high to low. Switch to low to high');
+    const shareHead = document.querySelector('#fa-view .pl-head .h-tgt'), sm = plShareMode();
+    if(shareHead){
+      shareHead.setAttribute('data-pl-sort', sm === 'mixed' ? 'use' : sm);
+      shareHead.textContent = { tgt: 'Tgt', tkl: 'Tkl', mixed: 'Tgt/Tkl' }[sm];
+      shareHead.title = { tgt: 'Season target share', tkl: 'Season tackle share: his tackles ÷ his defense’s tackles', mixed: 'Target share (offense) · tackle share (defense)' }[sm];
+      document.querySelector('#fa-view .pl-head .h-snap').title = sm === 'tkl' ? 'Season defensive snap share' : sm === 'mixed' ? 'Season snap share (offense or defense)' : 'Season snap share';
+    }
     document.querySelectorAll('#fa-view .list-head [data-pl-sort]').forEach(function(h){
       const k = h.getAttribute('data-pl-sort');
       h.className = h.className.replace(/ sorted (asc|desc)/, '') + sortedClass(k);
@@ -5514,7 +5595,7 @@
         '</div>' +
         '<div class="col col-opp">' + oppOnly(p.team) + (gameStatusHTML(p.team, true) ? '' : dvpChipHTML(pid, true)) + '</div>' +
         '<div class="col col-snap">' + snapCell(pid) + '</div>' +
-        '<div class="col col-tgt">' + (SKILL_POSITIONS.indexOf(p.position) !== -1 && p.position !== 'QB' ? pct(seasonShare(pid, 't')) : '—') + '</div>' +
+        '<div class="col col-tgt">' + (isIdp(pid) ? '<span title="Tackle share">' + pct(seasonShare(pid, 'k')) + '</span>' : SKILL_POSITIONS.indexOf(p.position) !== -1 && p.position !== 'QB' ? pct(seasonShare(pid, 't')) : '—') + '</div>' +
         pointsColsHTML(pid) +
         '<div class="col col-vs">' + who.replace('class="fa-vs"', 'class="fa-vs-inline"') + '</div>' +
         '<div class="row-vs">' + vsBtn(pid) + '</div>' +
@@ -5586,7 +5667,7 @@
     el.innerHTML = '<div class="eyebrow">Quick filters</div><div class="pl-presets">' +
         PL_PRESETS.map(function(f, i){ return '<button type="button" class="pl-chip preset' + (on(f) ? ' on' : '') + '" data-pl-preset="' + i + '">' + escapeHTML(filterLabel(f)) + '</button>'; }).join('') + '</div>' +
       '<div class="eyebrow" style="margin-top:12px">Custom</div><div class="pl-custom">' +
-        '<select id="pl-f-k" aria-label="Stat">' + Object.keys(PL_METRICS).map(function(k){ return '<option value="' + k + '">' + PL_METRICS[k].label + '</option>'; }).join('') + '</select>' +
+        '<select id="pl-f-k" aria-label="Stat">' + plMetricKeys().map(function(k){ return '<option value="' + k + '">' + PL_METRICS[k].label + '</option>'; }).join('') + '</select>' +
         '<select id="pl-f-op" aria-label="Comparison"><option value=">=">at least</option><option value="<=">at most</option></select>' +
         '<input id="pl-f-v" type="number" inputmode="decimal" step="any" placeholder="e.g. 20" aria-label="Value">' +
         '<button type="button" class="pl-add" id="pl-f-add">Add</button></div>' +
@@ -5799,11 +5880,15 @@
     K:   ['fgm','fga','fgm_lng','fgm_0_19','fgm_20_29','fgm_30_39','fgm_40_49','fgm_50p','fgmiss','xpm','xpa','xpmiss'],
     DEF: ['pts_allow','yds_allow','sack','int','fum_rec','def_td','td','safe','blk_kick','ff','qb_hit','tkl_loss','def_pass_def','def_3_and_out','def_4_and_stop'],
   };
-  const POS_SECTION = { QB: 'Passing & rushing', RB: 'Rushing & receiving', WR: 'Receiving', TE: 'Receiving', K: 'Kicking', DEF: 'Defense' };
+  // Defenders (Sleeper position DE / DT / CB / S … or the group itself): the same tackle-first order as FantasyPros' IDP stats.
+  const IDP_STAT_ORDER = ['idp_tkl','idp_tkl_solo','idp_tkl_ast','idp_sack','idp_tkl_loss','idp_qb_hit','idp_pass_def','idp_int','idp_ff','idp_fum_rec','idp_def_td','idp_safe','idp_blk_kick'];
+  IDP_GROUPS.forEach(function(g){ POS_STATS[g] = IDP_STAT_ORDER; });
+  const IDP_POS_ALIAS = { DE: 'DL', DT: 'DL', NT: 'DL', OLB: 'LB', ILB: 'LB', MLB: 'LB', CB: 'DB', S: 'DB', SS: 'DB', FS: 'DB' };
+  const POS_SECTION = { QB: 'Passing & rushing', RB: 'Rushing & receiving', WR: 'Receiving', TE: 'Receiving', K: 'Kicking', DEF: 'Defense', DL: 'Defense', LB: 'Defense', DB: 'Defense' };
   // Team context (team snap counts), game-played flags and scoring-bonus counters say nothing about the player.
   const NOT_PLAYER_STAT = /^(tm_|gp$|gs$|gms_active$|anytime_tds$|bonus_)/;
   function statsForPosition(pos, keys){
-    const order = POS_STATS[pos] || [];
+    const order = POS_STATS[pos] || POS_STATS[IDP_POS_ALIAS[pos]] || [];
     const main = order.filter(function(k){ return keys.indexOf(k) !== -1; });
     const more = keys.filter(function(k){ return main.indexOf(k) === -1 && !NOT_PLAYER_STAT.test(k); }).sort(compareStatKeys);
     return { main: main, more: more };
@@ -5831,7 +5916,8 @@
 
     const nflByWeek = {};
     (nflWeeks(pid) || []).forEach(function(x){ nflByWeek[x.week] = x; });
-    const usage = SKILL_POSITIONS.indexOf(p.position) === -1 ? [] :
+    const idp = isIdp(pid);
+    const usage = idp ? [['s', 'Snap %'], ['k', 'Tackle share'], ['b', 'Big plays']] : SKILL_POSITIONS.indexOf(p.position) === -1 ? [] :
       [['s', 'Snap %']].concat(p.position === 'QB' ? [] : [['t', 'Target share'], ['a', 'Air yards share']]);
 
     const span = cols.length + 2;
@@ -5860,22 +5946,27 @@
     let body = '<tr class="gl-pts-row"><th class="gl-wk">Fantasy points</th>' + cols.map(function(c){ return c.w ? '<td class="gl-pts">' + fmtPts(c.w.pts) + '</td>' : '<td class="gl-off"></td>'; }).join('') +
       '<td class="gl-tot gl-pts">' + fmtPts(total) + '</td><td class="gl-tot gl-pts">' + fmtPts(total / n) + '</td></tr>';
     if(usage.length){
-      body += secRow('Usage · nflverse');
+      body += secRow(idp ? 'Usage · Sleeper' : 'Usage · nflverse');
       usage.forEach(function(u){
         const vals = weeks.map(function(w){ return (nflByWeek[w.week] || {})[u[0]]; }).filter(function(v){ return typeof v === 'number'; });
-        const fmt = u[0] === 'a' ? airPct : pct;
-        body += '<tr><th class="gl-wk">' + u[1] + '</th>' + cols.map(function(c){ return c.w ? '<td>' + fmt((nflByWeek[c.week] || {})[u[0]]) + '</td>' : '<td class="gl-off"></td>'; }).join('') +
-          '<td class="gl-tot">—</td><td class="gl-tot">' + fmt(meanOf(vals)) + '</td></tr>'; // shares don't sum; season avg of weekly shares
+        const count = u[0] === 'b';   // big plays add up; shares are season averages of the weekly shares
+        const fmt = u[0] === 'a' ? airPct : count ? function(v){ return typeof v === 'number' ? fmtStat(v) : '—'; } : pct;
+        const tot = count ? vals.reduce(function(a, b){ return a + b; }, 0) : null;
+        body += '<tr><th class="gl-wk"' + (count ? ' title="Sacks + INT + forced fumbles + fumble recoveries + defensive TDs"' : u[0] === 'k' ? ' title="His tackles ÷ his defense&#39;s tackles that week"' : '') + '>' + u[1] + '</th>' +
+          cols.map(function(c){ return c.w ? '<td>' + fmt((nflByWeek[c.week] || {})[u[0]]) + '</td>' : '<td class="gl-off"></td>'; }).join('') +
+          '<td class="gl-tot">' + (count ? fmtStat(tot) : '—') + '</td><td class="gl-tot">' + (count ? (vals.length ? (tot / vals.length).toFixed(2) : '—') : fmt(meanOf(vals))) + '</td></tr>';
       });
     }
-    if(groups.main.length){ body += secRow(POS_SECTION[p.position] || 'Stats'); groups.main.forEach(function(k){ body += statRow(k); }); }
+    if(groups.main.length){ body += secRow(POS_SECTION[p.position] || POS_SECTION[IDP_POS_ALIAS[p.position]] || 'Stats'); groups.main.forEach(function(k){ body += statRow(k); }); }
     let more = '';
     if(groups.more.length){
       more = '<tbody class="gl-more-toggle"><tr><th class="gl-wk"><button type="button" class="gl-more-btn" data-gl-more aria-expanded="' + (groups.main.length ? 'false' : 'true') + '">More stats (' + groups.more.length + ')</button></th><td colspan="' + span + '"></td></tr></tbody>' +
         '<tbody class="gl-more"' + (groups.main.length ? ' hidden' : '') + '>' + groups.more.map(statRow).join('') + '</tbody>';
     }
     return '<div class="gl-wrap"><table class="gl-table gl-vertical"><thead>' + head + '</thead><tbody>' + body + '</tbody>' + more + '</table></div>' +
-      (usage.length ? '<div class="gl-note">' + (ctx.nfl
+      (usage.length ? '<div class="gl-note">' + (idp
+        ? 'Usage rows from Sleeper’s weekly stats: snap % = his defensive snaps ÷ his team’s; tackle share = his tackles ÷ every defender’s tackles for his team that week; big plays = sacks + INT + forced fumbles + fumble recoveries + defensive TDs.'
+        : ctx.nfl
         ? 'Usage rows from nflverse (through week ' + ctx.nfl.stats_through_week + ').' + (nflWeeks(pid) ? '' : ' No nflverse match for this player.')
         : 'nflverse data unavailable, so usage rows show "—".') + '</div>' : '');
   }
@@ -6323,6 +6414,11 @@
     let usage = '';
     if(trA || trB) usage += row('Snap share, last game', trA ? trA.last : null, trB ? trB.last : null, pct, 'high') +
       row('Snap share, season', share(a, 's'), share(b, 's'), pct, 'high');
+    if(isIdp(a) || isIdp(b)){
+      const pg = function(pid, k){ return idpPerGame(pid, k); }, f1 = function(v){ return v.toFixed(1); }, f2 = function(v){ return v.toFixed(2); };
+      usage += row('Tackle share', share(a, 'k'), share(b, 'k'), pct, 'high') + row('Tackles per game', pg(a, 'n'), pg(b, 'n'), f1, 'high') +
+        row('Big plays per game', pg(a, 'b'), pg(b, 'b'), f2, 'high');
+    }
     const catcher = ['RB', 'WR', 'TE'].indexOf(pa.position) !== -1 || ['RB', 'WR', 'TE'].indexOf(pb.position) !== -1; // not meaningful for two QBs
     if(catcher && (share(a, 't') !== null || share(b, 't') !== null)) usage += row('Target share', share(a, 't'), share(b, 't'), pct, 'high');
     if(catcher && (share(a, 'a') !== null || share(b, 'a') !== null)) usage += row('Air yards share', share(a, 'a'), share(b, 'a'), airPct, 'high');
@@ -6363,7 +6459,7 @@
       const fa = fcValue(a), fb = fcValue(b); if(fa || fb) rk += row('Rest of season · trade value (FantasyCalc)', fa ? fa.v : null, fb ? fb.v : null, function(v){ return v.toLocaleString(); }, 'high');
     }
     const body = sec('This week', week) + sec('Rankings &amp; value <span class="eyebrow">FantasyPros · Boris Chen · FantasyCalc · ESPN</span>', rk) + sec('Fantasy points <span class="eyebrow">league scoring</span>', fp) +
-      sec('Usage <span class="eyebrow">nflverse</span>', usage) +
+      sec('Usage <span class="eyebrow">' + (isIdp(a) && isIdp(b) ? 'Sleeper' : isIdp(a) || isIdp(b) ? 'nflverse · Sleeper' : 'nflverse') + '</span>', usage) +
       sec('Season stats <span class="eyebrow">totals</span>', stats + (moreN ? '<details class="h2h-more"><summary>More stats (' + moreN + ')</summary>' + more + '</details>' : ''));
 
     const who = function(pid, side){
@@ -6423,7 +6519,7 @@
   function maxRosterHTML(){
     const weeks = completedWeeks(), started = weekStarted(), extra = 11;   // 10 rank columns + L3
     const plainTh = function(label, key, cls){ return '<th class="' + (cls || '') + '">' + label + '</th>'; };
-    const head = '<thead>' + rankGroupHead(3, 3 + weeks.length + 3) + '<tr><th class="l">Slot</th><th class="l">Player</th><th class="l">Opp</th>' + rankHeadCells(plainTh) + '<th>Snap by week</th><th>Tgt share</th><th' + (started ? ' title="Actual points once their game has started, otherwise the projection"' : '') + '>' + (started ? 'Wk ' + ctx.week + ' pts' : 'Proj') + '</th>' +
+    const head = '<thead>' + rankGroupHead(3, 3 + weeks.length + 3) + '<tr><th class="l">Slot</th><th class="l">Player</th><th class="l">Opp</th>' + rankHeadCells(plainTh) + '<th>Snap by week</th><th' + (isIdpLeague() ? ' title="Target share for offense, tackle share for defenders"' : '') + '>' + (isIdpLeague() ? 'Tgt / Tkl share' : 'Tgt share') + '</th><th' + (started ? ' title="Actual points once their game has started, otherwise the projection"' : '') + '>' + (started ? 'Wk ' + ctx.week + ' pts' : 'Proj') + '</th>' +
       weeks.map(function(w){ return '<th>Wk ' + w + '</th>'; }).join('') +
       '<th title="Average of the last 3 games">L3</th><th>Avg</th><th>Total</th></tr></thead>';
     function row(pid, slotLabel, slotIndex, i){
@@ -6432,7 +6528,8 @@
       const fresh = slotIndex != null && ctx.originalStarters[slotIndex] !== pid;
       const cls = (slotIndex != null && isOnBye(pid) ? 'bye ' : '') + (fresh ? 'fresh' : '');
       const byWeek = {}; games.forEach(function(h){ byWeek[h.week] = h.pts; });
-      const t = SKILL_POSITIONS.indexOf(p.position) !== -1 && p.position !== 'QB' ? pct(seasonShare(pid, 't')) : '<span class="dim">—</span>';
+      const t = isIdp(pid) ? '<span title="Tackle share">' + pct(seasonShare(pid, 'k')) + ' tkl</span>'
+        : SKILL_POSITIONS.indexOf(p.position) !== -1 && p.position !== 'QB' ? pct(seasonShare(pid, 't')) : '<span class="dim">—</span>';
       return '<tr style="--i:' + i + '" data-open="' + escapeHTML(pid) + '" class="' + cls + '"><td class="l slot">' + escapeHTML(slotLabel) + '</td><td class="l">' + mxWho(pid, fresh) + '</td>' +
         '<td class="l">' + oppCell(pid) + '</td>' + rankCells(pid) + '<td>' + snapByWeek(pid) + '</td><td class="muted">' + t + '</td>' +
         (function(){ const wa = weekActual(pid); if(wa === null) return '<td><span class="proj">' + fmtPts(ctx.projections[pid]) + '</span></td>';
@@ -6463,13 +6560,17 @@
     };
     const chips = st.filters.map(function(f, i){ return '<button type="button" class="pl-chip" data-pl-remove="' + i + '">' + escapeHTML(filterLabel(f)) + ' <span aria-hidden="true">×</span></button>'; }).join('') +
       (st.q ? '<button type="button" class="pl-chip" data-pl-clear-q>“' + escapeHTML(st.q) + '” <span aria-hidden="true">×</span></button>' : '');
-    const headAfter = th('Tgt share', 'tgt') + th('Air share', 'air') + th('Proj', 'proj') +
+    // Share columns: target / air-yards share for offense, tackle share / big plays per game for defenders.
+    const sm = plShareMode();
+    const shareHeads = sm === 'tkl' ? th('Tkl share', 'tkl') + th('Big plays/gm', 'big')
+      : sm === 'mixed' ? th('Tgt · Tkl share', 'use') + th('Air share · Big/gm', null) : th('Tgt share', 'tgt') + th('Air share', 'air');
+    const headAfter = shareHeads + th('Proj', 'proj') +
       (weekStarted() ? th('Wk ' + ctx.week, 'wk') : '') + th('Last', 'last') + th('L3', 'l3') + th('Avg', 'avg') + th('Total', 'tot') + th('Key stats (season)', null, 'l') + '<th></th><th></th>';
     return '<div class="mx-tools"><div class="pos-filter mx-pos" role="group" aria-label="Positions">' + posChipsHTML() + '</div>' +
         '<div class="mx-count">' + all.length + ' player' + (all.length === 1 ? '' : 's') + (chips ? '' : '') + '</div></div>' +
       (chips ? '<div class="pl-active mx-active">' + chips + '</div>' : '') +
       '<div class="mx-scroll"><table class="mx-tbl"><thead>' + rankGroupHead(3, (headAfter.match(/<th/g) || []).length) + '<tr>' + th('Player', 'name', 'l') + th('Opp', null, 'l') + th('Snap by week', 'snap') +
-      rankHeadCells(th) + th('Tgt share', 'tgt') + th('Air share', 'air') + th('Proj', 'proj') +
+      rankHeadCells(th) + shareHeads + th('Proj', 'proj') +
       (weekStarted() ? th('Wk ' + ctx.week, 'wk') : '') + th('Last', 'last') + th('L3', 'l3') + th('Avg', 'avg') + th('Total', 'tot') + th('Key stats (season)', null, 'l') +
       '<th class="l" style="padding-left:20px">' + (st.view !== 'avail' ? 'Team / vs yours' : ctx.faPos === 'FLEX' ? 'vs your FLEX' : 'vs your weakest') + '</th><th><span class="sr-only">Compare</span></th></tr></thead><tbody class="stagger">' +
       list.map(function(pid, i){
@@ -6479,11 +6580,13 @@
         const c = catcher(pid);
         return '<tr style="--i:' + i + '" data-open="' + escapeHTML(pid) + '"><td class="l">' + mxWho(pid) + '</td><td class="l">' + oppCell(pid) + '</td><td>' + snapByWeek(pid) + '</td>' +
           rankCells(pid) +
-          '<td class="muted">' + (c ? pct(seasonShare(pid, 't')) : '<span class="dim">—</span>') + '</td><td class="muted">' + (c ? airPct(seasonShare(pid, 'a')) : '<span class="dim">—</span>') + '</td>' +
+          (isIdp(pid)
+            ? '<td class="muted" title="Tackle share">' + pct(seasonShare(pid, 'k')) + '</td><td class="muted" title="Big plays per game">' + (function(){ const b = idpPerGame(pid, 'b'); return b === null ? '<span class="dim">—</span>' : b.toFixed(2); })() + '</td>'
+            : '<td class="muted">' + (c ? pct(seasonShare(pid, 't')) : '<span class="dim">—</span>') + '</td><td class="muted">' + (c ? airPct(seasonShare(pid, 'a')) : '<span class="dim">—</span>') + '</td>') +
           '<td><span class="proj">' + fmtPts(proj) + '</span></td>' +
           (weekStarted() ? (function(){ const wa = weekActual(pid); return '<td class="' + (wa === null ? 'dim' : 'act-live') + '">' + (wa === null ? '—' : fmtPts(wa)) + '</td>'; })() : '') +
           '<td class="muted">' + fmtPts(lastGamePts(pid)) + '</td><td class="muted">' + fmtPts(last3Avg(pid)) + '</td><td class="muted">' + fmtPts(seasonAvgPts(pid)) + '</td><td class="muted">' + fmtPts(seasonTotalPts(pid)) + '</td>' +
-          '<td class="l key-stats mx-ks">' + (function(){ const r = aggregatedRaw(pid, 'season'), d = POSITION_KEY_STATS[ctx.players[pid].position]; return r && d ? d.map(function(x){ return r[x[0]] !== undefined ? '<span><span class="kv">' + x[1] + '</span> ' + Math.round(r[x[0]]) + '</span>' : ''; }).join('') : '<span class="dim">—</span>'; })() + '</td>' +
+          '<td class="l key-stats mx-ks">' + (function(){ const r = aggregatedRaw(pid, 'season'), d = POSITION_KEY_STATS[isIdp(pid) ? posGroup(pid) : ctx.players[pid].position]; return r && d ? d.map(function(x){ return r[x[0]] !== undefined ? '<span><span class="kv">' + x[1] + '</span> ' + Math.round(r[x[0]]) + '</span>' : ''; }).join('') : '<span class="dim">—</span>'; })() + '</td>' +
           '<td class="l" style="padding-left:20px">' + vs + '</td><td>' + vsBtn(pid) + '</td></tr>';
       }).join('') + '</tbody></table></div>' +
       (list.length ? '' : '<div class="empty-state">No players match your filters.</div>') +
@@ -6554,6 +6657,11 @@
     if(pos === 'QB') return [[tr ? pct(tr.last) : '—', 'Snap'], [v(season.pass_td), 'Pass TD']];
     if(pos === 'K') return [[loading ? '…' : (season.fga ? fmtStat(season.fgm || 0) + '/' + fmtStat(season.fga) : '—'), 'FG made'], [v(season.fgm_lng), 'Long FG']];
     if(pos === 'DEF') return [[v(season.sack), 'Sacks'], [loading || !games || typeof season.pts_allow !== 'number' ? (loading ? '…' : '—') : (season.pts_allow / games).toFixed(1), 'Pts allowed / gm']];
+    if(isIdp(pid)){
+      const tpg = loading ? null : idpPerGame(pid, 'n'), bp = loading ? null : idpPerGame(pid, 'b');
+      return [[tr ? pct(tr.last) : '—', 'Snap'], [loading ? '…' : pct(seasonShare(pid, 'k')), 'Tkl share'],
+        [loading ? '…' : tpg === null ? '—' : tpg.toFixed(1), 'Tkl / gm'], [loading ? '…' : bp === null ? '—' : bp.toFixed(2), 'Big plays / gm']];
+    }
     return [[tr ? pct(tr.last) : '—', 'Snap'], [pct(seasonShare(pid, 't')), 'Tgt share']];
   }
 
