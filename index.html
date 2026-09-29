@@ -5504,7 +5504,7 @@
   }
   // Double-tap / double-click a pool card: into the first empty slot of this tab it fits, else in place of the lowest-
   // projected unlocked starter there. Position tabs use only that position's own slots (FLEX tab: the flex slots).
-  // Never replaces a locked starter; skips (with a note) when he projects no higher than any of them.
+  // Never replaces a locked starter; otherwise always swaps, even when he projects lower (tap-then-tap picks a specific slot).
   function prAutoSwap(pid, el){
     const tab = ctx.prTab, word = tab === 'FLEX' ? 'flex' : tab;
     if(isLocked(pid)){ prNudge(el); prToast(escapeHTML(playerName(ctx.players[pid])) + '’s game has started: he’s locked.'); return false; }
@@ -5515,12 +5515,7 @@
       const open = ts.filter(function(s){ return !prLockedSlot(s.i) && ctx.prWork[s.i] !== pid; })
         .sort(function(a, b){ return prProjOf(ctx.prWork[a.i]) - prProjOf(ctx.prWork[b.i]); });
       if(!open.length){ prNudge(el); prToast('Every ' + word + ' starter’s game has started: nothing to swap.'); return false; }
-      target = open[0];
-      if(prProjOf(pid) <= prProjOf(ctx.prWork[target.i])){
-        prNudge(el);
-        prToast(escapeHTML(playerName(ctx.players[pid])) + ' projects below all your ' + word + ' starters. Tap him, then pick a slot, to swap anyway.');
-        return false;
-      }
+      target = open[0];   // always the lowest-projected starter, even if he outprojects the player coming in
     }
     ctx.prFly = { pid: pid, rect: el.getBoundingClientRect() };
     return prPlace(target.i, pid);
