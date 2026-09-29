@@ -8773,11 +8773,11 @@
     if(!L) return;
     const wrap = zoneView.querySelector('.zn-tiles'), alt = zoneView.querySelector('.zn-alt'), el = L.tile;
     const wr = wrap.getBoundingClientRect(), ar = alt.getBoundingClientRect(), zr = zoneView.getBoundingClientRect();
-    const w = Math.min(wr.width, 1040);
-    el.style.left = (wr.left - zr.left + (wr.width - w) / 2) + 'px';
-    el.style.top = (ar.top - zr.top + 16) + 'px';
-    el.style.width = w + 'px';
-    el.style.maxHeight = (ar.height - 32) + 'px';
+    // the whole grid column (everything left of the live feed), edge to edge, nearly full height
+    el.style.left = (wr.left - zr.left) + 'px';
+    el.style.top = (ar.top - zr.top + 10) + 'px';
+    el.style.width = wr.width + 'px';
+    el.style.maxHeight = (ar.height - 20) + 'px';
   }
   function zoneFocus(id){
     const z = ctx.zone, wrap = zoneView.querySelector('.zn-tiles');
