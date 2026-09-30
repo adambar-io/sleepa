@@ -2681,6 +2681,11 @@
   .cd-info::after{ content: ''; position: absolute; inset: -12px; }   /* 44px touch target */
   .cd-info svg{ width: 15px; height: 15px; }
   .cd-info:hover, .cd-info[aria-expanded="true"]{ color: var(--text); }
+  .cd-music.on{ color: var(--accent); }
+  .cd-music.on svg{ animation: cdBeat 1.6s ease-in-out infinite; }
+  @keyframes cdBeat{ 0%, 100%{ transform: scale(1); } 50%{ transform: scale(1.12); } }
+  .cd-music:disabled{ opacity: .4; }
+  @media (prefers-reduced-motion: reduce){ .cd-music.on svg{ animation: none; } }
   .cd-legend{ position: absolute; z-index: 30; top: 26px; left: 50%; transform: translateX(-50%); width: min(100%, 380px); padding: 14px 16px 12px; border-radius: 16px;
     background: var(--surface); box-shadow: var(--shadow-lg), inset 0 0 0 1px var(--hair); text-align: left; animation: fadeIn .18s var(--ease); }
   .cd-legend[hidden]{ display: none; }
@@ -6633,6 +6638,10 @@
 
   // ============ Power Rank view (shown as "Sleepa Huddle"): set the lineup one position at a time, then the flex ============
   const HUDDLE_NAME = 'Sleepa Huddle';
+  // card music state (the player itself is with the deck code)
+  const CD_MUSIC_URL = 'audio/cards-theme.mp3', CD_MUSIC_VOL = 0.55;
+  const cdMusic = { el: null, on: false, fade: null, failed: false, blocked: false };
+  try{ cdMusic.on = localStorage.getItem('rv-cards-music') === 'on'; }catch(e){}
   const HUDDLE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="7" r="2.6"/><circle cx="5.5" cy="10" r="2.2"/><circle cx="18.5" cy="10" r="2.2"/><path d="M7.5 20a4.5 4.5 0 0 1 9 0M2.5 18.5a3.3 3.3 0 0 1 5-2.8M21.5 18.5a3.3 3.3 0 0 0-5-2.8"/></svg>';
   // Same plan as the list view (ctx.draftStarters, saved per league and week); only the way you edit it differs.
   // Tabs come from the league's own slots, so a league without a TE slot has no TE tab, and an IDP league gets DL / LB /
@@ -6663,7 +6672,7 @@
   function applyLuMode(){
     const pr = ctx.luMode === 'pr';
     document.documentElement.classList.toggle('lu-pr', pr);
-    if(!pr) renderHuddleCard();   // back on the Lineup page: the card shows what you just did (saved, draft, discarded)
+    if(!pr){ renderHuddleCard(); cdMusicSync(); }   // back on the Lineup page: the card shows what you just did (saved, draft, discarded); music stops
     document.querySelectorAll('[data-lu-mode]').forEach(function(b){ b.setAttribute('aria-pressed', String(b.getAttribute('data-lu-mode') === ctx.luMode)); });
     const view = document.getElementById('pr-view'), note = document.getElementById('opt-note');
     view.hidden = !pr;
@@ -7011,6 +7020,7 @@
     view.querySelector('#pr-chg').innerHTML = nChg ? 'Saved lineup: ' + nChg + ' change' + (nChg > 1 ? 's' : '') + ' to make in Sleeper · <button type="button" data-pr-compare>See them</button>' : '';
     prPlayFly();
     prPlayLanded();
+    cdMusicSync();
   }
   // soft fades on the bar's edges while there's more to scroll that way
   function prTabsFade(el){
@@ -7404,13 +7414,54 @@
     ctx.prCardIdx = Math.max(0, Math.min(n - 1, ctx.prCardIdx || 0));
     const deal = ctx.prCardDeal; ctx.prCardDeal = false;
     return '<div class="cd-deckw">' +
-      '<div class="cd-top"><span class="cd-top-l">' + escapeHTML(cdSeries()) + '<button type="button" class="cd-info" data-cd-legend aria-expanded="false" aria-label="What the card designs mean" title="What the card designs mean">' + PR_ICON.info + '</button></span><span data-cd-count>' + (ctx.prCardIdx + 1) + ' / ' + n + '</span></div>' +
+      '<div class="cd-top"><span class="cd-top-l">' + escapeHTML(cdSeries()) + '<button type="button" class="cd-info" data-cd-legend aria-expanded="false" aria-label="What the card designs mean" title="What the card designs mean">' + PR_ICON.info + '</button>' + cdMusicBtnHTML() + '</span><span data-cd-count>' + (ctx.prCardIdx + 1) + ' / ' + n + '</span></div>' +
       cdLegendHTML() +
       '<div class="cd-deck' + (deal ? ' deal' : '') + '" data-cd-deck>' + list.map(function(s, k){ return cdCardHTML(s, tiers, numOf[s.i], k); }).join('') + cdSummaryHTML(list, tiers, list.length) + '</div>' +
       '<div class="cd-strip" role="tablist" aria-label="Cards">' + list.map(function(s, k){ return '<button type="button" data-cd-go="' + k + '" style="--pc:' + prTabColor(s.tab) + '">' + escapeHTML(s.name.replace('FLEX', 'FX')) + '</button>'; }).join('') +
         '<button type="button" data-cd-go="' + list.length + '" aria-label="Summary">∑</button></div>' +
       '<div class="cd-act"><button type="button" data-cd-flip>↻ Flip</button><button type="button" data-cd-edit>Edit slot</button></div></div>';
   }
+  // ---- card music: one looping track while you're on the Cards screen (off by default; the speaker turns it on) ----
+  // Plays only while the Huddle is open on Review → Cards, the page is on screen and the speaker is on (remembered on
+  // this device). Loaded the first time it's turned on. Fades in / out where the browser allows volume changes (not iOS:
+  // there it just plays / pauses). Browsers only start sound from a tap; if one is refused, the next tap retries.
+  function cdMusicBtnHTML(){
+    return '<button type="button" class="cd-info cd-music' + (cdMusic.on ? ' on' : '') + '" data-cd-music aria-pressed="' + cdMusic.on + '" aria-label="' + (cdMusic.on ? 'Turn music off' : 'Turn music on') + '" title="' + (cdMusic.failed ? 'Music unavailable' : cdMusic.on ? 'Music on' : 'Music off') + '"' + (cdMusic.failed ? ' disabled' : '') + '>' +
+      (cdMusic.on ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg>' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>') + '</button>';
+  }
+  function cdMusicWanted(){ return cdMusic.on && !cdMusic.failed && ctx.luMode === 'pr' && ctx.prTab === 'REVIEW' && ctx.prRvMode === 'cards' && document.visibilityState === 'visible'; }
+  function cdMusicFade(to, done){
+    const a = cdMusic.el;
+    clearInterval(cdMusic.fade);
+    if(reduceMotion.matches){ a.volume = to; if(done) done(); return; }
+    cdMusic.fade = setInterval(function(){
+      const v = a.volume + (to > a.volume ? 0.05 : -0.05);
+      if((to > a.volume && v >= to) || (to <= a.volume && v <= to)){ a.volume = to; clearInterval(cdMusic.fade); if(done) done(); return; }
+      a.volume = Math.max(0, Math.min(1, v));
+    }, 40);
+  }
+  function cdMusicSync(){
+    const want = cdMusicWanted(), a = cdMusic.el;
+    if(!want){ if(a && !a.paused) cdMusicFade(0, function(){ a.pause(); }); return; }
+    if(!a){
+      const el = cdMusic.el = new Audio(CD_MUSIC_URL);
+      el.loop = true; el.preload = 'auto'; el.volume = 0;
+      el.addEventListener('error', function(){ cdMusic.failed = true; cdMusicBtns(); });
+    }
+    const el = cdMusic.el;
+    if(!el.paused && !cdMusic.blocked){ cdMusicFade(CD_MUSIC_VOL); return; }
+    const pr = el.play();
+    if(pr && pr.then) pr.then(function(){ cdMusic.blocked = false; cdMusicFade(CD_MUSIC_VOL); }).catch(function(){ cdMusic.blocked = true; });   // refused: the next tap retries
+    else cdMusicFade(CD_MUSIC_VOL);
+  }
+  function cdMusicBtns(){ document.querySelectorAll('#pr-view [data-cd-music]').forEach(function(b){ b.outerHTML = cdMusicBtnHTML(); }); }
+  function cdMusicToggle(){
+    cdMusic.on = !cdMusic.on;
+    try{ localStorage.setItem('rv-cards-music', cdMusic.on ? 'on' : 'off'); }catch(e){}
+    cdMusicBtns(); cdMusicSync();
+  }
+  document.addEventListener('visibilitychange', cdMusicSync);
+  document.addEventListener('pointerdown', function(){ if(cdMusic.blocked && cdMusicWanted()) cdMusicSync(); }, true);
   // The (i) next to "Sleepa Series": what each design and mark on a card means.
   function cdLegendHTML(){
     const tier = function(t, name, what){ return '<div class="cdl-row"><span class="cdl-sw" style="--stops:var(--foil-' + t + ')"></span><span class="cdl-m">' + CD_MARK[t] + '</span><span><b>' + name + '</b> · ' + what + '</span></div>'; };
@@ -7741,6 +7792,7 @@
     if(cgo){ cdGo(Number(cgo.getAttribute('data-cd-go'))); return; }
     if(e.target.closest('[data-cd-flip]')){ cdFlip(); return; }
     if(e.target.closest('[data-cd-rewind]')){ cdRewind(); return; }
+    if(e.target.closest('[data-cd-music]')){ cdMusicToggle(); return; }
     if(e.target.closest('[data-cd-legend]')){ const lg = prView.querySelector('.cd-legend'); cdLegend(lg && lg.hidden); return; }
     if(e.target.closest('[data-cd-legend-x]')){ cdLegend(false); return; }
     if(e.target.closest('.cd-legend')) return;
