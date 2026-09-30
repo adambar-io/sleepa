@@ -618,6 +618,8 @@
   .kpi-mid{ font-size: 22px; font-weight: 600; letter-spacing: -0.02em; line-height: 1; margin-top: 8px; }
   .kpi-mid.up{ color: var(--accent); } .kpi-mid.down{ color: var(--danger); } .kpi-mid.flat{ color: var(--text-3); }
   .kpi-cap{ font-size: 12px; color: var(--text-2); margin-top: 6px; }
+  .kpi-fd{ margin-top: 4px; font-size: 11.5px; color: var(--text-3); cursor: help; }
+  .kpi-fd[hidden]{ display: none; }
   .bye-alert{ display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
   .bye-alert .bye-text{ flex: 1; min-width: 200px; }
   .bye-fix{ background: var(--danger); color: #fff; padding: 6px 14px; font-size: 12.5px; min-height: 32px; }
@@ -2640,7 +2642,7 @@
     <div id="lineup-top">
       <div id="mu-slot"></div>
       <div class="kpis">
-        <div class="kpi kpi-hero"><div class="eyebrow">Projected points</div><div class="kpi-big num" id="kpi-proj">—</div><div class="kpi-cap">Your planned lineup</div></div>
+        <div class="kpi kpi-hero"><div class="eyebrow">Projected points</div><div class="kpi-big num" id="kpi-proj">—</div><div class="kpi-cap">Your planned lineup</div><div class="kpi-fd" id="kpi-fd" hidden title="Sleeper projects about twice as many first downs as players actually get. This league scores first downs, so Sleepa uses each player’s real first-down rate instead. Projections here are lower than in the Sleeper app; actual points are unchanged.">First downs adjusted · differs from Sleeper <span aria-hidden="true">ⓘ</span></div></div>
         <div class="kpi"><div class="eyebrow">vs Sleeper</div><div class="kpi-mid num flat" id="kpi-delta">±0.0</div><div class="kpi-cap" id="kpi-delta-cap">No changes yet</div></div>
         <div class="kpi"><div class="eyebrow">Playing</div><div class="kpi-mid num" id="kpi-playing">—</div><div class="kpi-cap" id="kpi-playing-cap"></div></div>
         <div class="kpi"><div class="eyebrow">Record</div><div class="kpi-mid num" id="kpi-record">—</div><div class="kpi-cap" id="kpi-record-cap"></div></div>
@@ -3343,6 +3345,61 @@
   }
   function fmtPts(v){ return (v === null || v === undefined || isNaN(v)) ? '—' : v.toFixed(2); }
 
+  // ---- first-down projections ----
+  // Sleeper projects about 2.3× too many first downs (2026 wk 3: 1.13 per completion vs 0.46 real, 1.34 per catch vs
+  // 0.57, 0.43 per carry vs 0.19). In a league that scores first downs that inflates every offensive projection (QBs
+  // ~14 pts). So there, projected first downs = projected completions / carries / catches × a realistic rate: the
+  // player's own season rate, blended toward his position's average until he has the volume (FD_PRIOR = how many
+  // attempts the average counts as). Only projections change; actual points never go through this.
+  const FD_STATS = [['pass_fd', 'pass_cmp'], ['rush_fd', 'rush_att'], ['rec_fd', 'rec']];
+  const FD_PRIOR = { pass_fd: 60, rush_fd: 40, rec_fd: 15 };
+  const FD_DEFAULT = { pass_fd: 0.46, rush_fd: 0.22, rec_fd: 0.55 };   // league-wide, used before weekly.json loads
+  let fdMemo = null;
+  function scoresFirstDowns(sc){ return !!(sc && (sc.pass_fd || sc.rush_fd || sc.rec_fd)); }
+  function fdRates(){
+    const key = ctx.weekly ? ctx.weekly.generated || 'w' : null;
+    if(fdMemo && fdMemo.key === key) return fdMemo;
+    const me = {}, pos = {};
+    if(ctx.weekly){
+      const src = ctx.weekly.players;
+      for(const pid in src){
+        const g = ctx.players[pid] ? posGroup(pid) : '?', a = me[pid] = {}, t = pos[g] || (pos[g] = {});
+        for(const wk in src[pid]){
+          const st = src[pid][wk].s || {};
+          FD_STATS.forEach(function(x){
+            const b = st[x[1]] || 0, f = st[x[0]] || 0;
+            if(!b) return;
+            a[x[1]] = (a[x[1]] || 0) + b; a[x[0]] = (a[x[0]] || 0) + f;
+            t[x[1]] = (t[x[1]] || 0) + b; t[x[0]] = (t[x[0]] || 0) + f;
+          });
+        }
+      }
+    }
+    return (fdMemo = { key: key, me: me, pos: pos });
+  }
+  function fdRate(pid, fd, base){
+    const R = fdRates(), g = ctx.players[pid] ? posGroup(pid) : '?', t = R.pos[g] || {}, a = R.me[pid] || {};
+    const avg = t[base] >= 50 ? t[fd] / t[base] : FD_DEFAULT[fd], k = FD_PRIOR[fd];
+    return ((a[fd] || 0) + avg * k) / ((a[base] || 0) + k);
+  }
+  function fdFix(raw, pid, sc){
+    if(!raw || !scoresFirstDowns(sc)) return raw;
+    let out = null;
+    FD_STATS.forEach(function(x){
+      if(!sc[x[0]] || typeof raw[x[0]] !== 'number') return;
+      out = out || Object.assign({}, raw);
+      out[x[0]] = (raw[x[1]] || 0) * fdRate(pid, x[0], x[1]);
+    });
+    return out || raw;
+  }
+  // Sleeper projection (raw stats) → points in this scoring, first downs corrected
+  function projPoints(raw, pid, sc){ return calcPoints(fdFix(raw, pid, sc), sc); }
+  function scoreProjections(){
+    const sc = (ctx.league && ctx.league.scoring_settings) || {}, raw = ctx.projRaw || {};
+    ctx.projections = {};
+    for(const pid in raw){ ctx.projections[pid] = projPoints(raw[pid], pid, sc); }
+  }
+
   // ---- stat aggregation (season totals for the main table, full set for the focus panel) ----
   // Keys that aren't stats: Sleeper's own generic fantasy points (we score with the league's settings instead),
   // ranks, ADP, and points-allowed-by-position splits.
@@ -3465,7 +3522,7 @@
   function pastProjPts(pid, week){
     const d = ctx.pastProj[pid], r = d && d[week];
     if(!r) return null;
-    const v = calcPoints(r, ctx.league.scoring_settings || {});
+    const v = projPoints(r, pid, ctx.league.scoring_settings || {});
     return typeof v === 'number' ? v : null;
   }
   function gameEntry(week, g){
@@ -4352,8 +4409,8 @@
       const scoring = league.scoring_settings || {};
       const projRaw = await getWeekProjections(ctx.season, week);
       ctx.projFailed = !Object.keys(projRaw).length; // shown on the Updated line so a 0.0 total isn't mistaken for real
-      ctx.projections = {};
-      for(const pid in projRaw){ ctx.projections[pid] = calcPoints(projRaw[pid], scoring); }
+      ctx.projRaw = projRaw; ctx.league = league;
+      scoreProjections();
 
       const rosterIds = myRoster.players || [];
       ctx.history = {};
@@ -4408,6 +4465,7 @@
         if(loadId !== ctx.loadId || !res || !applyWeekly(res)) return;
         await fillGapWeeks();
         if(loadId !== ctx.loadId) return;
+        if(scoresFirstDowns(ctx.league.scoring_settings)){ scoreProjections(); rosMemo = {}; }
         rerenderEverything();
       });
     }catch(err){
@@ -4545,9 +4603,8 @@
     if(Object.keys(projRaw).length) ctx.projFailed = false;
     else if(!Object.keys(ctx.projections || {}).length) ctx.projFailed = true;
     if(Object.keys(projRaw).length || weekRolled){
-      const scoring = bundle.league.scoring_settings || {};
-      ctx.projections = {};
-      for(const pid in projRaw){ ctx.projections[pid] = calcPoints(projRaw[pid], scoring); }
+      ctx.projRaw = projRaw;
+      scoreProjections();
     }
     setTeamHeader(bundle.users);
     // the panel may be showing someone who's no longer yours, or a slot that no longer exists
@@ -5918,6 +5975,7 @@
 
     const total = sumProj(ctx.draftStarters), diff = total - sumProj(ctx.originalStarters);
     if(ctx.deferEntrance) els.kpiProj.textContent = '0.00'; else countTo(els.kpiProj, total);
+    document.getElementById('kpi-fd').hidden = !scoresFirstDowns(ctx.league && ctx.league.scoring_settings);
     setDiff(els.kpiDelta, diff);
     els.kpiDelta.className = 'kpi-mid num ' + els.kpiDelta.className.replace('lc-diff', '').trim();
     const changed = ctx.draftStarters.filter(function(pid, i){ return pid !== ctx.originalStarters[i]; }).length;
@@ -7759,7 +7817,7 @@
     if(!ctx.ros || !ctx.ros.players) return null;
     if(pid in rosMemo) return rosMemo[pid];
     const r = ctx.ros.players[pid];
-    return (rosMemo[pid] = r ? { pts: calcPoints(r.s, ctx.league.scoring_settings || {}) || 0, weeks: r.w } : null);
+    return (rosMemo[pid] = r ? { pts: projPoints(r.s, pid, ctx.league.scoring_settings || {}) || 0, weeks: r.w } : null);
   }
   function recentTrend(pid){
     const h = hist(pid);
@@ -7975,7 +8033,7 @@
     (hist(pid) || []).forEach(function(g){
       const pr = W[String(g.week)] && W[String(g.week)][pid];
       if(!pr) return;
-      const p = calcPoints(pr, sc);
+      const p = projPoints(pr, pid, sc);
       if(typeof p === 'number') games.push({ w: g.week, act: g.pts, proj: p, d: g.pts - p, tkl: (g.raw && g.raw.idp_tkl) || 0 });
     });
     if(games.length < 2) return (memo[pid] = null);
@@ -9928,7 +9986,7 @@
   function zProj(L, meta, pid){
     if(!ctx.zone.projRaw || ctx.zone.projWeek !== ctx.zone.week) return null;
     L.pp = L.pp || {};
-    if(!(pid in L.pp)){ const r = ctx.zone.projRaw[pid]; L.pp[pid] = r ? calcPoints(r, meta.league.scoring_settings || {}) : null; }
+    if(!(pid in L.pp)){ const r = ctx.zone.projRaw[pid]; L.pp[pid] = r ? projPoints(r, pid, meta.league.scoring_settings || {}) : null; }
     return L.pp[pid];
   }
   // One starter: actual (Sleeper, league-scored), projection, game state, and projected final (the same rule as the

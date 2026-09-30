@@ -140,6 +140,17 @@
     check('two identical slots: nobody moves for nothing', r4[0] === 'Z' && r4[1] === 'X', JSON.stringify(r4));
   }
 
+  section('Projections: first-down correction (leagues that score first downs)');
+  const fdsrc = ['const FD_STATS', 'const FD_PRIOR', 'const FD_DEFAULT', 'function scoresFirstDowns(', 'function fdRates(', 'function fdRate(', 'function fdFix('].map(extract).join('\n');
+  const fdCtx = { players: { Q: {}, W: {} }, weekly: { generated: 't', players: { Q: { 1: { s: { pass_cmp: 60, pass_fd: 30 } } } } } };
+  const fd = new Function('ctx', 'posGroup', 'let fdMemo = null;\n' + fdsrc + '; return { fdFix, scoresFirstDowns };')(fdCtx, function(pid){ return pid === 'Q' ? 'QB' : 'WR'; });
+  const qRaw = { pass_cmp: 20, pass_fd: 23, pass_yd: 250 };
+  check('no first-down scoring: projection untouched', fd.fdFix(qRaw, 'Q', { pass_yd: 0.04, pass_td: 4 }) === qRaw);
+  const qFix = fd.fdFix(qRaw, 'Q', { pass_fd: 1, pass_yd: 0.05 });
+  check('QB: 20 completions × his real rate (0.50) = 10 first downs, not 23; other stats kept', Math.abs(qFix.pass_fd - 10) < 1e-9 && qFix.pass_yd === 250 && qRaw.pass_fd === 23, JSON.stringify(qFix));
+  const wFix = fd.fdFix({ rec: 6, rec_fd: 8 }, 'W', { rec_fd: 1 });
+  check('no history yet: league-average rate (6 catches × 0.55 = 3.3)', Math.abs(wFix.rec_fd - 3.3) < 1e-9, JSON.stringify(wFix));
+
   section('Actuals: games played and live game clock');
   const asrc = ['const NON_STAT_KEY', 'const GAME_LENGTH', 'function playedWeek(', 'function remainingFrac('].map(extract).join('\n');
   const a = new Function(asrc + '; return { playedWeek, remainingFrac };')();
