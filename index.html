@@ -923,7 +923,7 @@
   @keyframes swapIn{ 0%{ opacity: 0; transform: translateX(-16px); } 100%{ opacity: 1; transform: none; } }
   .slot-row.just-swapped{ animation: swapIn .55s var(--spring); }
 
-  /* ---- Lineup view switch: Quick Swap (list) / Power Rank (position-by-position card placement) ---- */
+  /* ---- Lineup bar: week switch (Sleepa Huddle has its own card above) ---- */
   .lu-bar{ display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 0 2px 16px; }
   .wk-seg{ display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--hair); }
   .wk-seg button{ background: none; color: var(--text-2); padding: 7px 12px; min-height: 34px; font-size: 13px; font-weight: 600; border-radius: 999px; font-variant-numeric: tabular-nums; }
@@ -932,12 +932,34 @@
   .wk-seg button:disabled{ opacity: .4; }
   .wk-preview{ color: var(--accent); font-weight: 700; }
   html.wk-loading :is(#lineup-top, #pr-view, #roster-view .starters, #roster-view .bench-section){ opacity: .45; pointer-events: none; transition: opacity .2s var(--ease); }
-  .lu-mode{ display: inline-flex; }
-  .lu-mode .lu-enter{ background: var(--accent-soft) !important; color: var(--accent) !important; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent); }
-  .lu-mode .lu-enter:active{ transform: scale(.96); }
-  .lu-mode button{ display: inline-flex; align-items: center; gap: 6px; background: none; color: var(--text-2); padding: 7px 14px; min-height: 34px; font-size: 13px; font-weight: 600; border-radius: 999px; transition: background .2s var(--ease), color .2s var(--ease); }
-  .lu-mode button svg{ width: 15px; height: 15px; }
-  .lu-mode button[aria-pressed="true"]{ background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.14); }
+  /* Sleepa Huddle card (Lineup page, under the matchup tile) */
+  .hd-card{ display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px; width: 100%; margin: 0 0 12px; padding: 14px 16px;
+    text-align: left; font: inherit; color: var(--text); cursor: pointer; border-radius: var(--radius-lg); -webkit-tap-highlight-color: transparent;
+    background: linear-gradient(120deg, color-mix(in srgb, var(--accent) 16%, var(--surface)) 0%, var(--surface) 70%); box-shadow: var(--shadow), inset 0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent);
+    transition: transform .3s var(--spring), box-shadow .2s; }
+  .hd-card:hover{ box-shadow: var(--shadow), inset 0 0 0 1.5px color-mix(in srgb, var(--accent) 55%, transparent); }
+  .hd-card:active{ transform: scale(.985); }
+  .hd-ico{ display: grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); }
+  .hd-ico svg{ width: 26px; height: 26px; }
+  .hd-main{ display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .hd-top{ display: flex; align-items: baseline; gap: 8px; }
+  .hd-name{ font-size: 17px; font-weight: 750; letter-spacing: -0.01em; }
+  .hd-wk{ font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
+  .hd-status{ font-size: 12.5px; color: var(--text-2); }
+  .hd-status .ok{ color: var(--accent); font-weight: 650; } .hd-status .warn{ color: var(--warn); font-weight: 650; }
+  .hd-chips{ display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 2px; }
+  .hd-pos{ display: inline-flex; align-items: center; gap: 4px; }
+  .hd-pos b{ font-size: 10px; font-weight: 800; letter-spacing: .04em; color: var(--c); }
+  .hd-pos i{ display: inline-flex; gap: 2px; }
+  .hd-pos em{ width: 7px; height: 7px; border-radius: 50%; }
+  .hd-pos em.set{ background: var(--c); } .hd-pos em.empty{ box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--c) 60%, transparent); } .hd-pos em.bad{ background: var(--danger); }
+  .hd-go{ display: inline-flex; align-items: center; gap: 4px; padding: 10px 16px; border-radius: 999px; background: var(--accent); color: var(--bg); font-size: 14px; font-weight: 700; white-space: nowrap; }
+  @media (max-width: 480px){
+    .hd-card{ grid-template-columns: auto minmax(0, 1fr); row-gap: 12px; }
+    .hd-go{ grid-column: 1 / -1; justify-content: center; min-height: 44px; }
+  }
+  .nav-huddle kbd{ margin-left: auto; font: 600 10.5px/1 inherit; padding: 3px 6px; border-radius: 5px; background: var(--surface-2); color: var(--text-3); }
+  .nav-huddle svg{ color: var(--accent); }
   html.lu-pr #roster-view .starters > :not(.opt-note), html.lu-pr #roster-view .bench-section{ display: none; }
 
   /* ---- Power Rank ---- */
@@ -2607,6 +2629,7 @@
     <nav class="nav" id="side-nav" aria-label="Sections">
       <span class="nav-thumb"></span>
       <button class="nav-btn" data-view="roster"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><span>Lineup</span><span class="nav-badge" data-bye-badge hidden></span></button>
+      <button class="nav-btn nav-huddle" data-huddle title="Sleepa Huddle (H)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="7" r="2.6"/><circle cx="5.5" cy="10" r="2.2"/><circle cx="18.5" cy="10" r="2.2"/><path d="M7.5 20a4.5 4.5 0 0 1 9 0M2.5 18.5a3.3 3.3 0 0 1 5-2.8M21.5 18.5a3.3 3.3 0 0 0-5-2.8"/></svg><span>Huddle</span><kbd>H</kbd></button>
       <button class="nav-btn" data-view="fa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg><span>Players</span></button>
       <button class="nav-btn" data-view="league"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0V4zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8.5 20h7M10 17h4"/></svg><span>League</span></button>
       <button class="nav-btn" data-view="compare"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v16M7 4l-3 3M7 4l3 3M17 20V4M17 20l-3-3M17 20l3-3"/></svg><span>Compare</span></button>
@@ -2636,6 +2659,7 @@
 
     <div id="lineup-top">
       <div id="mu-slot"></div>
+      <div id="huddle-slot"></div>
       <div class="bye-alert gone" id="bye-alert" role="alert"></div>
     </div>
 
@@ -2644,9 +2668,6 @@
         <section class="view" id="roster-view">
           <div class="lu-bar">
           <div class="wk-seg" role="group" aria-label="Week"><button type="button" data-wk-off="0" aria-pressed="true">This week</button><button type="button" data-wk-off="1" aria-pressed="false">Next week</button></div>
-          <div class="lu-mode">
-            <button type="button" class="lu-enter" data-lu-mode="pr" title="Set your lineup position by position, full screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="7" height="10" rx="1.5"/><rect x="14" y="4" width="7" height="10" rx="1.5"/><path d="M6 18h12"/></svg>Power Rank</button>
-          </div>
           </div>
           <div id="pr-view" class="pr" hidden></div>
           <div id="zone-view" class="zn" hidden></div>
@@ -2927,7 +2948,7 @@
     cmpReset: document.getElementById('cmp-reset'),
     cmpDone: document.getElementById('cmp-done'),
     focusSectionTitle: document.getElementById('focus-section-title'),
-    navBtns: document.querySelectorAll('.nav-btn, .tab-btn'),
+    navBtns: document.querySelectorAll('.nav-btn[data-view], .tab-btn[data-view]'),
     sideNav: document.getElementById('side-nav'),
     tabNav: document.getElementById('tab-nav'),
     compareView: document.getElementById('compare-view'),
@@ -4441,6 +4462,7 @@
         ctx.deferEntrance = false;
         staggerIn(els.startersList); staggerIn(els.benchList);
       };
+      if(/^#huddle$/i.test(location.hash) && !ctx.huddleLinked){ ctx.huddleLinked = true; openHuddle(); }   // a #huddle link / bookmark opens straight into it
 
       nflPromise.then(function(res){
         if(loadId !== ctx.loadId || !res || !applyNfl(res)) return; // another league loaded meanwhile, no data, or already newer
@@ -5225,6 +5247,7 @@
     '</button>';
   }
   function renderMatchupCard(){
+    renderHuddleCard();
     const slot = document.getElementById('mu-slot');
     if(slot){ slot.innerHTML = matchupCardHTML(); wpAnimate(slot); }
   }
@@ -6445,7 +6468,9 @@
     if(luMode() === 'pr') renderPowerRank();
   }
 
-  // ============ Power Rank view: set the lineup one position at a time, then the flex ============
+  // ============ Power Rank view (shown as "Sleepa Huddle"): set the lineup one position at a time, then the flex ============
+  const HUDDLE_NAME = 'Sleepa Huddle';
+  const HUDDLE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="7" r="2.6"/><circle cx="5.5" cy="10" r="2.2"/><circle cx="18.5" cy="10" r="2.2"/><path d="M7.5 20a4.5 4.5 0 0 1 9 0M2.5 18.5a3.3 3.3 0 0 1 5-2.8M21.5 18.5a3.3 3.3 0 0 0-5-2.8"/></svg>';
   // Same plan as the list view (ctx.draftStarters, saved per league and week); only the way you edit it differs.
   // Tabs come from the league's own slots, so a league without a TE slot has no TE tab, and an IDP league gets DL / LB /
   // DB / IDP steps and no team DEF.
@@ -6475,6 +6500,7 @@
   function applyLuMode(){
     const pr = ctx.luMode === 'pr';
     document.documentElement.classList.toggle('lu-pr', pr);
+    if(!pr) renderHuddleCard();   // back on the Lineup page: the card shows what you just did (saved, draft, discarded)
     document.querySelectorAll('[data-lu-mode]').forEach(function(b){ b.setAttribute('aria-pressed', String(b.getAttribute('data-lu-mode') === ctx.luMode)); });
     const view = document.getElementById('pr-view'), note = document.getElementById('opt-note');
     view.hidden = !pr;
@@ -6506,9 +6532,24 @@
     if(b && !b.disabled) switchWeek(Number(b.getAttribute('data-wk-off')));
   });
   document.body.appendChild(document.getElementById('pr-view'));   // out of .pane-main (a CSS container would trap position: fixed)
-  document.querySelector('.lu-mode').addEventListener('click', function(e){
-    const b = e.target.closest('[data-lu-mode]');
-    if(b && b.getAttribute('data-lu-mode') !== ctx.luMode) setLuMode(b.getAttribute('data-lu-mode'));
+  // Into the Huddle from anywhere: the Lineup card, the sidebar item, H on a keyboard, or a #huddle link
+  function openHuddle(){
+    if(!ctx.myRoster) return;
+    if(ctx.view !== 'roster') setView('roster');
+    if(ctx.luMode !== 'pr') setLuMode('pr');
+  }
+  document.addEventListener('click', function(e){
+    const b = e.target.closest && e.target.closest('[data-lu-mode], [data-huddle]');
+    if(!b) return;
+    if(b.hasAttribute('data-huddle')){ openHuddle(); return; }
+    if(b.getAttribute('data-lu-mode') !== ctx.luMode) setLuMode(b.getAttribute('data-lu-mode'));
+  });
+  window.addEventListener('hashchange', function(){ if(/^#huddle$/i.test(location.hash)) openHuddle(); });
+  document.addEventListener('keydown', function(e){
+    if((e.key !== 'h' && e.key !== 'H') || e.metaKey || e.ctrlKey || e.altKey || ctx.luMode === 'pr' || !ctx.myRoster) return;
+    if(e.target && (/INPUT|SELECT|TEXTAREA/.test(e.target.tagName) || e.target.isContentEditable)) return;
+    if(maxOpen() || document.querySelector('.overlay.open, .pr-dlg-back') || !document.getElementById('zone-view').hidden) return;
+    e.preventDefault(); openHuddle();
   });
   applyLuMode();
 
@@ -6549,8 +6590,37 @@
   //   base = the draft as it was when opened / last saved; dirty = work differs from base.
   function prKey(){ return 'rv-pr:' + ctx.league.league_id + ':' + ctx.week; }
   function prStore(){ try{ return JSON.parse(localStorage.getItem(prKey()) || 'null') || {}; }catch(e){ return {}; } }
-  function prWrite(st){ try{ lsSet(prKey(), JSON.stringify(st)); }catch(e){ console.warn('Could not keep your Power Rank draft', e); } }
+  function prWrite(st){ try{ lsSet(prKey(), JSON.stringify(st)); }catch(e){ console.warn('Could not keep your Huddle draft', e); } }
   function prIsEmpty(pid){ return !pid || pid === '0' || !ctx.players[pid]; }
+  // The Lineup page's way in: this week's progress by position (a dot per slot: set / empty / won't play), where you
+  // are (not started, draft in progress, saved; games under way) and a big "Huddle up". Tapping anywhere enters.
+  function huddleCardHTML(){
+    if(!ctx.myRoster || !ctx.league) return '';
+    const st = prStore(), n = ctx.draftStarters.length;
+    const draft = Array.isArray(st.work) && st.work.length === n ? st.work : null;
+    const lineup = draft || ctx.draftStarters, slots = prSlots();
+    const bad = function(pid){ return !prIsEmpty(pid) && (isOnBye(pid) || (!isLocked(pid) && cantPlay(effectiveStatus(pid)))); };
+    const set = slots.filter(function(s){ return !prIsEmpty(lineup[s.i]); }).length;
+    const locked = slots.filter(function(s){ return !prIsEmpty(lineup[s.i]) && isLocked(lineup[s.i]); }).length;
+    const chips = prTabs().map(function(t){
+      const ts = slots.filter(function(s){ return s.tab === t; });
+      return '<span class="hd-pos" style="--c:' + prTabColor(t) + '"><b>' + escapeHTML(t === 'FLEX' ? 'FLX' : t === 'IDP' ? 'IDP' : t) + '</b><i>' +
+        ts.map(function(s){ const pid = lineup[s.i]; return '<em class="' + (prIsEmpty(pid) ? 'empty' : bad(pid) ? 'bad' : 'set') + '"></em>'; }).join('') + '</i></span>';
+    }).join('');
+    const status = draft ? '<b class="warn">Draft in progress</b> · ' + set + ' of ' + slots.length + ' set'
+      : !st.saved ? 'Build week ' + ctx.week + ' position by position'
+      : set === slots.length ? '<b class="ok">Saved</b> · all ' + slots.length + ' set' : '<b class="ok">Saved</b> · ' + (slots.length - set) + ' empty';
+    return '<button type="button" class="hd-card" data-huddle aria-label="Open ' + HUDDLE_NAME + ': set your week ' + ctx.week + ' lineup position by position">' +
+      '<span class="hd-ico">' + HUDDLE_ICON + '</span>' +
+      '<span class="hd-main"><span class="hd-top"><b class="hd-name">' + HUDDLE_NAME + '</b><span class="hd-wk">Week ' + ctx.week + '</span></span>' +
+        '<span class="hd-status">' + status + (locked ? ' · ' + locked + ' locked' : '') + '</span>' +
+        '<span class="hd-chips">' + chips + '</span></span>' +
+      '<span class="hd-go">Huddle up <span aria-hidden="true">›</span></span></button>';
+  }
+  function renderHuddleCard(){
+    const slot = document.getElementById('huddle-slot');
+    if(slot) slot.innerHTML = huddleCardHTML();
+  }
   function prSlotIdx(){ return new Set(prSlots().map(function(s){ return s.i; })); }
   // this lineup with every unlocked Power Rank slot emptied
   function prCleared(base){
@@ -6590,7 +6660,7 @@
   // Leaving with unsaved changes asks first. then() runs once it's fine to go.
   function prLeave(then){
     if(ctx.luMode !== 'pr' || !ctx.prWork || !prDirty()){ then(); return; }
-    prDialog('Save your lineup?', 'You have unsaved changes in Power Rank.', [
+    prDialog('Save your lineup?', 'You have unsaved changes in ' + HUDDLE_NAME + '.', [
       { k: 'keep', label: 'Keep editing' }, { k: 'discard', label: 'Discard', danger: true }, { k: 'save', label: 'Save', primary: true },
     ]).then(function(k){
       if(k === 'save'){ prSave(); then(); }
@@ -6718,7 +6788,7 @@
       view.innerHTML =
         '<div class="pr-topbar">' +
           '<button type="button" class="pr-exit" data-pr-exit aria-label="Back to the lineup list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg><span>Lineup</span></button>' +
-          '<div class="pr-title"><b>Power Rank</b><span id="pr-sub"></span></div>' +
+          '<div class="pr-title"><b>' + HUDDLE_NAME + '</b><span id="pr-sub"></span></div>' +
           '<div class="pr-actions"><div class="wk-seg" role="group" aria-label="Week"><button type="button" data-wk-off="0" data-short></button><button type="button" data-wk-off="1" data-short></button></div>' +
           '<button type="button" class="pr-undo" data-pr-undo hidden>Undo</button>' +
           '<button type="button" class="pr-clear" data-pr-clear title="Empty every slot and start over" aria-label="Clear lineup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg><span>Clear</span></button>' +
@@ -7840,7 +7910,7 @@
     if(tab && tab.offsetWidth) place(tt, { left: tab.offsetLeft + 'px', width: tab.offsetWidth + 'px' });
   }
   window.addEventListener('resize', moveNavThumbs);
-  els.navBtns.forEach(function(t){ t.addEventListener('click', function(){ setView(t.getAttribute('data-view')); }); });
+  els.navBtns.forEach(function(t){ if(t.hasAttribute('data-view')) t.addEventListener('click', function(){ setView(t.getAttribute('data-view')); }); });
 
 
   // ---- rest-of-season projections (ros.json from the GitHub Action: raw stats summed this week..week 17) ----
