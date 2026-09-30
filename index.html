@@ -674,6 +674,53 @@
     .pane-detail .focus-close{ display: grid; place-items: center; position: sticky; top: 0; z-index: 2; width: 30px; height: 30px; margin: -10px -10px 0 8px; font-size: 20px; }
     .pane-detail .focus-close:hover{ color: var(--text); }
     .pane-detail .hero{ gap: 14px; }
+    .pane-detail .hero > div:nth-child(2){ min-width: 0; }
+    .pane-detail .hero-name{ display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font-size: 19px; line-height: 1.15; }
+    .pane-detail .hero-meta{ font-size: 13px; line-height: 1.35; }
+    .pane-detail .hero-avatar{ width: 48px; height: 48px; }
+    .pane-detail .hero{ gap: 12px; }
+    .pane-detail .hero .vs-btn, .pane-detail .hero .xbtn{ width: 32px; height: 32px; min-height: 0; font-size: 11px; }
+    .pane-detail .hero-stats{ display: flex; flex-direction: column; gap: 16px; margin-top: 10px; }
+    .pane-detail.pn-fa .hero-slot-note, .pane-detail .focus-panel.pn-fa .hero-slot-note{ display: none; }
+    .pn-card{ padding: 14px 16px; border-radius: 16px; background: var(--surface-2); }
+    .pn-h{ display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+    .pn-jump{ min-height: 0; padding: 3px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 11.5px; font-weight: 700; letter-spacing: 0; text-transform: none; }
+    .pn-big{ display: flex; align-items: baseline; gap: 8px; margin-top: 6px; }
+    .pn-big b{ font-size: 34px; font-weight: 750; letter-spacing: -0.03em; line-height: 1; font-variant-numeric: tabular-nums; }
+    .pn-big b.live{ color: var(--accent); }
+    .pn-big span{ font-size: 12.5px; color: var(--text-3); }
+    .pn-chips{ display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .pn-rng{ margin-top: 12px; }
+    .pn-rng-bar{ position: relative; height: 6px; border-radius: 3px; background: var(--surface-3); }
+    .pn-rng-bar em{ position: absolute; top: 0; bottom: 0; border-radius: 3px; background: color-mix(in srgb, var(--accent) 55%, transparent); }
+    .pn-rng-bar i{ position: absolute; top: -4px; width: 3px; height: 14px; margin-left: -1.5px; border-radius: 2px; background: var(--text); }
+    .pn-rng-l{ display: flex; justify-content: space-between; gap: 6px; margin-top: 6px; font-size: 11px; color: var(--text-3); }
+    .pn-rng-l b{ color: var(--text); font-variant-numeric: tabular-nums; }
+    .pn-note{ margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--hair); font-size: 12.5px; color: var(--text-2); }
+    .pn-sec h4{ display: flex; align-items: baseline; justify-content: space-between; margin: 0 0 8px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+    .pn-sec h4 span{ font-weight: 600; letter-spacing: .02em; text-transform: none; }
+    .pn-form{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .pn-form > div{ display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); }
+    .pn-form b{ font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .pn-form b em{ font-style: normal; font-size: 11px; } .pn-form b em.up{ color: var(--accent); } .pn-form b em.down{ color: var(--danger); }
+    .pn-form small{ font-size: 11px; color: var(--text-3); }
+    .pn-form > .pn-spark{ grid-column: 1 / -1; flex-direction: row; padding: 0 2px; background: none; border-radius: 0; }
+    .pn-spark{ display: flex; align-items: flex-end; gap: 3px; height: 34px; padding: 0 2px; }
+    .pn-spark i{ flex: 1 1 0; max-width: 22px; border-radius: 3px 3px 1px 1px; background: color-mix(in srgb, var(--accent) 60%, transparent); }
+    .pn-spark i:last-child{ background: var(--accent); }
+    .pn-rk{ display: grid; grid-template-columns: 104px 58px minmax(0, 1fr); align-items: baseline; gap: 8px; padding: 7px 0; border-top: 1px solid var(--hair); font-size: 13px; }
+    .pn-rk:first-of-type{ border-top: 0; }
+    .pn-rk span{ color: var(--text-2); } .pn-rk b{ font-size: 16px; } .pn-rk small{ font-size: 11.5px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pn-src{ margin-top: 6px; }
+    .pn-src summary{ cursor: pointer; list-style: none; font-size: 12.5px; font-weight: 650; color: var(--accent); }
+    .pn-src summary::-webkit-details-marker{ display: none; }
+    .pn-src[open] summary{ margin-bottom: 8px; }
+    .pn-src .rk-tbl-wrap{ margin: 0; } .pn-src .rk-tbl{ font-size: 12px; } .pn-src .rk-tbl th, .pn-src .rk-tbl td{ padding-left: 2px; padding-right: 2px; } .pn-src .rk-tbl tbody td.cons{ font-size: 13px; } .pn-src .rk-tbl thead th{ letter-spacing: 0; }
+    .pn-stats{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .pn-stats > div{ display: flex; flex-direction: column; gap: 1px; padding: 8px 10px; border-radius: 10px; background: var(--surface-2); min-width: 0; }
+    .pn-stats b{ font-size: 16px; font-variant-numeric: tabular-nums; }
+    .pn-stats small{ font-size: 11px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pn-sec .all-stats{ margin-top: 8px; }
     .pane-detail .hero-avatar{ width: 68px; height: 68px; }
     .pane-detail .hero-name{ font-size: 22px; }
     .pane-detail .hs-block{ padding: 8px 10px; }
@@ -4315,7 +4362,7 @@
   // the row that's showing in the open panel: clicking it again closes the panel
   function paneShowing(row){ return paneMode() && !ctx.paneClosed && !!row && row.classList.contains('sel'); }
   function showFocus(){
-    if(paneMode()){ ctx.paneClosed = false; els.panes.classList.remove('closed'); }
+    if(paneMode()){ ctx.paneClosed = false; els.panes.classList.remove('closed'); paneHeroFinish(); }
     markSelected();
     if(paneMode()){
       els.detailPane.scrollTop = 0;
@@ -8784,6 +8831,7 @@
     syncVsButtons();
     els.heroName.innerHTML = analyzeName(playerId, playerName(player));
     els.heroMeta.textContent = eligLabel(playerId) + (eligLabel(playerId).indexOf('/') !== -1 ? ' (eligible at both)' : '') + ' · ' + (player.team || 'FA') + (player.injury_status && player.injury_status !== 'Healthy' ? ' · ' + player.injury_status : '');
+    if(paneMode()){ paneHeroRender(playerId, loadingHistory); return; }
 
     const pending = loadingHistory ? '…' : null;
     const wa = weekActual(playerId), wg = gameOf(player.team);
@@ -8810,6 +8858,73 @@
         '<button type="button" class="all-stats"' + analyzeAttr(playerId) + '>' + (keys.length > HERO_STAT_LIMIT ? 'All ' + keys.length + ' stats &amp; game log' : 'Game log') + ' →</button></div>';
     }
   }
+
+  // ---- desktop side panel (paneMode): one clear card per question ----
+  // This week (projection or live points, matchup, typical week, the "vs your weakest" line for available players) ·
+  // Form (last game, last 3, season avg + points by week) · Role (snaps, target / tackle share) · Rankings (consensus
+  // this week and rest of season, the sources in one line, full table behind "Sources") · Season stats (the position's
+  // key ones) · then the swap options, with an "N options ↓" jump at the top. The phone sheet keeps its layout.
+  function paneHeroRender(pid, loading){
+    const p = ctx.players[pid], m = matchup(p.team, ctx.week), k0 = kickoff(p.team, ctx.week);
+    const game = m ? (m.bye ? 'BYE week ' + ctx.week : m.text + (k0 ? ' · ' + zKickShort(k0) : '')) : '';
+    els.heroMeta.textContent = eligLabel(pid) + ' · ' + (p.team || 'FA') + (game ? ' · ' + game : '');
+    const pend = loading ? '…' : null, proj = ctx.projections[pid], wa = weekActual(pid), g = gameOf(p.team);
+    // this week
+    const rg = weekRange(pid);
+    let range = '';
+    if(rg && rg.ok && typeof proj === 'number'){
+      const top = Math.max(rg.ceil * 1.15, proj * 1.1, 1), a = rg.floor / top * 100, b = rg.ceil / top * 100, x = Math.min(100, proj / top * 100);
+      range = '<div class="pn-rng" title="' + escapeHTML(rangeBasis(rg)) + '"><div class="pn-rng-bar"><em style="left:' + a.toFixed(1) + '%;width:' + Math.max(1, b - a).toFixed(1) + '%"></em><i style="left:' + x.toFixed(1) + '%"></i></div>' +
+        '<div class="pn-rng-l"><span>Bad week <b>' + rg.floor.toFixed(1) + '</b></span><span>Typical week</span><span>Good week <b>' + rg.ceil.toFixed(1) + '</b></span></div></div>';
+    }
+    const chips = [dvpChipHTML(pid), depthChipHTML(pid)].filter(Boolean).join(' ');
+    const big = wa !== null
+      ? '<div class="pn-big"><b class="live">' + fmtPts(wa) + '</b><span>' + (g && g.state === 'post' ? 'final' : 'live') + ' · proj ' + fmtPts(proj) + '</span></div>'
+      : '<div class="pn-big"><b>' + fmtPts(proj) + '</b><span>projected' + (m && m.bye ? ' · bye' : '') + '</span></div>';
+    const week = '<section class="pn-card pn-week"><div class="pn-h"><span>This week · Wk ' + ctx.week + '</span><button type="button" class="pn-jump" data-pn-jump hidden></button></div>' +
+      big + (chips ? '<div class="pn-chips">' + chips + '</div>' : '') + range + '<div class="pn-note" data-pn-note hidden></div></section>';
+    // form
+    const h = hist(pid) || [], mx = Math.max.apply(null, h.map(function(w){ return w.pts; }).concat([1]));
+    const spark = h.length > 1 ? '<div class="pn-spark" title="Points by week">' + h.map(function(w){ return '<i style="height:' + Math.max(6, w.pts / mx * 100).toFixed(0) + '%" title="Wk ' + w.week + ': ' + fmtPts(w.pts) + '"></i>'; }).join('') + '</div>' : '';
+    const stat = function(v, k){ return '<div><b>' + v + '</b><small>' + k + '</small></div>'; };
+    const form = '<section class="pn-sec"><h4>Form</h4><div class="pn-form">' + stat(pend || fmtPts(lastGamePts(pid)), 'Last game') + stat(pend || fmtPts(last3Avg(pid)), 'Last 3 avg') + stat(pend || fmtPts(seasonAvgPts(pid)), 'Season avg') + spark + '</div></section>';
+    // role
+    const role = [];
+    const tr = snapTrend(pid);
+    if(tr) role.push(stat(pct(tr.last) + (tr.dir === 'up' ? ' <em class="up">▲</em>' : tr.dir === 'down' ? ' <em class="down">▼</em>' : ''), 'Snaps last game'));
+    if(isIdp(pid)){ const k = seasonShare(pid, 'k'); if(typeof k === 'number') role.push(stat(pct(k), 'Tackle share')); }
+    else if(['RB', 'WR', 'TE'].indexOf(p.position) !== -1){ const t = seasonShare(pid, 't'); if(typeof t === 'number') role.push(stat(pct(t), 'Target share')); }
+    const roleHTML = role.length ? '<section class="pn-sec"><h4>Role</h4><div class="pn-form">' + role.join('') + '</div></section>' : '';
+    // rankings
+    const R = ranksOf(pid), c = function(n){ return n ? rkTxt(pid, n) : '—'; };
+    const srcLine = function(x){ return [['FP', x.fp], ['Sleeper', x.sl], ['ESPN', x.es]].filter(function(y){ return y[1]; }).map(function(y){ return y[0] + ' ' + y[1]; }).join(' · '); };
+    const rkRow = function(lbl, x){ return '<div class="pn-rk"><span>' + lbl + '</span><b>' + c(x.cons) + '</b><small>' + escapeHTML(srcLine(x) || 'no sources yet') + '</small></div>'; };
+    const ranks = '<section class="pn-sec"><h4>Rankings <span>consensus at ' + escapeHTML(posGroup(pid)) + '</span></h4>' + rkRow('This week', R.w) + rkRow('Rest of season', R.r) +
+      '<details class="pn-src"><summary>Sources ›</summary>' + rankingsHTML(pid) + '</details></section>';
+    // season stats
+    const raw = aggregatedRaw(pid, 'season') || {};
+    const grouped = statsForPosition(p.position, Object.keys(raw).filter(function(k){ return raw[k] !== 0; }));
+    const keys = grouped.main.slice(0, 6), all = grouped.main.length + grouped.more.length;
+    const stats = keys.length ? '<section class="pn-sec"><h4>Season stats <span>' + h.length + ' game' + (h.length === 1 ? '' : 's') + '</span></h4><div class="pn-stats">' +
+      keys.map(function(k){ return '<div><b>' + fmtStat(raw[k]) + '</b><small>' + escapeHTML(statLabel(k)) + '</small></div>'; }).join('') + '</div>' +
+      '<button type="button" class="all-stats"' + analyzeAttr(pid) + '>' + (all > keys.length ? 'All ' + all + ' stats &amp; game log' : 'Game log') + ' →</button></section>' : '';
+    els.heroStats.innerHTML = injuryMiniHTML(pid) + week + form + roleHTML + ranks + stats;
+  }
+  // After the options are drawn: the jump link ("4 options ↓") and, for an available player, the comparison line up top
+  function paneHeroFinish(){
+    const j = els.heroStats.querySelector('[data-pn-jump]'), note = els.heroStats.querySelector('[data-pn-note]');
+    if(!j) return;
+    const n = els.candidatesList.querySelectorAll('[data-swap-to], [data-fill]').length;
+    j.hidden = !n; j.textContent = n + ' option' + (n === 1 ? '' : 's') + ' ↓';
+    const fa = ctx.focus && ctx.focus.kind === 'fa', txt = els.heroSlotNote.textContent;
+    note.hidden = !(fa && txt); note.textContent = fa ? txt : '';
+    els.focusPanel.classList.toggle('pn-fa', fa);
+  }
+  document.addEventListener('click', function(e){
+    if(!e.target.closest || !e.target.closest('[data-pn-jump]')) return;
+    const t = els.focusSectionTitle, pane = els.detailPane;
+    pane.scrollTo({ top: t.getBoundingClientRect().top - pane.getBoundingClientRect().top + pane.scrollTop - 12, behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+  });
 
   // Season history on demand (roster players are loaded up front; free agents only when opened).
   async function ensureHistory(pid){
