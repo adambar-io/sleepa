@@ -1010,6 +1010,14 @@
   .pr-slot .pr-nm b{ font-size: 20px; letter-spacing: -0.01em; }
   .pr-slot .pr-nm small{ font-size: 13px; margin-top: 2px; }
   .pr-slot .pr-proj{ font-size: 46px; }
+  /* slim cards: team defense (logo, no injury) and kickers: projection and matchup up front, less height */
+  .pr-slot.slim{ min-height: 200px; }
+  .pr-card.def .pr-av{ border-radius: 12px; object-fit: contain; padding: 4px; background: var(--surface-2); box-shadow: none; }
+  .pr-slot .pr-card.def .pr-av{ padding: 8px; }
+  .pr-card.slim .pr-game{ font-size: 13px; }
+  /* IDP: the defender's usage per game */
+  .pr-idp{ font-size: 11.5px; color: var(--text-3); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pr-idp b{ color: var(--text-2); font-weight: 650; }
   .pr-slot .pr-proj small{ font-size: 11px; }
   .pr-slot .pr-l3{ font-size: 18px; }
   .pr-slot .pr-l3 small{ font-size: 10.5px; }
@@ -5833,11 +5841,17 @@
 
   // ============ Power Rank view: set the lineup one position at a time, then the flex ============
   // Same plan as the list view (ctx.draftStarters, saved per league and week); only the way you edit it differs.
-  // Tabs come from the league's own slots, so a league without a TE slot has no TE tab. v1 covers position players;
-  // K / DEF / IDP slots are simply not shown here (the list view still has them), and adding them later is a matter
-  // of listing them in PR_POS / PR_FLEX.
-  const PR_POS = ['QB', 'RB', 'WR', 'TE'];
-  const PR_FLEX = ['FLEX', 'WRRB_FLEX', 'REC_FLEX', 'WRRB', 'WR_TE', 'SUPER_FLEX', 'QB_FLEX'];
+  // Tabs come from the league's own slots, so a league without a TE slot has no TE tab, and an IDP league gets DL / LB /
+  // DB / IDP steps and no team DEF.
+  // Steps come from the league's own starting slots. A plain slot is its own step (QB, RB, … K, DEF, DL, LB, DB);
+  // flex slots group by what can go in them: offensive flexes → FLEX, superflex → SF, defensive flex → IDP.
+  // Order: offense, defense, special teams; anything unusual goes after defense. Counts always come from the league.
+  const PR_FLEX_TAB = { FLEX: 'FLEX', WRRB_FLEX: 'FLEX', REC_FLEX: 'FLEX', WRRB: 'FLEX', WR_TE: 'FLEX', SUPER_FLEX: 'SF', QB_FLEX: 'SF', IDP_FLEX: 'IDP' };
+  const PR_ORDER = ['QB', 'RB', 'WR', 'TE', 'FLEX', 'SF', 'DL', 'LB', 'DB', 'IDP', 'K', 'DEF'];
+  const PR_SKIP = { BN: 1, IR: 1, TAXI: 1 };
+  function prTabOf(label){ return PR_SKIP[label] ? null : (PR_FLEX_TAB[label] || label); }
+  function prIsFlexTab(t){ return t === 'FLEX' || t === 'SF' || t === 'IDP'; }
+  function prTabColor(t){ return t === 'IDP' ? posColor('IDP_FLEX') : t === 'SF' ? posColor('QB') : posColor(t); }
   // Power Rank is a full-screen screen you enter from the Lineup tab and leave with "‹ Lineup" (or Esc). It's not
   // remembered across app opens: the app always starts on the normal Lineup page.
   ctx.luMode = 'list';
@@ -5896,14 +5910,17 @@
     const total = {}, seen = {};
     ctx.rosterPositions.forEach(function(l){ total[l] = (total[l] || 0) + 1; });
     return ctx.rosterPositions.map(function(label, i){
-      const tab = PR_POS.indexOf(label) !== -1 ? label : PR_FLEX.indexOf(label) !== -1 ? 'FLEX' : null;
+      const tab = prTabOf(label);
       seen[label] = (seen[label] || 0) + 1;
       return { i: i, label: label, tab: tab, name: slotShort(label) + (total[label] > 1 ? seen[label] : '') };
     }).filter(function(s){ return s.tab; });
   }
   function prTabs(){
     const slots = prSlots();
-    return PR_POS.concat(['FLEX']).filter(function(t){ return slots.some(function(s){ return s.tab === t; }); });
+    const have = [];
+    slots.forEach(function(s){ if(have.indexOf(s.tab) === -1) have.push(s.tab); });
+    const rank = function(t){ const i = PR_ORDER.indexOf(t); return i === -1 ? PR_ORDER.indexOf('IDP') + 0.5 : i; };
+    return have.sort(function(a, b){ return rank(a) - rank(b); });
   }
   // Players who could go in this tab's slots: on the roster, not parked on IR / taxi.
   function prPool(tab){
@@ -5919,8 +5936,8 @@
 
   // ---- the Power Rank draft (ctx.prWork) ----
   // Power Rank edits a draft; Save makes it the saved lineup (ctx.draftStarters: what Quick Swap, Compare and the
-  // totals show, kept per league and week). A league + week you've never saved here opens with its QB/RB/WR/TE/FLEX
-  // slots empty (locked players stay put); K / DEF / defender slots always mirror the saved lineup. Unsaved work is kept
+  // totals show, kept per league and week). A league + week you've never saved here opens with every starting slot
+  // empty (locked players stay put): offense, K, DEF and defenders alike. Unsaved work is kept
   // on this device (rv-pr:<league>:<week>) so a reload or iOS closing the app doesn't lose it.
   //   base = the draft as it was when opened / last saved; dirty = work differs from base.
   function prKey(){ return 'rv-pr:' + ctx.league.league_id + ':' + ctx.week; }
@@ -6028,7 +6045,7 @@
   // projected unlocked starter there. Position tabs use only that position's own slots (FLEX tab: the flex slots).
   // Never replaces a locked starter; otherwise always swaps, even when he projects lower (tap-then-tap picks a specific slot).
   function prAutoSwap(pid, el){
-    const tab = ctx.prTab, word = tab === 'FLEX' ? 'flex' : tab;
+    const tab = ctx.prTab, word = prIsFlexTab(tab) ? tab.toLowerCase() : tab;
     if(isLocked(pid)){ prNudge(el); prToast(escapeHTML(playerName(ctx.players[pid])) + '’s game has started: he’s locked.'); return false; }
     const ts = prSlots().filter(function(s){ return s.tab === tab && canFill(pid, s.label); });
     if(!ts.length){ prNudge(el); return false; }
@@ -6073,7 +6090,7 @@
     else { ctx.prWork = prSanitize(ctx.prWork); ctx.prBase = prSanitize(ctx.prBase); }
     if(prDrag.st && prDrag.st.active){ ctx.prPending = true; return; }   // a live-score refresh mid-drag waits for the drop
     const tabs = prTabs();
-    if(!tabs.length){ view.innerHTML = '<div class="pr-empty">Your league has no QB / RB / WR / TE slots to set here.</div>'; return; }
+    if(!tabs.length){ view.innerHTML = '<div class="pr-empty">Your league has no starting slots to set here.</div>'; return; }
     if(tabs.indexOf(ctx.prTab) === -1) ctx.prTab = tabs[0];
     const slots = prSlots();
     const total = sumProj(ctx.prWork), diff = total - sumProj(ctx.originalStarters);
@@ -6083,7 +6100,7 @@
       const bad = ts.some(function(s){ const p = ctx.prWork[s.i]; return !prIsEmpty(p) && prSlotProblem(p); });
       const todo = filled < ts.length;
       const pts = sumProj(ts.map(function(s){ return ctx.prWork[s.i]; }));
-      return '<button type="button" class="pr-tab" role="tab" data-pr-tab="' + t + '" aria-selected="' + (t === ctx.prTab) + '" style="--c:' + posColor(t) + '" title="' + filled + ' of ' + ts.length + ' set · ' + fmtPts(pts) + ' projected">' +
+      return '<button type="button" class="pr-tab" role="tab" data-pr-tab="' + t + '" aria-selected="' + (t === ctx.prTab) + '" style="--c:' + prTabColor(t) + '" title="' + filled + ' of ' + ts.length + ' set · ' + fmtPts(pts) + ' projected">' +
         '<b>' + t + '</b><small><span class="pr-tf">' + filled + '/' + ts.length + ' · </span>' + fmtPts(pts) + '</small>' + (bad ? '<span class="pr-dot" title="A player here won’t score"></span>' : todo ? '<span class="pr-dot todo" title="Slot' + (ts.length - filled > 1 ? 's' : '') + ' to fill"></span>' : '') + '</button>';
     }).join('');
     // Built once; after that only the parts inside are replaced, so the scroll area (.pr-main) never remounts and
@@ -6100,7 +6117,7 @@
         '</div>' +
         '<div class="pr-main"><div class="pr-note-slot"></div><div class="pr-body"></div></div>' +
         '<div class="pr-toast" role="status" aria-live="polite" hidden></div>' +
-        '<div class="pr-dock"><div class="pr-dock-top"><div class="pr-total" title="Your whole lineup as it stands here: filled slots only, plus K / DEF / defenders from your saved lineup"><div class="eyebrow">Projected lineup</div>' +
+        '<div class="pr-dock"><div class="pr-dock-top"><div class="pr-total" title="Your whole lineup as it stands here: filled slots only"><div class="eyebrow">Projected lineup</div>' +
           '<div class="pr-total-row"><span class="pr-total-num" id="pr-total">0.00</span><span class="pr-delta" id="pr-delta"></span></div><div class="pr-chg-note" id="pr-chg"></div></div>' +
           '<span class="pr-status" id="pr-status"></span><button type="button" class="pr-save" data-pr-save>Save</button></div>' +
           '<div class="pr-tabs" role="tablist" aria-label="Positions"></div></div>';
@@ -6185,14 +6202,23 @@
     // won't-score tag for a bye / no projection (a ruled-out status already shows as the injury chip)
     const tag = un && !cantPlay(effectiveStatus(pid)) ? '<span class="pr-tag bad" title="Won’t score this week">' + escapeHTML(un) + '</span>'
       : where === 'pool' && at !== -1 ? '<span class="pr-tag" title="Starting there now">' + escapeHTML(prSlotName(at)) + '</span>' : '';
-    return '<div class="pr-card' + (i ? ' mt-' + i.tone : '') + (un && where === 'pool' ? ' unavail' : '') + (locked ? ' locked' : '') + (at !== -1 && where === 'pool' ? ' in-slot' : '') +
+    // Team DEF isn't a person: logo instead of a photo, no injury chip. Kickers and DEF get the slim card.
+    const isDef = p.position === 'DEF', slim = isDef || p.position === 'K';
+    const idpLine = isIdp(pid) ? (function(){
+      const t = idpPerGame(pid, 'n'), bp = idpPerGame(pid, 'b'), sn = seasonShare(pid, 's'), bits = [];
+      if(t !== null) bits.push('<b>' + t.toFixed(1) + '</b> tkl/g');
+      if(bp !== null) bits.push('<b>' + bp.toFixed(1) + '</b> big plays/g');
+      if(typeof sn === 'number') bits.push('<b>' + Math.round(sn * 100) + '%</b> snaps');
+      return bits.length ? '<div class="pr-idp" title="Season per game: tackles; sacks + INT + forced fumbles + fumble recoveries + TDs; share of defensive snaps">' + bits.join(' · ') + '</div>' : '';
+    })() : '';
+    return '<div class="pr-card' + (slim ? ' slim' : '') + (isDef ? ' def' : '') + (i ? ' mt-' + i.tone : '') + (un && where === 'pool' ? ' unavail' : '') + (locked ? ' locked' : '') + (at !== -1 && where === 'pool' ? ' in-slot' : '') +
         (ctx.prSel && ctx.prSel.pid === pid ? ' sel' : '') + '" data-pr-pid="' + escapeHTML(pid) + '"' + (where === 'pool' ? ' role="button" tabindex="0" style="--i:' + (idx || 0) + '"' : '') +
         ' aria-label="' + escapeHTML(playerName(p)) + ', ' + escapeHTML(eligLabel(pid)) + ', projected ' + fmtPts(ctx.projections[pid]) + (locked ? ', locked' : '') + '">' +
       tag + '<button type="button" class="pr-ic" data-pr-info="' + escapeHTML(pid) + '" aria-label="Details for ' + escapeHTML(playerName(p)) + '" title="Details">' + PR_ICON.info + '</button>' +
       '<div class="pr-head"><img class="pr-av" src="' + escapeHTML(playerImageUrl(pid)) + '" alt="" loading="lazy" draggable="false" onerror="this.style.visibility=\'hidden\'" style="--team:' + teamColor(p.team) + '">' +
-        '<div class="pr-nm"><b>' + escapeHTML(playerName(p)) + '</b><small>' + escapeHTML(eligLabel(pid)) + ' · ' + escapeHTML(p.team || 'FA') + ' ' + injuryChip(effectiveStatus(pid)) + '</small></div></div>' +
+        '<div class="pr-nm"><b>' + escapeHTML(playerName(p)) + '</b><small>' + (isDef ? 'Team defense · ' + escapeHTML(p.team || pid) : escapeHTML(eligLabel(pid)) + ' · ' + escapeHTML(p.team || 'FA') + ' ' + injuryChip(effectiveStatus(pid))) + '</small></div></div>' +
       '<div class="pr-nums">' + big + '<div class="pr-l3">' + (l3 === null ? '—' : fmtPts(l3)) + '<small>' + (n >= 3 || !n ? 'L3 avg' : 'L' + n + ' avg') + '</small></div></div>' +
-      '<div class="pr-game">' + game + '</div>' + (where === 'slot' ? prMoreHTML(pid, i) : '') + '</div>';
+      idpLine + '<div class="pr-game">' + game + '</div>' + (where === 'slot' && !slim ? prMoreHTML(pid, i) : '') + '</div>';
   }
   // Hero cards only: the typical bad / good week and the matchup ranking in words.
   function prMoreHTML(pid, i){
@@ -6213,7 +6239,8 @@
       const chg = (pid || '0') !== (ctx.originalStarters[s.i] || '0');   // differs from your Sleeper lineup: a change to copy over
       const lbl = '<span class="pr-slot-lbl' + (chg ? ' chg" title="Changed from your Sleeper lineup' : '') + '">' + escapeHTML(s.name) + '</span>';
       if(!has) return '<div class="pr-slot empty' + (target ? ' target' : '') + '" data-pr-slot="' + s.i + '" role="button" tabindex="0" aria-label="Empty ' + escapeHTML(s.name) + ' slot">' + lbl + PR_ICON.plus + '<span>' + (selPid ? 'Place here' : '<b>Pick your ' + escapeHTML(s.name) + '</b><small>tap a player below' + (hasFinePointer() ? ' or drag one here' : '') + '</small>') + '</span></div>';
-      return '<div class="pr-slot' + (target ? ' target' : '') + (prUnavail(pid) ? ' bad' : '') + '" data-pr-slot="' + s.i + '">' + lbl + prCardHTML(pid, 'slot') +
+      const slimSlot = ctx.players[pid].position === 'DEF' || ctx.players[pid].position === 'K';
+      return '<div class="pr-slot' + (slimSlot ? ' slim' : '') + (target ? ' target' : '') + (prUnavail(pid) ? ' bad' : '') + '" data-pr-slot="' + s.i + '">' + lbl + prCardHTML(pid, 'slot') +
         (isLocked(pid) ? '<span class="pr-lock" title="Game started: locked">' + PR_ICON.lock + '</span>'
           : '<button type="button" class="pr-rm" data-pr-rm="' + s.i + '" aria-label="Remove ' + escapeHTML(playerName(ctx.players[pid])) + ' from ' + escapeHTML(s.name) + '" title="Remove">' + PR_ICON.x + '</button>') + '</div>';
     }).join('');
@@ -6228,13 +6255,12 @@
           : '<div class="pr-empty">' + emptyTxt + '</div>');
     };
     let poolHTML;
-    if(tab === 'FLEX'){
-      const dedicated = function(pid){ const at = ctx.prWork.indexOf(pid); return at !== -1 && !isFlexSlot(ctx.rosterPositions[at]); };
-      const left = pool.filter(function(pid){ return !dedicated(pid); }), busy = pool.filter(dedicated);
-      poolHTML = row('left', 'Leftovers', left.length + ' competing for flex', left, 'Everyone eligible is already starting.') +
-        (busy.length ? '<div style="height:14px"></div>' + row('busy', 'Starting at their position', busy.length + '', busy, '', left.length) : '');
+    if(prIsFlexTab(tab)){   // flex: only the leftovers (anyone already in a starting slot stays out)
+      const left = pool.filter(function(pid){ return ctx.prWork.indexOf(pid) === -1; });
+      poolHTML = row('left', 'Leftovers', left.length + ' competing for ' + tab.toLowerCase() + ' · best projection first', left, 'Everyone eligible is already starting.');
     } else {
-      poolHTML = row('pool', 'Your other ' + tab + 's', pool.length + (pool.length === 1 ? ' option' : ' options') + ' · best projection first', pool, 'No other ' + tab + 's on your roster.');
+      const word = tab === 'DEF' ? 'defenses' : tab === 'K' ? 'kickers' : tab + 's';
+      poolHTML = row('pool', 'Your other ' + word, pool.length + (pool.length === 1 ? ' option' : ' options') + ' · best projection first', pool, 'No other ' + word + ' on your roster.');
     }
     // deck-builder flow: once this position is set, offer the next one
     const tabs = prTabs(), nextTab = tabs[tabs.indexOf(tab) + 1];
@@ -6246,13 +6272,13 @@
       : selPid ? 'Pick a slot for <b>' + escapeHTML(playerName(ctx.players[selPid])) + '</b> · tap it again to cancel'
       : sel ? 'Pick a player for <b>' + escapeHTML(prSlotName(sel.slot)) + '</b>'
       : empty.length ? 'Tap a player to fill <b>' + escapeHTML(empty[0].name) + '</b>' + (hasFinePointer() ? ', or drag one onto a slot' : '')
-      : (tab === 'FLEX' ? 'Tap a leftover, then the flex spot it should take' : 'Tap a player, then a slot') + ' · <b>double-' + (hasFinePointer() ? 'click' : 'tap') + '</b> to swap in for your lowest starter' + (hasFinePointer() ? ' · or drag' : ' · hold to drag');
+      : (prIsFlexTab(tab) ? 'Tap a leftover, then the ' + tab.toLowerCase() + ' spot it should take' : 'Tap a player, then a slot') + ' · <b>double-' + (hasFinePointer() ? 'click' : 'tap') + '</b> to swap in for your lowest starter' + (hasFinePointer() ? ' · or drag' : ' · hold to drag');
     const blank = prSlots().every(function(s){ const p = ctx.prWork[s.i]; return prIsEmpty(p) || isLocked(p); });
     const start = blank ? '<div class="pr-start"><div><b>Build your week ' + ctx.week + ' lineup from scratch.</b> Go position by position (' + tabs.join(', ') + '), then Save.</div>' +
       '<button type="button" data-pr-from-sleeper>Start from my Sleeper lineup</button></div>' : '';
     const enter = ctx.prEnter; ctx.prEnter = null;
-    return '<div class="pr-stage' + (enter ? ' enter' : '') + '" style="--pr-c:' + posColor(tab) + (enter ? ';--dir:' + enter : '') + '">' + start +
-      '<div class="pr-sec"><h3>' + (tab === 'FLEX' ? 'Flex' : tab) + ' slots</h3><span>' + (empty.length ? empty.length + ' empty' : 'all set') + '</span>' + next + '</div>' +
+    return '<div class="pr-stage' + (enter ? ' enter' : '') + '" style="--pr-c:' + prTabColor(tab) + (enter ? ';--dir:' + enter : '') + '">' + start +
+      '<div class="pr-sec"><h3>' + (tab === 'FLEX' ? 'Flex' : tab === 'SF' ? 'Superflex' : tab === 'IDP' ? 'IDP flex' : tab === 'DEF' ? 'Team defense' : tab === 'K' ? 'Kicker' : tab) + ' slot' + (ts.length > 1 ? 's' : '') + '</h3><span>' + (empty.length ? empty.length + ' empty' : 'all set') + '</span>' + next + '</div>' +
       '<div class="pr-hint">' + hint + '</div><div class="pr-slots' + (ts.length === 1 ? ' one' : '') + '">' + slotHTML + '</div>' + poolHTML + '</div>';
   }
   function hasFinePointer(){ return window.matchMedia('(pointer: fine)').matches; }
