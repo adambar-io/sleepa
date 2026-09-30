@@ -1616,6 +1616,60 @@
   .mu-foot{ margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--hair); font-size: 13px; font-weight: 600; color: var(--text-2); }
   .mu-foot.up{ color: var(--accent); } .mu-foot.down{ color: var(--danger); }
   .mu-foot .dim{ font-weight: 500; color: var(--text-3); }
+  .mu-pts[data-open-proj]{ width: fit-content; }
+  .mu-bd{ display: inline-block; margin-top: 3px; font-size: 12px; font-weight: 650; color: var(--accent); }
+  .mu-card .mu-side .mu-bd:hover{ text-decoration: underline; }
+  /* Projected lineup breakdown (full view) */
+  .pj{ max-width: 780px; margin: 0 auto; display: grid; gap: 14px; }
+  .pj-head{ padding: 18px 20px; }
+  .pj-total{ display: flex; flex-direction: column; gap: 2px; }
+  .pj-total small{ font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+  .pj-total b{ font-size: 40px; font-weight: 750; letter-spacing: -0.03em; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .pj-total span{ font-size: 13px; color: var(--text-2); }
+  .pj-how{ margin: 10px 0 0; font-size: 13px; color: var(--text-2); line-height: 1.5; }
+  .pj-how b{ color: var(--text); }
+  .pj-all{ margin-top: 12px; }
+  .pj-list{ padding: 4px 0; overflow: hidden; }
+  .pj-row{ border-top: 1px solid var(--hair); }
+  .pj-row:first-child{ border-top: 0; }
+  .pj-row summary, .pj-empty{ display: grid; grid-template-columns: 44px 38px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 11px 16px; cursor: pointer; list-style: none; }
+  .pj-row summary::-webkit-details-marker{ display: none; }
+  .pj-empty{ grid-template-columns: 44px minmax(0, 1fr) auto; color: var(--text-3); cursor: default; }
+  .pj-slot{ justify-self: start; padding: 2px 7px; border-radius: 999px; font-size: 10.5px; font-weight: 800; letter-spacing: .04em; color: var(--pc, var(--text-2)); background: color-mix(in srgb, var(--pc, var(--text-3)) 14%, transparent); }
+  .pj-av{ width: 38px; height: 38px; border-radius: 50%; object-fit: cover; object-position: center 15%; background: var(--surface-2); box-shadow: 0 0 0 2px var(--team, transparent); }
+  .pj-who{ display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .pj-who b{ font-size: 14.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pj-who small{ font-size: 12px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pj-bar{ display: block; height: 4px; margin-top: 4px; border-radius: 2px; background: var(--surface-2); overflow: hidden; }
+  .pj-bar em{ display: block; height: 100%; border-radius: 2px; background: var(--accent); }
+  .pj-pts{ display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+  .pj-pts b{ font-size: 18px; font-weight: 750; font-variant-numeric: tabular-nums; }
+  .pj-pts small{ font-size: 11px; color: var(--text-3); white-space: nowrap; } .pj-pts .live{ color: var(--accent); font-weight: 700; }
+  .pj-row[open] summary{ background: var(--surface-2); }
+  .pj-body{ padding: 12px 16px 16px; display: grid; gap: 12px; }
+  .pj-tbl{ display: grid; border-radius: 12px; background: var(--surface-2); padding: 4px 12px; }
+  .pj-tr{ display: grid; grid-template-columns: minmax(0, 1fr) 70px 64px 58px; align-items: baseline; gap: 8px; padding: 7px 0; border-top: 1px solid var(--hair); font-size: 13px; font-variant-numeric: tabular-nums; }
+  .pj-tr:first-child{ border-top: 0; }
+  .pj-tr > span:first-child{ color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pj-tr > span:nth-child(2), .pj-tr > span:nth-child(3), .pj-tr > b{ text-align: right; }
+  .pj-tr > span:nth-child(3){ color: var(--text-3); }
+  .pj-tr s{ display: block; font-size: 10.5px; color: var(--text-3); }
+  .pj-tr b.down{ color: var(--danger); }
+  .pj-th{ font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+  .pj-th > span{ color: var(--text-3) !important; }
+  .pj-sum{ border-top: 1.5px solid var(--text-3); font-weight: 700; } .pj-sum > span:first-child{ color: var(--text) !important; } .pj-sum b{ color: var(--accent); }
+  .pj-vol, .pj-none{ margin: 0; font-size: 12.5px; color: var(--text-3); }
+  .pj-chips{ display: flex; flex-wrap: wrap; gap: 6px; }
+  .pj-chip{ display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; background: var(--surface-2); font-size: 12px; color: var(--text-2); }
+  .pj-chip b{ color: var(--text); } .pj-chip em{ font-style: normal; font-size: 10px; } .pj-chip em.up{ color: var(--accent); } .pj-chip em.down{ color: var(--danger); }
+  .pj-open{ justify-self: start; background: none; padding: 0; min-height: 0; font-size: 13px; font-weight: 700; color: var(--accent); }
+  @media (max-width: 480px){
+    .pj-row summary{ grid-template-columns: 40px 34px minmax(0, 1fr) auto; gap: 8px; padding: 10px 12px; }
+    .pj-av{ width: 34px; height: 34px; }
+    .pj-body{ padding: 10px 12px 14px; }
+    .pj-tr{ grid-template-columns: minmax(0, 1fr) 58px 50px 52px; gap: 6px; font-size: 12.5px; }
+    .pj-total b{ font-size: 34px; }
+  }
   .mu-wp{ --wp: 50%; margin-top: 12px; }
   .mu-wp-lbl{ display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 5px; }
   .mu-wp-lbl b{ font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; min-width: 42px; }
@@ -2537,6 +2591,9 @@
   .cd-sm span{ width: fit-content; padding: calc(var(--u) * 3) calc(var(--u) * 9); border-radius: 999px; background: var(--surface-3); font-size: calc(var(--u) * 12); font-weight: 700; color: var(--text-2); }
   .cd-sm span.up{ color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); }
   .cd-sm span.down{ color: var(--danger); background: color-mix(in srgb, var(--danger) 14%, transparent); }
+  .cd-sm b[data-open-proj]{ cursor: pointer; width: fit-content; }
+  .cd-sm-r{ display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .cd-bd{ text-decoration: none; font-size: calc(var(--u) * 11.5); font-weight: 700; color: var(--accent); cursor: pointer; white-space: nowrap; }
   .cd-sm span.warn{ color: var(--warn); background: color-mix(in srgb, var(--warn) 14%, transparent); }
   .cd-sch{ flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: calc(var(--u) * 4); padding: calc(var(--u) * 8); border-radius: calc(var(--u) * 12); background: var(--surface-2); scrollbar-width: none; }
   .cd-sch::-webkit-scrollbar{ display: none; }
@@ -3400,7 +3457,8 @@
   // 0.57, 0.43 per carry vs 0.19). In a league that scores first downs that inflates every offensive projection (QBs
   // ~14 pts). So there, projected first downs = projected completions / carries / catches × a realistic rate: the
   // player's own season rate, blended toward his position's average until he has the volume (FD_PRIOR = how many
-  // attempts the average counts as). Only projections change; actual points never go through this.
+  // attempts the average counts as). ESPN's projections have no first-down stats at all, so they get the same estimate
+  // (otherwise they'd miss every first-down point). Only projections change; actual points never go through this.
   const FD_STATS = [['pass_fd', 'pass_cmp'], ['rush_fd', 'rush_att'], ['rec_fd', 'rec']];
   const FD_PRIOR = { pass_fd: 60, rush_fd: 40, rec_fd: 15 };
   const FD_DEFAULT = { pass_fd: 0.46, rush_fd: 0.22, rec_fd: 0.55 };   // league-wide, used before weekly.json loads
@@ -3436,7 +3494,7 @@
     if(!raw || !scoresFirstDowns(sc)) return raw;
     let out = null;
     FD_STATS.forEach(function(x){
-      if(!sc[x[0]] || typeof raw[x[0]] !== 'number') return;
+      if(!sc[x[0]] || (typeof raw[x[0]] !== 'number' && !raw[x[1]])) return;   // also fills them in when a source has none (ESPN)
       out = out || Object.assign({}, raw);
       out[x[0]] = (raw[x[1]] || 0) * fdRate(pid, x[0], x[1]);
     });
@@ -4781,7 +4839,7 @@
   function espnProj(pid){
     const e = ctx.rk && ctx.rk.espn && ctx.rk.espn[String(ctx.week)];
     if(!e || srcAge(ctx.rk.generated) > 2 || !e[pid]) return null;
-    return calcPoints(e[pid], ctx.league.scoring_settings || {});
+    return projPoints(e[pid], pid, ctx.league.scoring_settings || {});
   }
   function fmtSrcDay(s){ const t = Date.parse(/^\d{4}-\d{2}-\d{2}$/.test(s || '') ? s + 'T12:00:00Z' : s); return isNaN(t) ? '—' : new Date(t).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }); }
   // Small chip in list rows: this week's positional consensus rank + tier. Nothing when unavailable.
@@ -4836,11 +4894,11 @@
     const sameGroup = function(pid, rec){ return !rec.p || rec.p === posGroup(pid); };
     if(rkWeek() === ctx.week) for(const pid in ctx.rk.weekly){ const e = ctx.rk.weekly[pid]; if(e.rk && sameGroup(pid, e)) fpW[pid] = e.rk; }
     const ew = fresh && ctx.rk.espn && ctx.rk.espn[String(ctx.week)];
-    if(ew) for(const pid in ew) esWv[pid] = calcPoints(ew[pid], sc);
+    if(ew) for(const pid in ew) esWv[pid] = projPoints(ew[pid], pid, sc);
     const rs = ctx.rk && ctx.rk.sources && ctx.rk.sources.ros;
     if(rs && srcAge(rs.scraped) <= 10) for(const pid in ctx.rk.ros){ const e = ctx.rk.ros[pid], n = posNum(e.pr); if(n && sameGroup(pid, e)) fpR[pid] = n; }
     const er = fresh && ctx.rk.espn_ros;
-    if(er && er.from === ctx.week) for(const pid in er.players) esRv[pid] = calcPoints(er.players[pid], sc);
+    if(er && er.from === ctx.week) for(const pid in er.players) esRv[pid] = projPoints(er.players[pid], pid, sc);
     if(ctx.ros && ctx.ros.players && ctx.ros.from_week === ctx.week) for(const pid in ctx.ros.players){ const r = rosValue(pid); if(r) slRv[pid] = r.pts; }
     if(ctx.fc && ctx.fc.players) for(const pid in ctx.fc.players){ if(ctx.fc.players[pid].pr) fcR[pid] = ctx.fc.players[pid].pr; }
     const slW = rankByValue(ctx.projections || {}), esW = rankByValue(esWv), slR = rankByValue(slRv), esR = rankByValue(esRv);
@@ -5246,8 +5304,8 @@
     return '<button type="button" class="mu-card" data-open-opp aria-label="This week’s matchup. Compare your lineup with ' + escapeHTML(mu.name) + '’s">' +
       '<div class="mu-head"><span class="eyebrow">Week ' + ctx.week + ' matchup · projected</span><span class="mu-link">Compare lineups ›</span></div>' +
       '<div class="mu-row">' +
-        '<div class="mu-side"><div class="mu-name">' + escapeHTML(els.teamName.textContent || 'You') + '</div><div class="mu-pts num' + tone + '">' + mine.toFixed(2) + '</div>' +
-          (dirty ? '<div class="mu-sub">Your plan · Sleeper lineup ' + sleeperTotal.toFixed(2) + '</div>' : '<div class="mu-sub">Your Sleeper lineup</div>') + '</div>' +
+        '<div class="mu-side"><div class="mu-name">' + escapeHTML(els.teamName.textContent || 'You') + '</div><div class="mu-pts num' + tone + '" data-open-proj="lineup">' + mine.toFixed(2) + '</div>' +
+          (dirty ? '<div class="mu-sub">Your plan · Sleeper lineup ' + sleeperTotal.toFixed(2) + '</div>' : '<div class="mu-sub">Your Sleeper lineup</div>') + '<span class="mu-bd" data-open-proj="lineup">Breakdown ›</span></div>' +
         '<div class="mu-vs" aria-hidden="true">vs</div>' +
         '<div class="mu-side opp"><div class="mu-name">' + escapeHTML(mu.name) + '</div><div class="mu-pts num">' + oppTotal.toFixed(2) + '</div><div class="mu-sub">Their Sleeper lineup</div></div>' +
       '</div>' + wpBarHTML(wp, false, false) +
@@ -5272,8 +5330,8 @@
     const on = me.inG + op.inG > 0 || liveWindow();
     const dirty = JSON.stringify(ctx.draftStarters) !== JSON.stringify(ctx.originalStarters);
     const side = function(cls, name, t, tn){
-      return '<div class="mu-side' + cls + '"><div class="mu-name">' + escapeHTML(name) + '</div><div class="mu-pts num' + tn + '">' + t.pts.toFixed(2) + '</div>' +
-        '<div class="mu-sub">' + (done ? 'Final' : 'Proj. final <b>' + t.fin.toFixed(2) + '</b>') + '</div><div class="mu-left">' + playsLeftText(t) + '</div></div>';
+      return '<div class="mu-side' + cls + '"><div class="mu-name">' + escapeHTML(name) + '</div><div class="mu-pts num' + tn + '"' + (cls ? '' : ' data-open-proj="live"') + '>' + t.pts.toFixed(2) + '</div>' +
+        '<div class="mu-sub">' + (done ? 'Final' : 'Proj. final <b>' + t.fin.toFixed(2) + '</b>') + '</div><div class="mu-left">' + playsLeftText(t) + '</div>' + (cls ? '' : '<span class="mu-bd" data-open-proj="live">Breakdown ›</span>') + '</div>';
     };
     const est = me.est || op.est;
     const mm = (ctx.matchups || []).find(function(x){ return x.roster_id === ctx.myRoster.roster_id; }) || {};
@@ -5299,6 +5357,12 @@
     if(slot){ slot.innerHTML = matchupCardHTML(); wpAnimate(slot); }
   }
   document.addEventListener('click', function(e){
+    const pj = e.target.closest && e.target.closest('[data-open-proj]');
+    if(pj){
+      const card = pj.closest('.cd');
+      if(card && (e.cdMoved || !card.classList.contains('on') || Date.now() - cdDragged < 400)) return;   // deck: only the front card, never the end of a swipe
+      e.stopPropagation(); openMax({ kind: 'proj', from: pj.getAttribute('data-open-proj') }, pj); return;
+    }
     const b = e.target.closest && e.target.closest('[data-open-opp]');
     if(b && myMatchup()) openMax({ kind: 'opp' }, b);
   });
@@ -7230,8 +7294,9 @@
     const dirty = prDirty(), empty = slots.filter(function(s){ return prIsEmpty(ctx.prWork[s.i]); }).length;
     return '<div class="cd sum t-silver" data-cd-sum style="--k:' + k + '"><div class="cd-in"><div class="cd-face cd-front"><div class="cd-body cd-bk">' +
       '<div class="cd-bh"><span class="cd-bs dim"><button type="button" class="cd-rew" data-cd-rewind aria-label="Back to the first card" title="Back to the first card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>DECK SUMMARY</span>' + cdStamp() + '</div>' +
-      '<div class="cd-sm"><small>PROJECTED LINEUP</small><b>' + fmtPts(total) + '</b>' +
-        '<span class="' + (empty ? 'warn' : flat ? '' : diff > 0 ? 'up' : 'down') + '">' + (empty ? empty + ' slot' + (empty > 1 ? 's' : '') + ' empty' : flat ? 'Same as Sleeper' : (diff > 0 ? '+' : '−') + Math.abs(diff).toFixed(2) + ' vs Sleeper') + '</span></div>' +
+      '<div class="cd-sm"><small>PROJECTED LINEUP</small><b data-open-proj="huddle" role="button" tabindex="0" title="How it’s projected">' + fmtPts(total) + '</b>' +
+        '<div class="cd-sm-r"><span class="' + (empty ? 'warn' : flat ? '' : diff > 0 ? 'up' : 'down') + '">' + (empty ? empty + ' slot' + (empty > 1 ? 's' : '') + ' empty' : flat ? 'Same as Sleeper' : (diff > 0 ? '+' : '−') + Math.abs(diff).toFixed(2) + ' vs Sleeper') + '</span>' +
+        '<u class="cd-bd" data-open-proj="huddle" role="button" tabindex="0">Breakdown ›</u></div></div>' +
       cdScheduleHTML(slots) +
       '<button type="button" class="pr-save cd-save" data-pr-save' + (!dirty && ctx.prSaved ? ' disabled' : '') + '>' + (!dirty && ctx.prSaved ? 'Saved' : 'Save lineup') + '</button>' +
       '<div class="cd-bf"><span>' + escapeHTML(cdSeries()) + ' · ' + slots.length + ' cards</span></div>' +
@@ -7570,11 +7635,13 @@
   prView.addEventListener('pointerdown', cdOnDrag);
   prView.addEventListener('keydown', function(e){
     const w = (e.key === 'Enter' || e.key === ' ') && e.target.closest && e.target.closest('[data-cd-win]');
-    if(w){ e.preventDefault(); e.stopPropagation(); cdWinToggle(w); }
+    if(w){ e.preventDefault(); e.stopPropagation(); cdWinToggle(w); return; }
+    const pj = (e.key === 'Enter' || e.key === ' ') && e.target.closest && e.target.closest('[data-open-proj]');
+    if(pj){ e.preventDefault(); e.stopPropagation(); pj.click(); }
   });
   prView.addEventListener('pointerdown', function(e){
     const c = e.target.closest('[data-cd-deck] > [data-cd-sum]');
-    cdSumDown = c && c.classList.contains('on') && !e.target.closest('button, [data-cd-win]') && (e.pointerType !== 'mouse' || e.button === 0) ? { id: e.pointerId, x: e.clientX, y: e.clientY, t: Date.now() } : null;
+    cdSumDown = c && c.classList.contains('on') && !e.target.closest('button, [data-cd-win], [data-open-proj]') && (e.pointerType !== 'mouse' || e.button === 0) ? { id: e.pointerId, x: e.clientX, y: e.clientY, t: Date.now() } : null;
   });
   prView.addEventListener('pointerup', function(e){
     const d = cdSumDown; cdSumDown = null;
@@ -7642,7 +7709,7 @@
     if(cdc && cdc.closest('[data-cd-deck]')){
       if(Date.now() - cdDragged < 400) return;   // the end of a swipe isn't a tap
       const k = Array.prototype.indexOf.call(cdc.parentNode.children, cdc);
-      if(k !== ctx.prCardIdx){ cdGo(k); return; }
+      if(k !== ctx.prCardIdx){ cdGo(k); e.cdMoved = true; return; }   // (cdMoved: the same tap mustn't also open what's on it)
       if(cdc.classList.contains('empty')){ prJumpSlot(Number(cdc.getAttribute('data-cd-slot'))); return; }
       if(!cdc.hasAttribute('data-cd-sum')) cdFlip(cdc);
       return;
@@ -9126,10 +9193,88 @@
   const FULL_CLIP = 'inset(0px 0px 0px 0px round 0px)';
 
   function maxOpen(){ return !maxEl.hidden; }
+  // ---- Projected lineup: how every starter's projection is built ----
+  // Sleeper projects stats, not points: points = each projected stat × what this league pays for it (first downs
+  // corrected in leagues that score them, fdFix). So each player opens to that exact sum, plus the context we have
+  // (matchup, recent form, role, typical week, injury, ESPN's number). Which lineup: the Huddle draft (deck summary),
+  // your plan or Sleeper lineup (matchup tile, before kickoff), your Sleeper lineup (matchup tile, live).
+  function projLineup(from){
+    if(from === 'huddle' && ctx.prWork) return { list: ctx.prWork, label: 'Your ' + HUDDLE_NAME + ' draft' };
+    if(from === 'live'){ const me = (ctx.matchups || []).find(function(x){ return x.roster_id === ctx.myRoster.roster_id; }); if(me) return { list: me.starters || [], label: 'Your lineup in Sleeper' }; }
+    const dirty = JSON.stringify(ctx.draftStarters) !== JSON.stringify(ctx.originalStarters);
+    return dirty ? { list: ctx.draftStarters, label: 'Your plan' } : { list: ctx.originalStarters, label: 'Your Sleeper lineup' };
+  }
+  const PJ_VOLUME = [['pass_att', 'pass att'], ['pass_cmp', 'completions'], ['rush_att', 'carries'], ['rec_tgt', 'targets'], ['rec', 'catches'], ['fga', 'FG att'], ['xpa', 'XP att'], ['idp_tkl', 'tackles']];
+  function projStatRows(pid){
+    const raw = (ctx.projRaw || {})[pid];
+    if(!raw) return null;
+    const sc = ctx.league.scoring_settings || {}, fixed = fdFix(raw, pid, sc);
+    const rows = Object.keys(fixed).filter(function(k){ return typeof fixed[k] === 'number' && sc[k] && Math.abs(fixed[k] * sc[k]) >= 0.005; })
+      .map(function(k){ return { k: k, v: fixed[k], orig: raw[k], each: sc[k], pts: fixed[k] * sc[k] }; })
+      .sort(function(a, b){ return Math.abs(b.pts) - Math.abs(a.pts); });
+    const volume = PJ_VOLUME.filter(function(x){ return typeof raw[x[0]] === 'number' && raw[x[0]] > 0 && !(sc[x[0]]); }).map(function(x){ return pjNum(raw[x[0]]) + ' ' + x[1]; });
+    return { rows: rows, volume: volume };
+  }
+  function pjNum(v){ const a = Math.abs(v); return a >= 100 ? v.toFixed(0) : a >= 10 ? v.toFixed(1) : a >= 1 ? v.toFixed(1) : v.toFixed(2); }
+  function pjEach(v){ const a = Math.abs(v); return (v < 0 ? '−' : '') + (a >= 1 || a === 0 ? String(Math.round(a * 100) / 100) : String(Math.round(a * 1000) / 1000)); }
+  function projBreakdownHTML(e){
+    if(!ctx.myRoster) return '';
+    const L = projLineup(e.from), sc = ctx.league.scoring_settings || {}, fd = scoresFirstDowns(sc);
+    const rowsIdx = [];
+    L.list.forEach(function(pid, i){ if(i < ctx.rosterPositions.length) rowsIdx.push({ i: i, pid: pid }); });
+    const proj = function(pid){ return prIsEmpty(pid) ? 0 : (typeof ctx.projections[pid] === 'number' ? ctx.projections[pid] : 0); };
+    const total = rowsIdx.reduce(function(a, r){ return a + proj(r.pid); }, 0);
+    const top = Math.max.apply(null, rowsIdx.map(function(r){ return proj(r.pid); }).concat([1]));
+    const head = '<div class="card pj-head"><div class="pj-total"><small>Projected lineup · week ' + ctx.week + '</small><b>' + fmtPts(total) + '</b><span>' + escapeHTML(L.label) + ' · ' + rowsIdx.filter(function(r){ return !prIsEmpty(r.pid); }).length + ' starters</span></div>' +
+      '<p class="pj-how">Sleeper projects <b>stats</b>, not points. Each player’s projection is his projected stats × what ' + escapeHTML(ctx.league.name) + ' pays for each one. Tap a player to see the math' + (fd ? '; first downs use each player’s real rate, not Sleeper’s inflated number' : '') + '.</p>' +
+      '<button type="button" class="quiet-btn pj-all" data-pj-all>Expand all</button></div>';
+    const list = rowsIdx.map(function(r){
+      const label = slotShort(ctx.rosterPositions[r.i]);
+      if(prIsEmpty(r.pid)) return '<div class="pj-row pj-empty"><span class="pj-slot">' + escapeHTML(label) + '</span><span>Empty slot</span><b>0.00</b></div>';
+      const pid = r.pid, p = ctx.players[pid], v = proj(pid), m = matchup(p.team, ctx.week), k0 = kickoff(p.team, ctx.week), wa = weekActual(pid), g = gameOf(p.team);
+      const br = projStatRows(pid);
+      const meta = eligLabel(pid) + ' · ' + (p.team || 'FA') + (m ? ' · ' + (m.bye ? 'BYE' : m.text + (k0 ? ' · ' + zKickShort(k0) : '')) : '');
+      let body = '';
+      if(!br || !br.rows.length) body = '<p class="pj-none">' + (m && m.bye ? 'On a bye this week.' : 'Sleeper has no stat projection for him this week' + (cantPlay(effectiveStatus(pid)) ? ' (' + escapeHTML(statusInfo(effectiveStatus(pid)).label.toLowerCase()) + ')' : '') + '.') + '</p>';
+      else{
+        const sum = br.rows.reduce(function(a, x){ return a + x.pts; }, 0);
+        body = '<div class="pj-tbl"><div class="pj-tr pj-th"><span>Projected stat</span><span>Amount</span><span>× Each</span><span>Points</span></div>' +
+          br.rows.map(function(x){
+            const adj = fd && /_fd$/.test(x.k) && typeof x.orig === 'number' && Math.abs(x.orig - x.v) > 0.05;
+            return '<div class="pj-tr"><span>' + escapeHTML(statLabel(x.k)) + '</span><span>' + pjNum(x.v) + (adj ? '<s title="Sleeper’s projection">' + pjNum(x.orig) + '</s>' : '') + '</span><span>' + pjEach(x.each) + '</span><b class="' + (x.pts < 0 ? 'down' : '') + '">' + (x.pts < 0 ? '−' : '') + Math.abs(x.pts).toFixed(2) + '</b></div>';
+          }).join('') +
+          '<div class="pj-tr pj-sum"><span>Projection</span><span></span><span></span><b>' + fmtPts(sum) + '</b></div></div>' +
+          (br.volume.length ? '<p class="pj-vol">Also projected (not scored here): ' + escapeHTML(br.volume.join(' · ')) + '</p>' : '');
+      }
+      const chips = [];
+      const dv = dvpChipHTML(pid); if(dv) chips.push(dv);
+      const l3 = last3Avg(pid), avg = seasonAvgPts(pid);
+      if(l3 !== null && l3 !== undefined) chips.push('<span class="pj-chip">Last 3 <b>' + fmtPts(l3) + '</b></span>');
+      if(avg !== null && avg !== undefined) chips.push('<span class="pj-chip">Season avg <b>' + fmtPts(avg) + '</b></span>');
+      const rg = weekRange(pid); if(rg && rg.ok) chips.push('<span class="pj-chip" title="' + escapeHTML(rangeBasis(rg)) + '">Typical week <b>' + rg.floor.toFixed(1) + '–' + rg.ceil.toFixed(1) + '</b></span>');
+      const tr = snapTrend(pid); if(tr) chips.push('<span class="pj-chip">Snaps <b>' + pct(tr.last) + '</b>' + (tr.dir === 'up' ? ' <em class="up">▲</em>' : tr.dir === 'down' ? ' <em class="down">▼</em>' : '') + '</span>');
+      const es = espnProj(pid); if(typeof es === 'number') chips.push('<span class="pj-chip">ESPN projects <b>' + fmtPts(es) + '</b></span>');
+      const inj = injuryChip(effectiveStatus(pid)); if(inj) chips.push(inj);
+      return '<details class="pj-row"><summary><span class="pj-slot" style="--pc:' + prTabColor(prTabOf(ctx.rosterPositions[r.i]) || p.position) + '">' + escapeHTML(label) + '</span>' + avatarTag(pid, 'pj-av') +
+          '<span class="pj-who"><b>' + escapeHTML(playerName(p)) + '</b><small>' + escapeHTML(meta) + '</small><i class="pj-bar"><em style="width:' + Math.max(0, v / top * 100).toFixed(1) + '%"></em></i></span>' +
+          '<span class="pj-pts"><b>' + fmtPts(v) + '</b><small>' + (wa !== null ? '<span class="live">' + fmtPts(wa) + ' ' + (g && g.state === 'post' ? 'final' : 'live') + '</span>' : Math.round(v / (total || 1) * 100) + '% of total') + '</small></span></summary>' +
+        '<div class="pj-body">' + body + (chips.length ? '<div class="pj-chips">' + chips.join('') + '</div>' : '') +
+          '<button type="button" class="pj-open"' + analyzeAttr(pid) + '>Player page ›</button></div></details>';
+    }).join('');
+    return '<div class="pj">' + head + '<div class="card pj-list">' + list + '</div></div>';
+  }
+  document.addEventListener('click', function(e){
+    const b = e.target.closest && e.target.closest('[data-pj-all]');
+    if(!b) return;
+    const rows = maxBody.querySelectorAll('details.pj-row'), open = !Array.prototype.every.call(rows, function(d){ return d.open; });
+    rows.forEach(function(d){ d.open = open; });
+    b.textContent = open ? 'Collapse all' : 'Expand all';
+  });
   function maxTitleFor(e){
     if(e.kind === 'h2h') return lastName(e.pids[0]) + ' vs ' + lastName(e.pids[1]);
     if(e.kind === 'opp'){ const mu = myMatchup(); return mu ? 'You vs ' + mu.name : 'Matchup'; }
     if(e.kind === 'trade') return 'Trade helper';
+    if(e.kind === 'proj') return 'Projected lineup';
     return e.kind === 'roster' ? 'Lineup · full view' : e.kind === 'fa' ? 'Players · full view' : playerName(ctx.players[e.pid]);
   }
   function insetOf(el){
@@ -9140,7 +9285,7 @@
   function renderMax(dir){
     const e = maxStack[maxStack.length - 1];
     const openDetails = dir ? [] : Array.prototype.map.call(maxBody.querySelectorAll('details'), function(d){ return d.open; });
-    maxBody.innerHTML = e.kind === 'roster' ? maxRosterHTML() : e.kind === 'fa' ? maxWaiversHTML() : e.kind === 'h2h' ? h2hHTML(e.pids[0], e.pids[1]) : e.kind === 'opp' ? oppHTML() : e.kind === 'trade' ? tradeHTML() : maxPlayerHTML(e.pid);
+    maxBody.innerHTML = e.kind === 'roster' ? maxRosterHTML() : e.kind === 'fa' ? maxWaiversHTML() : e.kind === 'h2h' ? h2hHTML(e.pids[0], e.pids[1]) : e.kind === 'opp' ? oppHTML() : e.kind === 'trade' ? tradeHTML() : e.kind === 'proj' ? projBreakdownHTML(e) : maxPlayerHTML(e.pid);
     if(openDetails.length) maxBody.querySelectorAll('details').forEach(function(d, i){ if(openDetails[i]) d.open = true; });
     maxBody.style.setProperty('--bar-h', maxEl.querySelector('.max-bar').offsetHeight + 'px');
     maxTitle.textContent = maxTitleFor(e);

@@ -150,6 +150,8 @@
   check('QB: 20 completions × his real rate (0.50) = 10 first downs, not 23; other stats kept', Math.abs(qFix.pass_fd - 10) < 1e-9 && qFix.pass_yd === 250 && qRaw.pass_fd === 23, JSON.stringify(qFix));
   const wFix = fd.fdFix({ rec: 6, rec_fd: 8 }, 'W', { rec_fd: 1 });
   check('no history yet: league-average rate (6 catches × 0.55 = 3.3)', Math.abs(wFix.rec_fd - 3.3) < 1e-9, JSON.stringify(wFix));
+  const eFix = fd.fdFix({ rec: 5, rec_yd: 60 }, 'W', { rec_fd: 1, rec: 1 });
+  check('a source with no first-down stats (ESPN) gets them estimated: 5 catches × 0.55', Math.abs(eFix.rec_fd - 2.75) < 1e-9, JSON.stringify(eFix));
 
   section('Actuals: games played and live game clock');
   const asrc = ['const NON_STAT_KEY', 'const GAME_LENGTH', 'function playedWeek(', 'function remainingFrac('].map(extract).join('\n');
