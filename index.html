@@ -1784,6 +1784,7 @@
   .rv-act{ display: flex; align-items: center; gap: 12px; }
   .rv-save{ min-height: 44px; padding: 0 22px; font-size: 15px; }
   .rv-sec{ display: flex; align-items: baseline; gap: 10px; margin: 16px 2px 8px; }
+  .rv-head + .rv-sec{ margin-top: 4px; }   /* the Offense label sits right under the header */
   .rv-sec h3{ margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-2); }
   .rv-views{ display: flex; width: fit-content; margin: 0 auto 12px; }
   .rv-views button{ padding: 7px 14px; min-height: 34px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
@@ -6524,8 +6525,12 @@
         '<div class="rv-sub">' + (toFill ? '<b class="warn">' + toFill + ' slot' + (toFill > 1 ? 's' : '') + ' empty</b> · tap one to fill it' : flat ? 'Same as your Sleeper lineup' : '<b class="' + (diff > 0 ? 'up' : 'down') + '">' + (diff > 0 ? '+' : '−') + Math.abs(diff).toFixed(2) + '</b> vs your Sleeper lineup') + '</div></div>' +
         '<div class="rv-act"><span class="pr-status ' + (dirty ? 'unsaved' : ctx.prSaved ? 'saved' : 'new') + '">' + (dirty ? 'Unsaved changes' : ctx.prSaved ? 'Saved' : 'Not saved yet') + '</span>' +
           '<button type="button" class="pr-save rv-save" data-pr-save' + (!dirty && ctx.prSaved ? ' disabled' : '') + '>' + (!dirty && ctx.prSaved ? 'Saved' : 'Save lineup') + '</button></div></div>' +
-      seg + board +
-      (!hasDef && st.length ? '<div class="rv-sec"><h3>Special teams</h3></div>' + prBoardHTML([{ k: 'st', spots: st }], 'Special teams', true) : '') +
+      // IDP leagues have the Offense / Defense / Special teams tabs; others get section labels over each board
+      seg + (hasDef ? '' : '<div class="rv-sec"><h3>Offense</h3></div>') + board +
+      (!hasDef && st.length ? (function(){
+        const t = st.some(function(s){ return s.tab === 'DEF'; }) ? 'Special Teams & Defense' : 'Special Teams';
+        return '<div class="rv-sec"><h3>' + t + '</h3></div>' + prBoardHTML([{ k: 'st', spots: st }], t, true);
+      })() : '') +
       '<p class="rv-hint">Tap a player to change them · ' + (hasFinePointer() ? 'hover' : 'press and hold') + ' for their game and matchup</p>' +
       '</div>';
   }
