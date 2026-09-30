@@ -391,6 +391,11 @@
   .hero-name{ font-size: 28px; margin: 0; line-height: 1.1; }
   .hero-meta{ color: var(--text-2); font-size: 14px; margin-top: 4px; }
   .hero-slot-note{ color: var(--text-2); font-size: 13px; margin: 14px 0 4px; }
+  .hero-acts{ display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin: 12px 0 14px; }
+  .hero-acts[hidden]{ display: none; }
+  .hero-acts button{ display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 999px; background: var(--danger-soft); color: var(--danger); font-size: 14px; font-weight: 700; }
+  .hero-acts svg{ width: 14px; height: 14px; flex: none; }
+  .hero-acts span{ display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-3); }
 
   .hero-stats{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 16px 0 22px; }
   .hs-block{ background: var(--surface-2); border-radius: var(--radius-sm); padding: 10px 12px; }
@@ -956,11 +961,12 @@
   .pr-ic{ position: absolute; top: 5px; right: 5px; width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; background: none; color: var(--text-3); padding: 0; min-height: 0; }
   .pr-ic svg{ width: 15px; height: 15px; }
   .pr-ic:hover{ background: var(--surface-2); color: var(--text); }
-  .pr-rm{ position: absolute; top: -9px; right: -7px; z-index: 3; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; padding: 0; min-height: 0;
+  .pr-rm{ position: absolute; top: -9px; left: -7px; z-index: 3; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; padding: 0; min-height: 0;
     background: var(--surface-3); color: var(--text); box-shadow: 0 0 0 3px var(--bg); transition: transform .18s var(--spring), background .18s; }
   .pr-rm svg{ width: 12px; height: 12px; }
   .pr-rm:hover{ background: var(--danger); color: #fff; transform: scale(1.08); }
-  .pr-lock{ position: absolute; top: -9px; right: -7px; z-index: 3; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-3); color: var(--text-2); box-shadow: 0 0 0 3px var(--bg); }
+  .pr-slot:not(.empty) .pr-slot-lbl{ left: 26px; }   /* room for the remove / lock badge on the corner */
+  .pr-lock{ position: absolute; top: -9px; left: -7px; z-index: 3; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-3); color: var(--text-2); box-shadow: 0 0 0 3px var(--bg); }
   .pr-lock svg{ width: 12px; height: 12px; }
   .pr-sub{ margin: 22px 2px 10px; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
   /* lock-in: the card lands, the slot flashes and throws a few sparks */
@@ -1095,10 +1101,14 @@
     .pr-nm b{ display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; -webkit-line-clamp: none; }
     .pr-idp{ display: none; }
     .pr-slots:not(.one) .pr-slot .pr-av{ width: 36px; height: 36px; }
-    .pr-slots:not(.one) .pr-slot .pr-head{ gap: 8px; padding-right: 12px; }
+    .pr-slots:not(.one) .pr-slot .pr-head{ gap: 8px; padding-right: 26px; }   /* the name stops short of the info button */
+    .pr-pool .pr-head{ padding-right: 26px; }
     .pr-slots:not(.one) .pr-slot .pr-nm b{ font-size: 14px; letter-spacing: -0.01em; }
-    .pr-rm{ width: 28px; height: 28px; top: -10px; right: -6px; }
-    .pr-ic{ width: 28px; height: 28px; top: 4px; right: 4px; }
+    .pr-rm{ width: 28px; height: 28px; top: -10px; left: -7px; }
+    .pr-slot:not(.empty) .pr-slot-lbl{ left: 28px; }
+    .pr-ic{ width: 30px; height: 30px; top: 5px; right: 5px; background: var(--surface-2); color: var(--text-2); }
+    .pr-ic::after{ content: ''; position: absolute; inset: -7px; }   /* 44px touch target */
+    .pr-ic svg{ width: 16px; height: 16px; }
     .pr-slot .pr-more{ font-size: 11.5px; gap: 4px 10px; padding-top: 8px; }
     .pr-slots:not(.one) .pr-slot .pr-more{ display: none; }   /* 2-up is too narrow for the extra line */
     .pr-slots.one .pr-slot .pr-av{ width: 56px; height: 56px; }
@@ -2662,6 +2672,7 @@
       <button type="button" class="vs-btn hero-vs" id="hero-vs" data-vs="" title="Compare head-to-head">VS</button>
       <button class="xbtn" id="hero-expand" data-expand="player" aria-label="Open full player page" title="Full screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M10 20H4v-6M20 4l-6.5 6.5M4 20l6.5-6.5"/></svg></button>
     </div>
+    <div class="hero-acts" id="hero-acts" hidden></div>
     <div class="hero-stats" id="hero-stats"></div>
     <div class="hero-slot-note" id="hero-slot-note"></div>
     <div class="focus-section-title" id="focus-section-title">Options for this slot</div>
@@ -2793,6 +2804,7 @@
     heroMeta: document.getElementById('hero-meta'),
     heroStats: document.getElementById('hero-stats'),
     heroSlotNote: document.getElementById('hero-slot-note'),
+    heroActs: document.getElementById('hero-acts'),
     candidatesList: document.getElementById('candidates-list'),
     compareBtn: document.getElementById('compare-btn'),
     cmpGrid: document.getElementById('cmp-grid'),
@@ -6468,7 +6480,7 @@
     body.querySelectorAll('.pr-pool[data-row]').forEach(function(r){ const k = r.getAttribute('data-row'); if(rows[k]) r.scrollLeft = rows[k]; });
     // Undo (Clear / Optimize / Load) stays in the bar until you change something yourself
     const undo = view.querySelector('.pr-topbar [data-pr-undo]');
-    undo.hidden = !ctx.prUndo;
+    undo.hidden = !ctx.prUndo || !!ctx.prUndo.quiet;
     undo.textContent = ctx.prUndo ? 'Undo ' + ctx.prUndo.what.toLowerCase() : 'Undo';
     // saved / unsaved
     const dirty = prDirty(), stEl = document.getElementById('pr-status'), save = view.querySelector('[data-pr-save]');
@@ -6954,9 +6966,27 @@
   }
   function prRemove(i){
     if(prLockedSlot(i)) return;
+    const pid = ctx.prWork[i], before = ctx.prWork.slice();
     ctx.prWork[i] = '0';
     prEdited();
+    if(prIsEmpty(pid)) return;
+    const p = ctx.players[pid];
+    ctx.prUndo = { work: before, what: 'Remove', quiet: true };   // quiet: the Undo is in the toast, not the top bar
+    prToast('Removed ' + escapeHTML(p.position === 'DEF' ? playerName(p) : p.last_name || playerName(p)), true);
   }
+  // The phone player sheet, opened from Power Rank for someone in the draft: the way to remove a starter without a gesture.
+  function prSheetActs(pid){
+    const el = els.heroActs, i = ctx.luMode === 'pr' && !paneMode() && ctx.prWork ? ctx.prWork.indexOf(pid) : -1;
+    const sl = i === -1 ? null : prSlots().find(function(s){ return s.i === i; });
+    el.hidden = !sl;
+    el.innerHTML = !sl ? '' : isLocked(pid) ? '<span>' + PR_ICON.lock + 'Starting at ' + escapeHTML(sl.name) + ' · game started, locked</span>'
+      : '<button type="button" data-pr-sheet-rm="' + i + '">' + PR_ICON.x + 'Remove from lineup</button><span>Starting at ' + escapeHTML(sl.name) + '</span>';
+  }
+  els.heroActs.addEventListener('click', function(e){
+    const b = e.target.closest('[data-pr-sheet-rm]');
+    if(!b || ctx.luMode !== 'pr') return;
+    closeFocus(); prRemove(Number(b.getAttribute('data-pr-sheet-rm')));
+  });
   // A change to the draft: the saved lineup (and the rest of the app) only changes on Save.
   function prEdited(){
     ctx.prSel = null; ctx.prHand = true; ctx.prUndo = null;
@@ -8059,6 +8089,7 @@
   function renderHero(playerId, loadingHistory){
     const player = ctx.players[playerId];
     els.heroAvatar.style.visibility = ''; els.heroAvatar.style.display = '';
+    prSheetActs(playerId);
     els.heroAvatar.src = playerImageUrl(playerId);
     els.heroAvatar.style.setProperty('--team', teamColor(player.team));
     els.focusPanel.style.setProperty('--team', teamColor(player.team));
