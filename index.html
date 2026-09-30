@@ -444,6 +444,78 @@
   .gl-table tfoot td{ background: var(--surface-3); font-weight: 600; border-bottom: none; }
   .gl-table tfoot td.gl-wk{ background: var(--surface-3); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-2); }
   .gl-note{ color: var(--text-3); font-size: 12px; margin-top: 8px; }
+  /* phone game log (gameLogMobileHTML): shown instead of the table under 700px; the table opens from its button */
+  .glm{ display: none; }
+  @media (max-width: 700px){
+    .glm{ display: block; }
+    .pf-log .gl-full{ display: none; margin-top: 12px; }
+    .pf-log .gl-full.open{ display: block; }
+    .pf-charts{ display: none; }   /* the phone game log already has points and snaps by week */
+  }
+  .glm-sec{ display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 22px 0 10px; }
+  .glm-sec:first-child{ margin-top: 4px; }
+  .glm-sec h4{ margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-2); }
+  .glm-sec span{ font-size: 11.5px; color: var(--text-3); text-align: right; }
+  .glm-chart{ position: relative; display: flex; gap: 3px; height: 168px; padding-top: 16px; }
+  .glm-col{ flex: 1 1 0; min-width: 0; display: grid; grid-template-rows: minmax(0, 1fr) 17px 12px; justify-items: center; }
+  .glm-trk{ width: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; }
+  .glm-col i{ position: relative; display: block; width: min(100%, 26px); border-radius: 5px 5px 2px 2px; background: var(--text-3); }
+  .glm-col.up i{ background: var(--accent); }
+  .glm-col.down i{ background: color-mix(in srgb, var(--text-3) 75%, transparent); }
+  .glm-col.proj i{ background: color-mix(in srgb, var(--accent) 12%, transparent); box-shadow: inset 0 0 0 1.5px var(--accent); }
+  .glm-col.off i{ height: 2px; background: var(--hair); }
+  .glm-v{ font-style: normal; position: absolute; left: 50%; bottom: calc(100% + 2px); transform: translateX(-50%); font-size: 10.5px; font-weight: 700; color: var(--text-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .glm-col > b{ align-self: end; font-size: 11px; font-weight: 700; color: var(--text-2); line-height: 1; }
+  .glm-col > small{ font-size: 9px; line-height: 12px; color: var(--text-3); white-space: nowrap; max-width: 100%; overflow: hidden; }
+  .glm-avg{ position: absolute; left: 0; right: 0; bottom: calc(29px + (100% - 45px) * var(--avg)); border-top: 1.5px dashed color-mix(in srgb, var(--text) 45%, transparent); pointer-events: none; }
+  .glm-pills{ display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 12px; }
+  .glm-pills span{ display: flex; flex-direction: column; gap: 2px; padding: 8px 9px; border-radius: 12px; background: var(--surface-2); min-width: 0; }
+  .glm-pills small{ font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--text-3); }
+  .glm-pills b{ font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .glm-pills em{ font-style: normal; font-size: 10.5px; font-weight: 600; color: var(--text-3); margin-left: 3px; }
+  .glm-pills em.up{ color: var(--accent); } .glm-pills em.down{ color: var(--danger); }
+  .glm-stack{ display: flex; gap: 2px; height: 12px; border-radius: 6px; overflow: hidden; }
+  .glm-stack i{ min-width: 3px; }
+  .glm-src{ display: grid; gap: 2px; margin-top: 8px; }
+  .glm-src div{ display: grid; grid-template-columns: 10px minmax(0, 1fr) auto 36px; align-items: center; gap: 8px; padding: 5px 0; font-size: 13px; }
+  .glm-src i{ width: 10px; height: 10px; border-radius: 3px; }
+  .glm-src span{ color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .glm-src b{ font-variant-numeric: tabular-nums; }
+  .glm-src small{ text-align: right; font-size: 11.5px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+  .glm-src .neg b{ color: var(--danger); }
+  .glm-src .neg i{ background: none; box-shadow: inset 0 0 0 1.5px var(--danger); }
+  .glm-trs{ display: grid; gap: 0; }
+  .glm-tr{ display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) 52px 60px; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--hair); font-size: 13px; }
+  .glm-tr > span:first-child{ color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .glm-tr > b{ text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+  .glm-tr > b.up{ color: var(--accent); } .glm-tr > b.down{ color: var(--danger); }
+  .glm-trh{ border-top: 0; padding: 0 0 4px; font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+  .glm-trh > *, .glm-trh > b{ color: var(--text-3); font-weight: 700; }
+  .glm-spark{ display: flex; align-items: flex-end; gap: 2px; height: 22px; }
+  .glm-spark i{ flex: 1 1 0; max-width: 10px; border-radius: 2px; background: color-mix(in srgb, var(--accent) 65%, transparent); }
+  .glm-spark i:last-child{ background: var(--accent); }
+  .glm-spark i.off{ height: 2px; background: var(--hair); }
+  .glm-wks{ display: grid; gap: 6px; }
+  .glm-wk{ border-radius: 12px; background: var(--surface-2); }
+  .glm-wk summary{ display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 10px 12px; cursor: pointer; list-style: none; }
+  .glm-wk summary::-webkit-details-marker{ display: none; }
+  .glm-wk-l{ display: flex; flex-direction: column; gap: 1px; }
+  .glm-wk-l b{ font-size: 13.5px; } .glm-wk-l small{ font-size: 11.5px; color: var(--text-3); }
+  .glm-line{ display: flex; flex-wrap: wrap; gap: 2px 10px; font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .glm-line small{ font-size: 10px; font-weight: 700; letter-spacing: .04em; color: var(--text-3); }
+  .glm-line .z{ color: var(--text-3); font-weight: 500; }
+  .glm-pts{ font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .glm-pts.up{ color: var(--accent); }
+  .glm-wk[open] summary{ border-bottom: 1px solid var(--hair); }
+  .glm-all{ display: grid; grid-template-columns: minmax(0, 1fr); padding: 6px 12px 8px; }
+  .glm-all div{ display: grid; grid-template-columns: minmax(0, 1fr) 48px 56px; gap: 8px; align-items: baseline; padding: 6px 0; font-size: 13px; border-bottom: 1px solid var(--hair); }
+  .glm-all div:last-child{ border-bottom: 0; }
+  .glm-all b{ text-align: right; }
+  .glm-all span{ color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .glm-all b{ font-variant-numeric: tabular-nums; }
+  .glm-all small{ text-align: right; font-size: 11px; font-variant-numeric: tabular-nums; color: var(--text-3); }
+  .glm-all small.up{ color: var(--accent); } .glm-all small.down{ color: var(--danger); }
+  .glm-table-btn{ margin-top: 14px; width: 100%; min-height: 44px; border-radius: 12px; background: var(--surface-2); color: var(--text); font-weight: 650; }
   .gl-table th.gl-nfl{ color: var(--accent); }
   .gl-table tr.gl-bye td{ color: var(--danger); font-weight: 600; font-size: 12.5px; background: var(--danger-soft); }
   .gl-table tr.gl-bye td.gl-wk{ background: var(--surface-2); }
@@ -2379,7 +2451,11 @@
   .cd-grid.three{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .cd-st{ min-width: 0; padding: calc(var(--u) * 10) calc(var(--u) * 12); border-radius: calc(var(--u) * 10); background: var(--surface-2); }
   .cd-st b{ display: block; font-size: calc(var(--u) * 20); font-weight: 800; font-variant-numeric: tabular-nums; }
-  .cd-rng{ display: flex; flex-direction: column; gap: calc(var(--u) * 6); padding: calc(var(--u) * 10) calc(var(--u) * 12); border-radius: calc(var(--u) * 10); background: var(--surface-2); }
+  .cd-rng{ display: flex; flex-direction: column; gap: calc(var(--u) * 6); padding: calc(var(--u) * 10) calc(var(--u) * 12); border-radius: calc(var(--u) * 10); background: var(--surface-2);
+    width: 100%; min-height: 0; text-align: left; font: inherit; color: inherit; cursor: pointer; transition: background .15s, transform .15s var(--spring); }
+  button.cd-rng:hover{ background: var(--surface-3); }
+  button.cd-rng:active{ transform: scale(.98); }
+  .cd-rng u{ align-self: flex-end; text-decoration: none; font-size: calc(var(--u) * 10.5); font-weight: 700; color: var(--accent); margin-top: calc(var(--u) * 1); }
   .cd-rng div{ display: flex; justify-content: space-between; gap: 8px; font-size: calc(var(--u) * 12); color: var(--text-2); }
   .cd-rng b{ color: var(--text); font-weight: 700; font-variant-numeric: tabular-nums; }
   .cd-rng b.dim{ color: var(--text-3); font-weight: 500; }
@@ -2418,7 +2494,12 @@
     transition: transform .45s var(--ease), opacity .45s var(--ease); cursor: pointer; }
   .cd-deck > .cd.far{ opacity: 0; pointer-events: none; }
   .cd-deck.dragging > .cd{ transition: none; }
-  .cd.sum{ user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }   /* triple-tap / triple-click (rewind) never selects text */
+  .cd.sum{ user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+  .cd-bs:has(.cd-rew){ display: inline-flex; align-items: center; gap: calc(var(--u) * 8); }
+  .cd-rew{ position: relative; display: grid; place-items: center; width: calc(var(--u) * 26); height: calc(var(--u) * 26); min-height: 0; padding: 0; border-radius: 50%; background: var(--surface-2); color: var(--text-2); }
+  .cd-rew::after{ content: ''; position: absolute; inset: -8px; }   /* bigger touch target */
+  .cd-rew svg{ width: 58%; height: 58%; }
+  .cd-rew:hover{ color: var(--text); background: var(--surface-3); }   /* triple-tap / triple-click (rewind) never selects text */
   .cd-deck > .cd.on{ cursor: auto; }
   .cd-deck.deal > .cd{ animation: cdDeal .5s var(--ease) both; animation-delay: calc(var(--k) * 60ms); }
   @keyframes cdDeal{ from{ opacity: 0; margin-top: 24px; } to{ margin-top: 0; } }
@@ -6789,8 +6870,8 @@
     const r = !isDef && !isK ? weekRange(pid) : null;
     const range = r ? (r.ok ? (function(){
         const top = Math.max(r.ceil * 1.15, 1), a = Math.max(0, r.floor / top * 100), b = Math.min(100, r.ceil / top * 100);
-        return '<div class="cd-rng"><div><span>Typical week</span><b>' + r.floor.toFixed(1) + '–' + r.ceil.toFixed(1) + '</b></div><i><em style="left:' + a.toFixed(1) + '%;right:' + (100 - b).toFixed(1) + '%"></em></i></div>';
-      })() : '<div class="cd-rng"><div><span>Typical week</span><b class="dim">' + escapeHTML(rangeBasis(r)) + '</b></div></div>') : '';
+        return '<button type="button" class="cd-rng" data-cd-log="' + escapeHTML(pid) + '" aria-label="Typical week ' + r.floor.toFixed(1) + ' to ' + r.ceil.toFixed(1) + ' points. Open the game log"><div><span>Typical week</span><b>' + r.floor.toFixed(1) + '–' + r.ceil.toFixed(1) + '</b></div><i><em style="left:' + a.toFixed(1) + '%;right:' + (100 - b).toFixed(1) + '%"></em></i><u>Game log ›</u></button>';
+      })() : '<button type="button" class="cd-rng" data-cd-log="' + escapeHTML(pid) + '"><div><span>Typical week</span><b class="dim">' + escapeHTML(rangeBasis(r)) + '</b></div><u>Game log ›</u></button>') : '';
     // injury / game line: the official report's practice log when there is one
     const g = gameOf(p.team), live = gameStateText(g);
     let line, tone = 'ok';
@@ -6832,7 +6913,7 @@
     slots.forEach(function(s){ if(tiers[s.i]) count[tiers[s.i]]++; });
     const dirty = prDirty(), empty = slots.filter(function(s){ return prIsEmpty(ctx.prWork[s.i]); }).length;
     return '<div class="cd sum t-silver" data-cd-sum style="--k:' + k + '"><div class="cd-in"><div class="cd-face cd-front"><div class="cd-body cd-bk">' +
-      '<div class="cd-bh"><span class="cd-bs dim">DECK SUMMARY</span>' + cdStamp() + '</div>' +
+      '<div class="cd-bh"><span class="cd-bs dim"><button type="button" class="cd-rew" data-cd-rewind aria-label="Back to the first card" title="Back to the first card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>DECK SUMMARY</span>' + cdStamp() + '</div>' +
       '<div class="cd-sm"><small>PROJECTED LINEUP</small><b>' + fmtPts(total) + '</b>' +
         '<span class="' + (empty ? 'warn' : flat ? '' : diff > 0 ? 'up' : 'down') + '">' + (empty ? empty + ' slot' + (empty > 1 ? 's' : '') + ' empty' : flat ? 'Same as Sleeper' : (diff > 0 ? '+' : '−') + Math.abs(diff).toFixed(2) + ' vs Sleeper') + '</span></div>' +
       '<div class="cd-tc">' + ['holo', 'gold', 'silver', 'base'].map(function(t){ return '<div><i>' + CD_MARK[t] + '</i><b>' + count[t] + '</b><small>' + t.toUpperCase() + '</small></div>'; }).join('') + '</div>' +
@@ -6881,7 +6962,8 @@
   function cdGo(i){ cdRewindStop(); ctx.prCardIdx = i; cdLayout(); }
   // Hidden: triple-tap / triple-click the summary card = rewind to the first card, every card back on its front.
   // Taps count only when each follows the last within 280ms and all three land within 650ms; one or two do nothing.
-  let cdTaps = [], cdRewindT = null;
+  // Counted on pointerdown / pointerup, not click: iOS turns a quick second tap into a dblclick and sends no click.
+  let cdTaps = [], cdRewindT = null, cdSumDown = null;
   function cdSumTap(){
     const now = Date.now();
     cdTaps = cdTaps.filter(function(t){ return now - t < 650; });
@@ -7098,6 +7180,15 @@
     renderPowerRank(); prView.querySelector('.pr-main').scrollTop = 0;
   }
   prView.addEventListener('pointerdown', cdOnDrag);
+  prView.addEventListener('pointerdown', function(e){
+    const c = e.target.closest('[data-cd-deck] > [data-cd-sum]');
+    cdSumDown = c && c.classList.contains('on') && !e.target.closest('button') && (e.pointerType !== 'mouse' || e.button === 0) ? { id: e.pointerId, x: e.clientX, y: e.clientY, t: Date.now() } : null;
+  });
+  prView.addEventListener('pointerup', function(e){
+    const d = cdSumDown; cdSumDown = null;
+    if(!d || d.id !== e.pointerId || Math.abs(e.clientX - d.x) + Math.abs(e.clientY - d.y) > 12 || Date.now() - d.t > 450) return;
+    cdSumTap();
+  });
   document.addEventListener('keydown', function(e){   // the deck: ←/→ between cards, Enter/Space flips the front card
     if(ctx.luMode !== 'pr' || ctx.prTab !== 'REVIEW' || ctx.prRvMode !== 'cards' || document.querySelector('.pr-dlg-back, .overlay.open')) return;
     if(e.target && /INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
@@ -7138,6 +7229,9 @@
     const cgo = e.target.closest('[data-cd-go]');
     if(cgo){ cdGo(Number(cgo.getAttribute('data-cd-go'))); return; }
     if(e.target.closest('[data-cd-flip]')){ cdFlip(); return; }
+    if(e.target.closest('[data-cd-rewind]')){ cdRewind(); return; }
+    const lg = e.target.closest('[data-cd-log]');
+    if(lg){ openMax({ kind: 'player', pid: lg.getAttribute('data-cd-log'), anchor: 'log' }, lg); return; }
     if(e.target.closest('[data-cd-edit]')){
       const c = cdCurrent();
       if(c && c.hasAttribute('data-cd-slot')) prJumpSlot(Number(c.getAttribute('data-cd-slot')));
@@ -7150,7 +7244,7 @@
       const k = Array.prototype.indexOf.call(cdc.parentNode.children, cdc);
       if(k !== ctx.prCardIdx){ cdGo(k); return; }
       if(cdc.classList.contains('empty')){ prJumpSlot(Number(cdc.getAttribute('data-cd-slot'))); return; }
-      if(!cdc.hasAttribute('data-cd-sum')) cdFlip(cdc); else cdSumTap();
+      if(!cdc.hasAttribute('data-cd-sum')) cdFlip(cdc);
       return;
     }
     const rvv = e.target.closest('[data-rv-view]');
@@ -8352,13 +8446,115 @@
       more = '<tbody class="gl-more-toggle"><tr><th class="gl-wk"><button type="button" class="gl-more-btn" data-gl-more aria-expanded="' + (groups.main.length ? 'false' : 'true') + '">More stats (' + groups.more.length + ')</button></th><td colspan="' + span + '"></td></tr></tbody>' +
         '<tbody class="gl-more"' + (groups.main.length ? ' hidden' : '') + '>' + groups.more.map(statRow).join('') + '</tbody>';
     }
-    return '<div class="gl-wrap"><table class="gl-table gl-vertical"><thead>' + head + '</thead><tbody>' + body + '</tbody>' + more + '</table></div>' +
+    return gameLogMobileHTML(pid, cols) + '<div class="gl-full"><div class="gl-wrap"><table class="gl-table gl-vertical"><thead>' + head + '</thead><tbody>' + body + '</tbody>' + more + '</table></div>' +
       (usage.length ? '<div class="gl-note">' + (idp
         ? 'Usage rows from Sleeper’s weekly stats: snap % = his defensive snaps ÷ his team’s; tackle share = his tackles ÷ every defender’s tackles for his team that week; big plays = sacks + INT + forced fumbles + fumble recoveries + defensive TDs.'
         : ctx.nfl
         ? 'Usage rows from nflverse (through week ' + ctx.nfl.stats_through_week + ').' + (nflWeeks(pid) ? '' : ' No nflverse match for this player.')
-        : 'nflverse data unavailable, so usage rows show "—".') + '</div>' : '');
+        : 'nflverse data unavailable, so usage rows show "—".') + '</div>' : '') + '</div>';
   }
+
+  // Phones: the game log as a story instead of a wide table. (1) points by week against his average, (2) where the
+  // points come from in this league's scoring, (3) the position's key stats with their trend, (4) week by week, newest
+  // first, each opening to its full stat line with what every stat was worth. The full table is one tap away.
+  // Desktop keeps the table (CSS shows one or the other).
+  function gameLogMobileHTML(pid, cols){
+    const p = ctx.players[pid], weeks = (hist(pid) || []).slice().sort(function(a, b){ return a.week - b.week; });
+    if(!weeks.length) return '';
+    const sc = ctx.league.scoring_settings || {}, n = weeks.length;
+    const avg = weeks.reduce(function(a, w){ return a + w.pts; }, 0) / n, l3 = last3Avg(pid);
+    const proj = ctx.projections[pid], hasProj = typeof proj === 'number' && !weeks.some(function(w){ return w.week === ctx.week; });
+    // (1) points by week
+    const top = Math.max.apply(null, weeks.map(function(w){ return w.pts; }).concat([hasProj ? proj : 0, avg, 1]));
+    const many = cols.length + (hasProj ? 1 : 0) > 10;
+    let best = weeks[0], worst = weeks[0];
+    weeks.forEach(function(w){ if(w.pts > best.pts) best = w; if(w.pts < worst.pts) worst = w; });
+    const bar = function(v, cls, lbl, sub, show){
+      return '<div class="glm-col ' + cls + '"><div class="glm-trk"><i style="height:' + Math.max(2, v / top * 100).toFixed(1) + '%">' + (show ? '<span class="glm-v">' + fmtPts1(v) + '</span>' : '') + '</i></div><b>' + lbl + '</b><small>' + escapeHTML(sub || '') + '</small></div>';
+    };
+    const chart = '<div class="glm-chart" style="--avg:' + (avg / top).toFixed(3) + '">' + cols.map(function(c){
+        if(!c.w) return '<div class="glm-col off"><div class="glm-trk"><i></i></div><b>' + c.week + '</b><small>' + c.note + '</small></div>';
+        const w = c.w, show = !many || w === best || w === worst || w === weeks[n - 1];
+        return bar(w.pts, w.pts >= avg ? 'up' : 'down', c.week, w.opp ? (w.away === true ? '@' : '') + w.opp : '', show);
+      }).join('') + (hasProj ? bar(proj, 'proj', ctx.week, 'proj', true) : '') + '<span class="glm-avg" aria-hidden="true"></span></div>';
+    const d3 = l3 === null || n < 4 ? null : l3 - avg;
+    const pills = '<div class="glm-pills">' +
+      '<span><small>Avg</small><b>' + fmtPts1(avg) + '</b></span>' +
+      '<span><small>Last 3</small><b>' + fmtPts1(l3) + (d3 === null || Math.abs(d3) < avg * 0.08 ? '' : '<em class="' + (d3 > 0 ? 'up' : 'down') + '">' + (d3 > 0 ? '▲' : '▼') + Math.abs(d3).toFixed(1) + '</em>') + '</b></span>' +
+      '<span><small>Best</small><b>' + fmtPts1(best.pts) + ' <em>wk ' + best.week + '</em></b></span>' +
+      '<span><small>Worst</small><b>' + fmtPts1(worst.pts) + ' <em>wk ' + worst.week + '</em></b></span></div>';
+    // (2) where the points come from: each scored stat × this league's value, per game
+    const worth = {};
+    weeks.forEach(function(w){ for(const k in w.raw){ if(sc.hasOwnProperty(k) && typeof w.raw[k] === 'number' && sc[k]) worth[k] = (worth[k] || 0) + w.raw[k] * sc[k]; } });
+    const srcKeys = Object.keys(worth).filter(function(k){ return Math.abs(worth[k]) / n >= 0.05; }).sort(function(a, b){ return worth[b] - worth[a]; });
+    const pos = srcKeys.filter(function(k){ return worth[k] > 0; }), neg = srcKeys.filter(function(k){ return worth[k] < 0; });
+    const posTot = pos.reduce(function(a, k){ return a + worth[k]; }, 0) || 1;
+    const shown = pos.slice(0, 5), rest = pos.slice(5).reduce(function(a, k){ return a + worth[k]; }, 0);
+    const hues = ['var(--accent)', 'var(--pos-QB)', 'var(--pos-WR)', 'var(--pos-TE)', 'var(--pos-DEF)', 'var(--text-3)'];
+    const segs = shown.map(function(k, i){ return { k: k, v: worth[k], c: hues[i], l: glmSrcLabel(k, sc) }; }).concat(rest > 0 ? [{ v: rest, c: hues[5], l: 'Everything else' }] : []);
+    const sources = srcKeys.length ? '<div class="glm-sec"><h4>Where points come from</h4><span>league scoring · per game</span></div>' +
+      '<div class="glm-stack">' + segs.map(function(g){ return '<i style="flex:' + g.v.toFixed(2) + ';background:' + g.c + '"></i>'; }).join('') + '</div>' +
+      '<div class="glm-src">' + segs.map(function(g){
+          return '<div><i style="background:' + g.c + '"></i><span>' + escapeHTML(g.l) + '</span><b>' + (g.v / n).toFixed(1) + '</b><small>' + Math.round(g.v / posTot * 100) + '%</small></div>';
+        }).join('') + neg.map(function(k){
+          return '<div class="neg"><i></i><span>' + escapeHTML(glmSrcLabel(k, sc)) + '</span><b>−' + Math.abs(worth[k] / n).toFixed(1) + '</b><small></small></div>';
+        }).join('') + '</div>' : '';
+    // (3) key stats for the position: per game, the last 3 vs the season, a small bar per week
+    const group = isIdp(pid) ? posGroup(pid) : p.position;
+    const keyDefs = (POSITION_KEY_STATS[group] || []).filter(function(x){ return weeks.some(function(w){ return typeof w.raw[x[0]] === 'number'; }); });
+    const nfl = {}; (nflWeeks(pid) || []).forEach(function(x){ nfl[x.week] = x; });
+    const trendRow = function(label, vals, fmt){
+      const got = vals.filter(function(v){ return typeof v === 'number'; });
+      if(!got.length) return '';
+      const season = meanOf(got), last = meanOf(got.slice(-3)), mx = Math.max.apply(null, got.concat([0.0001]));
+      const moved = got.length >= 4 && season > 0 && Math.abs(last - season) / season >= 0.12;
+      return '<div class="glm-tr"><span>' + escapeHTML(label) + '</span><div class="glm-spark">' + vals.map(function(v){ return '<i' + (typeof v === 'number' ? ' style="height:' + Math.max(6, v / mx * 100).toFixed(0) + '%"' : ' class="off"') + '></i>'; }).join('') + '</div>' +
+        '<b>' + fmt(season) + '</b><b class="' + (moved ? (last > season ? 'up' : 'down') : '') + '">' + fmt(last) + (moved ? (last > season ? ' ▲' : ' ▼') : '') + '</b></div>';
+    };
+    const one = function(v){ return v === null ? '—' : v >= 10 ? v.toFixed(0) : v.toFixed(1); };
+    const pctF = function(v){ return v === null ? '—' : Math.round(v * 100) + '%'; };
+    let trends = keyDefs.map(function(x){ return trendRow(statLabel(x[0]), weeks.map(function(w){ return typeof w.raw[x[0]] === 'number' ? w.raw[x[0]] : 0; }), one); }).join('');
+    if(SKILL_POSITIONS.indexOf(p.position) !== -1 || isIdp(pid)){
+      trends += trendRow('Snap %', weeks.map(function(w){ return (nfl[w.week] || {}).s; }), pctF);
+      if(p.position === 'WR' || p.position === 'TE' || p.position === 'RB') trends += trendRow('Target share', weeks.map(function(w){ return (nfl[w.week] || {}).t; }), pctF);
+    }
+    const keys = trends ? '<div class="glm-sec"><h4>Key stats</h4><span>per game</span></div><div class="glm-trs"><div class="glm-tr glm-trh"><span></span><span>by week</span><b>Season</b><b>Last 3</b></div>' + trends + '</div>' : '';
+    // (4) week by week, newest first
+    const line = function(raw){
+      return keyDefs.map(function(x){ const v = raw[x[0]]; return '<span' + (!v ? ' class="z"' : '') + '>' + fmtStat(typeof v === 'number' ? v : 0) + ' <small>' + x[1] + '</small></span>'; }).join('');
+    };
+    const groups = function(raw){ return statsForPosition(p.position, Object.keys(raw).filter(function(k){ return typeof raw[k] === 'number' && raw[k] !== 0 && !NON_STAT_KEY.test(k) && !NOT_PLAYER_STAT.test(k); })); };
+    const list = weeks.slice().reverse().map(function(w){
+      const g = groups(w.raw), all = g.main.concat(g.more);
+      const opp = w.opp ? (w.away === true ? '@ ' : w.away === false ? 'vs ' : '') + w.opp : '';
+      return '<details class="glm-wk"><summary><span class="glm-wk-l"><b>Wk ' + w.week + '</b><small>' + escapeHTML(opp) + '</small></span>' +
+          '<span class="glm-line">' + line(w.raw) + '</span><b class="glm-pts ' + (w.pts >= avg ? 'up' : 'down') + '">' + fmtPts1(w.pts) + '</b></summary>' +
+        '<div class="glm-all">' + all.map(function(k){
+            const v = w.raw[k], pts = sc.hasOwnProperty(k) && sc[k] ? v * sc[k] : null;
+            return '<div><span>' + escapeHTML(statLabel(k)) + '</span><b>' + fmtStat(v) + '</b><small class="' + (pts === null ? '' : pts < 0 ? 'down' : 'up') + '">' + (pts === null || Math.abs(pts) < 0.005 ? '' : (pts > 0 ? '+' : '−') + Math.abs(pts).toFixed(2)) + '</small></div>';
+          }).join('') + '</div></details>';
+    }).join('');
+    const skipped = cols.filter(function(c){ return !c.w; }).map(function(c){ return 'Wk ' + c.week + ' ' + c.note; });
+    return '<div class="glm">' +
+      '<div class="glm-sec"><h4>Points by week</h4><span>- - - season avg</span></div>' + chart + pills + sources + keys +
+      '<div class="glm-sec"><h4>Week by week</h4><span>tap for every stat</span></div><div class="glm-wks">' + list + '</div>' +
+      (skipped.length ? '<div class="gl-note">' + escapeHTML(skipped.join(' · ')) + '</div>' : '') +
+      '<button type="button" class="glm-table-btn" data-gl-table aria-expanded="false">Full stat table</button></div>';
+  }
+  function fmtPts1(v){ return v === null || v === undefined || isNaN(v) ? '—' : v.toFixed(1); }
+  // "Pass yards · 0.04 each" style names for the scoring breakdown
+  function glmSrcLabel(k, sc){
+    const v = sc[k], each = Math.abs(v) < 1 ? String(Math.round(Math.abs(v) * 1000) / 1000).replace(/^0/, '') : String(Math.abs(v));
+    return statLabel(k) + ' · ' + (v < 0 ? '−' : '') + each + ' each';
+  }
+  document.addEventListener('click', function(e){
+    const b = e.target.closest && e.target.closest('[data-gl-table]');
+    if(!b) return;
+    const full = b.closest('.pf-log').querySelector('.gl-full'), open = !full.classList.contains('open');
+    full.classList.toggle('open', open); b.setAttribute('aria-expanded', String(open));
+    b.textContent = open ? 'Hide full stat table' : 'Full stat table';
+    if(open) full.scrollIntoView({ block: 'nearest', behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+  });
   document.addEventListener('click', function(e){
     const b = e.target.closest && e.target.closest('[data-gl-more]');
     if(!b) return;
@@ -8502,6 +8698,7 @@
     if(openDetails.length) maxBody.querySelectorAll('details').forEach(function(d, i){ if(openDetails[i]) d.open = true; });
     maxBody.style.setProperty('--bar-h', maxEl.querySelector('.max-bar').offsetHeight + 'px');
     maxTitle.textContent = maxTitleFor(e);
+    if(!maxEl.hidden) maxToAnchor(e);
     maxBackLabel.textContent = maxStack.length > 1 ? maxTitleFor(maxStack[maxStack.length - 2]) : 'Back to ' + VIEW_TITLES[ctx.view];
     if(dir && !reduceMotion.matches) maxBody.animate([{ opacity: 0, transform: 'translateX(' + (dir > 0 ? 28 : -28) + 'px)' }, { opacity: 1, transform: 'none' }], { duration: 360, easing: 'cubic-bezier(.2,.8,.2,1)' });
     // A player page needs their season history; fetch it once, then re-render if they're still on top.
@@ -8511,6 +8708,13 @@
     if(e.kind === 'h2h' && e.pids.some(function(id){ return !hist(id); })){
       Promise.all(e.pids.map(ensureHistory)).then(function(){ if(maxOpen() && maxStack[maxStack.length - 1] === e) renderMax(0); });
     }
+  }
+  // A page opened for one section (the card back's "Game log"): start scrolled there, once its history is in.
+  function maxToAnchor(e){
+    if(!e.anchor || e.kind !== 'player' || !hist(e.pid)) return;
+    const t = maxBody.querySelector('.pf-log');
+    if(t) maxPanel.scrollTop = Math.max(0, t.getBoundingClientRect().top - maxPanel.getBoundingClientRect().top + maxPanel.scrollTop - maxEl.querySelector('.max-bar').offsetHeight - 8);
+    e.anchor = null;
   }
   let maxClosing = null; // pending cleanup from a close animation
   function finishClose(){
@@ -8522,12 +8726,13 @@
   }
   function openMax(entry, fromEl){
     finishClose(); // a close still animating must not wipe out what we're about to open
-    if(maxOpen()){ maxStack.push(entry); maxPanel.scrollTop = 0; renderMax(1); return; }
+    if(maxOpen()){ maxStack.push(entry); maxPanel.scrollTop = 0; renderMax(1); maxToAnchor(entry); return; }
     entry.from = fromEl || null;
     maxStack = [entry];
     renderMax(0);
     maxPanel.scrollTop = 0;
     maxEl.hidden = false;
+    maxToAnchor(entry);
     document.body.classList.add('no-scroll');
     if(reduceMotion.matches) return;
     maxPanel.animate([{ clipPath: insetOf(fromEl) }, { clipPath: FULL_CLIP }], { duration: 540, easing: 'cubic-bezier(.2,.85,.25,1)' });
@@ -9032,7 +9237,7 @@
       left += '<div class="pf-sec"' + (left ? ' style="margin-top:22px"' : '') + '><h3>Snap share by week</h3><span class="eyebrow">Role</span></div><div class="bars">' +
         snaps.map(function(x, i){ return '<div class="bar"><span class="lbl">Wk ' + x.week + '</span><div class="track"><div class="fill snap" style="--i:' + i + ';width:' + (x.s * 100) + '%"></div></div><b>' + pct(x.s) + '</b></div>'; }).join('') + '</div>';
     }
-    left = left ? '<div class="card pf-card">' + left + '</div>' : '<div></div>';
+    left = left ? '<div class="card pf-card pf-charts">' + left + '</div>' : '<div></div>';
     const dvp = dvpInfo(pid);
     const context = rangeDetailHTML(pid) + idpRangeNote(pid) + (dvp ? '<div class="dvp-line"><span class="dvp-chip ' + (dvp.early ? 'early' : dvp.tone) + '">Matchup</span> ' + escapeHTML(dvpSentence(dvp)) + '</div>' : '');
     return byeCallouts([pid]) + hero + injurySourcesHTML(pid) + (loading ? '' : context) + '<div class="card pf-card pf-rk"><div class="pf-sec"><h3>Rankings &amp; value</h3><span class="eyebrow">consensus · market</span></div>' + rankingsHTML(pid) + '</div>' + weekCard + logCard + '<div class="pf-grid">' + left + '<div class="card pf-card">' + maxSideHTML(pid) + '</div></div>';
