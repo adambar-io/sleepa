@@ -866,7 +866,7 @@
   .pr-title span{ font-size: 12px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .pr-actions{ margin-left: auto; display: flex; align-items: center; gap: 8px; }
   .pr-topbar .wk-seg button{ padding: 6px 12px; min-height: 32px; }
-  .pr-main{ overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 22px 28px 28px; }
+  .pr-main{ overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 22px 28px 28px; }
   .pr-main .opt-note{ max-width: 1180px; margin: 0 auto 16px; }
   .pr-body{ max-width: 1180px; margin: 0 auto; }
   .pr-dock{ display: flex; align-items: center; gap: 18px; padding: 10px 24px calc(env(safe-area-inset-bottom) + 10px); background: var(--surface); border-top: 1px solid var(--hair);
@@ -890,6 +890,8 @@
   /* entrance only when the tab changes (not on every tap): slide in from the side you moved toward, cards stagger */
   .pr-stage.enter{ animation: prStageIn .3s var(--ease); }
   @keyframes prStageIn{ from{ opacity: 0; transform: translateX(calc(var(--dir, 0) * var(--shift, 18px))); } to{ opacity: 1; transform: none; } }
+  .pr-main .pr-stage.swipe-in{ --shift: 64px; animation-duration: .26s; }   /* after a swipe: the next step slides in from that side */
+  .pr-stage.swiping{ will-change: transform; }
   .nm-s, .t-s{ display: none; }
   .pr-tabs.fade-r{ -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); }
   .pr-tabs.fade-l{ -webkit-mask-image: linear-gradient(90deg, transparent, #000 28px); mask-image: linear-gradient(90deg, transparent, #000 28px); }
@@ -6626,12 +6628,13 @@
       : selPid ? 'Pick a slot for <b>' + escapeHTML(playerName(ctx.players[selPid])) + '</b> · tap it again to cancel'
       : sel ? 'Pick a player for <b>' + escapeHTML(prSlotName(sel.slot)) + '</b>'
       : empty.length ? 'Tap a player to fill <b>' + escapeHTML(empty[0].name) + '</b>' + (hasFinePointer() ? ', or drag one onto a slot' : '')
-      : (prIsFlexTab(tab) ? 'Tap a leftover, then the ' + tab.toLowerCase() + ' spot it should take' : 'Tap a player, then a slot') + ' · <b>double-' + (hasFinePointer() ? 'click' : 'tap') + '</b> to swap in for your lowest starter' + (hasFinePointer() ? ' · or drag' : ' · hold to drag');
+      : (prIsFlexTab(tab) ? 'Tap a leftover, then the ' + tab.toLowerCase() + ' spot it should take' : 'Tap a player, then a slot') + ' · <b>double-' + (hasFinePointer() ? 'click' : 'tap') + '</b> to swap in for your lowest starter' +(hasFinePointer() ? ' · or drag · ←/→ for the next position' : ' · hold to drag · swipe for the next position');
     const blank = prSlots().every(function(s){ const p = ctx.prWork[s.i]; return prIsEmpty(p) || isLocked(p); });
     const start = blank ? '<div class="pr-start"><div><b>Build your week ' + ctx.week + ' lineup from scratch.</b> Go position by position (' + tabs.join(', ') + '), then Save.</div>' +
       '<button type="button" data-pr-from-sleeper>Start from my Sleeper lineup</button></div>' : '';
     const enter = ctx.prEnter; ctx.prEnter = null;
-    return '<div class="pr-stage' + (enter ? ' enter' : '') + '" style="--pr-c:' + prTabColor(tab) + (enter ? ';--dir:' + enter : '') + '">' + start +
+    const swiped = ctx.prSwipeIn; ctx.prSwipeIn = false;
+    return '<div class="pr-stage' + (enter ? ' enter' : '') + (enter && swiped ? ' swipe-in' : '') + '" style="--pr-c:' + prTabColor(tab) + (enter ? ';--dir:' + enter : '') + '">' + start +
       '<div class="pr-sec"><h3>' + (tab === 'FLEX' ? 'Flex' : tab === 'SF' ? 'Superflex' : tab === 'IDP' ? 'IDP flex' : tab === 'DEF' ? 'Team defense' : tab === 'K' ? 'Kicker' : tab) + ' slot' + (ts.length > 1 ? 's' : '') + '</h3><span>' + (empty.length ? empty.length + ' empty' : 'all set') + '</span>' + next + '</div>' +
       '<div class="pr-hint">' + hint + '</div><div class="pr-slots' + (ts.length === 1 ? ' one' : '') + '">' + slotHTML + '</div>' + poolHTML + '</div>';
   }
@@ -7099,15 +7102,7 @@
   prView.addEventListener('click', function(e){
     if(prDrag.justDropped){ prDrag.justDropped = false; return; }   // the click that ends a drag
     const t = e.target.closest('[data-pr-tab]');
-    if(t){
-      const nt = t.getAttribute('data-pr-tab'), tabs = prTabs().concat(['REVIEW']);
-      if(nt === ctx.prTab) return;
-      ctx.prEnter = tabs.indexOf(nt) > tabs.indexOf(ctx.prTab) ? 1 : -1;
-      ctx.prTab = nt; ctx.prSel = null; renderPowerRank();
-      // a new position starts at its slots (the page itself never moves: only this screen's own scroll area)
-      prView.querySelector('.pr-main').scrollTop = 0;
-      return;
-    }
+    if(t){ prGoTab(t.getAttribute('data-pr-tab')); return; }
     const rvm = e.target.closest('[data-rv-mode]');
     if(rvm){ const m = rvm.getAttribute('data-rv-mode'); if(m !== ctx.prRvMode){ ctx.prRvMode = m; ctx.prCardDeal = m === 'cards'; ctx.prEnter = 1; prSpotDetailClose(); renderPowerRank(); } return; }
     const cgo = e.target.closest('[data-cd-go]');
@@ -7258,6 +7253,102 @@
   // iOS: once a hold-drag is live, stop the page from scrolling under the finger
   document.addEventListener('touchmove', function(e){ if(prDrag.st && prDrag.st.active) e.preventDefault(); }, { passive: false });
   prView.addEventListener('contextmenu', function(e){ if(e.target.closest('.pr-card')) e.preventDefault(); });   // long-press menu on Android
+
+  // ---- steps: chips, Next, swipe and ←/→ all go through prGoTab ----
+  function prStepList(){ return prTabs().concat(['REVIEW']); }
+  function prGoTab(nt, swiped){
+    const tabs = prStepList();
+    if(nt === ctx.prTab || tabs.indexOf(nt) === -1) return;
+    ctx.prEnter = tabs.indexOf(nt) > tabs.indexOf(ctx.prTab) ? 1 : -1;
+    ctx.prSwipeIn = !!swiped;
+    ctx.prTab = nt; ctx.prSel = null; prSpotDetailClose(); renderPowerRank();
+    // a new position starts at its slots (the page itself never moves: only this screen's own scroll area)
+    prView.querySelector('.pr-main').scrollTop = 0;
+  }
+  function prStepBy(d, swiped){
+    const tabs = prStepList(), k = tabs.indexOf(ctx.prTab) + d;
+    if(k < 0 || k >= tabs.length) return false;   // no wrap
+    prGoTab(tabs[k], swiped); return true;
+  }
+  // Swipe left / right on a step (touch). The direction is decided once, after ~10px: mostly sideways = this swipe,
+  // anything else is left to the browser (vertical scroll). Not a swipe: starting within 24px of the screen's left /
+  // right edge (iOS back / forward), on a pool swipe row (it scrolls itself), on the Review card deck (its own swipe),
+  // or once a hold-to-drag has started. The step follows the finger; past 25% of the width or a flick = next / previous
+  // step, otherwise it springs back. No wrap: the first and last steps rubber-band.
+  const prSwipe = { st: null };
+  const prMainEl = function(){ return prView.querySelector('.pr-main'); };
+  prView.addEventListener('touchstart', function(e){
+    prSwipe.st = null;
+    if(e.touches.length !== 1 || ctx.luMode !== 'pr') return;
+    const t = e.touches[0], main = prMainEl();
+    if(!main || !main.contains(e.target)) return;   // the bottom bar and top bar scroll / tap on their own
+    if(t.clientX < 24 || t.clientX > window.innerWidth - 24) return;
+    if(e.target.closest('.pr-pool:not(.all), [data-cd-deck], .cb-pop')) return;
+    if(ctx.prTab === 'REVIEW' && ctx.prRvMode === 'cards') return;
+    if(document.querySelector('.overlay.open, .pr-dlg-back')) return;
+    const stage = main.querySelector('.pr-stage, .rv');
+    prSwipe.st = { x0: t.clientX, y0: t.clientY, t0: e.timeStamp, lock: null, stage: stage || main.firstElementChild, dx: 0, hist: [] };
+  }, { passive: true });
+  prView.addEventListener('touchmove', function(e){
+    const st = prSwipe.st;
+    if(!st) return;
+    if(prDrag.st && prDrag.st.active){ prSwipeCancel(); return; }   // a hold-to-drag owns this touch
+    const t = e.touches[0], dx = t.clientX - st.x0, dy = t.clientY - st.y0;
+    if(!st.lock){
+      if(Math.max(Math.abs(dx), Math.abs(dy)) < 10) return;
+      st.lock = Math.abs(dx) > Math.abs(dy) * 1.2 ? 'x' : 'y';
+      if(st.lock === 'y'){ prSwipe.st = null; return; }   // vertical: the browser scrolls, nothing else happens
+      if(prDrag.st && !prDrag.st.active){ clearTimeout(prDrag.st.timer); prDrag.st = null; }   // no hold-drag after a swipe began
+      st.x0 = t.clientX - Math.sign(dx) * 10;   // no jump when the lock kicks in
+      if(st.stage) st.stage.classList.add('swiping');
+    }
+    e.preventDefault();   // sideways: keep the page from scrolling under the finger
+    const tabs = prStepList(), k = tabs.indexOf(ctx.prTab), raw = t.clientX - st.x0;
+    const atEnd = (raw > 0 && k <= 0) || (raw < 0 && k >= tabs.length - 1);
+    st.dx = atEnd ? raw * 0.28 : raw;   // rubber band at the first / last step
+    st.atEnd = atEnd;
+    st.hist.push({ x: t.clientX, t: e.timeStamp }); if(st.hist.length > 5) st.hist.shift();
+    if(st.stage && !prReduced()){
+      const w = prMainEl().clientWidth;
+      st.stage.style.transition = 'none';
+      st.stage.style.transform = 'translateX(' + st.dx + 'px)';
+      st.stage.style.opacity = String(1 - Math.min(0.5, Math.abs(st.dx) / w * 0.6));
+    }
+  }, { passive: false });
+  prView.addEventListener('touchend', function(e){
+    const st = prSwipe.st; prSwipe.st = null;
+    if(!st || st.lock !== 'x') return;
+    const w = prMainEl().clientWidth, h = st.hist, a = h[0], b = h[h.length - 1];
+    const v = a && b && b.t > a.t ? (b.x - a.x) / (b.t - a.t) : 0;   // px / ms over the last few moves
+    const dir = st.dx < 0 ? 1 : -1;
+    const go = !st.atEnd && (Math.abs(st.dx) > w * 0.25 || (Math.abs(v) > 0.45 && Math.abs(st.dx) > 30 && Math.sign(v) === Math.sign(st.dx)));
+    prDrag.justDropped = true; setTimeout(function(){ prDrag.justDropped = false; }, 60);   // the lift isn't a tap
+    if(!go){ prSwipeBack(st); return; }
+    try{ if(navigator.vibrate) navigator.vibrate(6); }catch(err){}
+    if(prReduced() || !st.stage){ prStepBy(dir, true); return; }
+    st.stage.style.transition = 'transform .16s var(--ease), opacity .16s var(--ease)';
+    st.stage.style.transform = 'translateX(' + (-dir * w * 0.5) + 'px)';
+    st.stage.style.opacity = '0';
+    setTimeout(function(){ prStepBy(dir, true); }, 150);
+  });
+  prView.addEventListener('touchcancel', function(){ prSwipeCancel(); });
+  function prSwipeCancel(){ const st = prSwipe.st; prSwipe.st = null; if(st && st.lock === 'x') prSwipeBack(st); }
+  function prSwipeBack(st){
+    const el = st.stage;
+    if(!el) return;
+    el.style.transition = prReduced() ? 'none' : 'transform .32s var(--spring), opacity .2s var(--ease)';
+    el.style.transform = ''; el.style.opacity = '';
+    setTimeout(function(){ el.style.transition = ''; el.classList.remove('swiping'); }, 340);
+  }
+  function prReduced(){ return window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
+  // desktop: ←/→ between steps (the Review card deck keeps its own arrows)
+  document.addEventListener('keydown', function(e){
+    if(ctx.luMode !== 'pr' || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') || e.altKey || e.metaKey || e.ctrlKey) return;
+    if(ctx.prTab === 'REVIEW' && ctx.prRvMode === 'cards') return;
+    if(document.querySelector('.overlay.open, .pr-dlg-back') || (document.getElementById('max') && !document.getElementById('max').hidden)) return;
+    if(e.target && (/INPUT|SELECT|TEXTAREA/.test(e.target.tagName) || e.target.isContentEditable || e.target.closest('.pr-pool, .pr-tabs'))) return;
+    if(prStepBy(e.key === 'ArrowRight' ? 1 : -1)) e.preventDefault();
+  });
 
   els.byeAlert.addEventListener('click', function(e){
     const b = e.target.closest('[data-fix-slot]');
