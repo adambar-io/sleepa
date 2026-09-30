@@ -2418,6 +2418,7 @@
     transition: transform .45s var(--ease), opacity .45s var(--ease); cursor: pointer; }
   .cd-deck > .cd.far{ opacity: 0; pointer-events: none; }
   .cd-deck.dragging > .cd{ transition: none; }
+  .cd.sum{ user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }   /* triple-tap / triple-click (rewind) never selects text */
   .cd-deck > .cd.on{ cursor: auto; }
   .cd-deck.deal > .cd{ animation: cdDeal .5s var(--ease) both; animation-delay: calc(var(--k) * 60ms); }
   @keyframes cdDeal{ from{ opacity: 0; margin-top: 24px; } to{ margin-top: 0; } }
@@ -6877,7 +6878,34 @@
     const act = document.querySelector('#pr-view .cd-strip [aria-selected="true"]');
     if(act){ const st = act.parentNode; st.scrollTo({ left: Math.max(0, act.offsetLeft - (st.clientWidth - act.offsetWidth) / 2), behavior: 'smooth' }); }
   }
-  function cdGo(i){ ctx.prCardIdx = i; cdLayout(); }
+  function cdGo(i){ cdRewindStop(); ctx.prCardIdx = i; cdLayout(); }
+  // Hidden: triple-tap / triple-click the summary card = rewind to the first card, every card back on its front.
+  // Taps count only when each follows the last within 280ms and all three land within 650ms; one or two do nothing.
+  let cdTaps = [], cdRewindT = null;
+  function cdSumTap(){
+    const now = Date.now();
+    cdTaps = cdTaps.filter(function(t){ return now - t < 650; });
+    if(cdTaps.length && now - cdTaps[cdTaps.length - 1] > 280) cdTaps = [];
+    cdTaps.push(now);
+    if(cdTaps.length >= 3){ cdTaps = []; cdRewind(); }
+  }
+  function cdRewindStop(){ clearTimeout(cdRewindT); cdRewindT = null; }
+  function cdRewind(){
+    cdRewindStop();
+    ctx.prCardFlip = {};
+    document.querySelectorAll('#pr-view [data-cd-deck] > .cd.flipped').forEach(function(c){ c.classList.remove('flipped'); });
+    try{ if(navigator.vibrate) navigator.vibrate([8, 40, 8]); }catch(e){}
+    const from = ctx.prCardIdx;
+    if(from <= 0) return;
+    if(prReduced()){ ctx.prCardIdx = 0; cdLayout(); return; }
+    // a quick shuffle back: one card at a time, faster for bigger decks (~0.5s in all), the counter ticking down
+    const step = Math.max(28, Math.min(70, 500 / from));
+    const tick = function(){
+      ctx.prCardIdx = Math.max(0, ctx.prCardIdx - 1); cdLayout();
+      cdRewindT = ctx.prCardIdx > 0 ? setTimeout(tick, step) : null;
+    };
+    tick();
+  }
   function cdCurrent(){ const deck = document.querySelector('#pr-view [data-cd-deck]'); return deck ? deck.children[ctx.prCardIdx] : null; }
   function cdFlip(card){
     card = card || cdCurrent();
@@ -7122,7 +7150,7 @@
       const k = Array.prototype.indexOf.call(cdc.parentNode.children, cdc);
       if(k !== ctx.prCardIdx){ cdGo(k); return; }
       if(cdc.classList.contains('empty')){ prJumpSlot(Number(cdc.getAttribute('data-cd-slot'))); return; }
-      if(!cdc.hasAttribute('data-cd-sum')) cdFlip(cdc);
+      if(!cdc.hasAttribute('data-cd-sum')) cdFlip(cdc); else cdSumTap();
       return;
     }
     const rvv = e.target.closest('[data-rv-view]');
