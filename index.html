@@ -2222,6 +2222,49 @@
   .zn-entry:active{ transform: scale(.985); }
   .zn-set-btns{ display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
   .set-card .zn-set-btns .quiet-btn{ margin-top: 0; }
+  /* ============ Sleepa Zone: live feed (Phase 2) ============ */
+  /* impact = what the play does to ME: pos green, neg red, mix amber, neu gray; m1..m3 = size of the swing */
+  .zf-ev{ --ic: var(--impact-neutral); --it: 5%; position: relative; padding: 7px 10px 7px 12px; border-radius: 10px;
+    background: color-mix(in srgb, var(--ic) var(--it), var(--surface-2)); }
+  .zf-ev::before{ content: ''; position: absolute; left: 0; top: 7px; bottom: 7px; width: 3px; border-radius: 0 3px 3px 0; background: var(--ic); opacity: .8; }
+  .zf-ev.imp-pos{ --ic: var(--impact-pos); } .zf-ev.imp-neg{ --ic: var(--impact-neg); } .zf-ev.imp-mix{ --ic: var(--impact-mixed); } .zf-ev.imp-neu{ --ic: var(--impact-neutral); --it: 0%; }
+  .zf-ev.m2{ --it: 10%; } .zf-ev.m3{ --it: 17%; }
+  .zf-ev.imp-neu.m2, .zf-ev.imp-neu.m3{ --it: 0%; }
+  .zf-ev.new{ animation: zfIn .45s var(--ease) both; }
+  @keyframes zfIn{ from{ opacity: 0; transform: translateY(-6px); } to{ opacity: 1; transform: none; } }
+  .zf-top{ display: flex; align-items: center; gap: 6px; }
+  .zf-pts{ font-size: 12px; font-weight: 750; font-variant-numeric: tabular-nums; color: var(--ic); }
+  .zf-ev.imp-neu .zf-pts{ color: var(--text-3); }
+  .zf-clk{ margin-left: auto; font-size: 10.5px; color: var(--text-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .zf-d{ margin-top: 2px; font-size: 11.5px; line-height: 1.35; color: var(--text-2); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+  .zf-d b{ color: var(--text); font-weight: 650; }
+  .zf-ev.adj .zf-d{ font-style: italic; }
+  .zf-chip{ font-size: 9.5px; font-weight: 800; letter-spacing: .05em; padding: 1px 6px; border-radius: 5px; background: color-mix(in srgb, var(--ic) 18%, transparent); color: var(--ic); white-space: nowrap; }
+  .zf-ev.imp-neu .zf-chip{ color: var(--text-3); background: var(--surface-3); }
+  .zf-lg{ margin-top: 2px; font-size: 10px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .zf-lead{ display: flex; align-items: center; gap: 6px; padding: 4px 2px; font-size: 11px; color: var(--text-3); }
+  .zf-lead span{ font-weight: 700; color: var(--accent); letter-spacing: .03em; }
+  .zf-lead.new{ animation: zfIn .45s var(--ease) both; }
+  .zf-none{ margin: 4px 0; font-size: 11.5px; color: var(--text-3); }
+  /* in a card: two columns under the starters */
+  .zf-card{ margin: 4px 0 8px; }
+  .zf-h{ display: flex; align-items: baseline; gap: 8px; margin: 6px 2px 8px; }
+  .zf-h b{ font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-2); }
+  .zf-warn{ font-size: 11px; color: var(--warn); }
+  .zf-more{ margin-left: auto; min-height: 28px; padding: 0 10px; border-radius: 999px; background: var(--surface-2); color: var(--text-2); font-size: 11.5px; font-weight: 600; }
+  .zf-cols{ display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+  .zf-cols.solo{ grid-template-columns: minmax(0, 1fr); }
+  .zf-col{ display: grid; gap: 5px; align-content: start; min-width: 0; }
+  /* the desktop grid's column */
+  .zf-modes{ display: flex; width: fit-content; margin: 10px 0 8px; }
+  .zf-modes button{ padding: 5px 11px; min-height: 28px; font-size: 12px; }
+  .zf-note{ font-size: 11.5px; color: var(--warn); margin-bottom: 8px; line-height: 1.4; }
+  .zf-note[hidden]{ display: none; }
+  .zf-list{ display: grid; gap: 5px; max-height: calc(100vh - 250px); overflow-y: auto; overscroll-behavior: contain; padding-right: 2px; }
+  .zn-feedph .zf-list .zf-ev{ background: color-mix(in srgb, var(--ic) var(--it), var(--surface)); }
+  .imp-t.pos{ color: var(--impact-pos); } .imp-t.neg{ color: var(--impact-neg); } .imp-t.mix{ color: var(--impact-mixed); }
+  @media (prefers-reduced-motion: reduce){ .zf-ev.new, .zf-lead.new{ animation: none !important; } }
+  .zn .zn-feedph{ border-style: solid; border-color: var(--hair); color: var(--text); }
 </style>
 </head>
 <body>
@@ -8566,15 +8609,20 @@
   // set (a team, true or "1"); otherwise the ball position (the team with the ball inside the other team's 20).
   async function zoneFetchScores(week){
     const arr = await fetchJSON(UNOFFICIAL + '/scores/nfl/regular/' + ctx.season + '/' + week);
-    const out = {};
+    const out = {}, games = [];
     (Array.isArray(arr) ? arr : []).forEach(function(g){
       const m = g && g.metadata || {}, live = !!m.is_in_progress, poss = m.possession || '', raw = m.red_zone;
+      if(g && g.game_id && m.home_team && m.away_team){
+        const done = g.status === 'complete' || !!m.is_over;
+        games.push({ gid: String(g.game_id), home: m.home_team, away: m.away_team, status: g.status, live: live && !done, done: done, started: done || live || !!m.has_started });
+      }
       let rzTeam = '';
       if(typeof raw === 'string' && raw && (raw === m.home_team || raw === m.away_team)) rzTeam = raw;
       else if(raw === true || raw === 1 || (typeof raw === 'string' && /^(true|1|yes)$/i.test(raw))) rzTeam = poss;
       else{ const yl = Number(m.yard_line), terr = m.yard_line_territory; if(poss && terr && terr !== poss && yl > 0 && yl <= 20) rzTeam = poss; }
       [m.home_team, m.away_team].forEach(function(t){ if(t) out[t] = { live: live, poss: poss === t, rz: live && rzTeam === t }; });
     });
+    Object.defineProperty(out, '__games', { value: games });   // not a team: kept off the team keys
     return out;
   }
   async function zoneFetchProj(week){
@@ -8592,13 +8640,24 @@
       },
       apply: function(res, week){
         let ok = 0;
-        res.forEach(function(r){ if(!r) return; const L = zLeague(r.id); if(!L) return; if(r.err){ L.muErr = true; return; } L.mu = r.mu; L.muWeek = week; L.muErr = false; L.muTs = Date.now(); ok++; });
+        res.forEach(function(r){ if(!r) return; const L = zLeague(r.id); if(!L) return; if(r.err){ L.muErr = true; return; }
+          if(L.muWeek === week && L.mu) zFeedDiffCapture(L, L.mu, r.mu, week);
+          L.mu = r.mu; L.muWeek = week; L.muErr = false; L.muTs = Date.now(); ok++; });
         return ok > 0 || !res.some(Boolean);
       } },
     { name: 'games', gap: 0, run: function(week){ return fetchGames(week); },
       apply: function(g, week){ ctx.zone.games = g; ctx.zone.gamesWeek = week; ctx.zone.gamesTs = Date.now(); return true; } },
     { name: 'scores', gap: 0, optional: true, run: zoneFetchScores,
-      apply: function(s, week){ ctx.zone.scores = s; ctx.zone.scoresWeek = week; ctx.zone.scoresTs = Date.now(); return true; } },
+      apply: function(s, week){ ctx.zone.scores = s; ctx.zone.scoresWeek = week; ctx.zone.scoresTs = Date.now(); ctx.zone.sgames = s.__games || []; ctx.zone.sgamesWeek = week; ctx.zone.sgamesTs = Date.now(); return true; } },
+    // Phase 2: the play feed. Runs after the others (it needs this refresh's matchups and games). Two failures in a row
+    // switch the feed to score changes between refreshes (zFeedDiffCapture) until it works again.
+    { name: 'plays', gap: 0, optional: true, after: true,
+      run: function(week){
+        const z = ctx.zone;
+        return zoneFetchPlays(week).then(function(r){ z.feedFail = 0; z.feedDiff = false; return r; },
+          function(e){ z.feedFail++; if(z.feedFail >= 2) z.feedDiff = true; throw e; });
+      },
+      apply: function(){ return true; } },
     // raw stats for the week (desktop stat lines; Sleeper caches this for 5 minutes, so every 3 is plenty)
     { name: 'stats', gap: 3 * 60 * 1000, optional: true, when: function(){ return zoneWide(); },
       run: function(week){ return fetchJSON(UNOFFICIAL + '/stats/nfl/' + ctx.season + '/' + week + '?season_type=regular&' + zonePositions().map(function(p){ return 'position[]=' + p; }).join('&')); },
@@ -8625,14 +8684,20 @@
       if(loadId !== z.loadId) return;
       const now = Date.now();
       const due = zoneSources.filter(function(s){ return (!s.when || s.when()) && (opts.force || !s.week || s.week !== week || now - (s.ts || 0) >= s.gap); });
-      const res = await Promise.all(due.map(function(s){ return Promise.resolve().then(function(){ return s.run(week); }).catch(function(e){ console.warn('Sleepa Zone: ' + s.name + ' unavailable', e); return undefined; }); }));
-      if(loadId !== z.loadId || week !== z.week) return;
+      const runAll = function(list){ return Promise.all(list.map(function(s){ return Promise.resolve().then(function(){ return s.run(week); }).catch(function(e){ console.warn('Sleepa Zone: ' + s.name + ' unavailable', e); return undefined; }); })); };
       let failed = false;
-      due.forEach(function(s, i){
-        if(res[i] === undefined){ if(!s.optional) failed = true; return; }   // red zone and stat lines are extras: their failure doesn't mark the view as failed
-        if(s.apply(res[i], week) === false) failed = true;
-        s.ts = Date.now(); s.week = week;
-      });
+      const applyAll = function(list, res){
+        list.forEach(function(s, i){
+          if(res[i] === undefined){ if(!s.optional) failed = true; return; }   // red zone, stat lines and the feed are extras: their failure doesn't mark the view as failed
+          if(s.apply(res[i], week) === false) failed = true;
+          s.ts = Date.now(); s.week = week;
+        });
+      };
+      const first = due.filter(function(s){ return !s.after; }), later = due.filter(function(s){ return s.after; });
+      applyAll(first, await runAll(first));
+      if(loadId !== z.loadId || week !== z.week) return;
+      if(later.length){ zoneRender(true); applyAll(later, await runAll(later)); }
+      if(loadId !== z.loadId || week !== z.week) return;
       z.failed = failed;
       if(!failed || z.leagues.some(function(L){ return L.muTs && L.muWeek === week; })) z.ts = Date.now();
       zoneRender(true);
@@ -8640,6 +8705,313 @@
       z.busy = false;
       zoneRenderAgo();
     }
+  }
+
+
+  // ============ Sleepa Zone, Phase 2: the live feed ============
+  // Source: Sleeper's GraphQL `plays` (undocumented). Two shapes, checked Sept 30 2026:
+  //   plays(week)    = every play of the week (≈3,000 plays, ≈440 KB gzipped, 2.5–12 s): the backfill
+  //   plays(game_id) = that game's newest 20 plays, newest first (≈18 KB, ≈70 ms): the live poll
+  // With `week` given, game_id / date are ignored; there is no cursor. 20 plays ≈ 8–10 minutes of game time, so a
+  // 30 s poll per live game can't miss plays; a newest-20 that doesn't reach what we already have is a gap → backfill.
+  // Kept per device in IndexedDB ('zone-feed'), only for the current Zone week (reset when the week rolls over);
+  // plays are keyed by play ID and trimmed to what the feed needs (rostered players' stats, plus every scoring play).
+  const FEED_KEY = 'zone-feed', FEED_VER = 2, FEED_STALE = 8 * 60 * 1000, FEED_BACKFILL_GAP = 5 * 60 * 1000;
+  // a team defense's sacks, takeaways and return TDs are credited to its players in the play-by-play: map them back
+  const DEF_FROM_PLAYER = { idp_sack: 'sack', idp_int: 'int', idp_ff: 'ff', idp_fum_rec: 'fum_rec', idp_def_td: 'def_td', idp_safe: 'safe', idp_blk_kick: 'blk_kick',
+    idp_sack_yd: 'sack_yd', idp_int_ret_yd: 'int_ret_yd', idp_qb_hit: 'qb_hit', idp_tkl_loss: 'tkl_loss', st_td: 'def_st_td', st_fum_rec: 'def_st_fum_rec' };
+  const FEED_FIELDS = 'play_id game_id sequence time updated_at metadata play_stats { player_id stats }';
+  ctx.zone.feed = null;
+  ctx.zone.feedFail = 0; ctx.zone.diffEv = []; ctx.zone.leadEv = []; ctx.zone.feedAll = {}; ctx.zone.feedSeen = null;
+  try{ ctx.zone.feedMode = localStorage.getItem('rv-zone-feedmode') === 'all' ? 'all' : 'mine'; }catch(e){ ctx.zone.feedMode = 'mine'; }
+  function zFeedNew(week){ return { ver: FEED_VER, season: ctx.season, week: week, plays: {}, max: {}, sync: {}, done: {}, backfillTs: 0, v: 1 }; }
+  async function zFeedLoad(week){
+    const z = ctx.zone;
+    if(z.feed && z.feed.week === week && z.feed.season === ctx.season) return z.feed;
+    let f = null;
+    if(week === z.homeWeek){
+      try{ const c = await idbGet(FEED_KEY); if(c && c.ver === FEED_VER && c.season === ctx.season && c.week === week && c.plays) f = c; }catch(e){ console.warn('Sleepa Zone: saved feed unreadable', e); }
+    }
+    z.feed = f || zFeedNew(week);
+    z.feed.v = (z.feed.v || 0) + 1; z.feedSorted = null;
+    if(!f) zFeedSave();   // the current week starts fresh: this also clears last week's store
+    return z.feed;
+  }
+  let zFeedSaveT = 0;
+  function zFeedSave(){
+    const z = ctx.zone;
+    if(!z.feed || z.feed.week !== z.homeWeek || z.feed.season !== ctx.season) return;   // other weeks: memory only
+    clearTimeout(zFeedSaveT);
+    zFeedSaveT = setTimeout(function(){ idbSet(FEED_KEY, z.feed); }, 800);
+  }
+  async function zGql(query){
+    const r = await fetch('https://sleeper.com/graphql', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ query: query }) });
+    if(!r.ok) throw new Error('GraphQL ' + r.status);
+    const j = await r.json();
+    if(j.errors && j.errors.length) throw new Error(j.errors[0].message);
+    return j.data || {};
+  }
+  function zPlaysQ(filter){ return 'query { plays(sport: "nfl", season: "' + ctx.season + '", season_type: "regular", ' + filter + ') { ' + FEED_FIELDS + ' } }'; }
+  // who matters: everyone on my roster and my opponent's, in every league (starters can change before kickoff)
+  function zFeedRelevant(week){
+    const keep = {}, teams = {}, defTeams = {};
+    ctx.zone.leagues.forEach(function(L){
+      const meta = ctx.zone.meta[L.id], mu = L.muWeek === week ? L.mu : null;
+      if(!meta || meta.rosterId === null || !mu) return;
+      const mine = mu.find(function(m){ return m.roster_id === meta.rosterId; });
+      const opp = mine && mine.matchup_id != null ? mu.find(function(m){ return m.matchup_id === mine.matchup_id && m.roster_id !== meta.rosterId; }) : null;
+      [mine, opp].forEach(function(e){ ((e && e.players) || []).forEach(function(pid){
+        keep[pid] = 1;
+        const p = ctx.players[pid], t = (p && p.team) || (/^[A-Z]{2,3}$/.test(pid) ? pid : null);
+        if(t) teams[t] = 1;
+        if(/^[A-Z]{2,3}$/.test(pid)) defTeams[pid] = 1;
+      }); });
+    });
+    return { keep: keep, teams: teams, defTeams: defTeams };
+  }
+  function zTrimPlay(x, keep, defTeams){
+    const m = x.metadata || {}, st = {};
+    let any = false;
+    (x.play_stats || []).forEach(function(s){
+      if(!s || !s.player_id || !s.stats) return;
+      const p = ctx.players[s.player_id], forDef = !!(defTeams && p && p.team && defTeams[p.team]);
+      if(keep[s.player_id] || forDef || m.is_scoring_play){ st[s.player_id] = s.stats; if(keep[s.player_id] || forDef) any = true; }
+    });
+    return { id: x.play_id, g: x.game_id || '', q: Number(x.sequence) || 0, t: Number(x.time) || 0, u: Number(x.updated_at) || 0,
+      qn: m.quarter_name || '', mm: m.time_remaining_minutes, ss: m.time_remaining_seconds, d: m.fantasy_description || m.description || '',
+      s: m.is_scoring_play ? 1 : 0, tm: m.team || '', hp: m.home_points, ap: m.away_points, st: st, any: any ? 1 : 0 };
+  }
+  function zFeedMerge(F, arr, keep, defTeams){
+    let added = 0;
+    arr.forEach(function(x){
+      if(!x || !x.play_id) return;
+      const g = x.game_id || '', q = Number(x.sequence) || 0;
+      if(g && q > (F.max[g] || 0)) F.max[g] = q;
+      const p = zTrimPlay(x, keep, defTeams);
+      if(!p.any && !p.s) return;
+      const old = F.plays[p.id];
+      if(!old){ F.plays[p.id] = p; added++; }
+      else if(p.u > old.u){ F.plays[p.id] = p; added++; }   // Sleeper corrected the play
+    });
+    if(added){ F.v++; ctx.zone.feedSorted = null; }
+    return added;
+  }
+  // the games that matter this week, from Sleeper's scores (game IDs match `plays`), with ESPN's state as a cross-check
+  function zFeedGames(week, teams){
+    const z = ctx.zone;
+    return (z.sgamesWeek === week ? z.sgames || [] : []).filter(function(g){ return teams[g.home] || teams[g.away]; }).map(function(g){
+      const e = zGame(g.home, week), live = g.live || !!(e && e.state === 'in'), done = g.done || !!(e && e.state === 'post' && e.src === 'espn');
+      return Object.assign({}, g, { live: live && !done, done: done, started: live || done || g.started });
+    });
+  }
+  async function zoneFetchPlays(week){
+    const z = ctx.zone, F = await zFeedLoad(week), rel = zFeedRelevant(week), now = Date.now();
+    const started = zFeedGames(week, rel.teams).filter(function(g){ return g.started; });
+    if(!started.length) return { added: 0 };
+    const stale = started.some(function(g){ return !F.sync[g.gid] || (!F.done[g.gid] && now - F.sync[g.gid] > FEED_STALE); });
+    if(stale && now - (F.backfillTs || 0) > FEED_BACKFILL_GAP){
+      const d = await zGql(zPlaysQ('week: ' + week));
+      const added = zFeedMerge(F, d.plays || [], rel.keep, rel.defTeams);
+      started.forEach(function(g){ F.sync[g.gid] = Date.now(); if(g.done) F.done[g.gid] = 1; });
+      F.backfillTs = Date.now(); zFeedSave();
+      return { added: added, backfill: true };
+    }
+    let added = 0;
+    await Promise.all(started.filter(function(g){ return !F.done[g.gid]; }).map(function(g){
+      const had = F.max[g.gid] || 0;
+      return zGql(zPlaysQ('game_id: "' + g.gid + '"')).then(function(d){
+        const arr = d.plays || [], oldest = arr.length ? Math.min.apply(null, arr.map(function(x){ return Number(x.sequence) || 0; })) : 0;
+        F.sync[g.gid] = had && arr.length >= 20 && oldest > had ? 0 : Date.now();   // 0 = a gap: backfill next time
+        added += zFeedMerge(F, arr, rel.keep, rel.defTeams);
+        if(g.done) F.done[g.gid] = 1;
+      });
+    }));
+    zFeedSave();
+    return { added: added };
+  }
+  function zFeedSortedPlays(){
+    const z = ctx.zone;
+    if(!z.feed) return [];
+    if(!z.feedSorted || z.feedSortedV !== z.feed.v){
+      z.feedSorted = Object.keys(z.feed.plays).map(function(k){ return z.feed.plays[k]; }).sort(function(a, b){ return a.q - b.q; });
+      z.feedSortedV = z.feed.v;
+    }
+    return z.feedSorted;
+  }
+  // ---- per-play points, per league, from running totals ----
+  // Each player's stats are summed play by play; after each play the total is scored with this league's settings and
+  // the play is worth the change. Threshold bonuses and a team defense's points-allowed band only exist in the weekly
+  // totals, so they're derived from the running totals / the game score here. Anything still left over when the
+  // player's game is final becomes one "Scoring adjustment" line, so the feed always adds up to Sleeper's points.
+  function zPtsBand(p){ return p === 0 ? 'pts_allow_0' : p <= 6 ? 'pts_allow_1_6' : p <= 13 ? 'pts_allow_7_13' : p <= 20 ? 'pts_allow_14_20' : p <= 27 ? 'pts_allow_21_27' : p <= 34 ? 'pts_allow_28_34' : 'pts_allow_35p'; }
+  function zDerive(cum, oppPts){
+    const d = Object.assign({}, cum), n = function(k){ return cum[k] || 0; };
+    const th = function(key, v, t){ if(v >= t) d[key] = 1; };
+    th('bonus_rush_yd_100', n('rush_yd'), 100); th('bonus_rush_yd_200', n('rush_yd'), 200);
+    th('bonus_rec_yd_100', n('rec_yd'), 100); th('bonus_rec_yd_200', n('rec_yd'), 200);
+    th('bonus_pass_yd_300', n('pass_yd'), 300); th('bonus_pass_yd_400', n('pass_yd'), 400);
+    th('bonus_rush_rec_yd_100', n('rush_yd') + n('rec_yd'), 100); th('bonus_rush_rec_yd_200', n('rush_yd') + n('rec_yd'), 200);
+    th('bonus_tkl_10p', n('idp_tkl') || n('idp_tkl_solo') + n('idp_tkl_ast'), 10);
+    th('bonus_sack_2p', n('idp_sack'), 2);
+    if(oppPts !== null && oppPts !== undefined){ d[zPtsBand(oppPts)] = 1; d.pts_allow = oppPts; }
+    return d;
+  }
+  function zAddStats(cum, st){
+    for(const k in st){ if(typeof st[k] === 'number') cum[k] = (cum[k] || 0) + st[k]; }
+    if(st.conv_cmp){   // a successful 2-point try: conv_* on the passer / receiver / runner
+      if(st.conv_pass_att) cum.pass_2pt = (cum.pass_2pt || 0) + 1;
+      if(st.conv_rec_att) cum.rec_2pt = (cum.rec_2pt || 0) + 1;
+      if(st.conv_rush_att) cum.rush_2pt = (cum.rush_2pt || 0) + 1;
+    }
+  }
+  function zDefPlayStats(pl, team){   // what a team defense did on this play, from its players' lines
+    let out = null;
+    for(const id in pl.st){
+      const p = ctx.players[id];
+      if(!p || p.team !== team || id === team) continue;
+      const st = pl.st[id];
+      for(const k in DEF_FROM_PLAYER){ if(typeof st[k] === 'number' && st[k]){ out = out || {}; out[DEF_FROM_PLAYER[k]] = (out[DEF_FROM_PLAYER[k]] || 0) + st[k]; } }
+    }
+    return out;
+  }
+  function zGameOfTeam(team, week){ const z = ctx.zone; return (z.sgamesWeek === week ? z.sgames || [] : []).find(function(g){ return g.home === team || g.away === team; }) || null; }
+  function zFeedEvents(M){
+    const z = ctx.zone, F = z.feed, L = M.L;
+    if(M.kind !== 'ok' || !M.my) return null;
+    if(z.feedDiff) return z.diffEv.filter(function(e){ return e.lid === L.id && e.week === M.week; });
+    if(!F || F.week !== M.week) return null;
+    const key = F.v + ':' + (L.muTs || 0) + ':' + (z.sgamesTs || 0);
+    if(L._fev && L._fev.key === key) return L._fev.ev;
+    const sc = M.meta.league.scoring_settings || {}, plays = zFeedSortedPlays(), ev = [];
+    [['me', M.my], ['opp', M.opp]].forEach(function(pair){
+      const side = pair[0], S = pair[1];
+      if(!S) return;
+      S.rows.forEach(function(r){
+        if(r.empty || !r.pid || r.state === 'pre' || r.state === 'bye') return;
+        const pid = r.pid, isDef = r.p.position === 'DEF', g = isDef ? zGameOfTeam(r.team, M.week) : null;
+        const cum = {};
+        let prev = 0, last = null, kicked = false;
+        plays.forEach(function(pl){
+          const own = pl.st[pid], fromPlayers = isDef && g && pl.g === g.gid ? zDefPlayStats(pl, r.team) : null;
+          const st = own && fromPlayers ? Object.assign({}, fromPlayers, own) : (own || fromPlayers), band = isDef && g && pl.g === g.gid;
+          if(!st && !band) return;
+          if(band && !kicked){   // a team defense starts every game with the shutout band
+            kicked = true;
+            const v0 = calcPoints(zDerive({}, 0), sc) || 0;
+            if(Math.abs(v0) >= 0.005) ev.push({ k: 'k0:' + pid, pid: pid, side: side, pts: v0, pl: { id: 'k0' + pid, g: pl.g, q: pl.q - 1, t: pl.t, qn: '1', mm: 15, ss: 0, d: 'Kickoff: no points allowed yet' }, r: r, note: 1 });
+            prev = v0;
+          }
+          if(st) zAddStats(cum, st);
+          if(!st && !pl.s) return;   // a defense's band only moves on scoring plays
+          const oppPts = isDef && g && typeof pl.hp === 'number' ? (g.home === r.team ? pl.ap : pl.hp) : null;
+          const now = calcPoints(zDerive(cum, isDef ? (oppPts === null ? 0 : oppPts) : null), sc) || 0;
+          const pts = now - prev; prev = now; last = pl;
+          if(Math.abs(pts) >= 0.005) ev.push({ k: pl.id + ':' + pid, pid: pid, side: side, pts: pts, pl: pl, r: r });
+        });
+        if(r.state === 'post' && typeof r.pts === 'number' && Math.abs(r.pts - prev) >= 0.01){
+          const lp = last || { g: '', q: 0, t: 0, qn: 'F' };
+          ev.push({ k: 'adj:' + pid, pid: pid, side: side, pts: r.pts - prev, adj: 1, r: r,
+            pl: { id: 'adj' + pid, g: lp.g, q: lp.q + 0.5, t: lp.t, qn: 'F', d: 'Scoring adjustment (bonuses and totals Sleeper only has for the whole game)' } });
+        }
+      });
+    });
+    ev.sort(function(a, b){ return b.pl.q - a.pl.q; });
+    L._fev = { key: key, ev: ev };
+    return ev;
+  }
+  // ---- fallback: when the plays feed fails, show each starter's point changes between refreshes (no play text) ----
+  function zFeedDiffCapture(L, before, after, week){
+    const meta = ctx.zone.meta[L.id];
+    if(!meta || !before || !after) return;
+    const find = function(mu, rid){ return mu.find(function(m){ return m.roster_id === rid; }); };
+    const mineA = find(after, meta.rosterId), mineB = find(before, meta.rosterId);
+    if(!mineA || !mineB) return;
+    const oppA = mineA.matchup_id != null ? after.find(function(m){ return m.matchup_id === mineA.matchup_id && m.roster_id !== meta.rosterId; }) : null;
+    const oppB = oppA ? find(before, oppA.roster_id) : null;
+    const now = Date.now();
+    [['me', mineB, mineA], ['opp', oppB, oppA]].forEach(function(x){
+      const b = x[1], a = x[2];
+      if(!a || !b) return;
+      (a.starters || []).forEach(function(pid){
+        if(!pid || pid === '0') return;
+        const d = ((a.players_points || {})[pid] || 0) - ((b.players_points || {})[pid] || 0);
+        if(Math.abs(d) < 0.005) return;
+        const p = ctx.players[pid] || {};
+        ctx.zone.diffEv.unshift({ k: 'diff:' + L.id + ':' + pid + ':' + now, lid: L.id, week: week, pid: pid, side: x[0], pts: d, diff: 1,
+          r: { pid: pid, p: p, team: p.team || pid }, pl: { id: 'd' + now + pid, q: now, t: now, d: '' } });
+      });
+    });
+    if(ctx.zone.diffEv.length > 400) ctx.zone.diffEv.length = 400;
+  }
+
+  // ---- rendering ----
+  function zImpact1(side, pts){ const v = side === 'me' ? pts : -pts; return v > 0.004 ? 'pos' : v < -0.004 ? 'neg' : 'neu'; }
+  function zMag(pts){ const a = Math.abs(pts); return a >= 6 ? 3 : a >= 2 ? 2 : 1; }
+  function zClock(pl){
+    if(pl.diff || !pl.qn) return pl.t ? new Date(pl.t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
+    if(pl.qn === 'F') return 'Final';
+    const q = /^\d$/.test(String(pl.qn)) ? 'Q' + pl.qn : String(pl.qn);
+    return typeof pl.mm === 'number' ? q + ' ' + pl.mm + ':' + String(pl.ss || 0).padStart(2, '0') : q;
+  }
+  function zShortName(r){ const p = r.p || {}; return p.position === 'DEF' ? (r.team || r.pid) + ' D/ST' : p.first_name && p.last_name ? p.first_name.charAt(0) + '. ' + p.last_name : (p.full_name || r.pid); }
+  function zSign(v){ return (v > 0 ? '▲ +' : v < 0 ? '▼ −' : '') + Math.abs(v).toFixed(2); }
+  function zEvHTML(e, fresh){
+    const imp = zImpact1(e.side, e.pts), txt = e.diff ? 'Points update' : e.pl.d;
+    return '<div class="zf-ev imp-' + imp + ' m' + zMag(e.pts) + (e.adj ? ' adj' : '') + (fresh ? ' new' : '') + '" title="' + escapeHTML(zShortName(e.r) + ': ' + (txt || '')) + '">' +
+      '<div class="zf-top"><span class="zf-pts">' + zSign(e.pts) + '</span><span class="zf-clk">' + escapeHTML(zClock(e.pl)) + '</span></div>' +
+      '<div class="zf-d"><b>' + escapeHTML(zShortName(e.r)) + '</b> ' + escapeHTML(txt || '') + '</div></div>';
+  }
+  function zFeedFresh(k){ const z = ctx.zone; if(z.feedNow) z.feedNow.add(k); return !!(z.feedSeen && !z.feedSeen.has(k)); }   // new since the last render: slides in
+  // inside each card's starters section: my events under me, my opponent's under them; newest first
+  function zCardFeedHTML(M){
+    const z = ctx.zone, ev = zFeedEvents(M);
+    if(!M.started && !(ev && ev.length)) return '';
+    const all = !!z.feedAll[M.L.id], n = 5;
+    const col = function(side){
+      const list = (ev || []).filter(function(e){ return e.side === side; });
+      if(!list.length) return '<div class="zf-col"><p class="zf-none">' + (ev ? 'Nothing yet' : 'Loading plays…') + '</p></div>';
+      return '<div class="zf-col">' + (all ? list : list.slice(0, n)).map(function(e){ return zEvHTML(e, zFeedFresh(M.L.id + '|' + e.k)); }).join('') + '</div>';
+    };
+    const more = ev && (ev.filter(function(e){ return e.side === 'me'; }).length > n || ev.filter(function(e){ return e.side === 'opp'; }).length > n);
+    return '<div class="zf-card"><div class="zf-h"><b>Live feed</b>' + (z.feedDiff ? '<span class="zf-warn">Play details unavailable · score changes only</span>' : '') +
+        (more ? '<button type="button" class="zf-more" data-zf-all="' + escapeHTML(M.L.id) + '">' + (all ? 'Show less' : 'Show all') + '</button>' : '') + '</div>' +
+      '<div class="zf-cols' + (M.opp ? '' : ' solo') + '">' + col('me') + (M.opp ? col('opp') : '') + '</div></div>';
+  }
+  // the desktop grid's combined feed: the same play across leagues is one line with its net effect on me
+  function zCombinedFeedHTML(models){
+    const z = ctx.zone, groups = {}, order = [];
+    models.forEach(function(M){
+      (zFeedEvents(M) || []).forEach(function(e){
+        const k = e.adj || e.diff ? e.k + '@' + M.L.id : e.pl.id + ':' + e.pid;
+        if(!groups[k]){ groups[k] = { e: e, legs: [] }; order.push(k); }
+        groups[k].legs.push({ name: M.L.name, side: e.side, pts: e.pts });
+      });
+    });
+    z.leadEv.forEach(function(l){ const k = 'lead:' + l.t + l.lid; groups[k] = { lead: l }; order.push(k); });
+    let items = order.map(function(k){ return Object.assign({ k: k }, groups[k]); });
+    if(z.feedMode === 'all' && !z.feedDiff){   // every scoring play in the league-wide data; neutral unless it involves my matchups
+      zFeedSortedPlays().filter(function(pl){ return pl.s; }).forEach(function(pl){
+        if(items.some(function(it){ return it.e && it.e.pl.id === pl.id; })) return;
+        items.push({ k: 'nfl:' + pl.id, nfl: pl });
+      });
+    }
+    const t = function(it){ return it.lead ? it.lead.t : it.nfl ? it.nfl.t : it.e.pl.t; };
+    const q = function(it){ return it.lead ? it.lead.t : it.nfl ? it.nfl.q : it.e.pl.q; };
+    items.sort(function(a, b){ return (a.lead || b.lead) ? t(b) - t(a) : q(b) - q(a); });
+    items = items.slice(0, 150);
+    if(!items.length) return '<p class="zf-none">' + (models.some(function(M){ return M.started; }) ? 'No plays yet for your starters.' : 'Plays show up here once your players’ games kick off.') + '</p>';
+    return items.map(function(it){
+      if(it.lead) return '<div class="zf-lead' + (zFeedFresh(it.k) ? ' new' : '') + '"><span>Lead change</span> ' + escapeHTML(it.lead.name) + ' · you’re ' + (it.lead.lead === 1 ? 'ahead' : 'behind') + '</div>';
+      if(it.nfl){ const pl = it.nfl; return '<div class="zf-ev imp-neu m1 nfl' + (zFeedFresh(it.k) ? ' new' : '') + '"><div class="zf-top"><span class="zf-chip">NFL</span><span class="zf-clk">' + escapeHTML(zClock(pl)) + '</span></div><div class="zf-d">' + escapeHTML(pl.d) + '</div></div>'; }
+      const e = it.e, fo = it.legs.filter(function(l){ return l.side === 'me'; }), ag = it.legs.filter(function(l){ return l.side === 'opp'; });
+      const net = it.legs.reduce(function(a, l){ return a + (l.side === 'me' ? l.pts : -l.pts); }, 0);
+      const imp = fo.length && ag.length ? 'mix' : net > 0.004 ? 'pos' : net < -0.004 ? 'neg' : 'neu';
+      const chip = fo.length && ag.length ? fo.length + ' for · ' + ag.length + ' against' : fo.length ? 'MINE' + (fo.length > 1 ? ' ×' + fo.length : '') : 'OPP' + (ag.length > 1 ? ' ×' + ag.length : '');
+      return '<div class="zf-ev imp-' + imp + ' m' + zMag(net) + (e.adj ? ' adj' : '') + (zFeedFresh(it.k) ? ' new' : '') + '" title="' + escapeHTML(it.legs.map(function(l){ return l.name + ': ' + (l.side === 'me' ? 'yours ' : 'opponent ') + zSign(l.pts); }).join('\n')) + '">' +
+        '<div class="zf-top"><span class="zf-chip">' + chip + '</span><span class="zf-pts">' + zSign(net) + '</span><span class="zf-clk">' + escapeHTML(zClock(e.pl)) + '</span></div>' +
+        '<div class="zf-d"><b>' + escapeHTML(zShortName(e.r)) + '</b> ' + escapeHTML(e.diff ? 'Points update' : e.pl.d || '') + '</div>' +
+        '<div class="zf-lg">' + escapeHTML(it.legs.map(function(l){ return l.name; }).join(' · ')) + '</div></div>';
+    }).join('');
   }
 
   // ---- the model: one card per league ----
@@ -8835,9 +9207,7 @@
   }
   function zRowsHTML(M){
     if(!M.my) return '';
-    return zPairsHTML(M.my.rows, M.opp ? M.opp.rows : null, M.week, M.L.id, true) +
-      // Phase 2: the live feed goes here, my events under my side and my opponent's under theirs.
-      '<div class="zn-feeds" hidden><div data-zone-feed="me"></div><div data-zone-feed="opp"></div></div>';
+    return zPairsHTML(M.my.rows, M.opp ? M.opp.rows : null, M.week, M.L.id, true) + zCardFeedHTML(M);   // the live feed: mine under me, theirs under them
   }
   function zBenchHTML(M){
     if(!M.my) return '';
@@ -8931,7 +9301,8 @@
           '<button type="button" class="zn-btn" data-zn-hideall></button><span class="zn-gtip">Click a league’s header to focus on it</span></div>' +
           '<div class="zn-tiles"></div></div>' +
           '<aside class="zn-feedph" aria-label="Live feed"><div class="zf-head"><b>Live feed</b><button type="button" class="zf-tg" data-zn-feed aria-label="Collapse the live feed" title="Collapse">' + ICO.fold + '</button></div>' +
-            '<p>Coming next: every play involving your starters and your opponents’ starters, across all your leagues, colored by what it does to you.</p>' +
+            '<div class="wk-seg zf-modes" role="group" aria-label="Feed"><button type="button" data-zf-mode="mine">My players</button><button type="button" data-zf-mode="all">All NFL</button></div>' +
+            '<div class="zf-note" data-zf-note hidden></div><div class="zf-list" data-zfeed></div>' +
             '<button type="button" class="zf-rail" data-zn-feed aria-label="Expand the live feed" title="Expand the live feed">' + ICO.unfold + '<span>Live feed</span></button></aside>' +
         '</div></main>' +
       '<div class="zn-bot"><nav class="zn-dots" aria-label="Leagues"></nav><button type="button" class="zn-btn zn-bot-mode" data-zn-mode aria-pressed="false"></button></div>' +
@@ -8983,7 +9354,10 @@
     if(!z.built) return;
     const models = z.leagues.map(zModel);
     z.models = models;
+    z.feedNow = new Set();
     models.forEach(function(M){ zPaint(M, anim); });
+    zoneRenderFeed(models);
+    z.feedSeen = z.feedSeen ? new Set(Array.from(z.feedSeen).concat(Array.from(z.feedNow))) : z.feedNow;
     zoneSortTiles(models, anim);
     const sub = document.getElementById('zn-sub');
     const live = models.filter(function(M){ return M.live; }).length;
@@ -9030,7 +9404,7 @@
     const ts = tile.querySelectorAll('.zt-side');
     ts[0].classList.toggle('lead', lead === 1); ts[1].classList.toggle('lead', lead === -1);
     tile.querySelector('.zt-score').classList.toggle('has-lead', lead !== 0);
-    if(anim && same && prev.lead && lead && prev.lead !== lead) zFlip(card, tile);
+    if(anim && same && prev.lead && lead && prev.lead !== lead){ zFlip(card, tile); z.leadEv.unshift({ t: Date.now(), lid: L.id, name: L.name, lead: lead }); if(z.leadEv.length > 50) z.leadEv.length = 50; }
     z.prev[L.id] = { week: M.week, kind: a && a.kind, lead: lead || (prev && same ? prev.lead : 0) };
     tile.querySelector('.zt-score').classList.toggle('pre', !!(a && a.kind === 'proj'));
     [tile, card].forEach(function(el){
@@ -9065,6 +9439,16 @@
       }else{ set('[data-compact]', zCompactHTML(M)); set('[data-full]', ''); }
     }
     tile.classList.toggle('has-detail', M.kind === 'ok');
+  }
+  function zoneRenderFeed(models){
+    const z = ctx.zone, list = zoneView.querySelector('[data-zfeed]');
+    if(!list) return;
+    zoneView.querySelectorAll('[data-zf-mode]').forEach(function(b){ b.setAttribute('aria-pressed', String(b.getAttribute('data-zf-mode') === z.feedMode)); });
+    const note = zoneView.querySelector('[data-zf-note]');
+    note.hidden = !z.feedDiff; note.textContent = z.feedDiff ? 'Play-by-play is unavailable right now: showing each starter’s point changes between refreshes.' : '';
+    if(z.mode !== 'alt' || !zoneWide()) return;   // only built while the grid is on screen
+    const h = zCombinedFeedHTML(models);
+    if(list._h !== h){ list.innerHTML = h; list._h = h; }
   }
   function zoneRenderBar(){
     const z = ctx.zone;
@@ -9359,6 +9743,7 @@
     let st = null;
     try{ st = await fetchJSON(API + '/state/nfl'); }catch(e){ console.warn('Sleepa Zone: NFL state unavailable, using the app\'s week', e); }
     z.week = zoneDefaultWeek(st);
+    z.homeWeek = z.week; z.feedSeen = null; z.leadEv = [];
     zoneBuild();
     zoneView.hidden = false;
     document.documentElement.classList.add('zone-open');
@@ -9382,7 +9767,7 @@
     const z = ctx.zone;
     w = Math.max(1, Math.min(MAX_PLAN_WEEK, w));
     if(w === z.week) return;
-    z.week = w; z.loadId++; z.busy = false; z.ts = 0; z.prev = {};
+    z.week = w; z.loadId++; z.busy = false; z.ts = 0; z.prev = {}; z.feedSeen = null;
     zoneRender(false);
     zoneRefresh({ force: true });
   }
@@ -9414,6 +9799,10 @@
     const wk = t.closest('[data-zn-wk]');
     if(wk){ zoneSetWeek(ctx.zone.week + Number(wk.getAttribute('data-zn-wk'))); return; }
     if(t.closest('[data-zn-mode]')){ zoneSetMode(ctx.zone.mode === 'alt' ? 'car' : 'alt'); return; }
+    const fa = t.closest('[data-zf-all]');
+    if(fa){ const id = fa.getAttribute('data-zf-all'); ctx.zone.feedAll[id] = !ctx.zone.feedAll[id]; zoneRender(false); return; }
+    const fm = t.closest('[data-zf-mode]');
+    if(fm){ ctx.zone.feedMode = fm.getAttribute('data-zf-mode'); zSave('rv-zone-feedmode', ctx.zone.feedMode); zoneRender(false); return; }
     if(t.closest('[data-zn-feed]')){
       ctx.zone.feedMin = !ctx.zone.feedMin; zSave('rv-zone-feed', ctx.zone.feedMin ? 'min' : 'open');
       zoneRenderBar(); zonePlaceFocus(); return;
@@ -9503,7 +9892,16 @@
       'The Cards / List button sits at the bottom right on phones, where your thumb is.'] },
     { t: 'Week rollover', b: [
       'Sleepa Zone follows Sleeper’s current week, except on Tuesdays: Sleeper moves to the new week on Tuesday, but the Zone keeps last week’s final scores up until Wednesday. Use ‹ › to look at other weeks; future weeks show projections, or say when there are no matchups yet.'] },
-    // Phase 2: the impact color system, MINE / OPP / multi-league chips, and how the live feed works.
+    { t: 'How the live feed works', b: [
+      'The feed lists the plays that change your matchups: under each card, your players’ plays under you and your opponent’s under them; on desktop, the grid’s right column combines every league. It comes from Sleeper’s play-by-play, checked about every 30 seconds for the games your and your opponents’ players are in, only while those games are on and the app is on screen.',
+      'Each play is scored with that league’s own settings: a player’s stats are added up play by play and each play is worth the change in their total. Bonuses and a team defense’s points-allowed tier are worked out as the game goes; anything Sleeper only settles at the end shows as one “Scoring adjustment” line, so the feed always adds up to Sleeper’s points.',
+      'Plays are kept on this device for the current week (opening mid-game still shows what already happened) and cleared when the week rolls over. If Sleeper’s play-by-play is unavailable, the feed shows each starter’s point changes between refreshes instead, without play text, until it’s back.'] },
+    { t: 'Impact colors', b: [
+      'Color is always what a play does to you, never whose player it is: <b class="imp-t pos">green ▲</b> helps you (your player scores, or your opponent’s player loses points), <b class="imp-t neg">red ▼</b> hurts you, <b class="imp-t mix">amber</b> is mixed (the player is for you in one league and against you in another), gray is no change. A bigger swing, like a touchdown, has a stronger tint. Signs and arrows are always there too.'] },
+    { t: 'MINE, OPP and multi-league chips', b: [
+      'In the combined feed a chip says whose player it was: MINE, OPP, or for a player in several of your matchups something like “2 for · 1 against”. The points shown are the net effect on you across those leagues; hover for each league.'] },
+    { t: 'All NFL', b: [
+      'Switch the combined feed to All NFL to see every scoring play in the league. Plays involving your or your opponents’ players keep their colors and chips; everything else is gray with no fantasy points, since points depend on each league’s scoring.'] },
   ];
   const zoneGuide = document.createElement('div');
   zoneGuide.className = 'zg-back'; zoneGuide.hidden = true;
