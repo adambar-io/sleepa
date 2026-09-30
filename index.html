@@ -6799,11 +6799,11 @@
   }
   function cdCardHTML(s, tiers, num, k){
     const pid = ctx.prWork[s.i];
-    if(prIsEmpty(pid)) return '<div class="cd empty" data-cd-slot="' + s.i + '" style="--k:' + k + '" role="button" tabindex="0" aria-label="' + escapeHTML(s.name) + ': empty. Add a player">' +
+    if(prIsEmpty(pid)) return '<div class="cd empty" data-cd-slot="' + s.i + '" data-cd-unit="' + cdUnit(s) + '" style="--k:' + k + '" role="button" tabindex="0" aria-label="' + escapeHTML(s.name) + ': empty. Add a player">' +
       '<div class="cd-in"><div class="cd-face cd-front"><div class="cd-body"><div class="cd-hd"><div class="cd-hl"><span class="cd-num">' + escapeHTML(s.name) + ' · ' + cdNum(num) + '</span></div></div>' +
       '<div class="cd-add">' + PR_ICON.plus + '<b>Add player</b></div></div></div></div></div>';
     const p = ctx.players[pid], tier = tiers[s.i] || 'base', i = dvpInfo(pid);
-    return '<div class="cd t-' + tier + (isLocked(pid) ? ' locked' : '') + (ctx.prCardFlip[s.i] ? ' flipped' : '') + '" data-cd-slot="' + s.i + '" data-tier="' + tier + '" style="--k:' + k + ';--pc:' + prTabColor(s.tab) + (i ? ';--mc:' + CD_TONE[i.tone] : '') + '"' +
+    return '<div class="cd t-' + tier + (isLocked(pid) ? ' locked' : '') + (ctx.prCardFlip[s.i] ? ' flipped' : '') + '" data-cd-slot="' + s.i + '" data-cd-unit="' + cdUnit(s) + '" data-tier="' + tier + '" style="--k:' + k + ';--pc:' + prTabColor(s.tab) + (i ? ';--mc:' + CD_TONE[i.tone] : '') + '"' +
         ' role="button" tabindex="0" aria-label="' + escapeHTML(s.name + ': ' + playerName(p) + ', ' + tier + ' card, projected ' + fmtPts(ctx.projections[pid]) + '. Tap to flip') + '">' +
       '<div class="cd-in">' + cdFrontHTML(s, pid, tier, num) + cdBackHTML(s, pid, num) + '</div></div>';
   }
@@ -6849,6 +6849,11 @@
     const cnt = document.querySelector('#pr-view [data-cd-count]'); if(cnt) cnt.textContent = (idx + 1) + ' / ' + n;
     document.querySelectorAll('#pr-view [data-cd-go]').forEach(function(b){ b.setAttribute('aria-selected', String(Number(b.getAttribute('data-cd-go')) === idx)); });
     const onSum = !!cards[idx] && cards[idx].hasAttribute('data-cd-sum');
+    const unit = cards[idx] ? cards[idx].getAttribute('data-cd-unit') : null, tabs = document.querySelectorAll('#pr-view .rv-views [data-rv-view]');
+    if(tabs.length){
+      if(unit) ctx.prRvView = unit;   // going back to Field shows the unit you were on
+      tabs.forEach(function(b){ b.setAttribute('aria-pressed', String(onSum ? false : b.getAttribute('data-rv-view') === unit)); });
+    }
     const f = document.querySelector('#pr-view [data-cd-flip]'), ed = document.querySelector('#pr-view [data-cd-edit]');
     if(f){ f.disabled = onSum || cards[idx].classList.contains('empty'); f.textContent = cards[idx] && cards[idx].classList.contains('flipped') ? '↻ Flip back' : '↻ Flip'; }
     if(ed) ed.textContent = onSum ? 'Edit lineup' : 'Edit slot';
@@ -6889,9 +6894,13 @@
     document.addEventListener('pointermove', mv); document.addEventListener('pointerup', up); document.addEventListener('pointercancel', up);
   }
   // which cards this view shows: IDP leagues keep the Offense / Defense / Special teams split
-  function cdList(slots, hasDef, view){
+  // One deck for the whole lineup. IDP leagues run offense → defense → special teams in a single pass with one summary
+  // at the end; the Offense / Defense / Special teams tabs follow the card you're on and jump to a unit's first card.
+  function cdUnit(s){ return PR_OFF_TABS[s.tab] ? 'off' : PR_ST_TABS[s.tab] ? 'st' : 'def'; }
+  function cdList(slots, hasDef){
     if(!hasDef) return slots;
-    return slots.filter(function(s){ return view === 'def' ? (PR_DEF_TABS[s.tab] || (!PR_OFF_TABS[s.tab] && !PR_ST_TABS[s.tab])) : view === 'st' ? PR_ST_TABS[s.tab] : PR_OFF_TABS[s.tab]; });
+    const rank = { off: 0, def: 1, st: 2 };
+    return slots.slice().sort(function(a, b){ return (rank[cdUnit(a)] - rank[cdUnit(b)]) || (a.i - b.i); });
   }
 
   function prReviewHTML(slots){
@@ -6909,7 +6918,7 @@
     const cards = ctx.prRvMode === 'cards';
     const modeSeg = '<div class="wk-seg rv-mode" role="group" aria-label="View"><button type="button" data-rv-mode="field" aria-pressed="' + !cards + '">' + PR_ICON.field + 'Field</button>' +
       '<button type="button" data-rv-mode="cards" aria-pressed="' + cards + '">' + PR_ICON.cards + 'Cards</button></div>';
-    const board = cards ? cdDeckHTML(cdList(slots, hasDef, view), slots, cdTiers(slots))
+    const board = cards ? cdDeckHTML(cdList(slots, hasDef), slots, cdTiers(slots))
       : view === 'def' ? prBoardHTML(prRvRows(slots, 'def'), 'Defense')
       : view === 'st' ? prBoardHTML(prRvRows(slots, 'st'), 'Special teams', true)
       : prBoardHTML(prRvRows(slots.filter(function(s){ return PR_OFF_TABS[s.tab]; }), 'off'), 'Offense');
@@ -7090,6 +7099,11 @@
       return;
     }
     const rvv = e.target.closest('[data-rv-view]');
+    if(rvv && ctx.prRvMode === 'cards'){
+      const first = document.querySelector('#pr-view [data-cd-deck] > [data-cd-unit="' + rvv.getAttribute('data-rv-view') + '"]');
+      if(first) cdGo(Array.prototype.indexOf.call(first.parentNode.children, first));
+      return;
+    }
     if(rvv){ ctx.prRvView = rvv.getAttribute('data-rv-view'); ctx.prEnter = 1; prSpotDetailClose(); renderPowerRank(); return; }
     if(Date.now() < cbHeldUntil){ cbHeldUntil = 0; return; }   // the end of a long-press only opens the details
     const pop = document.getElementById('cb-pop');
