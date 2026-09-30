@@ -611,15 +611,6 @@
   .compare-btn{ padding: 8px 16px; font-size: 13px; min-height: 36px; }
 
   /* summary cards (Revolut-style numbers) */
-  .kpis{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
-  .kpi{ background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow); padding: 14px 16px; min-width: 0; }
-  .kpi-hero{ grid-column: 1 / -1; padding: 18px 20px; }
-  .kpi-big{ font-size: 42px; font-weight: 600; letter-spacing: -0.03em; line-height: 1; margin-top: 10px; }
-  .kpi-mid{ font-size: 22px; font-weight: 600; letter-spacing: -0.02em; line-height: 1; margin-top: 8px; }
-  .kpi-mid.up{ color: var(--accent); } .kpi-mid.down{ color: var(--danger); } .kpi-mid.flat{ color: var(--text-3); }
-  .kpi-cap{ font-size: 12px; color: var(--text-2); margin-top: 6px; }
-  .kpi-fd{ margin-top: 4px; font-size: 11.5px; color: var(--text-3); cursor: help; }
-  .kpi-fd[hidden]{ display: none; }
   .bye-alert{ display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
   .bye-alert .bye-text{ flex: 1; min-width: 200px; }
   .bye-fix{ background: var(--danger); color: #fff; padding: 6px 14px; font-size: 12.5px; min-height: 32px; }
@@ -670,12 +661,6 @@
     .tabbar{ display: none; }
     .main{ padding: 28px 36px 60px; width: 100%; }
     .page-head h1{ font-size: 32px; }
-    .kpis{ grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 14px; margin-bottom: 16px; }
-    .kpi{ padding: 18px 20px; }
-    .kpi-hero{ grid-column: auto; }
-    .kpi-big{ font-size: 40px; }
-    .kpi-mid{ font-size: 28px; margin-top: 10px; }
-    .kpi-cap{ font-size: 12.5px; margin-top: 8px; }
   }
   /* ---- wide desktop: two panes, the player panel lives on the right instead of a pop-up ---- */
   @media (min-width: 1200px){
@@ -917,10 +902,6 @@
   .skel{ display: block; border-radius: 6px; color: transparent !important;
     background: linear-gradient(90deg, var(--surface-2) 0%, var(--surface-3) 50%, var(--surface-2) 100%); background-size: 200% 100%; animation: shimmer 1.3s ease-in-out infinite; }
   .skel-row .avatar{ background: var(--surface-2); box-shadow: none; }
-  .shell.is-loading .kpi-big, .shell.is-loading .kpi-mid, .shell.is-loading .kpi-cap{
-    color: transparent; border-radius: 8px; width: 55%;
-    background: linear-gradient(90deg, var(--surface-2) 0%, var(--surface-3) 50%, var(--surface-2) 100%); background-size: 200% 100%; animation: shimmer 1.3s ease-in-out infinite; }
-  .shell.is-loading .kpi-cap{ width: 75%; }
   .shell.is-loading .pane-detail .focus-panel{ display: none; }
   .shell.is-loading .pane-detail::before{ content: ''; display: block; margin: 22px; height: 420px; border-radius: var(--radius);
     background: linear-gradient(90deg, var(--surface-2) 0%, var(--surface-3) 50%, var(--surface-2) 100%); background-size: 200% 100%; animation: shimmer 1.3s ease-in-out infinite; }
@@ -958,7 +939,6 @@
   .lu-mode button svg{ width: 15px; height: 15px; }
   .lu-mode button[aria-pressed="true"]{ background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.14); }
   html.lu-pr #roster-view .starters > :not(.opt-note), html.lu-pr #roster-view .bench-section{ display: none; }
-  html.lu-pr .kpis{ display: none; }   /* Power Rank carries its own live total */
 
   /* ---- Power Rank ---- */
   /* Power Rank is its own full-screen screen: top bar (exit, week, optimize) · scrolling stage · bottom dock (total + positions).
@@ -1614,6 +1594,21 @@
   .mu-foot{ margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--hair); font-size: 13px; font-weight: 600; color: var(--text-2); }
   .mu-foot.up{ color: var(--accent); } .mu-foot.down{ color: var(--danger); }
   .mu-foot .dim{ font-weight: 500; color: var(--text-3); }
+  .mu-wp{ --wp: 50%; margin-top: 12px; }
+  .mu-wp-lbl{ display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 5px; }
+  .mu-wp-lbl b{ font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; min-width: 42px; }
+  .mu-wp-lbl .me{ color: var(--accent); } .mu-wp-lbl .op{ color: var(--text-2); text-align: right; }
+  .mu-wp-lbl span{ font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+  .mu-wp-bar{ position: relative; display: flex; gap: 3px; height: 10px; border-radius: 6px; overflow: hidden; }
+  .mu-wp-bar i{ display: block; height: 100%; border-radius: 3px; }
+  .mu-wp-bar .me{ flex: 0 0 calc(var(--wp) - 1.5px); background: var(--accent); transition: flex-basis 1.1s cubic-bezier(.22, 1, .36, 1); }
+  .mu-wp-bar .op{ flex: 1 1 0; min-width: 0; background: color-mix(in srgb, var(--text-3) 55%, transparent); }
+  /* live: a soft sheen travels along the bar so it reads as moving */
+  .mu-wp.live .mu-wp-bar::after{ content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,.22) 50%, transparent 70%);
+    background-size: 220% 100%; animation: wpSheen 2.8s linear infinite; pointer-events: none; }
+  @keyframes wpSheen{ from{ background-position: 120% 0; } to{ background-position: -120% 0; } }
+  @media (prefers-reduced-motion: reduce){ .mu-wp-bar .me{ transition: none; } .mu-wp.live .mu-wp-bar::after{ animation: none; display: none; } }
+  .mu-fd{ margin-top: 8px; font-size: 11.5px; color: var(--text-3); cursor: help; }
   .rows-card{ background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow); padding: 4px 0; overflow: hidden; margin-bottom: 14px; }
   .opp-view{ max-width: 760px; margin: 0 auto; }
   .opp-head h2{ margin: 2px 0 4px; font-size: 24px; letter-spacing: -0.02em; }
@@ -1822,7 +1817,6 @@
     }
     .setup{ margin-top: 8vh; }
     .page-head h1{ font-size: 26px; }
-    .kpi-big{ font-size: 38px; }
     .setup button#load-btn{ width: 100%; min-height: 48px; font-size: 16px; }
 
 
@@ -2642,12 +2636,6 @@
 
     <div id="lineup-top">
       <div id="mu-slot"></div>
-      <div class="kpis">
-        <div class="kpi kpi-hero"><div class="eyebrow">Projected points</div><div class="kpi-big num" id="kpi-proj">—</div><div class="kpi-cap">Your planned lineup</div><div class="kpi-fd" id="kpi-fd" hidden title="Sleeper projects about twice as many first downs as players actually get. This league scores first downs, so Sleepa uses each player’s real first-down rate instead. Projections here are lower than in the Sleeper app; actual points are unchanged.">First downs adjusted · differs from Sleeper <span aria-hidden="true">ⓘ</span></div></div>
-        <div class="kpi"><div class="eyebrow">vs Sleeper</div><div class="kpi-mid num flat" id="kpi-delta">±0.0</div><div class="kpi-cap" id="kpi-delta-cap">No changes yet</div></div>
-        <div class="kpi"><div class="eyebrow">Playing</div><div class="kpi-mid num" id="kpi-playing">—</div><div class="kpi-cap" id="kpi-playing-cap"></div></div>
-        <div class="kpi"><div class="eyebrow">Record</div><div class="kpi-mid num" id="kpi-record">—</div><div class="kpi-cap" id="kpi-record-cap"></div></div>
-      </div>
       <div class="bye-alert gone" id="bye-alert" role="alert"></div>
     </div>
 
@@ -2954,13 +2942,6 @@
     pageEyebrow: document.getElementById('page-eyebrow'),
     pageTitle: document.getElementById('page-title'),
     pageSub: document.getElementById('page-sub'),
-    kpiProj: document.getElementById('kpi-proj'),
-    kpiDelta: document.getElementById('kpi-delta'),
-    kpiDeltaCap: document.getElementById('kpi-delta-cap'),
-    kpiPlaying: document.getElementById('kpi-playing'),
-    kpiPlayingCap: document.getElementById('kpi-playing-cap'),
-    kpiRecord: document.getElementById('kpi-record'),
-    kpiRecordCap: document.getElementById('kpi-record-cap'),
     setTeam: document.getElementById('set-team'),
     setLeague: document.getElementById('set-league'),
     setWeek: document.getElementById('set-week'),
@@ -4113,7 +4094,6 @@
       row.classList.add('just-swapped');
       row.addEventListener('animationend', function(){ row.classList.remove('just-swapped'); row.style.animationDelay = ''; }, { once: true });
     });
-    [els.kpiProj, els.kpiDelta].forEach(function(el){ el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); });
     const orig = sumProj(ctx.originalStarters), now = sumProj(best), d = now - orig;
     showOptNote('<span class="on-txt"><b>Optimal lineup set</b> · ' + changed.length + ' slot' + (changed.length > 1 ? 's' : '') + ' changed. ' +
       'Sleeper lineup ' + orig.toFixed(2) + ' → <b>' + now.toFixed(2) + '</b> ' +
@@ -4281,7 +4261,6 @@
     els.pageSub.textContent = 'Loading roster…';
     els.teamName.textContent = 'Loading'; els.leagueName.textContent = picked ? picked.name : 'League'; els.teamRecord.textContent = '0-0';
     setLeagueAvatar(picked);
-    [els.kpiProj, els.kpiDelta, els.kpiPlaying, els.kpiRecord].forEach(function(el){ el.textContent = '—'; });
     els.startersList.innerHTML = skeletonRows(9);
     els.benchList.innerHTML = skeletonRows(5);
     els.navBtns.forEach(function(t){ if(t.getAttribute('data-view') === 'roster') t.setAttribute('aria-current', 'page'); else t.removeAttribute('aria-current'); });
@@ -4439,7 +4418,6 @@
       ctx.matchups = await matchupsP;
       ctx.focus = null;
       els.rosterScreen.classList.remove('is-loading');
-      els.kpiProj.textContent = '0.00'; // so the total counts up on first load
       // If the app-open animation is still playing, hold the total at 0 and skip the row fade-in for now;
       // both play once, after it lands (ctx.afterVt below). Otherwise they'd run twice.
       ctx.deferEntrance = !!ctx.vtRunning;
@@ -4462,7 +4440,6 @@
       if(ctx.deferEntrance) ctx.afterVt = function(){
         ctx.deferEntrance = false;
         staggerIn(els.startersList); staggerIn(els.benchList);
-        els.kpiProj.textContent = '0.00'; countTo(els.kpiProj, sumProj(ctx.draftStarters));
       };
 
       nflPromise.then(function(res){
@@ -5123,6 +5100,69 @@
     const roster = (ctx.lastRosters || []).find(function(r){ return r.roster_id === opp.roster_id; }) || {};
     return { rosterId: opp.roster_id, name: rosterName(opp.roster_id), starters: starters, players: roster.players || [], roster: roster };
   }
+  // ---- win probability ----
+  // Each starter: expected final = points so far + projection × share of his game left (projFinal); uncertainty =
+  // a typical weekly swing (sd) scaled by the share of the game left (variance ∝ time left). sd = projection × a
+  // coefficient of variation: his own week-to-week swing (3+ games) averaged with a position default, never below
+  // 3 points' worth. Team = sums; P(win) = Φ((my expected − theirs) / √(my variance + theirs)). Finished players add no
+  // variance, so it firms up as games end and swings as players beat or miss their projections.
+  const WP_CV = { QB: 0.45, RB: 0.55, WR: 0.6, TE: 0.65, K: 0.5, DEF: 0.7 };
+  function wpTeam(starters){
+    let mean = 0, v = 0;
+    (starters || []).forEach(function(pid){
+      if(!pid || pid === '0' || !ctx.players[pid]) return;
+      const f = projFinal(pid);
+      mean += f.v;
+      if(f.state !== 'pre' && f.state !== 'in') return;
+      const frac = f.state === 'pre' ? 1 : remainingFrac(gameOf(ctx.players[pid].team)).f;
+      const own = volatility(pid), base = WP_CV[posGroup(pid)] || 0.5;
+      const cv = own ? (base + Math.max(0.3, Math.min(1, own))) / 2 : base;
+      const sd = Math.max(3, f.proj || 0) * cv;
+      v += sd * sd * frac;
+    });
+    return { mean: mean, v: v };
+  }
+  function normCdf(z){   // Abramowitz & Stegun 26.2.17
+    const t = 1 / (1 + 0.2316419 * Math.abs(z)), d = 0.3989423 * Math.exp(-z * z / 2);
+    const q = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+    return z > 0 ? 1 - q : q;
+  }
+  function winProb(a, b){
+    const sd = Math.sqrt(a.v + b.v), d = a.mean - b.mean;
+    if(sd < 0.01) return d > 0.005 ? 1 : d < -0.005 ? 0 : 0.5;
+    return normCdf(d / sd);
+  }
+  // The bar: built at the last shown value, then moved to the new one (renderMatchupCard), so every update slides.
+  function wpBarHTML(p, live, done){
+    const shown = typeof ctx.wpShown === 'number' ? ctx.wpShown : 0.5;
+    const pct = function(x){ return done ? Math.round(x * 100) : Math.max(1, Math.min(99, Math.round(x * 100))); };
+    return '<div class="mu-wp' + (live && !done ? ' live' : '') + '" data-wp="' + p.toFixed(4) + '" style="--wp:' + (shown * 100).toFixed(2) + '%" ' +
+        'title="Win probability: each starter’s projection for the time left in his game, plus points already scored, with a typical week-to-week swing for each player. It moves as players beat or miss their projections and settles as games finish.">' +
+      '<div class="mu-wp-lbl"><b class="me" data-wp-me>' + pct(shown) + '%</b><span>Win probability</span><b class="op" data-wp-op>' + pct(1 - shown) + '%</b></div>' +
+      '<div class="mu-wp-bar" role="img" aria-label="Win probability: you ' + pct(p) + '%, them ' + pct(1 - p) + '%"><i class="me"></i><i class="op"></i></div></div>';
+  }
+  function wpAnimate(slot){
+    const el = slot && slot.querySelector('.mu-wp');
+    if(!el) return;
+    const to = Number(el.getAttribute('data-wp')), from = typeof ctx.wpShown === 'number' ? ctx.wpShown : 0.5;
+    const done = !el.classList.contains('live') && (to === 0 || to === 1);
+    const pct = function(x){ return done ? Math.round(x * 100) : Math.max(1, Math.min(99, Math.round(x * 100))); };
+    const me = el.querySelector('[data-wp-me]'), op = el.querySelector('[data-wp-op]');
+    ctx.wpShown = to;
+    void el.offsetWidth;   // commit the old width, then move
+    el.style.setProperty('--wp', (to * 100).toFixed(2) + '%');
+    if(reduceMotion.matches || Math.abs(to - from) < 0.005){ me.textContent = pct(to) + '%'; op.textContent = pct(1 - to) + '%'; return; }
+    const t0 = performance.now(), dur = 900;
+    clearInterval(ctx.wpTick);
+    ctx.wpTick = setInterval(function(){   // a timer, not rAF: keeps counting in a background tab
+      const k = Math.min(1, (performance.now() - t0) / dur), e = 1 - Math.pow(1 - k, 3), x = from + (to - from) * e;
+      me.textContent = pct(x) + '%'; op.textContent = pct(1 - x) + '%';
+      if(k >= 1) clearInterval(ctx.wpTick);
+    }, 30);
+  }
+  function fdNoteHTML(){
+    return scoresFirstDowns(ctx.league && ctx.league.scoring_settings) ? '<div class="mu-fd" title="Sleeper projects about twice as many first downs as players actually get. This league scores first downs, so Sleepa uses each player’s real first-down rate instead. Projections here are lower than in the Sleeper app; actual points are unchanged.">Projections: first downs adjusted · differs from Sleeper</div>' : '';
+  }
   function marginText(d){ return Math.abs(d) < 0.005 ? 'dead even' : (d > 0 ? 'ahead by ' : 'behind by ') + Math.abs(d).toFixed(2); }
   // Projected totals use the same league-scored projections as everything else.
   function matchupCardHTML(){
@@ -5133,6 +5173,7 @@
     const dirty = JSON.stringify(ctx.draftStarters) !== JSON.stringify(ctx.originalStarters);
     const mine = dirty ? planTotal : sleeperTotal, d = mine - oppTotal;
     const tone = Math.abs(d) < 0.005 ? '' : d > 0 ? ' up' : ' down';
+    const wp = winProb(wpTeam(dirty ? ctx.draftStarters : ctx.originalStarters), wpTeam(mu.starters));
     return '<button type="button" class="mu-card" data-open-opp aria-label="This week’s matchup. Compare your lineup with ' + escapeHTML(mu.name) + '’s">' +
       '<div class="mu-head"><span class="eyebrow">Week ' + ctx.week + ' matchup · projected</span><span class="mu-link">Compare lineups ›</span></div>' +
       '<div class="mu-row">' +
@@ -5140,10 +5181,10 @@
           (dirty ? '<div class="mu-sub">Your plan · Sleeper lineup ' + sleeperTotal.toFixed(2) + '</div>' : '<div class="mu-sub">Your Sleeper lineup</div>') + '</div>' +
         '<div class="mu-vs" aria-hidden="true">vs</div>' +
         '<div class="mu-side opp"><div class="mu-name">' + escapeHTML(mu.name) + '</div><div class="mu-pts num">' + oppTotal.toFixed(2) + '</div><div class="mu-sub">Their Sleeper lineup</div></div>' +
-      '</div>' +
+      '</div>' + wpBarHTML(wp, false, false) +
       '<div class="mu-foot' + tone + '">' + (dirty
         ? 'With your changes you’re ' + marginText(planTotal - oppTotal) + ' <span class="dim">(Sleeper lineup: ' + marginText(sleeperTotal - oppTotal) + ')</span>'
-        : 'You’re projected ' + marginText(d)) + '</div>' +
+        : 'You’re projected ' + marginText(d)) + '</div>' + fdNoteHTML() +
     '</button>';
   }
   function playsLeftText(t){
@@ -5166,20 +5207,26 @@
         '<div class="mu-sub">' + (done ? 'Final' : 'Proj. final <b>' + t.fin.toFixed(2) + '</b>') + '</div><div class="mu-left">' + playsLeftText(t) + '</div></div>';
     };
     const est = me.est || op.est;
+    const mm = (ctx.matchups || []).find(function(x){ return x.roster_id === ctx.myRoster.roster_id; }) || {};
+    let wp;
+    if(done) wp = Math.abs(me.pts - op.pts) < 0.005 ? 0.5 : me.pts > op.pts ? 1 : 0;
+    else{
+      wp = winProb(wpTeam(mm.starters), wpTeam(mu.starters));   // same expected finals as the "Proj. final" shown
+    }
     return '<button type="button" class="mu-card live" data-open-opp aria-label="This week’s matchup, live. Compare your lineup with ' + escapeHTML(mu.name) + '’s">' +
       '<div class="mu-head"><span class="eyebrow">Week ' + ctx.week + ' · ' + (done ? 'final' : on ? '<span class="live-dot"></span>live' : 'in progress') + '</span><span class="mu-link">Compare lineups ›</span></div>' +
-      '<div class="mu-row">' + side('', els.teamName.textContent || 'You', me, nowTone) + '<div class="mu-vs" aria-hidden="true">vs</div>' + side(' opp', mu.name, op, '') + '</div>' +
+      '<div class="mu-row">' + side('', els.teamName.textContent || 'You', me, nowTone) + '<div class="mu-vs" aria-hidden="true">vs</div>' + side(' opp', mu.name, op, '') + '</div>' + wpBarHTML(wp, true, done) +
       '<div class="mu-foot' + tone + '">' + (done ? (Math.abs(d) < 0.005 ? 'Tied' : d > 0 ? 'You won by ' + d.toFixed(2) : 'You lost by ' + (-d).toFixed(2))
         : 'Projected to ' + (Math.abs(d) < 0.005 ? 'finish dead even' : (d > 0 ? 'win' : 'lose') + ' by ' + Math.abs(d).toFixed(2))) +
         '<span class="mu-ago" data-live-ago>Updated ' + liveAgoText() + '</span></div>' +
       '<div class="mu-note">Actual points from Sleeper in your league’s scoring. Proj. final = points so far + projection for the rest of each game' +
         (est ? ' (no game clock available, so time left is estimated from kickoff)' : '') + '.' +
-        (dirty ? ' Live scores use your lineup in Sleeper, not your planned changes.' : '') + '</div>' +
+        (dirty ? ' Live scores use your lineup in Sleeper, not your planned changes.' : '') + '</div>' + fdNoteHTML() +
     '</button>';
   }
   function renderMatchupCard(){
     const slot = document.getElementById('mu-slot');
-    if(slot) slot.innerHTML = matchupCardHTML();
+    if(slot){ slot.innerHTML = matchupCardHTML(); wpAnimate(slot); }
   }
   document.addEventListener('click', function(e){
     const b = e.target.closest && e.target.closest('[data-open-opp]');
@@ -5988,29 +6035,9 @@
     els.resetBtn.classList.toggle('is-hidden', !isDirty);
     els.compareBtn.classList.toggle('is-hidden', !isDirty);
 
-    const total = sumProj(ctx.draftStarters), diff = total - sumProj(ctx.originalStarters);
-    if(ctx.deferEntrance) els.kpiProj.textContent = '0.00'; else countTo(els.kpiProj, total);
-    document.getElementById('kpi-fd').hidden = !scoresFirstDowns(ctx.league && ctx.league.scoring_settings);
-    setDiff(els.kpiDelta, diff);
-    els.kpiDelta.className = 'kpi-mid num ' + els.kpiDelta.className.replace('lc-diff', '').trim();
-    const changed = ctx.draftStarters.filter(function(pid, i){ return pid !== ctx.originalStarters[i]; }).length;
-    els.kpiDeltaCap.textContent = changed ? changed + ' slot' + (changed > 1 ? 's' : '') + ' changed · was ' + sumProj(ctx.originalStarters).toFixed(2) : 'No changes yet';
-
     const filled = ctx.draftStarters.filter(function(pid){ return pid && pid !== '0' && ctx.players[pid]; });
     const bye = filled.filter(isOnBye).length;
-    const out = filled.filter(function(pid){ const st = effectiveStatus(pid); return !isOnBye(pid) && cantPlay(st); }).length;
     const slots = ctx.rosterPositions.length;
-    els.kpiPlaying.textContent = (filled.length - bye - out) + '/' + slots;
-    els.kpiPlaying.className = 'kpi-mid num' + (bye || out || filled.length < slots ? ' down' : '');
-    const why = [];
-    if(bye) why.push(bye + ' on bye');
-    if(out) why.push(out + ' out');
-    if(filled.length < slots) why.push((slots - filled.length) + ' empty');
-    els.kpiPlayingCap.textContent = why.length ? why.join(' · ') : 'Everyone plays';
-
-    const st = ctx.myRoster.settings || {};
-    els.kpiRecord.textContent = typeof st.wins === 'number' ? st.wins + '–' + st.losses + (st.ties ? '–' + st.ties : '') : '—';
-    els.kpiRecordCap.textContent = typeof st.fpts === 'number' ? (st.fpts + (st.fpts_decimal || 0) / 100).toFixed(2) + ' points for' : '';
 
     const problemCount = bye + (slots - filled.length);
     document.querySelectorAll('[data-bye-badge]').forEach(function(b){ b.hidden = !problemCount; b.textContent = problemCount; });
@@ -6377,22 +6404,24 @@
     });
     els.benchList.innerHTML = benchHTML || '<div class="empty-state">Bench is empty.</div>';
 
-    // Lineup problems: starters on a bye and empty starting slots. Neither scores.
+    // Lineup problems: starters on a bye, starters ruled out (game not started) and empty starting slots. None score.
     const byeStarters = ctx.draftStarters.filter(function(pid){ return pid && pid !== '0' && isOnBye(pid); });
+    const outStarters = ctx.draftStarters.filter(function(pid){ return pid && pid !== '0' && ctx.players[pid] && !isOnBye(pid) && !isLocked(pid) && cantPlay(effectiveStatus(pid)); });
     const emptySlots = emptyStarterSlots();
-    const problems = byeStarters.length + emptySlots.length;
+    const problems = byeStarters.length + outStarters.length + emptySlots.length;
     els.byeAlert.classList.toggle('gone', !problems);
     if(problems){ // content is left in place when fixed, so it can collapse away
       const byeTxt = byeStarters.map(function(pid){ const p = ctx.players[pid]; return escapeHTML(playerName(p)) + ' (' + escapeHTML(p.team) + ') is on a bye'; });
+      const outTxt = outStarters.map(function(pid){ const p = ctx.players[pid]; return escapeHTML(playerName(p)) + ' is ' + escapeHTML(statusInfo(effectiveStatus(pid)).label); });
       const emptyTxt = emptySlots.map(function(i){ return 'your ' + escapeHTML(ctx.rosterPositions[i]) + ' slot is empty'; });
-      const all = byeTxt.concat(emptyTxt);
-      const firstSlot = byeStarters.length ? ctx.draftStarters.indexOf(byeStarters[0]) : emptySlots[0];
+      const all = byeTxt.concat(outTxt, emptyTxt);
+      const firstSlot = byeStarters.length ? ctx.draftStarters.indexOf(byeStarters[0]) : outStarters.length ? ctx.draftStarters.indexOf(outStarters[0]) : emptySlots[0];
       const head = problems === 1
-        ? (byeStarters.length ? all[0].charAt(0).toUpperCase() + all[0].slice(1) + ' in week ' + ctx.week + '.' : 'Your ' + escapeHTML(ctx.rosterPositions[emptySlots[0]]) + ' slot is empty.')
+        ? (byeStarters.length ? all[0].charAt(0).toUpperCase() + all[0].slice(1) + ' in week ' + ctx.week + '.' : outStarters.length ? all[0] + '.' : 'Your ' + escapeHTML(ctx.rosterPositions[emptySlots[0]]) + ' slot is empty.')
         : problems + ' starting slots won’t score in week ' + ctx.week + ':';
       els.byeAlert.innerHTML = '<div class="bye-text"><strong>' + head + '</strong> ' +
         (problems === 1 ? (byeStarters.length ? 'Swap them out so the slot scores.' : 'It won’t score until you add someone.') : all.join('; ') + '.') +
-        '</div><button class="bye-fix" data-fix-slot="' + firstSlot + '">' + (byeStarters.length ? 'Show options' : 'Fill it') + '</button>';
+        '</div><button class="bye-fix" data-fix-slot="' + firstSlot + '">' + (byeStarters.length || outStarters.length ? 'Show options' : 'Fill it') + '</button>';
     }
 
     document.querySelectorAll('.slot-row[data-player-id]').forEach(function(row){
@@ -8439,7 +8468,6 @@
       const row = els.startersList.querySelector('[data-slot-index="' + i + '"]');
       if(row){ row.classList.add('just-swapped'); row.addEventListener('animationend', function(){ row.classList.remove('just-swapped'); }, { once: true }); }
     });
-    [els.kpiProj, els.kpiDelta].forEach(function(el){ el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); });
     if(paneMode()) openFocus(newPid, targetSlotIndex); // keep the panel on the slot you just changed
     else closeFocus();
   }
