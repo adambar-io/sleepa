@@ -2684,7 +2684,7 @@
   .cd-music.on{ color: var(--accent); }
   .cd-music.on svg{ animation: cdBeat 1.6s ease-in-out infinite; }
   @keyframes cdBeat{ 0%, 100%{ transform: scale(1); } 50%{ transform: scale(1.12); } }
-  .cd-music:disabled{ opacity: .4; }
+
   @media (prefers-reduced-motion: reduce){ .cd-music.on svg{ animation: none; } }
   .cd-legend{ position: absolute; z-index: 30; top: 26px; left: 50%; transform: translateX(-50%); width: min(100%, 380px); padding: 14px 16px 12px; border-radius: 16px;
     background: var(--surface); box-shadow: var(--shadow-lg), inset 0 0 0 1px var(--hair); text-align: left; animation: fadeIn .18s var(--ease); }
@@ -2923,6 +2923,7 @@
             <div class="card set-card"><h3>Appearance</h3><p class="set-sub">Auto follows your device's light or dark setting.</p><div class="theme-seg" role="group" aria-label="Theme"><button type="button" data-theme-opt="system">Auto</button><button type="button" data-theme-opt="light">Light</button><button type="button" data-theme-opt="dark">Dark</button></div></div>
             <div class="card set-card"><h3>Lineup cards</h3><p class="set-sub">Compact shows what you need to set a lineup: projection, last game, opponent colored by matchup (green easy, amber average, red tough), injury or bye flags, and an arrow when snap share jumped or dropped. Tap a player for season stats, snaps, depth chart and the full matchup ranking. Detailed puts all of it on the card.</p><div class="cards-seg" role="group" aria-label="Lineup cards"><button type="button" data-cards-opt="compact">Compact</button><button type="button" data-cards-opt="detailed">Detailed</button></div></div>
             <div class="card set-card"><h3>Your leagues</h3><p class="set-sub">Tap a league to switch to it.</p><div class="league-list" data-league-list></div></div>
+            <div class="card set-card"><h3>Card music</h3><div id="set-music"></div></div>
             <div class="card set-card"><h3 data-zone-name>Sleepa Zone</h3><p class="set-sub">Every league at once: your team against each opponent, with live scores while games are on.</p><div class="zn-set-btns"><button type="button" class="quiet-btn" data-zone-open>Open <span data-zone-name>Sleepa Zone</span></button><button type="button" class="quiet-btn" data-zone-guide>How <span data-zone-name>Sleepa Zone</span> reads the game</button></div></div>
             <div class="card set-card"><h3>Current team</h3>
               <div class="set-row"><span>Team</span><b id="set-team">—</b></div>
@@ -6639,8 +6640,8 @@
   // ============ Power Rank view (shown as "Sleepa Huddle"): set the lineup one position at a time, then the flex ============
   const HUDDLE_NAME = 'Sleepa Huddle';
   // card music state (the player itself is with the deck code)
-  const CD_MUSIC_URL = 'audio/cards-theme.mp3', CD_MUSIC_VOL = 0.55;
-  const cdMusic = { el: null, on: false, fade: null, failed: false, blocked: false };
+  const CD_MUSIC_VOL = 0.55;
+  const cdMusic = { el: null, on: false, fade: null, failed: false, blocked: false, track: null };   // track = { blob, name } from this device
   try{ cdMusic.on = localStorage.getItem('rv-cards-music') === 'on'; }catch(e){}
   const HUDDLE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="7" r="2.6"/><circle cx="5.5" cy="10" r="2.2"/><circle cx="18.5" cy="10" r="2.2"/><path d="M7.5 20a4.5 4.5 0 0 1 9 0M2.5 18.5a3.3 3.3 0 0 1 5-2.8M21.5 18.5a3.3 3.3 0 0 0-5-2.8"/></svg>';
   // Same plan as the list view (ctx.draftStarters, saved per league and week); only the way you edit it differs.
@@ -7422,12 +7423,50 @@
       '<div class="cd-act"><button type="button" data-cd-flip>↻ Flip</button><button type="button" data-cd-edit>Edit slot</button></div></div>';
   }
   // ---- card music: one looping track while you're on the Cards screen (off by default; the speaker turns it on) ----
-  // Plays only while the Huddle is open on Review → Cards, the page is on screen and the speaker is on (remembered on
-  // this device). Loaded the first time it's turned on. Fades in / out where the browser allows volume changes (not iOS:
-  // there it just plays / pauses). Browsers only start sound from a tap; if one is refused, the next tap retries.
+  // The track is private: it's never uploaded. The first time you turn music on, you pick an audio file on that device;
+  // it's kept in this browser's storage (IndexedDB 'cards-music') and played from there. Settings → Card music replaces
+  // or removes it. Plays only while the Huddle is open on Review → Cards, the page is on screen and the speaker is on
+  // (remembered on this device). Fades in / out where the browser allows volume changes (not iOS: there it just plays /
+  // pauses). Browsers only start sound from a tap; if one is refused, the next tap retries.
+  idbGet('cards-music').then(function(t){ if(t && t.blob) cdMusic.track = t; renderCardMusicSetting(); });
+  function cdMusicPick(then){   // must run inside the tap (iOS only opens the picker from a user gesture)
+    const inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = 'audio/*,.mp3,.m4a,.aac,.wav';
+    inp.addEventListener('change', function(){
+      const f = inp.files && inp.files[0];
+      if(!f) return;
+      cdMusic.track = { blob: f, name: f.name };
+      if(cdMusic.el){ cdMusic.el.pause(); URL.revokeObjectURL(cdMusic.el.src); cdMusic.el = null; }
+      cdMusic.failed = false;
+      idbSet('cards-music', { blob: f, name: f.name, size: f.size, ts: Date.now() });
+      renderCardMusicSetting();
+      if(then) then();
+    });
+    inp.click();
+  }
+  function cdMusicClear(){
+    cdMusic.track = null; cdMusic.on = false;
+    try{ localStorage.setItem('rv-cards-music', 'off'); }catch(e){}
+    if(cdMusic.el){ cdMusic.el.pause(); URL.revokeObjectURL(cdMusic.el.src); cdMusic.el = null; }
+    idbSet('cards-music', null);
+    cdMusicBtns(); renderCardMusicSetting();
+  }
+  function renderCardMusicSetting(){
+    const el = document.getElementById('set-music');
+    if(!el) return;
+    el.innerHTML = cdMusic.track
+      ? '<p class="set-sub">Playing from this device: <b>' + escapeHTML(cdMusic.track.name || 'your track') + '</b>. It’s stored only in this browser and never uploaded.</p><div class="zn-set-btns"><button type="button" class="quiet-btn" data-music-pick>Replace track</button><button type="button" class="quiet-btn" data-music-clear>Remove</button></div>'
+      : '<p class="set-sub">Music on the Huddle’s Cards screen. Pick an audio file on this device: it’s stored only in this browser and never uploaded. Turn it on or off with the speaker above the deck.</p><div class="zn-set-btns"><button type="button" class="quiet-btn" data-music-pick>Choose a track</button></div>';
+  }
+  document.addEventListener('click', function(e){
+    if(!e.target.closest) return;
+    if(e.target.closest('[data-music-pick]')) cdMusicPick();
+    else if(e.target.closest('[data-music-clear]')) cdMusicClear();
+  });
   function cdMusicBtnHTML(){
-    return '<button type="button" class="cd-info cd-music' + (cdMusic.on ? ' on' : '') + '" data-cd-music aria-pressed="' + cdMusic.on + '" aria-label="' + (cdMusic.on ? 'Turn music off' : 'Turn music on') + '" title="' + (cdMusic.failed ? 'Music unavailable' : cdMusic.on ? 'Music on' : 'Music off') + '"' + (cdMusic.failed ? ' disabled' : '') + '>' +
-      (cdMusic.on ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg>' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>') + '</button>';
+    const on = cdMusic.on && !!cdMusic.track;
+    return '<button type="button" class="cd-info cd-music' + (on ? ' on' : '') + '" data-cd-music aria-pressed="' + on + '" aria-label="' + (on ? 'Turn music off' : cdMusic.track ? 'Turn music on' : 'Choose a track and turn music on') + '" title="' + (cdMusic.failed ? 'That file can’t be played here: Settings → Card music to replace it' : on ? 'Music on' : cdMusic.track ? 'Music off' : 'Music: choose a track on this device') + '">' +
+      (on ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg>' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>') + '</button>';
   }
   function cdMusicWanted(){ return cdMusic.on && !cdMusic.failed && ctx.luMode === 'pr' && ctx.prTab === 'REVIEW' && ctx.prRvMode === 'cards' && document.visibilityState === 'visible'; }
   function cdMusicFade(to, done){
@@ -7443,8 +7482,9 @@
   function cdMusicSync(){
     const want = cdMusicWanted(), a = cdMusic.el;
     if(!want){ if(a && !a.paused) cdMusicFade(0, function(){ a.pause(); }); return; }
+    if(!cdMusic.track) return;
     if(!a){
-      const el = cdMusic.el = new Audio(CD_MUSIC_URL);
+      const el = cdMusic.el = new Audio(URL.createObjectURL(cdMusic.track.blob));
       el.loop = true; el.preload = 'auto'; el.volume = 0;
       el.addEventListener('error', function(){ cdMusic.failed = true; cdMusicBtns(); });
     }
@@ -7456,6 +7496,10 @@
   }
   function cdMusicBtns(){ document.querySelectorAll('#pr-view [data-cd-music]').forEach(function(b){ b.outerHTML = cdMusicBtnHTML(); }); }
   function cdMusicToggle(){
+    if(!cdMusic.on && !cdMusic.track){   // first time on this device: pick the track, then start
+      cdMusicPick(function(){ cdMusic.on = true; try{ localStorage.setItem('rv-cards-music', 'on'); }catch(e){} cdMusicBtns(); cdMusicSync(); });
+      return;
+    }
     cdMusic.on = !cdMusic.on;
     try{ localStorage.setItem('rv-cards-music', cdMusic.on ? 'on' : 'off'); }catch(e){}
     cdMusicBtns(); cdMusicSync();
