@@ -875,7 +875,11 @@
   .pr-tab .pr-dot{ position: absolute; top: 7px; right: 8px; width: 7px; height: 7px; border-radius: 50%; background: var(--danger); }
   /* entrance only when the tab changes (not on every tap): slide in from the side you moved toward, cards stagger */
   .pr-stage.enter{ animation: prStageIn .3s var(--ease); }
-  @keyframes prStageIn{ from{ opacity: 0; transform: translateX(calc(var(--dir, 0) * 18px)); } to{ opacity: 1; transform: none; } }
+  @keyframes prStageIn{ from{ opacity: 0; transform: translateX(calc(var(--dir, 0) * var(--shift, 18px))); } to{ opacity: 1; transform: none; } }
+  .nm-s, .t-s{ display: none; }
+  .pr-tabs.fade-r{ -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); }
+  .pr-tabs.fade-l{ -webkit-mask-image: linear-gradient(90deg, transparent, #000 28px); mask-image: linear-gradient(90deg, transparent, #000 28px); }
+  .pr-tabs.fade-l.fade-r{ -webkit-mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent); }
   .pr-stage.enter .pr-pool > .pr-card{ animation: rowIn .34s var(--ease) both; animation-delay: calc(var(--i, 0) * 28ms + 60ms); }
   .pr-sec .pr-next{ margin-left: auto; display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; min-height: 28px; border-radius: 999px; font-size: 12px; font-weight: 700;
     background: color-mix(in srgb, var(--pr-c) 14%, transparent); color: var(--pr-c); animation: fadeIn .3s var(--ease); }
@@ -1050,27 +1054,42 @@
     .pr-toast{ bottom: 128px; }
     .pr-start{ padding: 12px; font-size: 12.5px; }
     .pr-start button{ margin-left: 0; }
-    .pr-main{ padding: 16px 12px 20px; }
+    .pr-main{ padding: 16px 12px 20px; --shift: 0px; }   /* phones: steps fade in without sliding (the pool row reaches the screen edge) */
     .pr-dock{ flex-direction: column; align-items: stretch; gap: 8px; padding: 8px 10px calc(env(safe-area-inset-bottom) + 8px); }
     .pr-total{ flex-direction: row; align-items: baseline; gap: 10px; }
     .pr-total .eyebrow{ display: none; }
     .pr-total-num{ font-size: 22px; }
     .pr-total .pr-chg-note{ margin-left: auto; }
-    .pr-tabs{ justify-content: stretch; gap: 6px; }
-    .pr-tab{ flex: 1 1 0; padding: 6px 7px 7px; border-radius: 12px; min-width: 0; }
+    /* position bar: chips keep their size and the bar scrolls (momentum, no scrollbar, edge fades, active chip centered) */
+    .pr-tabs{ justify-content: flex-start; gap: 6px; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+    .pr-tabs::-webkit-scrollbar{ display: none; }
+    .pr-tab{ flex: 0 0 auto; padding: 6px 10px 7px; border-radius: 12px; min-width: 58px; }
     .pr-tab b{ font-size: 13px; }
     .pr-tf{ display: none; }   /* phones: points only; an empty or non-scoring slot still shows the red dot */
-    .pr-slots{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 10px; margin: 8px 0 22px; }
+    /* compact tiles. Starters: always two across (a third, fourth… wraps to the next row, never off-screen), each
+       tile half the width minus the gap; pool: a swipe row where two cards show whole and the third peeks, or the
+       "All N" grid (two across). Every tile: short one-line name, team + position + status, projection biggest, L3,
+       game time + opponent in its matchup color. The IDP usage line and typical week live on the player page (ⓘ). */
+    .pr-slots{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 10px; margin: 8px 0 22px; }
     .pr-slots.one{ grid-template-columns: minmax(0, 1fr); }
-    .pr-slot{ min-height: 170px; min-width: 0; max-width: none; }
-    .pr-slot .pr-card{ padding: 18px 12px 12px; gap: 9px; border-radius: 18px; }
-    .pr-slot .pr-av{ width: 44px; height: 44px; }
-    .pr-slot .pr-head{ gap: 10px; padding-right: 14px; }
-    .pr-slot .pr-nm b{ font-size: 15.5px; }
-    .pr-slot .pr-nm small{ font-size: 12px; }
-    .pr-slot .pr-proj{ font-size: 30px; }
-    .pr-slot .pr-l3{ font-size: 15px; }
-    .pr-slot .pr-game{ font-size: 12.5px; }
+    .pr-slot{ min-height: 150px; min-width: 0; max-width: none; }
+    .pr-slot.slim{ min-height: 130px; }
+    .pr-slot .pr-card{ padding: 16px 11px 11px; gap: 8px; border-radius: 18px; }
+    .pr-slot .pr-av{ width: 40px; height: 40px; }
+    .pr-slot .pr-head{ gap: 9px; padding-right: 16px; }
+    .pr-slot .pr-nm b{ font-size: 15px; }
+    .pr-slot .pr-nm small{ font-size: 11.5px; }
+    .pr-slot .pr-proj{ font-size: 28px; }
+    .pr-slot .pr-l3{ font-size: 14px; }
+    .pr-slot .pr-game{ font-size: 12px; }
+    .nm-l, .t-l{ display: none; } .nm-s, .t-s{ display: inline; }
+    .pr-nm b{ display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; -webkit-line-clamp: none; }
+    .pr-idp{ display: none; }
+    .pr-slots:not(.one) .pr-slot .pr-av{ width: 36px; height: 36px; }
+    .pr-slots:not(.one) .pr-slot .pr-head{ gap: 8px; padding-right: 12px; }
+    .pr-slots:not(.one) .pr-slot .pr-nm b{ font-size: 14px; letter-spacing: -0.01em; }
+    .pr-rm{ width: 28px; height: 28px; top: -10px; right: -6px; }
+    .pr-ic{ width: 28px; height: 28px; top: 4px; right: 4px; }
     .pr-slot .pr-more{ font-size: 11.5px; gap: 4px 10px; padding-top: 8px; }
     .pr-slots:not(.one) .pr-slot .pr-more{ display: none; }   /* 2-up is too narrow for the extra line */
     .pr-slots.one .pr-slot .pr-av{ width: 56px; height: 56px; }
@@ -1081,7 +1100,7 @@
     .pr-pool:not(.all){ display: flex; gap: 10px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-padding: 0 12px;
       margin: 0 -12px; padding: 4px 12px 12px; scrollbar-width: none; }
     .pr-pool:not(.all)::-webkit-scrollbar{ display: none; }
-    .pr-pool:not(.all) > .pr-card{ flex: 0 0 min(44%, 190px); scroll-snap-align: start; }
+    .pr-pool:not(.all) > .pr-card{ flex: 0 0 calc((100cqw - 34px) / 2.2); scroll-snap-align: start; }   /* two whole cards + a peek of the next */
     .pr-pool.all{ grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
     .pr-card{ padding: 11px 10px 9px; }
     .pr-proj{ font-size: 21px; }
@@ -5938,6 +5957,7 @@
   function luMode(){ return ctx.luMode; }
   function setLuMode(mode){
     ctx.luMode = mode === 'pr' ? 'pr' : 'list';
+    ctx.prTabShown = null;
     ctx.prSel = null;
     if(ctx.luMode === 'pr') ctx.prWork = null;   // (re)read the draft for this league + week when entering
     applyLuMode();
@@ -6211,7 +6231,19 @@
     // while you're still building, the gap to Sleeper is just the empty slots: say that instead of a big red number
     d.textContent = toFill ? toFill + ' slot' + (toFill > 1 ? 's' : '') + ' to fill' : flat ? 'same as Sleeper' : (diff > 0 ? '+' : '−') + Math.abs(diff).toFixed(2) + ' vs Sleeper';
     d.className = 'pr-delta' + (toFill || flat ? '' : diff > 0 ? ' up' : ' down');
-    view.querySelector('.pr-tabs').innerHTML = tabHTML;
+    const tabsEl = view.querySelector('.pr-tabs'), keepX = tabsEl.scrollLeft;
+    tabsEl.innerHTML = tabHTML;
+    tabsEl.scrollLeft = keepX;
+    if(ctx.prTabShown !== ctx.prTab){   // a new step: scroll its chip to the middle of the bar
+      const act = tabsEl.querySelector('[aria-selected="true"]');
+      if(act && tabsEl.scrollWidth > tabsEl.clientWidth + 1){
+        const x = Math.max(0, act.offsetLeft - (tabsEl.clientWidth - act.offsetWidth) / 2);
+        tabsEl.scrollTo({ left: x, behavior: ctx.prTabShown && !window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'smooth' : 'auto' });
+      }
+      ctx.prTabShown = ctx.prTab;
+    }
+    prTabsFade(tabsEl);
+    if(!tabsEl._fade){ tabsEl._fade = true; tabsEl.addEventListener('scroll', function(){ prTabsFade(tabsEl); }, { passive: true }); }
     // Re-rendering the stage keeps where you are: the vertical scroll lives on .pr-main (not replaced), and each swipe
     // row's horizontal position is carried over when it's the same position's row.
     const body = view.querySelector('.pr-body'), rows = {};
@@ -6235,6 +6267,12 @@
     view.querySelector('#pr-chg').innerHTML = nChg ? 'Saved lineup: ' + nChg + ' change' + (nChg > 1 ? 's' : '') + ' to make in Sleeper · <button type="button" data-pr-compare>See them</button>' : '';
     prPlayFly();
     prPlayLanded();
+  }
+  // soft fades on the bar's edges while there's more to scroll that way
+  function prTabsFade(el){
+    const more = el.scrollWidth > el.clientWidth + 1;
+    el.classList.toggle('fade-l', more && el.scrollLeft > 2);
+    el.classList.toggle('fade-r', more && el.scrollLeft < el.scrollWidth - el.clientWidth - 2);
   }
   // Tapped card flies from the pool into its slot (FLIP: measure before, animate the new element from the old spot).
   function prPlayFly(){
@@ -6265,6 +6303,11 @@
     if(cantPlay(st)) return statusInfo(st).short;
     return typeof ctx.projections[pid] === 'number' ? '' : 'NO PROJ';
   }
+  // "T. Edmunds" (phones, one line); team defenses read "KC D/ST"
+  function prShortName(p, pid){
+    if(p.position === 'DEF') return (p.team || pid) + ' D/ST';
+    return p.first_name && p.last_name ? p.first_name.charAt(0) + '. ' + p.last_name : playerName(p);
+  }
   function prSlotName(i){ const s = prSlots().find(function(x){ return x.i === i; }); return s ? s.name : slotShort(ctx.rosterPositions[i]); }
   // "Sun 1:00 PM" in the device's time zone (kickoffs come from the nflverse schedule)
   function prWhen(t){ return new Date(t).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }); }
@@ -6277,7 +6320,7 @@
     const m = matchup(p.team, ctx.week), live = gameStatusHTML(p.team, true);
     const tipOpp = i ? ' title="' + escapeHTML(dvpSentence(i)) + '"' : '';
     const game = live ? live : !m ? '<span class="dim">No game info</span>' : m.bye ? '<span class="opp bye">BYE week ' + ctx.week + '</span>'
-      : '<span>' + escapeHTML(kickoff(p.team, ctx.week) ? prWhen(kickoff(p.team, ctx.week)) : 'Time TBD') + '</span><span class="opp' + (i ? ' mt-' + i.tone : '') + '"' + tipOpp + '>' + escapeHTML(m.text) + '</span>';
+      : '<span><span class="t-l">' + escapeHTML(kickoff(p.team, ctx.week) ? prWhen(kickoff(p.team, ctx.week)) : 'Time TBD') + '</span><span class="t-s">' + escapeHTML(kickoff(p.team, ctx.week) ? zKickShort(kickoff(p.team, ctx.week)) : 'TBD') + '</span></span><span class="opp' + (i ? ' mt-' + i.tone : '') + '"' + tipOpp + '>' + escapeHTML(m.text) + '</span>';
     const big = wa !== null
       ? '<div class="pr-proj live">' + fmtPts(wa) + '<small>' + (g && g.state === 'post' ? 'final' : 'live') + ' · proj ' + fmtPts(ctx.projections[pid]) + '</small></div>'
       : '<div class="pr-proj">' + fmtPts(ctx.projections[pid]) + '<small>proj</small></div>';
@@ -6298,7 +6341,7 @@
         ' aria-label="' + escapeHTML(playerName(p)) + ', ' + escapeHTML(eligLabel(pid)) + ', projected ' + fmtPts(ctx.projections[pid]) + (locked ? ', locked' : '') + '">' +
       tag + '<button type="button" class="pr-ic" data-pr-info="' + escapeHTML(pid) + '" aria-label="Details for ' + escapeHTML(playerName(p)) + '" title="Details">' + PR_ICON.info + '</button>' +
       '<div class="pr-head"><img class="pr-av" src="' + escapeHTML(playerImageUrl(pid)) + '" alt="" loading="lazy" draggable="false" onerror="this.style.visibility=\'hidden\'" style="--team:' + teamColor(p.team) + '">' +
-        '<div class="pr-nm"><b>' + escapeHTML(playerName(p)) + '</b><small>' + (isDef ? 'Team defense · ' + escapeHTML(p.team || pid) : escapeHTML(eligLabel(pid)) + ' · ' + escapeHTML(p.team || 'FA') + ' ' + injuryChip(effectiveStatus(pid))) + '</small></div></div>' +
+        '<div class="pr-nm"><b><span class="nm-l">' + escapeHTML(playerName(p)) + '</span><span class="nm-s">' + escapeHTML(prShortName(p, pid)) + '</span></b><small>' + (isDef ? 'Team defense · ' + escapeHTML(p.team || pid) : escapeHTML(eligLabel(pid)) + ' · ' + escapeHTML(p.team || 'FA') + ' ' + injuryChip(effectiveStatus(pid))) + '</small></div></div>' +
       '<div class="pr-nums">' + big + '<div class="pr-l3">' + (l3 === null ? '—' : fmtPts(l3)) + '<small>' + (n >= 3 || !n ? 'L3 avg' : 'L' + n + ' avg') + '</small></div></div>' +
       idpLine + '<div class="pr-game">' + game + '</div>' + (where === 'slot' && !slim ? prMoreHTML(pid, i) : '') + '</div>';
   }
