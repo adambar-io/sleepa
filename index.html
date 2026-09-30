@@ -23,6 +23,7 @@
   // Apply the saved theme before first paint so there is no flash of the wrong one.
   (function(){ try{ var t = localStorage.getItem('rv-theme'); if(t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t); }catch(e){ console.warn('Theme preference unavailable', e); } })();
   (function(){ try{ if(localStorage.getItem('rv-cards') === 'detailed') document.documentElement.classList.add('cards-detailed'); }catch(e){ console.warn('Card preference unavailable', e); } })();
+  (function(){ try{ if(localStorage.getItem('rv-pl-rows') === 'compact') document.documentElement.classList.add('pl-compact'); }catch(e){} })();
 </script>
 <style>
   /* ============ design tokens ============
@@ -431,7 +432,7 @@
   [data-analyze]{ cursor: pointer; }
   .player-name .an-link{ overflow: hidden; text-overflow: ellipsis; min-width: 0; }
   .an-link{ text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px; transition: text-decoration-color .2s; }
-  .gl-wrap{ overflow-x: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; border-radius: var(--radius); background: var(--surface-2); }
+  .gl-wrap{ position: relative; overflow-x: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; border-radius: var(--radius); background: var(--surface-2); }
   .gl-table{ border-collapse: separate; border-spacing: 0; font-size: 13.5px; min-width: 100%; }
   .gl-table th, .gl-table td{ padding: 10px 12px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--hair); }
   .gl-table th{ color: var(--text-3); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; background: var(--surface-2); vertical-align: bottom; }
@@ -719,6 +720,23 @@
   .fa-vs-inline .who{ color: var(--text-2); }
   .section-title{ display: flex; align-items: baseline; gap: 6px; }
   .section-title .xbtn{ margin-left: auto; align-self: center; }
+  .pl-density{ display: none; }
+  .section-title .pl-density + .xbtn{ margin-left: 0; }
+  @container list (max-width: 599px){
+    .pl-density{ display: inline-flex; margin-left: auto; align-self: center; gap: 2px; padding: 2px; border-radius: 10px; background: var(--surface-2); }
+    .pl-density button{ width: 30px; height: 28px; min-height: 0; padding: 0; border-radius: 8px; display: grid; place-items: center; background: none; color: var(--text-3); transition: background .15s, color .15s; }
+    .pl-density button svg{ width: 16px; height: 16px; }
+    .pl-density button[aria-pressed="true"]{ background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+    /* compact rows: the essentials only (secondary lines and chips move to the player sheet) */
+    html.pl-compact #fa-list .slot-row :is(.key-stats, .sig, .fa-vs, .depth-chip, .dvp-chip, .rng, .player-name .ecr-chip){ display: none; }
+    html.pl-compact #fa-list .slot-row{ gap: 8px; padding-top: 9px; padding-bottom: 9px; }
+    html.pl-compact #fa-list .slot-row .player-meta{ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    html.pl-compact #fa-list .slot-tag{ width: 28px; }
+    html.pl-compact #fa-list .avatar{ width: 34px; height: 34px; }
+    html.pl-compact #fa-list .stat-col .val{ font-size: 16px; }
+    html.pl-compact #fa-list .stat-col + .stat-col .val{ font-size: 12.5px; }
+    html.pl-compact #fa-list .row-vs .vs-btn{ transform: scale(.85); }
+  }
   .section-title .opt-btn{ margin-left: auto; align-self: center; }
   .section-title .opt-btn + .xbtn{ margin-left: 0; }
   .opt-btn{ display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 14px; border-radius: 999px; border: none; cursor: pointer;
@@ -783,7 +801,8 @@
   .max{ position: fixed; inset: 0; z-index: 100; }
   .max[hidden]{ display: none; }
   .max-bg{ position: absolute; inset: 0; background: var(--scrim); }
-  .max-panel{ position: absolute; inset: 0; background: var(--bg); overflow: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+  .max-panel{ position: absolute; inset: 0; background: var(--bg); overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;   /* never scrolls sideways: wide tables scroll inside their own box */
+    -webkit-overflow-scrolling: touch; }
   .max-bar{ position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 14px;
     padding: calc(12px + env(safe-area-inset-top)) calc(24px + env(safe-area-inset-right)) 12px calc(24px + env(safe-area-inset-left));
     background: color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter: blur(18px) saturate(1.5); -webkit-backdrop-filter: blur(18px) saturate(1.5); border-bottom: 1px solid var(--hair); }
@@ -799,7 +818,8 @@
   .callout b{ font-weight: 600; }
 
   /* full-screen tables */
-  .mx-scroll{ overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow); }
+  .mx-scroll{ position: relative; overflow-x: auto;   /* positioned, so absolutely placed bits (sr-only labels) stay inside the scroll box */
+    -webkit-overflow-scrolling: touch; border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow); }
   .mx-tbl{ width: 100%; border-collapse: separate; border-spacing: 0; }
   .mx-tbl th{ font-size: 11px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--text-3); text-align: right; padding: 14px 12px 10px; white-space: nowrap; }
   .mx-tbl td{ padding: 12px; text-align: right; border-top: 1px solid var(--hair); white-space: nowrap; font-variant-numeric: tabular-nums; font-size: 14px; }
@@ -2670,7 +2690,7 @@
             <div class="pl-active" id="pl-active"></div>
           </div>
           <div id="add-drop"></div>
-          <div class="section-title"><span id="pl-title">Available</span> <span style="opacity:0.7;" id="fa-sub"></span><button class="xbtn" data-expand="fa" aria-label="Expand waivers to full screen" title="Expand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M10 20H4v-6M20 4l-6.5 6.5M4 20l6.5-6.5"/></svg></button></div>
+          <div class="section-title"><span id="pl-title">Available</span> <span style="opacity:0.7;" id="fa-sub"></span><div class="pl-density" role="group" aria-label="Row style"><button type="button" data-pl-rows="compact" aria-label="Compact rows" title="Compact"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg></button><button type="button" data-pl-rows="detailed" aria-label="Detailed rows" title="Detailed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="7" rx="2"/><rect x="4" y="13" width="16" height="7" rx="2"/></svg></button></div><button class="xbtn" data-expand="fa" aria-label="Expand waivers to full screen" title="Expand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M10 20H4v-6M20 4l-6.5 6.5M4 20l6.5-6.5"/></svg></button></div>
           <div class="list-head pl-head"><div class="h-slot"></div><button type="button" class="h-info h-sort" data-pl-sort="name">Player</button><div class="h-col h-opp">Opp</div><button type="button" class="h-col h-snap h-sort" data-pl-sort="snap" title="Season snap share">Snap</button><button type="button" class="h-col h-tgt h-sort" data-pl-sort="tgt" title="Season target share">Tgt</button><button type="button" class="h-stat h-sort" data-pl-sort="proj">Proj</button><button type="button" class="h-stat h-sort h-last" data-pl-sort="last" title="Last game">Last</button><div class="h-col h-vs">vs your weakest</div><div class="h-pick" aria-hidden="true"></div></div>
           <div id="fa-list"></div>
           <button class="fa-more" id="fa-more" style="display:none;">Show more</button>
@@ -2992,6 +3012,19 @@
     if(b) applyCards(b.getAttribute('data-cards-opt'));
   });
   (function(){ let v = 'compact'; try{ v = localStorage.getItem('rv-cards') || 'compact'; }catch(e){} applyCards(v); })();
+  // Players tab rows on phones: compact (name, position · team · opponent, projection / last) or detailed (default).
+  // Remembered on this device, like the lineup card style.
+  function applyPlRows(v, save){
+    v = v === 'compact' ? 'compact' : 'detailed';
+    if(save){ try{ localStorage.setItem('rv-pl-rows', v); }catch(e){ console.warn('Could not save row style', e); } }
+    document.documentElement.classList.toggle('pl-compact', v === 'compact');
+    document.querySelectorAll('[data-pl-rows]').forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-pl-rows') === v ? 'true' : 'false'); });
+  }
+  document.addEventListener('click', function(e){
+    const b = e.target.closest && e.target.closest('[data-pl-rows]');
+    if(b) applyPlRows(b.getAttribute('data-pl-rows'), true);
+  });
+  (function(){ let v = 'detailed'; try{ v = localStorage.getItem('rv-pl-rows') || 'detailed'; }catch(e){} applyPlRows(v); })();
   document.addEventListener('click', function(e){
     const b = e.target.closest && e.target.closest('.theme-seg button');
     if(!b) return;
