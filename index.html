@@ -1769,83 +1769,100 @@
   .vt-debug{ position: fixed; z-index: 200; left: 12px; right: 12px; bottom: calc(90px + env(safe-area-inset-bottom)); margin: 0 auto; max-width: 520px;
     background: var(--text); color: var(--bg); font-size: 12px; line-height: 1.4; padding: 10px 12px; border-radius: 12px; box-shadow: var(--shadow-lg); white-space: pre-wrap; }
 
-  /* ============ Power Rank: Review (the lineup as a formation) ============ */
-  .rv{ max-width: 860px; margin: 0 auto; }
+  /* ============ Power Rank: Review (a chalkboard play diagram) ============ */
+  .rv{ max-width: 820px; margin: 0 auto; }
   .rv.enter{ animation: prStageIn .3s var(--ease); }
-  .rv-head{ display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 4px 0 18px; }
-  .rv-total{ display: flex; align-items: baseline; gap: 8px; margin-top: 2px; }
+  .rv-head{ display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 2px 0 16px; }
+  .rv-l{ min-width: 0; }
+  .rv-brand{ display: flex; align-items: center; gap: 7px; font-size: 11.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
+  .rv-brand .brand-mark{ width: 18px; height: 18px; }
+  .rv-total{ display: flex; align-items: baseline; gap: 8px; margin-top: 4px; }
   .rv-total span{ font-size: 44px; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; line-height: 1.05; }
   .rv-total small{ font-size: 12px; color: var(--text-3); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
   .rv-sub{ font-size: 13px; color: var(--text-2); margin-top: 2px; }
-  .rv-sub .warn{ color: var(--warn); font-weight: 600; }
+  .rv-sub .warn{ color: var(--warn); } .rv-sub .up{ color: var(--accent); } .rv-sub .down{ color: var(--danger); }
   .rv-act{ display: flex; align-items: center; gap: 12px; }
   .rv-save{ min-height: 44px; padding: 0 22px; font-size: 15px; }
-  .rv-sec{ display: flex; align-items: baseline; gap: 10px; margin: 18px 2px 8px; }
+  .rv-sec{ display: flex; align-items: baseline; gap: 10px; margin: 16px 2px 8px; }
   .rv-sec h3{ margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-2); }
-  .rv-sec span{ font-size: 12px; color: var(--text-3); }
-  /* the field: vertical, offense going up; soft turf in the app's own greens, yard lines, the line of scrimmage */
-  .fm-field{ position: relative; height: min(66vh, 620px); min-height: 460px; border-radius: 22px; overflow: hidden;
-    background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 9%, var(--surface)) 0%, color-mix(in srgb, var(--accent) 5%, var(--surface)) 100%);
-    box-shadow: var(--shadow), inset 0 0 0 1px color-mix(in srgb, var(--accent) 16%, transparent); }
-  .fm-turf{ position: absolute; inset: 0; pointer-events: none;
-    background: repeating-linear-gradient(180deg, transparent 0 calc(10% - 1px), color-mix(in srgb, var(--text) 7%, transparent) calc(10% - 1px) 10%),
-      linear-gradient(90deg, transparent calc(36% - 1px), color-mix(in srgb, var(--text) 5%, transparent) calc(36% - 1px) 36%, transparent 36%, transparent calc(64% - 1px), color-mix(in srgb, var(--text) 5%, transparent) calc(64% - 1px) 64%, transparent 64%); }
-  .fm-los{ position: absolute; left: 0; right: 0; top: 19%; height: 0; border-top: 2px dashed color-mix(in srgb, var(--accent) 45%, transparent); }
-  .fm-ol{ position: absolute; left: calc(var(--x) * 1%); top: 19%; width: 16px; height: 10px; margin: -5px 0 0 -8px; border-radius: 4px; background: color-mix(in srgb, var(--text) 16%, transparent); }
-  /* a player on the field: photo in a ring of their position color, slot, last name, projection, opponent + time */
-  .fm-spot{ position: absolute; left: calc(var(--x) * 1%); top: calc(var(--y) * 1%); transform: translate(-50%, -50%); width: 118px;
-    display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 4px; border: 0; border-radius: 16px; background: none; color: var(--text); font-weight: 400; text-align: center;
-    animation: fmIn .6s var(--spring) both; animation-delay: calc(var(--d, 0) * 45ms + 80ms); -webkit-tap-highlight-color: transparent; }
-  @keyframes fmIn{ from{ opacity: 0; transform: translate(-50%, 30%) scale(.6); } to{ opacity: 1; transform: translate(-50%, -50%); } }
-  .fm-spot:hover{ background: color-mix(in srgb, var(--surface) 70%, transparent); }
-  .fm-spot:active{ transform: translate(-50%, -50%) scale(.96); }
-  .fm-av{ position: relative; width: 56px; height: 56px; border-radius: 50%; background: var(--surface-2); display: grid; place-items: center; flex: none;
-    box-shadow: 0 0 0 2.5px var(--surface), 0 0 0 4.5px var(--pc, var(--text-3)), 0 6px 14px rgba(0,0,0,.22); }
-  .fm-av img{ width: 100%; height: 100%; border-radius: 50%; object-fit: cover; object-position: center 18%; }
-  .fm-av.def img{ object-fit: contain; padding: 8px; box-sizing: border-box; }
-  .fm-av svg{ width: 22px; height: 22px; color: var(--text-3); }
-  .fm-lock{ position: absolute; right: -4px; bottom: -4px; width: 20px; height: 20px; border-radius: 50%; background: var(--surface); display: grid; place-items: center; box-shadow: var(--shadow); }
-  .fm-lock svg{ width: 12px; height: 12px; color: var(--text-2); }
-  .fm-sl{ margin-top: 6px; font-size: 9.5px; font-weight: 700; letter-spacing: .06em; color: var(--text-3); }
-  .fm-nm{ max-width: 100%; font-size: 13px; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .fm-pts{ font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
-  .fm-pts.live{ color: var(--accent); }
-  .fm-m{ display: flex; align-items: center; justify-content: center; gap: 4px; max-width: 100%; font-size: 10.5px; color: var(--text-3); white-space: nowrap; overflow: hidden; }
-  .fm-m .status-chip{ font-size: 9px; padding: 0 4px; } .fm-m .chip-full{ display: none; }
-  .fm-m .pr-tag{ position: static; font-size: 8.5px; padding: 1px 4px; }
-  .fm-spot.locked .fm-av img{ filter: saturate(.6); }
-  .fm-spot.bad .fm-pts{ color: var(--danger); }
-  .fm-spot.empty .fm-av{ background: none; box-shadow: none; border: 2px dashed color-mix(in srgb, var(--text) 28%, transparent); }
-  .fm-spot.empty .fm-nm{ margin-top: 6px; color: var(--text-2); }
-  /* special teams / anything else: a strip of compact rows */
-  .fm-strip{ display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px; }
-  .fm-row{ display: flex; align-items: center; gap: 12px; padding: 10px 14px 10px 10px; border: 0; border-radius: 16px; background: var(--surface); box-shadow: var(--shadow); color: var(--text); font-weight: 400; text-align: left;
-    animation: rowIn .4s var(--ease) both; animation-delay: calc(var(--d, 0) * 40ms + 300ms); }
-  .fm-row:active{ transform: scale(.98); }
-  .fm-row .fm-av{ width: 42px; height: 42px; box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--pc, var(--text-3)); }
-  .fm-row.empty .fm-av{ box-shadow: none; border: 2px dashed color-mix(in srgb, var(--text) 28%, transparent); background: none; }
-  .fm-rt{ flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-  .fm-rt b{ font-size: 14px; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .fm-rt small{ font-size: 11.5px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .fm-rs{ font-weight: 700; letter-spacing: .04em; color: var(--text-2); }
-  .fm-row .fm-pts{ font-size: 17px; }
+  .rv-views{ display: flex; width: fit-content; margin: 0 auto 12px; }
+  .rv-views button{ padding: 7px 14px; min-height: 34px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+  .rv-e{ display: inline-grid; place-items: center; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: var(--warn-soft); color: var(--warn); font-size: 10px; font-weight: 800; }
+  .rv-hint{ text-align: center; font-size: 12px; color: var(--text-3); margin: 12px 0 4px; }
   .rv-tab{ --c: var(--accent); }
   .pr.reviewing .pr-dock-top{ display: none; }   /* the review header has the total and Save */
+  /* the board: a dark chalkboard in both themes, faint grain, yard lines and hash marks; rows stacked, never positioned */
+  .cb{ --cb-bg: #16201c; --cb-chalk: rgba(236, 242, 238, .92); --cb-dim: rgba(236, 242, 238, .55); --cb-faint: rgba(236, 242, 238, .07);
+    position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-evenly; gap: 6px; min-height: min(62vh, 600px); padding: 22px 12px;
+    border-radius: 22px; color: var(--cb-chalk); background-color: var(--cb-bg);
+    background-image: repeating-linear-gradient(180deg, transparent 0 63px, var(--cb-faint) 63px 64px),
+      repeating-linear-gradient(180deg, rgba(236,242,238,.10) 0 1px, transparent 1px 16px), repeating-linear-gradient(180deg, rgba(236,242,238,.10) 0 1px, transparent 1px 16px);
+    background-size: 100% 100%, 10px 100%, 10px 100%; background-position: 0 0, 33% 0, 67% 0; background-repeat: repeat, no-repeat, no-repeat;
+    box-shadow: var(--shadow), inset 0 0 0 1px rgba(255,255,255,.05), inset 0 0 80px rgba(0,0,0,.35); isolation: isolate; }
+  .cb.mini{ min-height: 0; padding: 18px 12px; }
+  .cb-grain{ position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: .5; mix-blend-mode: soft-light;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+  .cb-row{ display: flex; flex-wrap: wrap; justify-content: space-evenly; align-items: flex-start; gap: 10px 4px; }
+  .cb-los{ height: 14px; display: flex; align-items: center; padding: 0 4px; }
+  .cb-los span{ flex: 1; height: 0; border-top: 2px dashed rgba(236, 242, 238, .22); }
+  /* a spot: filled position tag, photo in a chalk ring colored by matchup, last name, projection. Identical size everywhere. */
+  .cb-spot{ width: 82px; flex: none; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 2px 0 4px; border: 0; border-radius: 14px; background: none; color: inherit; font-weight: 400;
+    animation: cbIn .5s var(--spring) both; animation-delay: calc(var(--d, 0) * 40ms + 60ms); -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
+  @keyframes cbIn{ from{ opacity: 0; transform: translateY(10px) scale(.85); } to{ opacity: 1; transform: none; } }
+  .cb-spot:active{ transform: scale(.95); }
+  .cb-tag{ padding: 1px 7px; border-radius: 5px; background: var(--pc); color: #0d1411; font-size: 10px; font-weight: 800; letter-spacing: .05em; line-height: 1.5; }
+  .cb-av{ --ring: rgba(236, 242, 238, .75); position: relative; width: 48px; height: 48px; margin-top: 2px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.06);
+    box-shadow: 0 0 0 2px var(--cb-bg), 0 0 0 4px var(--ring), 0 6px 14px rgba(0,0,0,.35); }
+  .cb-spot.ring-easy .cb-av{ --ring: var(--accent); }
+  .cb-spot.ring-mid .cb-av{ --ring: var(--warn); }
+  .cb-spot.ring-hard .cb-av{ --ring: var(--danger); }
+  .cb-av img{ width: 100%; height: 100%; border-radius: 50%; object-fit: cover; object-position: center 18%; }
+  .cb-av.def img{ object-fit: contain; padding: 7px; box-sizing: border-box; }
+  .cb-av svg{ width: 20px; height: 20px; color: var(--cb-dim); }
+  .cb-st{ position: absolute; top: -5px; right: -7px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 999px; display: grid; place-items: center; font-size: 9.5px; font-weight: 800;
+    background: var(--warn); color: #1a1204; box-shadow: 0 0 0 2px var(--cb-bg); }
+  .cb-st.st-bad{ background: var(--danger); color: #fff; }
+  .cb-lock{ position: absolute; bottom: -5px; right: -6px; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; background: var(--cb-chalk); color: var(--cb-bg); box-shadow: 0 0 0 2px var(--cb-bg); }
+  .cb-lock svg{ width: 10px; height: 10px; }
+  .cb-spot.locked .cb-av img{ filter: saturate(.55) brightness(.85); }
+  .cb-spot.locked .cb-nm, .cb-spot.locked .cb-pts{ opacity: .75; }
+  .cb-nm{ max-width: 100%; margin-top: 3px; font-size: 12.5px; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cb-nm.long{ font-size: 11px; letter-spacing: -0.01em; }
+  .cb-pts{ font-size: 14px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+  .cb-pts.live{ color: var(--accent); }
+  .cb-spot.bad .cb-pts{ color: var(--danger); }
+  .cb-spot.empty .cb-av{ background: none; box-shadow: none; border: 2px dashed rgba(236, 242, 238, .45); }
+  .cb-spot.empty .cb-nm{ color: var(--cb-dim); font-weight: 500; }
+  .cb-spot.empty .cb-pts{ color: var(--cb-dim); }
+  /* details: hover card on desktop, bottom sheet on phones */
+  .cb-pop{ position: fixed; z-index: 30; width: 260px; padding: 12px 14px; border-radius: 16px; background: var(--surface); color: var(--text); box-shadow: var(--shadow-lg), inset 0 0 0 1px var(--hair); animation: menuIn .16s var(--ease); }
+  .cb-pop[hidden]{ display: none; }
+  .cb-pop.sheet{ left: 0; right: 0; bottom: 0; top: auto; width: auto; border-radius: 20px 20px 0 0; padding: 16px 18px calc(env(safe-area-inset-bottom) + 16px); }
+  .cb-pop-h{ display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; }
+  .cb-pop-h b{ font-size: 15px; } .cb-pop-h span{ font-size: 12px; color: var(--text-3); }
+  .cb-pop-r{ display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-top: 1px solid var(--hair); font-size: 12.5px; }
+  .cb-pop-r span{ color: var(--text-3); } .cb-pop-r b{ font-weight: 600; text-align: right; } .cb-pop-r small{ color: var(--text-3); font-weight: 500; }
+  .cb-pop-go{ width: 100%; margin-top: 10px; min-height: 38px; border-radius: 999px; background: var(--surface-2); color: var(--text); font-weight: 650; }
+  @container pr (min-width: 700px){
+    .cb{ padding: 30px 24px; gap: 10px; }
+    .cb-row{ gap: 14px 10px; }
+    .cb-spot{ width: 116px; }
+    .cb-av{ width: 68px; height: 68px; }
+    .cb-tag{ font-size: 11px; padding: 1px 9px; }
+    .cb-nm{ font-size: 14.5px; } .cb-nm.long{ font-size: 13px; }
+    .cb-pts{ font-size: 16px; }
+  }
   @container pr (max-width: 600px){
     .rv-total span{ font-size: 36px; }
-    .rv-head{ align-items: center; }
+    .rv-head{ align-items: center; margin-bottom: 12px; }
     .rv-act{ width: 100%; justify-content: space-between; }
     .rv-save{ flex: 1; max-width: 220px; }
-    .fm-field{ height: 72vh; height: 72svh; min-height: 520px; border-radius: 18px; margin: 0 -4px; }
-    .fm-spot{ width: 84px; padding: 4px 2px; }
-    .fm-av{ width: 44px; height: 44px; }
-    .fm-nm{ font-size: 11.5px; }
-    .fm-pts{ font-size: 13.5px; }
-    .fm-m{ font-size: 9.5px; }
-    .fm-t{ display: none; }
-    .fm-strip{ grid-template-columns: 1fr; }
+    .cb{ min-height: 64svh; padding: 18px 6px; border-radius: 18px; }
+    .cb.mini{ min-height: 0; }
+    .cb-spot{ width: 80px; }   /* four across on a 375px phone */
+    .rv-views button{ padding: 6px 11px; font-size: 12.5px; }
   }
-  @media (prefers-reduced-motion: reduce){ .fm-spot, .fm-row, .rv.enter{ animation: none !important; } }
+  @media (prefers-reduced-motion: reduce){ .cb-spot, .rv.enter{ animation: none !important; } }
   /* ============ Sleepa Zone: every league at once ============ */
   /* Impact colors (Phase 2 feed): always the effect on ME. Soft versions of the existing palette. */
   :root{ --impact-pos: var(--accent); --impact-neg: var(--danger); --impact-mixed: var(--warn); --impact-neutral: var(--text-3); }
@@ -6217,6 +6234,7 @@
         '</div>' +
         '<div class="pr-main"><div class="pr-note-slot"></div><div class="pr-body"></div></div>' +
         '<div class="pr-toast" role="status" aria-live="polite" hidden></div>' +
+        '<div class="cb-pop" id="cb-pop" role="dialog" aria-label="Player details" hidden></div>' +
         '<div class="pr-dock"><div class="pr-dock-top"><div class="pr-total" title="Your whole lineup as it stands here: filled slots only"><div class="eyebrow">Projected lineup</div>' +
           '<div class="pr-total-row"><span class="pr-total-num" id="pr-total">0.00</span><span class="pr-delta" id="pr-delta"></span></div><div class="pr-chg-note" id="pr-chg"></div></div>' +
           '<span class="pr-status" id="pr-status"></span><button type="button" class="pr-save" data-pr-save>Save</button></div>' +
@@ -6409,86 +6427,109 @@
   }
   function hasFinePointer(){ return window.matchMedia('(pointer: fine)').matches; }
 
-  // ---- Review: the whole lineup, lined up for a play ----
-  // The offense is placed from the league's slot counts with a few rules, not hand-placed per league. x / y are % of the
-  // field (the offense attacks up the screen; the line of scrimmage is near the top):
-  //   wide:  WRs split out on the line, widest first (a flex takes a wide spot nobody else fills)
-  //   line:  TEs just off the line, inside the receivers (right side first)
-  //   slot:  extra WRs, then flex, just behind the line between the WRs and the ball
-  //   back:  QB(s) behind center; a superflex lines up beside the QB
-  //   deep:  RB(s) behind the QB, spread across the middle
-  // Anything left over (an unusual count) wraps onto the next free slot spot.
-  function prOffenseSpots(slots){
+  // ---- Review: the lineup as a chalkboard play diagram ----
+  // Built from rows, never coordinates: each row is a wrapping flex row of identical fixed-width spots spread evenly, so
+  // spots can't overlap at any slot count. A row with more spots than fit (phone: 4, desktop: 6) wraps to a second
+  // centered line inside the same row. The line of scrimmage is its own thin row between rows, so it can't cross text.
+  //   Offense: Line (WRs outside, WR1 far left / WR2 far right, TEs inside) · LOS · Flex · QB (+ superflex) · RB
+  //   Defense: LOS · DL · LB (+ IDP flex) · DB
+  //   Special teams: K (+ team DEF in leagues that start one)
+  const PR_OFF_TABS = { QB: 1, RB: 1, WR: 1, TE: 1, FLEX: 1, SF: 1 }, PR_DEF_TABS = { DL: 1, LB: 1, DB: 1, IDP: 1 }, PR_ST_TABS = { K: 1, DEF: 1 };
+  function prRvRows(slots, view){
     const by = function(t){ return slots.filter(function(s){ return s.tab === t; }); };
-    const wr = by('WR'), fx = by('FLEX'), te = by('TE'), qb = by('QB'), rb = by('RB'), sf = by('SF'), out = [];
-    const put = function(s, x, y){ out.push({ s: s, x: x, y: y }); };
-    const wide = [[11, 12], [89, 12]];
-    while(wide.length && (wr.length || fx.length)){ const w = wide.shift(); put(wr.length ? wr.shift() : fx.shift(), w[0], w[1]); }
-    [[70, 24], [30, 24], [82, 30], [18, 30]].forEach(function(p, k){ if(te[k]) put(te[k], p[0], p[1]); });
-    const slotSpots = [[28, 46], [72, 46], [12, 53], [88, 53], [40, 34], [60, 34]];
-    wr.concat(fx).forEach(function(s){ const p = slotSpots.shift() || [50, 44]; put(s, p[0], p[1]); });
-    const qx = qb.length === 1 ? [50] : qb.length === 2 ? [38, 62] : [30, 50, 70];
-    qb.forEach(function(s, k){ put(s, qx[k] || 50, 66); });
-    sf.forEach(function(s, k){ put(s, k % 2 ? 24 : 76, 68); });
-    const rx = rb.length === 1 ? [50] : rb.length === 2 ? [36, 64] : [24, 50, 76];
-    rb.forEach(function(s, k){ put(s, rx[k] || 50, 87); });
-    return out;
+    if(view === 'st') return [{ k: 'st', spots: slots.filter(function(s){ return PR_ST_TABS[s.tab]; }) }];
+    if(view === 'def'){
+      const odd = slots.filter(function(s){ return !PR_OFF_TABS[s.tab] && !PR_DEF_TABS[s.tab] && !PR_ST_TABS[s.tab]; });
+      return [{ los: true }, { k: 'dl', spots: by('DL') }, { k: 'lb', spots: by('LB').concat(by('IDP')) }, { k: 'db', spots: by('DB').concat(odd) }]
+        .filter(function(r){ return r.los || r.spots.length; });
+    }
+    const wr = by('WR'), left = wr.filter(function(s, i){ return i % 2 === 0; }), right = wr.filter(function(s, i){ return i % 2 === 1; }).reverse();
+    return [{ k: 'line', spots: left.concat(by('TE'), right) }, { los: true }, { k: 'flex', spots: by('FLEX') },
+      { k: 'qb', spots: by('QB').concat(by('SF')) }, { k: 'rb', spots: by('RB') }].filter(function(r){ return r.los || r.spots.length; });
   }
-  function prSpotHTML(sp, k){
-    const s = sp.s, pid = ctx.prWork[s.i], has = !prIsEmpty(pid);
-    const style = 'style="--x:' + sp.x + ';--y:' + sp.y + ';--d:' + k + (has ? ';--pc:' + posColor(ctx.players[pid].position) : '') + '"';
-    if(!has) return '<button type="button" class="fm-spot empty" data-fm-slot="' + s.i + '" ' + style + ' aria-label="' + escapeHTML(s.name) + ': empty, pick a player">' +
-      '<span class="fm-av">' + PR_ICON.plus + '</span><span class="fm-nm">' + escapeHTML(s.name) + '</span><span class="fm-m">Empty</span></button>';
-    const p = ctx.players[pid], locked = isLocked(pid), un = prUnavail(pid), i = dvpInfo(pid), m = matchup(p.team, ctx.week);
-    const wa = weekActual(pid), st = effectiveStatus(pid), chip = injuryChip(st);
-    const opp = !m ? '' : m.bye ? '<span class="opp bye">BYE</span>' : '<span class="opp' + (i ? ' mt-' + i.tone : '') + '">' + escapeHTML(m.text) + '</span>';
-    const k0 = kickoff(p.team, ctx.week);
-    return '<button type="button" class="fm-spot' + (locked ? ' locked' : '') + (un ? ' bad' : '') + '" data-fm-slot="' + s.i + '" ' + style +
-        ' aria-label="' + escapeHTML(s.name + ': ' + playerName(p) + ', projected ' + fmtPts(ctx.projections[pid]) + (locked ? ', locked' : '') + '. Change') + '">' +
-      '<span class="fm-av' + (p.position === 'DEF' ? ' def' : '') + '"><img src="' + escapeHTML(playerImageUrl(pid)) + '" alt="" loading="lazy" draggable="false" onerror="this.style.visibility=\'hidden\'">' +
-        (locked ? '<span class="fm-lock" title="Game started: locked">' + PR_ICON.lock + '</span>' : '') + '</span>' +
-      '<span class="fm-sl">' + escapeHTML(s.name) + '</span>' +
-      '<span class="fm-nm">' + escapeHTML(p.position === 'DEF' ? (p.team || pid) + ' D/ST' : (p.last_name || playerName(p))) + '</span>' +
-      '<span class="fm-pts' + (wa !== null ? ' live' : '') + '">' + fmtPts(wa !== null ? wa : ctx.projections[pid]) + '</span>' +
-      '<span class="fm-m">' + opp + (k0 && !(m && m.bye) ? '<span class="fm-t">' + escapeHTML(zKickShort(k0)) + '</span>' : '') + (chip ? ' ' + chip : '') + (un && !cantPlay(st) ? ' <span class="pr-tag bad">' + escapeHTML(un) + '</span>' : '') + '</span></button>';
+  function prRingTone(pid){ const i = dvpInfo(pid); return i ? i.tone : ''; }   // same colors as the cards' opponent text
+  function prSpotHTML(s, k){
+    const pid = ctx.prWork[s.i], has = !prIsEmpty(pid), tag = '<span class="cb-tag" style="--pc:' + prTabColor(s.tab) + '">' + escapeHTML(s.name) + '</span>';
+    if(!has) return '<button type="button" class="cb-spot empty" data-fm-slot="' + s.i + '" style="--d:' + k + '" aria-label="' + escapeHTML(s.name) + ': empty. Pick a player">' +
+      tag + '<span class="cb-av">' + PR_ICON.plus + '</span><span class="cb-nm">Empty</span><span class="cb-pts">—</span></button>';
+    const p = ctx.players[pid], locked = isLocked(pid), st = statusInfo(effectiveStatus(pid)), un = prUnavail(pid), wa = weekActual(pid);
+    const nm = p.position === 'DEF' ? (p.team || pid) + ' D/ST' : (p.last_name || playerName(p));
+    const tone = prRingTone(pid);
+    return '<button type="button" class="cb-spot' + (locked ? ' locked' : '') + (un ? ' bad' : '') + (tone ? ' ring-' + tone : '') + '" data-fm-slot="' + s.i + '" style="--d:' + k + '"' +
+        ' aria-label="' + escapeHTML(s.name + ': ' + playerName(p) + ', ' + fmtPts(wa !== null ? wa : ctx.projections[pid]) + (locked ? ', locked' : '') + '. Tap to change, hold for details') + '">' +
+      tag + '<span class="cb-av' + (p.position === 'DEF' ? ' def' : '') + '"><img src="' + escapeHTML(playerImageUrl(pid)) + '" alt="" loading="lazy" draggable="false" onerror="this.style.visibility=\'hidden\'">' +
+        (st ? '<span class="cb-st st-' + st.tone + '" title="' + escapeHTML(st.label) + '">' + escapeHTML(st.short) + '</span>' : un === 'BYE' ? '<span class="cb-st st-bad">BYE</span>' : '') +
+        (locked ? '<span class="cb-lock" title="Game started: locked">' + PR_ICON.lock + '</span>' : '') + '</span>' +
+      '<span class="cb-nm' + (nm.length > 10 ? ' long' : '') + '">' + escapeHTML(nm) + '</span>' +
+      '<span class="cb-pts' + (wa !== null ? ' live' : '') + '">' + fmtPts(wa !== null ? wa : ctx.projections[pid]) + '</span></button>';
   }
-  // Special teams (and anything else that isn't on the offense field yet): a strip of compact rows under the field.
-  function prStripHTML(list){
-    return list.map(function(s, k){
-      const pid = ctx.prWork[s.i], has = !prIsEmpty(pid);
-      if(!has) return '<button type="button" class="fm-row empty" data-fm-slot="' + s.i + '" style="--d:' + k + '"><span class="fm-av">' + PR_ICON.plus + '</span><span class="fm-rt"><b>' + escapeHTML(s.name) + '</b><small>Empty · pick one</small></span></button>';
-      const p = ctx.players[pid], m = matchup(p.team, ctx.week), i = dvpInfo(pid), wa = weekActual(pid), k0 = kickoff(p.team, ctx.week), locked = isLocked(pid);
-      return '<button type="button" class="fm-row' + (locked ? ' locked' : '') + '" data-fm-slot="' + s.i + '" style="--d:' + k + ';--pc:' + posColor(p.position) + '">' +
-        '<span class="fm-av' + (p.position === 'DEF' ? ' def' : '') + '"><img src="' + escapeHTML(playerImageUrl(pid)) + '" alt="" loading="lazy" draggable="false" onerror="this.style.visibility=\'hidden\'">' + (locked ? '<span class="fm-lock">' + PR_ICON.lock + '</span>' : '') + '</span>' +
-        '<span class="fm-rt"><b>' + escapeHTML(playerName(p)) + '</b><small><span class="fm-rs">' + escapeHTML(s.name) + '</span> ' +
-          (!m ? '' : m.bye ? '<span class="opp bye">BYE</span>' : '<span class="opp' + (i ? ' mt-' + i.tone : '') + '">' + escapeHTML(m.text) + '</span>') + (k0 ? ' · ' + escapeHTML(zKickShort(k0)) : '') + '</small></span>' +
-        '<span class="fm-pts' + (wa !== null ? ' live' : '') + '">' + fmtPts(wa !== null ? wa : ctx.projections[pid]) + '</span></button>';
-    }).join('');
+  function prBoardHTML(rows, label, mini){
+    let k = 0;
+    return '<div class="cb' + (mini ? ' mini' : '') + '" role="group" aria-label="' + escapeHTML(label) + '"><div class="cb-grain"></div>' +
+      rows.map(function(r){
+        if(r.los) return '<div class="cb-los" aria-hidden="true"><span></span></div>';
+        return '<div class="cb-row">' + r.spots.map(function(s){ return prSpotHTML(s, k++); }).join('') + '</div>';
+      }).join('') + '</div>';
   }
+  // The details that don't fit on a spot: opponent + kickoff, the matchup ranking, injury status, L3 and a Change button.
+  // Long-press (touch) or hover (mouse) a spot.
+  function prSpotDetailHTML(i){
+    const s = prSlots().find(function(x){ return x.i === i; }), pid = ctx.prWork[i];
+    if(!s) return '';
+    if(prIsEmpty(pid)) return '<div class="cb-pop-h"><b>' + escapeHTML(s.name) + '</b><span>Empty slot</span></div><button type="button" class="cb-pop-go" data-fm-slot="' + i + '">Pick a player</button>';
+    const p = ctx.players[pid], m = matchup(p.team, ctx.week), di = dvpInfo(pid), k0 = kickoff(p.team, ctx.week), st = effectiveStatus(pid), info = statusInfo(st);
+    const n = (hist(pid) || []).length, l3 = n ? last3Avg(pid) : null, live = gameStatusHTML(p.team, true), locked = isLocked(pid);
+    const row = function(k, v){ return '<div class="cb-pop-r"><span>' + k + '</span><b>' + v + '</b></div>'; };
+    return '<div class="cb-pop-h"><b>' + escapeHTML(playerName(p)) + '</b><span>' + escapeHTML(s.name) + ' · ' + escapeHTML(p.position === 'DEF' ? 'Team defense' : eligLabel(pid)) + ' · ' + escapeHTML(p.team || 'FA') + '</span></div>' +
+      row('Game', live ? live : !m ? '—' : m.bye ? '<span class="opp bye">BYE</span>' : '<span class="opp' + (di ? ' mt-' + di.tone : '') + '">' + escapeHTML(m.text) + '</span>' + (k0 ? ' · ' + escapeHTML(prWhen(k0)) : '')) +
+      (di ? row('Matchup', escapeHTML(dvpLabel(di))) : '') +
+      row('Projection', fmtPts(ctx.projections[pid]) + (l3 !== null ? ' <small>· L' + Math.min(3, n) + ' avg ' + fmtPts(l3) + '</small>' : '')) +
+      (info ? row('Status', escapeHTML(info.label)) : '') +
+      (locked ? row('Locked', 'Game started') : '') +
+      '<button type="button" class="cb-pop-go" data-fm-slot="' + i + '">' + (locked ? 'Open ' + escapeHTML(s.name) : 'Change ' + escapeHTML(s.name)) + '</button>';
+  }
+  function prSpotDetail(btn, sheet){
+    const pop = document.getElementById('cb-pop');
+    if(!pop) return;
+    pop.innerHTML = prSpotDetailHTML(Number(btn.getAttribute('data-fm-slot')));
+    pop.hidden = false; pop._for = btn;
+    pop.classList.toggle('sheet', !!sheet);
+    if(!sheet){
+      const r = btn.getBoundingClientRect(), vw = window.innerWidth, w = 260;
+      pop.style.left = Math.max(8, Math.min(vw - w - 8, r.left + r.width / 2 - w / 2)) + 'px';
+      const below = r.bottom + 8, h = pop.offsetHeight;
+      pop.style.top = (below + h > window.innerHeight - 8 ? Math.max(8, r.top - h - 8) : below) + 'px';
+    }else{ pop.style.left = ''; pop.style.top = ''; }
+  }
+  function prSpotDetailClose(){ const pop = document.getElementById('cb-pop'); if(pop && !pop.hidden){ pop.hidden = true; pop._for = null; } }
   function prReviewHTML(slots){
-    const offTabs = { QB: 1, RB: 1, WR: 1, TE: 1, FLEX: 1, SF: 1 };
-    const off = slots.filter(function(s){ return offTabs[s.tab]; }), rest = slots.filter(function(s){ return !offTabs[s.tab]; });
-    const st = rest.filter(function(s){ return s.tab === 'K' || s.tab === 'DEF'; }), other = rest.filter(function(s){ return s.tab !== 'K' && s.tab !== 'DEF'; });
-    const spots = prOffenseSpots(off);
+    const hasDef = slots.some(function(s){ return PR_DEF_TABS[s.tab]; });
+    const view = hasDef ? (ctx.prRvView || 'off') : 'off';
     const toFill = slots.filter(function(s){ return prIsEmpty(ctx.prWork[s.i]); }).length;
     const dirty = prDirty(), diff = sumProj(ctx.prWork) - sumProj(ctx.originalStarters), flat = Math.abs(diff) < 0.005;
     const enter = ctx.prEnter; ctx.prEnter = null;
-    const ol = [40, 45, 50, 55, 60].map(function(x){ return '<span class="fm-ol" style="--x:' + x + '"></span>'; }).join('');
+    const st = slots.filter(function(s){ return PR_ST_TABS[s.tab]; });
+    const seg = hasDef ? '<div class="wk-seg rv-views" role="tablist" aria-label="Unit">' + [['off', 'Offense'], ['def', 'Defense'], ['st', 'Special teams']].map(function(v){
+      const n = slots.filter(function(s){ return v[0] === 'off' ? PR_OFF_TABS[s.tab] : v[0] === 'def' ? (PR_DEF_TABS[s.tab] || (!PR_OFF_TABS[s.tab] && !PR_ST_TABS[s.tab])) : PR_ST_TABS[s.tab]; });
+      const e = n.filter(function(s){ return prIsEmpty(ctx.prWork[s.i]); }).length;
+      return '<button type="button" role="tab" data-rv-view="' + v[0] + '" aria-pressed="' + (view === v[0]) + '">' + v[1] + (e ? '<span class="rv-e" title="' + e + ' empty">' + e + '</span>' : '') + '</button>';
+    }).join('') + '</div>' : '';
+    const board = view === 'def' ? prBoardHTML(prRvRows(slots, 'def'), 'Defense')
+      : view === 'st' ? prBoardHTML(prRvRows(slots, 'st'), 'Special teams', true)
+      : prBoardHTML(prRvRows(slots.filter(function(s){ return PR_OFF_TABS[s.tab]; }), 'off'), 'Offense');
     return '<div class="rv' + (enter ? ' enter' : '') + '">' +
-      '<div class="rv-head"><div><div class="eyebrow">Week ' + ctx.week + ' lineup' + (ctx.league ? ' · ' + escapeHTML(ctx.league.name) : '') + '</div>' +
+      '<div class="rv-head"><div class="rv-l">' +
+        '<div class="rv-brand"><svg class="brand-mark" viewBox="0 0 200 200" aria-hidden="true"><use href="#sleepa-mark"/></svg><span>Week ' + ctx.week + (ctx.league ? ' · ' + escapeHTML(ctx.league.name) : '') + '</span></div>' +
         '<div class="rv-total"><span id="rv-total">' + (enter || !ctx.prRvLast ? 0 : ctx.prRvLast).toFixed(2) + '</span><small>projected</small></div>' +
-        '<div class="rv-sub">' + (toFill ? '<b class="warn">' + toFill + ' slot' + (toFill > 1 ? 's' : '') + ' still empty</b> · tap one on the field to fill it' : flat ? 'Same as your Sleeper lineup' : (diff > 0 ? '+' : '−') + Math.abs(diff).toFixed(2) + ' vs your Sleeper lineup') + '</div></div>' +
+        '<div class="rv-sub">' + (toFill ? '<b class="warn">' + toFill + ' slot' + (toFill > 1 ? 's' : '') + ' empty</b> · tap one to fill it' : flat ? 'Same as your Sleeper lineup' : '<b class="' + (diff > 0 ? 'up' : 'down') + '">' + (diff > 0 ? '+' : '−') + Math.abs(diff).toFixed(2) + '</b> vs your Sleeper lineup') + '</div></div>' +
         '<div class="rv-act"><span class="pr-status ' + (dirty ? 'unsaved' : ctx.prSaved ? 'saved' : 'new') + '">' + (dirty ? 'Unsaved changes' : ctx.prSaved ? 'Saved' : 'Not saved yet') + '</span>' +
           '<button type="button" class="pr-save rv-save" data-pr-save' + (!dirty && ctx.prSaved ? ' disabled' : '') + '>' + (!dirty && ctx.prSaved ? 'Saved' : 'Save lineup') + '</button></div></div>' +
-      '<div class="rv-sec"><h3>Offense</h3><span>tap a player to change them</span></div>' +
-      '<div class="fm-field" role="group" aria-label="Offense formation">' +
-        '<div class="fm-turf"></div><div class="fm-los"></div>' + ol +
-        spots.map(prSpotHTML).join('') + '</div>' +
-      (st.length ? '<div class="rv-sec"><h3>Special teams</h3></div><div class="fm-strip">' + prStripHTML(st) + '</div>' : '') +
-      // IDP leagues: the defense gets its own formation in the next step; until then its slots list here
-      (other.length ? '<div class="rv-sec"><h3>Defense</h3><span>' + other.length + ' players</span></div><div class="fm-strip">' + prStripHTML(other) + '</div>' : '') +
+      seg + board +
+      (!hasDef && st.length ? '<div class="rv-sec"><h3>Special teams</h3></div>' + prBoardHTML([{ k: 'st', spots: st }], 'Special teams', true) : '') +
+      '<p class="rv-hint">Tap a player to change them · ' + (hasFinePointer() ? 'hover' : 'press and hold') + ' for their game and matchup</p>' +
       '</div>';
   }
+
 
   // ---- placing: every change goes through prPlace / prRemove (one gesture; the old occupant goes back to the pool) ----
   function prPlace(i, pid){
@@ -6576,6 +6617,31 @@
   }
 
   const prView = document.getElementById('pr-view');
+  // Review details: press and hold a spot (touch) or hover it (mouse)
+  let cbHeldUntil = 0, cbTimer = 0, cbHover = 0;
+  prView.addEventListener('pointerdown', function(e){
+    const sp = e.target.closest('.cb-spot');
+    if(!sp || e.pointerType === 'mouse') return;
+    const x0 = e.clientX, y0 = e.clientY;
+    let held = false;
+    clearTimeout(cbTimer);
+    cbTimer = setTimeout(function(){ held = true; prSpotDetail(sp, true); if(navigator.vibrate) navigator.vibrate(8); }, 450);
+    const stop = function(ev){
+      if(ev.type === 'pointermove' && Math.abs(ev.clientX - x0) + Math.abs(ev.clientY - y0) <= 10) return;
+      clearTimeout(cbTimer); off();
+      if(held && ev.type === 'pointerup') cbHeldUntil = Date.now() + 400;   // swallow only the click that ends this hold
+    };
+    const off = function(){ ['pointermove', 'pointerup', 'pointercancel'].forEach(function(t){ document.removeEventListener(t, stop); }); };
+    ['pointermove', 'pointerup', 'pointercancel'].forEach(function(t){ document.addEventListener(t, stop); });
+  });
+  prView.addEventListener('contextmenu', function(e){ if(e.target.closest('.cb-spot')) e.preventDefault(); });   // no iOS/Android menu on the long-press
+  prView.addEventListener('pointerover', function(e){
+    if(e.pointerType !== 'mouse') return;
+    const sp = e.target.closest('.cb-spot'), pop = document.getElementById('cb-pop');
+    clearTimeout(cbHover);
+    if(sp){ if(!pop || pop._for !== sp) cbHover = setTimeout(function(){ prSpotDetail(sp, false); }, 350); }
+    else if(pop && !pop.hidden && !pop.contains(e.target)) cbHover = setTimeout(prSpotDetailClose, 200);
+  });
   prView.addEventListener('click', function(e){
     if(prDrag.justDropped){ prDrag.justDropped = false; return; }   // the click that ends a drag
     const t = e.target.closest('[data-pr-tab]');
@@ -6588,9 +6654,15 @@
       prView.querySelector('.pr-main').scrollTop = 0;
       return;
     }
+    const rvv = e.target.closest('[data-rv-view]');
+    if(rvv){ ctx.prRvView = rvv.getAttribute('data-rv-view'); ctx.prEnter = 1; prSpotDetailClose(); renderPowerRank(); return; }
+    if(Date.now() < cbHeldUntil){ cbHeldUntil = 0; return; }   // the end of a long-press only opens the details
+    const pop = document.getElementById('cb-pop');
+    if(pop && !pop.hidden && !pop.contains(e.target) && !e.target.closest('.cb-spot')){ prSpotDetailClose(); return; }
     // Review: tap a spot to go back to that step with the slot picked
     const sp = e.target.closest('[data-fm-slot]');
     if(sp){
+      prSpotDetailClose();
       const i = Number(sp.getAttribute('data-fm-slot')), sl = prSlots().find(function(x){ return x.i === i; });
       if(!sl) return;
       ctx.prEnter = -1; ctx.prTab = sl.tab; ctx.prSel = prLockedSlot(i) ? null : { slot: i };
@@ -6634,6 +6706,8 @@
   document.addEventListener('keydown', function(e){
     if(e.key !== 'Escape' || ctx.luMode !== 'pr') return;
     if(ctx.prSel){ ctx.prSel = null; renderPowerRank(); return; }
+    const cbp = document.getElementById('cb-pop');
+    if(cbp && !cbp.hidden){ prSpotDetailClose(); return; }
     if(!maxOpen() && !document.querySelector('.overlay.open') && !document.querySelector('.pr-dlg-back')) prLeave(function(){ setLuMode('list'); });
   });
 
