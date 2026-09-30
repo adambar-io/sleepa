@@ -680,13 +680,14 @@
   /* ---- wide desktop: two panes, the player panel lives on the right instead of a pop-up ---- */
   @media (min-width: 1200px){
     .panes{ display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 20px; align-items: start; }
-    .panes.solo{ display: block; }
-    .panes.solo .pane-detail{ display: none; }
+    .panes.solo, .panes.closed{ display: block; }
+    .panes.solo .pane-detail, .panes.closed .pane-detail{ display: none; }
     .pane-detail{ display: block; position: sticky; top: 24px; max-height: calc(100vh - 48px); overflow-y: auto; overscroll-behavior: contain;
       background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow); }
     .pane-detail .focus-panel{ max-width: none; box-shadow: none; border-radius: 0; background: transparent; padding: 22px; animation: none; }
     .pane-detail .focus-panel.pane-in{ animation: viewIn .35s var(--ease); }
-    .pane-detail .focus-close{ display: none; }
+    .pane-detail .focus-close{ display: grid; place-items: center; position: sticky; top: 0; z-index: 2; width: 30px; height: 30px; margin: -10px -10px 0 8px; font-size: 20px; }
+    .pane-detail .focus-close:hover{ color: var(--text); }
     .pane-detail .hero{ gap: 14px; }
     .pane-detail .hero-avatar{ width: 68px; height: 68px; }
     .pane-detail .hero-name{ font-size: 22px; }
@@ -2785,7 +2786,7 @@
 
 <div class="overlay" id="overlay">
   <div class="focus-panel">
-    <button class="focus-close" id="focus-close" aria-label="Close">&times;</button>
+    <button class="focus-close" id="focus-close" aria-label="Close" title="Close (Esc)">&times;</button>
     <button type="button" class="home-btn focus-home" data-home aria-label="Go to your lineup"><svg class="brand-mark" viewBox="0 0 200 200" aria-hidden="true"><use href="#sleepa-mark"/></svg></button>
     <div class="hero">
       <img class="hero-avatar" id="hero-avatar" src="" alt="" onerror="this.style.visibility='hidden'">
@@ -4120,7 +4121,7 @@
       stillEmptyNote(best) + '</span>' + why, before);
     // keep the side panel honest: show whoever is now in the slot it was showing
     const f = ctx.focus;
-    if(paneMode() && f && f.kind !== 'fa'){
+    if(paneMode() && !ctx.paneClosed && f && f.kind !== 'fa'){
       if(f.slot != null){ const pid = ctx.draftStarters[f.slot]; if(pid && pid !== '0') openFocus(pid, f.slot); else openEmptySlot(f.slot); }
       else if(f.pid){ const i = ctx.draftStarters.indexOf(f.pid); openFocus(f.pid, i === -1 ? null : i); }
     }
@@ -4147,14 +4148,16 @@
 
   els.username.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); els.username.blur(); els.loadBtn.click(); } });
 
-  els.focusClose.addEventListener('click', closeFocus);
+  els.focusClose.addEventListener('click', function(){ if(paneMode()) closePane(); else closeFocus(); });
   els.overlay.addEventListener('click', function(e){ if(e.target === els.overlay) closeFocus(); });
   els.compareBtn.addEventListener('click', function(){ setView('compare'); });
   els.cmpDone.addEventListener('click', function(){ setView('roster'); });
   document.addEventListener('keydown', function(e){
     if(e.key !== 'Escape') return;
     if(maxOpen()){ backMax(); return; } // topmost first
-    if(els.overlay.classList.contains('open')) closeFocus();
+    if(els.overlay.classList.contains('open')){ closeFocus(); return; }
+    if(paneMode() && focusVisible() && ctx.luMode !== 'pr' && (ctx.view === 'roster' || ctx.view === 'fa') && !document.querySelector('.pr-dlg-back') &&
+      !(e.target && /INPUT|SELECT|TEXTAREA/.test(e.target.tagName))) closePane();
   });
   // Tapping a player's name or photo anywhere opens the Analysis screen. Capture phase so it wins over
   // the row's own click (which opens the focus panel).
@@ -4193,8 +4196,20 @@
   }
   placeFocusPanel();
   if(paneMQ.addEventListener) paneMQ.addEventListener('change', function(){ placeFocusPanel(); if(ctx.myRoster) selectDefaultFocus(); });
-  function focusVisible(){ return paneMode() ? !els.panes.classList.contains('solo') : els.overlay.classList.contains('open'); }
+  function focusVisible(){ return paneMode() ? !els.panes.classList.contains('solo') && !ctx.paneClosed : els.overlay.classList.contains('open'); }
+  // Wide screens: the player panel can be closed (× on it, clicking the selected player again, Esc). Closed, the list
+  // takes the full width and nothing opens it by itself (refreshes, switching tabs); picking a player opens it again.
+  ctx.paneClosed = false;
+  function closePane(){
+    if(!paneMode()) return;
+    ctx.paneClosed = true;
+    els.panes.classList.add('closed');
+    markSelected();
+  }
+  // the row that's showing in the open panel: clicking it again closes the panel
+  function paneShowing(row){ return paneMode() && !ctx.paneClosed && !!row && row.classList.contains('sel'); }
   function showFocus(){
+    if(paneMode()){ ctx.paneClosed = false; els.panes.classList.remove('closed'); }
     markSelected();
     if(paneMode()){
       els.detailPane.scrollTop = 0;
@@ -4208,7 +4223,7 @@
   function markSelected(){
     const f = ctx.focus;
     document.querySelectorAll('.slot-row.sel').forEach(function(r){ r.classList.remove('sel'); });
-    if(!f || !paneMode()) return;
+    if(!f || !paneMode() || ctx.paneClosed) return;
     const sel = f.kind === 'fa'
       ? els.faList.querySelector('[data-fa-id="' + CSS.escape(f.pid) + '"]')
       : (f.slot != null ? els.startersList.querySelector('[data-slot-index="' + f.slot + '"]')
@@ -4217,7 +4232,7 @@
   }
   // On wide screens the panel is always visible, so pick something sensible to show: a bye starter first, else the first starter.
   function selectDefaultFocus(){
-    if(!paneMode()) return;
+    if(!paneMode() || ctx.paneClosed) return;
     if(ctx.view === 'fa'){
       const top = firstAvailableInList();
       if(top && !(ctx.focus && ctx.focus.kind === 'fa')) openFreeAgent(top);
@@ -6382,13 +6397,14 @@
 
     document.querySelectorAll('.slot-row[data-player-id]').forEach(function(row){
       row.addEventListener('click', function(){
+        if(paneShowing(row)){ closePane(); return; }
         const idxAttr = row.getAttribute('data-slot-index');
         const slotIndex = idxAttr === '' ? null : parseInt(idxAttr, 10);
         openFocus(row.getAttribute('data-player-id'), slotIndex);
       });
     });
     els.startersList.querySelectorAll('.slot-row[data-empty-slot]').forEach(function(row){
-      const open = function(){ openEmptySlot(Number(row.getAttribute('data-empty-slot'))); };
+      const open = function(){ if(paneShowing(row)){ closePane(); return; } openEmptySlot(Number(row.getAttribute('data-empty-slot'))); };
       row.addEventListener('click', open);
       row.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); } });
     });
@@ -8270,7 +8286,7 @@
     if(!b) return;
     togglePos(b.getAttribute('data-pl-pos'));
     renderPlayers(); renderAddDrop(); staggerIn(els.faList);
-    if(paneMode()){ const top = firstAvailableInList(); if(top) openFreeAgent(top); }
+    if(paneMode() && !ctx.paneClosed){ const top = firstAvailableInList(); if(top) openFreeAgent(top); }
   });
   let plTyping = null;
   document.getElementById('pl-q').addEventListener('input', function(e){
@@ -8344,7 +8360,9 @@
   els.faMore.addEventListener('click', function(){ ctx.faLimit += PL_PAGE; renderPlayers(true); });
   els.faList.addEventListener('click', function(e){
     const row = e.target.closest('[data-fa-id]');
-    if(row) openPlayerFromList(row.getAttribute('data-fa-id'), row);
+    if(!row) return;
+    if(paneShowing(row)){ closePane(); return; }
+    openPlayerFromList(row.getAttribute('data-fa-id'), row);
   });
   // FLEX = the best available RB/WR/TE together, by projection.
   function faList(){ return plList(); } // what the Players tab currently shows (used by the full view too)
