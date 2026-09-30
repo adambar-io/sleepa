@@ -456,9 +456,14 @@
   .glm-sec:first-child{ margin-top: 4px; }
   .glm-sec h4{ margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-2); }
   .glm-sec span{ font-size: 11.5px; color: var(--text-3); text-align: right; }
+  .glm-k{ font-weight: 700; } .glm-k.up{ color: var(--accent); } .glm-k.down{ color: var(--danger); }
   .glm-chart{ position: relative; display: flex; gap: 3px; height: 168px; padding-top: 16px; }
   .glm-col{ flex: 1 1 0; min-width: 0; display: grid; grid-template-rows: minmax(0, 1fr) 17px 12px; justify-items: center; }
-  .glm-trk{ width: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; }
+  .glm-trk{ position: relative; width: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; }
+  .glm-pj{ position: absolute; left: 50%; width: min(calc(100% + 4px), 34px); height: 0; transform: translateX(-50%); border-top: 2.5px solid var(--text); border-radius: 2px; opacity: .85; pointer-events: none; }
+  .glm-col.t-boom i{ background: var(--accent); }
+  .glm-col.t-mid i{ background: color-mix(in srgb, var(--text-3) 80%, transparent); }
+  .glm-col.t-bust i{ background: color-mix(in srgb, var(--danger) 75%, transparent); }
   .glm-col i{ position: relative; display: block; width: min(100%, 26px); border-radius: 5px 5px 2px 2px; background: var(--text-3); }
   .glm-col.up i{ background: var(--accent); }
   .glm-col.down i{ background: color-mix(in srgb, var(--text-3) 75%, transparent); }
@@ -474,6 +479,17 @@
   .glm-pills b{ font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .glm-pills em{ font-style: normal; font-size: 10.5px; font-weight: 600; color: var(--text-3); margin-left: 3px; }
   .glm-pills em.up{ color: var(--accent); } .glm-pills em.down{ color: var(--danger); }
+  .glm-pills b.up{ color: var(--accent); } .glm-pills b.down{ color: var(--danger); }
+  .glm-pills .boom b{ color: var(--accent); } .glm-pills .bust b{ color: var(--danger); }
+  .glm-fin{ display: inline-block; padding: 0 5px; border-radius: 5px; font-size: 10.5px; font-weight: 700; background: var(--surface-3); color: var(--text-2); }
+  .glm-fin.boom{ background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); }
+  .glm-fin.bust{ background: color-mix(in srgb, var(--danger) 16%, transparent); color: var(--danger); }
+  .glm-r{ display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+  .glm-r small{ display: flex; gap: 5px; align-items: center; font-size: 10.5px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .glm-r small .up{ color: var(--accent); } .glm-r small .down{ color: var(--danger); }
+  .glm-wk-sum{ padding: 8px 12px 0; font-size: 12.5px; color: var(--text-2); }
+  .glm-wk-sum b{ color: var(--text); }
+  .gl-d{ font-size: 10.5px; font-weight: 700; } .gl-d.up{ color: var(--accent); } .gl-d.down{ color: var(--danger); }
   .glm-stack{ display: flex; gap: 2px; height: 12px; border-radius: 6px; overflow: hidden; }
   .glm-stack i{ min-width: 3px; }
   .glm-src{ display: grid; gap: 2px; margin-top: 8px; }
@@ -3371,7 +3387,54 @@
     return changed;
   }
   let histMemo = {}, aggMemo = {}, teamTklMemo = null;
-  function histReset(){ histMemo = {}; aggMemo = {}; curMemo = {}; teamTklMemo = null; if(typeof plReset === 'function') plReset(); }
+  let finishMemo = {};
+  function histReset(){ histMemo = {}; aggMemo = {}; curMemo = {}; finishMemo = {}; teamTklMemo = null; if(typeof plReset === 'function') plReset(); }
+  // A week's finish at his position (WR8 = 8th-most WR points that week): every player in weekly.json (+ gap weeks)
+  // who played, scored with this league's settings. Groups follow posGroup (DE / DT → DL, CB / S → DB).
+  // Boom / bust: QB, TE, K, DEF top 6 / outside 18; RB, WR and IDP groups top 12 / outside 36.
+  const FINISH_TIERS = { QB: [6, 18], TE: [6, 18], K: [6, 18], DEF: [6, 18] };
+  function finishTiers(g){ return FINISH_TIERS[g] || [12, 36]; }
+  function weekFinish(pid, w){
+    if(!ctx.weekly || !w) return null;
+    const g = posGroup(pid), key = w.week + '|' + g;
+    let list = finishMemo[key];
+    if(!list){
+      const sc = ctx.league.scoring_settings || {}, src = ctx.weekly.players, gap = ctx.gapWeeks[w.week];
+      list = [];
+      const add = function(id, e){ if(!e || !playedWeek(e.s) || !ctx.players[id] || posGroup(id) !== g) return; const v = calcPoints(e.s, sc); if(v !== null) list.push(v); };
+      for(const id in src) add(id, src[id][w.week]);
+      if(gap) for(const id in gap){ if(!(src[id] && src[id][w.week])) add(id, gap[id]); }
+      list.sort(function(a, b){ return b - a; });
+      finishMemo[key] = list;
+    }
+    if(list.length < 10) return null;   // week not in the file (yet)
+    let r = 1;
+    for(let i = 0; i < list.length && list[i] > w.pts + 1e-6; i++) r++;
+    const t = finishTiers(g);
+    return { rank: r, of: list.length, group: g, tier: r <= t[0] ? 'boom' : r > t[1] ? 'bust' : 'mid' };
+  }
+  // Sleeper's projection for each week (one small request per player, ~2 KB; cached a day), scored like the actuals.
+  ctx.pastProj = {};
+  async function ensurePastProj(pid){
+    if(ctx.pastProj[pid]) return ctx.pastProj[pid];
+    const key = 'sleeper_pproj_v1_' + pid + '_' + ctx.season;
+    let c = null;
+    try{ c = JSON.parse(localStorage.getItem(key) || 'null'); }catch(e){}
+    if(c && c.ts && !isStale('daily', c.ts)) return (ctx.pastProj[pid] = c.data);
+    try{
+      const raw = await fetchJSON(UNOFFICIAL + '/projections/nfl/player/' + pid + '?season_type=regular&season=' + ctx.season + '&grouping=week');
+      const data = {};
+      for(const wk in (raw || {})){ const e = raw[wk]; if(e && e.stats) data[wk] = e.stats; }
+      try{ lsSet(key, JSON.stringify({ ts: Date.now(), data: data })); }catch(e){}
+      return (ctx.pastProj[pid] = data);
+    }catch(e){ console.warn('Past projections unavailable for', pid, e); return (ctx.pastProj[pid] = c ? c.data : {}); }
+  }
+  function pastProjPts(pid, week){
+    const d = ctx.pastProj[pid], r = d && d[week];
+    if(!r) return null;
+    const v = calcPoints(r, ctx.league.scoring_settings || {});
+    return typeof v === 'number' ? v : null;
+  }
   function gameEntry(week, g){
     const m = g.t && ctx.nfl && ctx.nfl.sched && ctx.nfl.sched[g.t] ? ctx.nfl.sched[g.t][week] : null;
     const raw = Object.assign({}, g.s || {}); delete raw.gp;   // gp is only used to tell a played game
@@ -8428,6 +8491,27 @@
     const total = weeks.reduce(function(a, w){ return a + w.pts; }, 0);
     let body = '<tr class="gl-pts-row"><th class="gl-wk">Fantasy points</th>' + cols.map(function(c){ return c.w ? '<td class="gl-pts">' + fmtPts(c.w.pts) + '</td>' : '<td class="gl-off"></td>'; }).join('') +
       '<td class="gl-tot gl-pts">' + fmtPts(total) + '</td><td class="gl-tot gl-pts">' + fmtPts(total / n) + '</td></tr>';
+    const pjs = weeks.map(function(w){ return pastProjPts(pid, w.week); }), pjGot = pjs.filter(function(v){ return v !== null; });
+    if(pjGot.length){
+      const pjTot = pjGot.reduce(function(a, b){ return a + b; }, 0);
+      body += '<tr><th class="gl-wk" title="Sleeper’s projection for that week, in this league’s scoring">Projected</th>' + cols.map(function(c){
+          if(!c.w) return '<td class="gl-off"></td>';
+          const v = pastProjPts(pid, c.week);
+          if(v === null) return '<td class="gl-zero">—</td>';
+          const d = c.w.pts - v;
+          return '<td>' + fmtPts(v) + '<div class="gl-d ' + (d >= 0 ? 'up' : 'down') + '">' + (d >= 0 ? '+' : '−') + Math.abs(d).toFixed(1) + '</div></td>';
+        }).join('') + '<td class="gl-tot">' + fmtPts(pjTot) + '</td><td class="gl-tot">' + fmtPts(pjTot / pjGot.length) + '</td></tr>';
+    }
+    const fins = weeks.map(function(w){ return weekFinish(pid, w); });
+    if(fins.some(Boolean)){
+      const booms = fins.filter(function(f){ return f && f.tier === 'boom'; }).length, busts = fins.filter(function(f){ return f && f.tier === 'bust'; }).length;
+      const tt = finishTiers(fins.find(Boolean).group);
+      body += '<tr><th class="gl-wk" title="Rank among every ' + escapeHTML(fins.find(Boolean).group) + ' that week in this league’s scoring. Boom = top ' + tt[0] + ', bust = outside the top ' + tt[1] + '.">Finish</th>' + cols.map(function(c){
+          if(!c.w) return '<td class="gl-off"></td>';
+          const f = weekFinish(pid, c.w);
+          return f ? '<td><span class="glm-fin ' + f.tier + '">' + escapeHTML(f.group) + f.rank + '</span></td>' : '<td class="gl-zero">—</td>';
+        }).join('') + '<td class="gl-tot" colspan="2">' + booms + ' boom · ' + busts + ' bust</td></tr>';
+    }
     if(usage.length){
       body += secRow(idp ? 'Usage · Sleeper' : 'Usage · nflverse');
       usage.forEach(function(u){
@@ -8465,17 +8549,20 @@
     const avg = weeks.reduce(function(a, w){ return a + w.pts; }, 0) / n, l3 = last3Avg(pid);
     const proj = ctx.projections[pid], hasProj = typeof proj === 'number' && !weeks.some(function(w){ return w.week === ctx.week; });
     // (1) points by week
-    const top = Math.max.apply(null, weeks.map(function(w){ return w.pts; }).concat([hasProj ? proj : 0, avg, 1]));
+    const pj = {}; weeks.forEach(function(w){ pj[w.week] = pastProjPts(pid, w.week); });
+    const fin = {}; weeks.forEach(function(w){ fin[w.week] = weekFinish(pid, w); });
+    const top = Math.max.apply(null, weeks.map(function(w){ return Math.max(w.pts, pj[w.week] || 0); }).concat([hasProj ? proj : 0, avg, 1]));
     const many = cols.length + (hasProj ? 1 : 0) > 10;
     let best = weeks[0], worst = weeks[0];
     weeks.forEach(function(w){ if(w.pts > best.pts) best = w; if(w.pts < worst.pts) worst = w; });
-    const bar = function(v, cls, lbl, sub, show){
-      return '<div class="glm-col ' + cls + '"><div class="glm-trk"><i style="height:' + Math.max(2, v / top * 100).toFixed(1) + '%">' + (show ? '<span class="glm-v">' + fmtPts1(v) + '</span>' : '') + '</i></div><b>' + lbl + '</b><small>' + escapeHTML(sub || '') + '</small></div>';
+    const bar = function(v, cls, lbl, sub, show, p){
+      return '<div class="glm-col ' + cls + '"><div class="glm-trk"><i style="height:' + Math.max(2, v / top * 100).toFixed(1) + '%">' + (show ? '<span class="glm-v">' + fmtPts1(v) + '</span>' : '') + '</i>' +
+        (typeof p === 'number' ? '<s class="glm-pj" style="bottom:' + (p / top * 100).toFixed(1) + '%" title="Projected ' + fmtPts1(p) + '"></s>' : '') + '</div><b>' + lbl + '</b><small>' + escapeHTML(sub || '') + '</small></div>';
     };
     const chart = '<div class="glm-chart" style="--avg:' + (avg / top).toFixed(3) + '">' + cols.map(function(c){
         if(!c.w) return '<div class="glm-col off"><div class="glm-trk"><i></i></div><b>' + c.week + '</b><small>' + c.note + '</small></div>';
         const w = c.w, show = !many || w === best || w === worst || w === weeks[n - 1];
-        return bar(w.pts, w.pts >= avg ? 'up' : 'down', c.week, w.opp ? (w.away === true ? '@' : '') + w.opp : '', show);
+        return bar(w.pts, fin[w.week] ? 't-' + fin[w.week].tier : w.pts >= avg ? 'up' : 'down', c.week, w.opp ? (w.away === true ? '@' : '') + w.opp : '', show, pj[w.week]);
       }).join('') + (hasProj ? bar(proj, 'proj', ctx.week, 'proj', true) : '') + '<span class="glm-avg" aria-hidden="true"></span></div>';
     const d3 = l3 === null || n < 4 ? null : l3 - avg;
     const pills = '<div class="glm-pills">' +
@@ -8483,6 +8570,22 @@
       '<span><small>Last 3</small><b>' + fmtPts1(l3) + (d3 === null || Math.abs(d3) < avg * 0.08 ? '' : '<em class="' + (d3 > 0 ? 'up' : 'down') + '">' + (d3 > 0 ? '▲' : '▼') + Math.abs(d3).toFixed(1) + '</em>') + '</b></span>' +
       '<span><small>Best</small><b>' + fmtPts1(best.pts) + ' <em>wk ' + best.week + '</em></b></span>' +
       '<span><small>Worst</small><b>' + fmtPts1(worst.pts) + ' <em>wk ' + worst.week + '</em></b></span></div>';
+    // (1b) floor & ceiling: boom / bust weeks by finish at the position, and how he does against his projection
+    const fins = weeks.map(function(w){ return fin[w.week]; }).filter(Boolean);
+    const vsPj = weeks.filter(function(w){ return pj[w.week] !== null; }).map(function(w){ return w.pts - pj[w.week]; });
+    let floorCeil = '';
+    if(fins.length || vsPj.length){
+      const g = fins.length ? fins[0].group : '', tt = finishTiers(g);
+      const boom = fins.filter(function(f){ return f.tier === 'boom'; }).length, bust = fins.filter(function(f){ return f.tier === 'bust'; }).length;
+      const beat = vsPj.filter(function(d){ return d >= 0; }).length, dAvg = vsPj.length ? meanOf(vsPj) : null;
+      floorCeil = '<div class="glm-sec"><h4>Floor &amp; ceiling</h4><span>' + (g ? 'finish among all ' + escapeHTML(g) + 's' : '') + (g && vsPj.length ? ' · ' : '') + (vsPj.length ? 'vs Sleeper’s projection' : '') + '</span></div>' +
+        '<div class="glm-pills">' +
+        (fins.length ? '<span class="boom"><small>Boom wks</small><b>' + boom + '<em>of ' + fins.length + '</em></b></span><span class="bust"><small>Bust wks</small><b>' + bust + '<em>of ' + fins.length + '</em></b></span>' : '') +
+        (vsPj.length ? '<span><small>Beat proj</small><b>' + beat + '<em>of ' + vsPj.length + '</em></b></span>' +
+          '<span><small>vs proj</small><b class="' + (dAvg >= 0 ? 'up' : 'down') + '">' + (dAvg >= 0 ? '+' : '−') + Math.abs(dAvg).toFixed(1) + '<em>/gm</em></b></span>' : '') + '</div>' +
+        '<div class="gl-note">' + (fins.length ? 'Boom = a top-' + tt[0] + ' ' + escapeHTML(g) + ' week, bust = outside the top ' + tt[1] + ', both in your league’s scoring. ' : '') +
+          (vsPj.length ? 'Ticks on the bars above are what Sleeper projected that week.' : '') + '</div>';
+    }
     // (2) where the points come from: each scored stat × this league's value, per game
     const worth = {};
     weeks.forEach(function(w){ for(const k in w.raw){ if(sc.hasOwnProperty(k) && typeof w.raw[k] === 'number' && sc[k]) worth[k] = (worth[k] || 0) + w.raw[k] * sc[k]; } });
@@ -8527,8 +8630,12 @@
     const list = weeks.slice().reverse().map(function(w){
       const g = groups(w.raw), all = g.main.concat(g.more);
       const opp = w.opp ? (w.away === true ? '@ ' : w.away === false ? 'vs ' : '') + w.opp : '';
+      const p = pj[w.week], f = fin[w.week];
       return '<details class="glm-wk"><summary><span class="glm-wk-l"><b>Wk ' + w.week + '</b><small>' + escapeHTML(opp) + '</small></span>' +
-          '<span class="glm-line">' + line(w.raw) + '</span><b class="glm-pts ' + (w.pts >= avg ? 'up' : 'down') + '">' + fmtPts1(w.pts) + '</b></summary>' +
+          '<span class="glm-line">' + line(w.raw) + '</span><span class="glm-r"><b class="glm-pts ' + (w.pts >= avg ? 'up' : 'down') + '">' + fmtPts1(w.pts) + '</b>' +
+            (f || p !== null ? '<small>' + (f ? '<span class="glm-fin ' + f.tier + '">' + escapeHTML(f.group) + f.rank + '</span>' : '') + (p !== null ? '<span class="' + (w.pts >= p ? 'up' : 'down') + '">' + (w.pts >= p ? '+' : '−') + Math.abs(w.pts - p).toFixed(1) + '</span>' : '') + '</small>' : '') + '</span></summary>' +
+        (p !== null || f ? '<div class="glm-wk-sum">' + (p !== null ? 'Projected <b>' + fmtPts1(p) + '</b>, scored <b>' + fmtPts1(w.pts) + '</b> (' + (w.pts >= p ? '+' : '−') + Math.abs(w.pts - p).toFixed(1) + ')' : '') +
+          (f ? (p !== null ? ' · ' : '') + escapeHTML(f.group) + f.rank + ' of ' + f.of + (f.tier === 'boom' ? ', a boom week' : f.tier === 'bust' ? ', a bust week' : '') : '') + '</div>' : '') +
         '<div class="glm-all">' + all.map(function(k){
             const v = w.raw[k], pts = sc.hasOwnProperty(k) && sc[k] ? v * sc[k] : null;
             return '<div><span>' + escapeHTML(statLabel(k)) + '</span><b>' + fmtStat(v) + '</b><small class="' + (pts === null ? '' : pts < 0 ? 'down' : 'up') + '">' + (pts === null || Math.abs(pts) < 0.005 ? '' : (pts > 0 ? '+' : '−') + Math.abs(pts).toFixed(2)) + '</small></div>';
@@ -8536,7 +8643,7 @@
     }).join('');
     const skipped = cols.filter(function(c){ return !c.w; }).map(function(c){ return 'Wk ' + c.week + ' ' + c.note; });
     return '<div class="glm">' +
-      '<div class="glm-sec"><h4>Points by week</h4><span>- - - season avg</span></div>' + chart + pills + sources + keys +
+      '<div class="glm-sec"><h4>Points by week</h4><span>- - - avg' + (weeks.some(function(w){ return pj[w.week] !== null; }) ? ' · ▬ proj' : '') + (weeks.some(function(w){ return fin[w.week]; }) ? ' · <b class=\"glm-k up\">boom</b> <b class=\"glm-k down\">bust</b>' : '') + '</span></div>' + chart + pills + floorCeil + sources + keys +
       '<div class="glm-sec"><h4>Week by week</h4><span>tap for every stat</span></div><div class="glm-wks">' + list + '</div>' +
       (skipped.length ? '<div class="gl-note">' + escapeHTML(skipped.join(' · ')) + '</div>' : '') +
       '<button type="button" class="glm-table-btn" data-gl-table aria-expanded="false">Full stat table</button></div>';
@@ -8704,6 +8811,9 @@
     // A player page needs their season history; fetch it once, then re-render if they're still on top.
     if(e.kind === 'player' && !hist(e.pid)){
       ensureHistory(e.pid).then(function(){ if(maxOpen() && maxStack[maxStack.length - 1] === e) renderMax(0); });
+    }
+    if(e.kind === 'player' && !ctx.pastProj[e.pid]){
+      ensurePastProj(e.pid).then(function(){ if(maxOpen() && maxStack[maxStack.length - 1] === e && hist(e.pid)){ const y = maxPanel.scrollTop; renderMax(0); maxPanel.scrollTop = y; } });
     }
     if(e.kind === 'h2h' && e.pids.some(function(id){ return !hist(id); })){
       Promise.all(e.pids.map(ensureHistory)).then(function(){ if(maxOpen() && maxStack[maxStack.length - 1] === e) renderMax(0); });
