@@ -2538,11 +2538,29 @@
   .cd-sm span.up{ color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); }
   .cd-sm span.down{ color: var(--danger); background: color-mix(in srgb, var(--danger) 14%, transparent); }
   .cd-sm span.warn{ color: var(--warn); background: color-mix(in srgb, var(--warn) 14%, transparent); }
-  .cd-tc{ display: grid; grid-template-columns: repeat(4, 1fr); gap: calc(var(--u) * 6); padding: calc(var(--u) * 10); border-radius: calc(var(--u) * 12); background: var(--surface-2); }
-  .cd-tc div{ display: flex; flex-direction: column; align-items: center; gap: 1px; }
-  .cd-tc i{ font-style: normal; font-size: calc(var(--u) * 12); color: var(--text-2); }
-  .cd-tc b{ font-size: calc(var(--u) * 20); font-weight: 800; }
-  .cd-tc small{ font-size: calc(var(--u) * 8.5); font-weight: 700; letter-spacing: .1em; color: var(--text-3); }
+  .cd-sch{ flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: calc(var(--u) * 4); padding: calc(var(--u) * 8); border-radius: calc(var(--u) * 12); background: var(--surface-2); scrollbar-width: none; }
+  .cd-sch::-webkit-scrollbar{ display: none; }
+  .cd-sch-h{ font-size: calc(var(--u) * 9.5); font-weight: 800; letter-spacing: .14em; color: var(--text-3); padding: 0 calc(var(--u) * 4) calc(var(--u) * 2); }
+  .cd-sch-none{ font-size: calc(var(--u) * 12); color: var(--text-3); padding: calc(var(--u) * 4); }
+  .cd-w{ flex: none; border-radius: calc(var(--u) * 9); cursor: pointer; transition: background .2s; }
+  .cd-w.open{ background: var(--surface-3); }
+  .cd-w-row{ display: grid; grid-template-columns: calc(var(--u) * 34) auto minmax(0, 1fr) auto calc(var(--u) * 10); align-items: center; gap: calc(var(--u) * 6); padding: calc(var(--u) * 5) calc(var(--u) * 6); }
+  .cd-w-row > b{ font-size: calc(var(--u) * 11); font-weight: 800; letter-spacing: .08em; }
+  .cd-w-t{ display: inline-flex; align-items: center; gap: calc(var(--u) * 4); font-size: calc(var(--u) * 11.5); font-weight: 650; color: var(--text-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .cd-w-t em{ font-style: normal; font-size: calc(var(--u) * 8.5); font-weight: 800; letter-spacing: .08em; padding: 0 calc(var(--u) * 4); border-radius: 999px; background: var(--surface); color: var(--text-3); }
+  .cd-w-t em.live{ background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); }
+  .cd-w.final .cd-w-row{ opacity: .6; }
+  .cd-w-dots{ display: flex; flex-wrap: wrap; gap: calc(var(--u) * 3); justify-content: flex-end; }
+  .cd-w-dots i{ width: calc(var(--u) * 6); height: calc(var(--u) * 6); border-radius: 50%; }
+  .cd-w-n{ font-size: calc(var(--u) * 11); font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
+  .cd-w-c{ font-size: calc(var(--u) * 9); color: var(--text-3); transition: transform .25s var(--ease); }
+  .cd-w.open .cd-w-c{ transform: rotate(180deg); }
+  .cd-w-list{ display: none; flex-direction: column; gap: calc(var(--u) * 3); padding: 0 calc(var(--u) * 6) calc(var(--u) * 7); }
+  .cd-w.open .cd-w-list{ display: flex; animation: fadeIn .2s var(--ease); }
+  .cd-w-list span{ display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: baseline; gap: calc(var(--u) * 6); padding-left: calc(var(--u) * 7); border-left: calc(var(--u) * 2.5) solid var(--pc); font-size: calc(var(--u) * 12); }
+  .cd-w-list b{ font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cd-w-list small{ font-size: calc(var(--u) * 9.5); font-weight: 700; color: var(--text-3); letter-spacing: .04em; }
+  .cd-w-list em{ font-style: normal; font-weight: 650; color: var(--text-2); min-width: calc(var(--u) * 44); text-align: right; }
   .cd-save{ width: 100%; min-height: calc(var(--u) * 42); font-size: calc(var(--u) * 15); }
   /* deck: the front card centered; neighbors 0.72 scale, 45% opacity, ±4° */
   .cd-deckw{ --cdw: min(300px, 62cqw); display: flex; flex-direction: column; align-items: center; gap: 12px; }
@@ -7209,17 +7227,58 @@
   // the deck's last card: the lineup's total, vs Sleeper, the tier mix, and Save
   function cdSummaryHTML(slots, tiers, k){
     const total = sumProj(ctx.prWork), diff = total - sumProj(ctx.originalStarters), flat = Math.abs(diff) < 0.005;
-    const count = { holo: 0, gold: 0, silver: 0, base: 0 };
-    slots.forEach(function(s){ if(tiers[s.i]) count[tiers[s.i]]++; });
     const dirty = prDirty(), empty = slots.filter(function(s){ return prIsEmpty(ctx.prWork[s.i]); }).length;
     return '<div class="cd sum t-silver" data-cd-sum style="--k:' + k + '"><div class="cd-in"><div class="cd-face cd-front"><div class="cd-body cd-bk">' +
       '<div class="cd-bh"><span class="cd-bs dim"><button type="button" class="cd-rew" data-cd-rewind aria-label="Back to the first card" title="Back to the first card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>DECK SUMMARY</span>' + cdStamp() + '</div>' +
       '<div class="cd-sm"><small>PROJECTED LINEUP</small><b>' + fmtPts(total) + '</b>' +
         '<span class="' + (empty ? 'warn' : flat ? '' : diff > 0 ? 'up' : 'down') + '">' + (empty ? empty + ' slot' + (empty > 1 ? 's' : '') + ' empty' : flat ? 'Same as Sleeper' : (diff > 0 ? '+' : '−') + Math.abs(diff).toFixed(2) + ' vs Sleeper') + '</span></div>' +
-      '<div class="cd-tc">' + ['holo', 'gold', 'silver', 'base'].map(function(t){ return '<div><i>' + CD_MARK[t] + '</i><b>' + count[t] + '</b><small>' + t.toUpperCase() + '</small></div>'; }).join('') + '</div>' +
+      cdScheduleHTML(slots) +
       '<button type="button" class="pr-save cd-save" data-pr-save' + (!dirty && ctx.prSaved ? ' disabled' : '') + '>' + (!dirty && ctx.prSaved ? 'Saved' : 'Save lineup') + '</button>' +
       '<div class="cd-bf"><span>' + escapeHTML(cdSeries()) + ' · ' + slots.length + ' cards</span></div>' +
       '</div></div></div></div>';
+  }
+  // Summary card: the Huddle draft's starters by kickoff window, soonest first ("SUN 1:00p · ●●●● 4 ▾"); each window
+  // opens (one at a time) to who plays in it and against whom. Byes and unknown kickoffs go last. Live / final marked.
+  function cdWindows(slots){
+    const groups = {};
+    slots.forEach(function(s){
+      const pid = ctx.prWork[s.i];
+      if(prIsEmpty(pid)) return;
+      const p = ctx.players[pid], m = matchup(p.team, ctx.week), k = m && !m.bye ? kickoff(p.team, ctx.week) : null;
+      const key = m && m.bye ? 'bye' : k ? String(k) : 'tbd';
+      (groups[key] = groups[key] || { key: key, k: k, list: [] }).list.push({ s: s, pid: pid, p: p, m: m });
+    });
+    return Object.keys(groups).map(function(x){ return groups[x]; }).sort(function(a, b){
+      const r = function(g){ return g.key === 'bye' ? Infinity : g.key === 'tbd' ? 1e15 : g.k; };
+      return r(a) - r(b);
+    });
+  }
+  function cdScheduleHTML(slots){
+    const wins = cdWindows(slots);
+    if(!wins.length) return '<div class="cd-sch"><div class="cd-sch-h">KICKOFFS</div><div class="cd-sch-none">No starters yet</div></div>';
+    const state = function(g){
+      if(!g.k) return '';
+      const st = g.list.map(function(x){ const gm = gameOf(x.p.team); return gm ? gm.state : 'pre'; });
+      return st.every(function(v){ return v === 'post'; }) ? 'final' : st.some(function(v){ return v === 'in'; }) ? 'live' : '';
+    };
+    return '<div class="cd-sch"><div class="cd-sch-h">KICKOFFS</div>' + wins.map(function(g){
+      const d = g.k ? new Date(g.k) : null, stt = state(g), open = ctx.cdWinOpen === g.key;
+      const day = g.key === 'bye' ? 'BYE' : d ? d.toLocaleDateString([], { weekday: 'short' }).toUpperCase() : 'TBD';
+      const time = d ? ((d.getHours() % 12) || 12) + ':' + String(d.getMinutes()).padStart(2, '0') + (d.getHours() < 12 ? 'a' : 'p') : '';
+      return '<div class="cd-w' + (open ? ' open' : '') + (stt ? ' ' + stt : '') + '" data-cd-win="' + g.key + '" role="button" tabindex="0" aria-expanded="' + open + '">' +
+        '<div class="cd-w-row"><b>' + day + '</b><span class="cd-w-t">' + escapeHTML(time) + (stt === 'live' ? '<em class="live">LIVE</em>' : stt === 'final' ? '<em>FINAL</em>' : '') + '</span>' +
+          '<i class="cd-w-dots">' + g.list.map(function(x){ return '<i style="background:' + prTabColor(x.s.tab) + '"></i>'; }).join('') + '</i>' +
+          '<span class="cd-w-n">' + g.list.length + '</span><span class="cd-w-c" aria-hidden="true">▾</span></div>' +
+        '<div class="cd-w-list">' + g.list.map(function(x){
+            return '<span style="--pc:' + prTabColor(x.s.tab) + '"><b>' + escapeHTML(prShortName(x.p, x.pid)) + '</b><small>' + escapeHTML(x.s.name) + '</small><em>' + escapeHTML(x.m ? (x.m.bye ? 'bye' : x.m.text) : '') + '</em></span>';
+          }).join('') + '</div></div>';
+    }).join('') + '</div>';
+  }
+  function cdWinToggle(el){
+    const key = el.getAttribute('data-cd-win'), open = !el.classList.contains('open');
+    el.parentNode.querySelectorAll('.cd-w.open').forEach(function(w){ w.classList.remove('open'); w.setAttribute('aria-expanded', 'false'); });
+    if(open){ el.classList.add('open'); el.setAttribute('aria-expanded', 'true'); }
+    ctx.cdWinOpen = open ? key : null;
   }
   // Deck: one card up front, neighbors peeking (0.72 scale, 45% opacity, ±4°), a slot strip to jump, Flip / Edit slot
   function cdDeckHTML(list, slots, tiers){
@@ -7509,9 +7568,13 @@
     renderPowerRank(); prView.querySelector('.pr-main').scrollTop = 0;
   }
   prView.addEventListener('pointerdown', cdOnDrag);
+  prView.addEventListener('keydown', function(e){
+    const w = (e.key === 'Enter' || e.key === ' ') && e.target.closest && e.target.closest('[data-cd-win]');
+    if(w){ e.preventDefault(); e.stopPropagation(); cdWinToggle(w); }
+  });
   prView.addEventListener('pointerdown', function(e){
     const c = e.target.closest('[data-cd-deck] > [data-cd-sum]');
-    cdSumDown = c && c.classList.contains('on') && !e.target.closest('button') && (e.pointerType !== 'mouse' || e.button === 0) ? { id: e.pointerId, x: e.clientX, y: e.clientY, t: Date.now() } : null;
+    cdSumDown = c && c.classList.contains('on') && !e.target.closest('button, [data-cd-win]') && (e.pointerType !== 'mouse' || e.button === 0) ? { id: e.pointerId, x: e.clientX, y: e.clientY, t: Date.now() } : null;
   });
   prView.addEventListener('pointerup', function(e){
     const d = cdSumDown; cdSumDown = null;
@@ -7562,6 +7625,8 @@
     if(e.target.closest('[data-cd-legend]')){ const lg = prView.querySelector('.cd-legend'); cdLegend(lg && lg.hidden); return; }
     if(e.target.closest('[data-cd-legend-x]')){ cdLegend(false); return; }
     if(e.target.closest('.cd-legend')) return;
+    { const win = e.target.closest('[data-cd-win]');
+      if(win && win.closest('.cd.on')){ if(Date.now() - cdDragged >= 400) cdWinToggle(win); return; } }
     { const lg = prView.querySelector('.cd-legend'); if(lg && !lg.hidden){ cdLegend(false); return; } }   // a tap outside just closes it
     const ij = e.target.closest('[data-cd-inj]');
     if(ij){ openMax({ kind: 'player', pid: ij.getAttribute('data-cd-inj'), anchor: 'injury' }, ij); return; }
