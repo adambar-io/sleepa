@@ -2517,6 +2517,11 @@
   .cd-rng i{ position: relative; display: block; height: calc(var(--u) * 4); border-radius: 2px; background: var(--surface-3); }
   .cd-rng em{ position: absolute; top: 0; bottom: 0; border-radius: 2px; background: var(--mc, var(--accent)); }
   .cd-inj{ display: flex; gap: calc(var(--u) * 8); align-items: flex-start; font-size: calc(var(--u) * 12); line-height: 1.4; color: var(--text-2); }
+  button.cd-inj{ width: calc(100% + var(--u) * 16); min-height: 0; padding: calc(var(--u) * 6) calc(var(--u) * 8); margin: calc(var(--u) * -6) calc(var(--u) * -8); border-radius: calc(var(--u) * 8); background: none; font: inherit; font-size: calc(var(--u) * 12); text-align: left; cursor: pointer; }
+  button.cd-inj:hover{ background: var(--surface-2); }
+  button.cd-inj u{ text-decoration: none; font-weight: 700; white-space: nowrap; }
+  button.cd-q{ padding: 0; min-height: 0; border: 0; cursor: pointer; }
+  button.cd-q::after{ content: ''; position: absolute; inset: -10px; }   /* bigger touch target */
   .cd-inj i{ flex: none; width: calc(var(--u) * 6); height: calc(var(--u) * 6); margin-top: calc(var(--u) * 5); border-radius: 50%; background: var(--accent); }
   .cd-inj.t-warn{ color: var(--warn); } .cd-inj.t-warn i{ background: var(--warn); }
   .cd-inj.t-bad{ color: var(--danger); } .cd-inj.t-bad i{ background: var(--danger); }
@@ -7129,7 +7134,7 @@
       '<div class="cd-hd"><div class="cd-hl"><span class="cd-pill">' + escapeHTML(s.name) + '</span><span class="cd-num">' + cdNum(num) + '</span></div>' +
         '<div class="cd-hr">' + (locked ? '<span class="cd-chip lock">' + PR_ICON.lock + 'LOCKED</span>' : tier === 'holo' ? '<span class="cd-chip holo">HOLO</span>' : '') + cdStamp() + '</div></div>' +
       '<div class="cd-win">' + art + '<span class="cd-glare"></span>' +
-        (st ? '<span class="cd-q st-' + st.tone + '" title="' + escapeHTML(st.label) + '">' + escapeHTML(st.short.charAt(0)) + '</span>' : '') + '</div>' +
+        (st ? '<button type="button" class="cd-q st-' + st.tone + '" data-cd-inj="' + escapeHTML(pid) + '" title="' + escapeHTML(st.label) + ': see injury reports" aria-label="' + escapeHTML(st.label) + '. See injury reports">' + escapeHTML(st.short.charAt(0)) + '</button>' : '') + '</div>' +
       '<div class="cd-id"><div class="cd-nm" style="--ns:' + cdNameSize(name) + '">' + escapeHTML(name) + '</div><div class="cd-meta">' + escapeHTML(meta) + '</div></div>' +
       '<div class="cd-nums"><div class="cd-pj"><b' + (wa !== null ? ' class="live"' : '') + '>' + fmtPts(wa !== null ? wa : ctx.projections[pid]) + '</b><small>' + (wa === null ? 'PROJ' : g && g.state === 'post' ? 'FINAL' : 'LIVE') + '</small></div>' +
         '<div class="cd-l3"><b>' + (l3 === null ? '—' : l3.toFixed(1)) + '</b><small>' + (n >= 3 || !n ? 'L3 AVG' : 'L' + n + ' AVG') + '</small></div></div>' +
@@ -7185,7 +7190,9 @@
       '<div class="cd-mu"><small>MATCHUP</small><b>' + escapeHTML(!m ? '—' : m.bye ? 'BYE' : m.text + (k0 ? ' · ' + zKickShort(k0) : '')) + '</b>' +
         (i ? '<span class="t-' + i.tone + '">' + escapeHTML(CD_TONE_WORD[i.tone] + ' · ' + dvpLabel(i)) + '</span>' : '<span class="t-none">' + (isDef ? 'No matchup ranking for team defenses' : 'No matchup ranking yet') + '</span>') + '</div>' +
       '<div class="cd-grid' + (three ? ' three' : '') + '">' + grid + '</div>' + range +
-      '<div class="cd-inj t-' + tone + '"><i></i><span>' + escapeHTML(line) + '</span></div>' +
+      (tone === 'warn' || tone === 'bad'
+        ? '<button type="button" class="cd-inj t-' + tone + '" data-cd-inj="' + escapeHTML(pid) + '" aria-label="' + escapeHTML(line) + '. See injury reports"><i></i><span>' + escapeHTML(line) + ' <u>Injury reports ›</u></span></button>'
+        : '<div class="cd-inj t-' + tone + '"><i></i><span>' + escapeHTML(line) + '</span></div>') +
       '<div class="cd-bf"><span>' + cdStamp() + escapeHTML(cdSeries()) + '</span><button type="button" class="cd-full" data-pr-info="' + escapeHTML(pid) + '">Full stats ›</button></div>' +
       '</div></div>';
   }
@@ -7556,6 +7563,8 @@
     if(e.target.closest('[data-cd-legend-x]')){ cdLegend(false); return; }
     if(e.target.closest('.cd-legend')) return;
     { const lg = prView.querySelector('.cd-legend'); if(lg && !lg.hidden){ cdLegend(false); return; } }   // a tap outside just closes it
+    const ij = e.target.closest('[data-cd-inj]');
+    if(ij){ openMax({ kind: 'player', pid: ij.getAttribute('data-cd-inj'), anchor: 'injury' }, ij); return; }
     const lg = e.target.closest('[data-cd-log]');
     if(lg){ openMax({ kind: 'player', pid: lg.getAttribute('data-cd-log'), anchor: 'log' }, lg); return; }
     if(e.target.closest('[data-cd-edit]')){
@@ -9087,7 +9096,7 @@
   // A page opened for one section (the card back's "Game log"): start scrolled there, once its history is in.
   function maxToAnchor(e){
     if(!e.anchor || e.kind !== 'player' || !hist(e.pid)) return;
-    const t = maxBody.querySelector('.pf-log');
+    const t = maxBody.querySelector(e.anchor === 'injury' ? '.inj-sources' : '.pf-log');
     if(t) maxPanel.scrollTop = Math.max(0, t.getBoundingClientRect().top - maxPanel.getBoundingClientRect().top + maxPanel.scrollTop - maxEl.querySelector('.max-bar').offsetHeight - 8);
     e.anchor = null;
   }
