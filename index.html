@@ -2488,6 +2488,15 @@
   .zf-ev.m2{ --it: 10%; } .zf-ev.m3{ --it: 17%; }
   .zf-ev.imp-neu.m2, .zf-ev.imp-neu.m3{ --it: 0%; }
   .zf-ev.new{ animation: zfIn .45s var(--ease) both; }
+  .zf-ev.big::before{ width: 5px; opacity: 1; }
+  .zf-ev.big .zf-d{ color: var(--text); }
+  .zf-big{ font-size: 9.5px; font-weight: 800; letter-spacing: .05em; padding: 1px 6px; border-radius: 5px; background: var(--ic); color: var(--bg); white-space: nowrap; }
+  .zf-ev.imp-neu .zf-big{ background: var(--surface-3); color: var(--text-2); }
+  .zf-bigtg{ min-height: 28px; padding: 0 10px; border-radius: 999px; background: var(--surface-2); color: var(--text-2); font-size: 11.5px; font-weight: 600; }
+  .zf-bigtg[aria-pressed="true"]{ background: var(--text); color: var(--bg); }
+  .zf-h .zf-bigtg{ margin-left: auto; }
+  .zf-h .zf-bigtg + .zf-more{ margin-left: 0; }
+  .zn-feedph .zf-bigtg{ margin: 0 0 8px; }
   @keyframes zfIn{ from{ opacity: 0; transform: translateY(-6px); } to{ opacity: 1; transform: none; } }
   .zf-top{ display: flex; align-items: center; gap: 6px; }
   .zf-pts{ font-size: 12px; font-weight: 750; font-variant-numeric: tabular-nums; color: var(--ic); }
@@ -10245,6 +10254,7 @@
   ctx.zone.feed = null;
   ctx.zone.feedFail = 0; ctx.zone.diffEv = []; ctx.zone.leadEv = []; ctx.zone.feedAll = {}; ctx.zone.feedSeen = null;
   try{ ctx.zone.feedMode = localStorage.getItem('rv-zone-feedmode') === 'all' ? 'all' : 'mine'; }catch(e){ ctx.zone.feedMode = 'mine'; }
+  try{ ctx.zone.feedBig = localStorage.getItem('rv-zone-feedbig') === '1'; }catch(e){ ctx.zone.feedBig = false; }
   function zFeedNew(week){ return { ver: FEED_VER, season: ctx.season, week: week, plays: {}, max: {}, sync: {}, done: {}, backfillTs: 0, v: 1 }; }
   async function zFeedLoad(week){
     const z = ctx.zone;
@@ -10476,10 +10486,31 @@
   }
   function zShortName(r){ const p = r.p || {}; return p.position === 'DEF' ? (r.team || r.pid) + ' D/ST' : p.first_name && p.last_name ? p.first_name.charAt(0) + '. ' + p.last_name : (p.full_name || r.pid); }
   function zSign(v){ return (v > 0 ? '▲ +' : v < 0 ? '▼ −' : '') + Math.abs(v).toFixed(2); }
+  // Big plays: a touchdown, a takeaway, a long gain, a field goal, or any play worth BIG_PTS or more to that player.
+  // Returns the badge label ('TD', 'INT', 'FUM', 'LONG 52', 'FG', 'BIG') or '' for a small play. Adjustments and point-only updates are never big.
+  const BIG_PTS = 3, BIG_LONG_YD = 40;
+  function zBigLabel(e){
+    if(!e || e.adj || e.diff || e.note) return '';
+    let st = (e.pl && e.pl.st && e.pl.st[e.pid]) || null;
+    if(!st && e.r && e.r.p && e.r.p.position === 'DEF' && e.pl && e.pl.st) st = zDefPlayStats(e.pl, e.r.team);   // a team defense: from its players' lines
+    st = st || {};
+    let td = false, fg = false;
+    for(const k in st){ if(typeof st[k] === 'number' && st[k] > 0){ if(/_td$/.test(k)) td = true; else if(/^fgm/.test(k)) fg = true; } }
+    if(td) return 'TD';
+    if(st.pass_int > 0 || st.int > 0 || st.idp_int > 0) return 'INT';
+    if(st.fum_lost > 0) return 'FUM';
+    const yd = Math.max(st.pass_yd || 0, st.rec_yd || 0, st.rush_yd || 0);
+    if(yd >= BIG_LONG_YD) return 'LONG ' + Math.round(yd);
+    if(fg) return 'FG';
+    return Math.abs(e.pts) >= BIG_PTS ? 'BIG' : '';
+  }
+  // a play shown as one line across leagues: big by its own label, or by its net swing (never a kickoff note, adjustment or point-only update)
+  function zBigNet(e, net){ return zBigLabel(e) || (!e.adj && !e.diff && !e.note && Math.abs(net) >= BIG_PTS ? 'BIG' : ''); }
+  function zBigChip(lbl){ return lbl ? '<span class="zf-big">' + escapeHTML(lbl) + '</span>' : ''; }
   function zEvHTML(e, fresh){
-    const imp = zImpact1(e.side, e.pts), txt = e.diff ? 'Points update' : e.pl.d;
-    return '<div class="zf-ev imp-' + imp + ' m' + zMag(e.pts) + (e.adj ? ' adj' : '') + (fresh ? ' new' : '') + '" title="' + escapeHTML(zShortName(e.r) + ': ' + (txt || '')) + '">' +
-      '<div class="zf-top"><span class="zf-pts">' + zSign(e.pts) + '</span><span class="zf-clk">' + escapeHTML(zClock(e.pl)) + '</span></div>' +
+    const imp = zImpact1(e.side, e.pts), txt = e.diff ? 'Points update' : e.pl.d, big = zBigLabel(e);
+    return '<div class="zf-ev imp-' + imp + ' m' + zMag(e.pts) + (big ? ' big' : '') + (e.adj ? ' adj' : '') + (fresh ? ' new' : '') + '" title="' + escapeHTML(zShortName(e.r) + ': ' + (txt || '')) + '">' +
+      '<div class="zf-top">' + zBigChip(big) + '<span class="zf-pts">' + zSign(e.pts) + '</span><span class="zf-clk">' + escapeHTML(zClock(e.pl)) + '</span></div>' +
       '<div class="zf-d"><b>' + escapeHTML(zShortName(e.r)) + '</b> ' + escapeHTML(txt || '') + '</div></div>';
   }
   function zFeedFresh(k){ const z = ctx.zone; if(z.feedNow) z.feedNow.add(k); return !!(z.feedSeen && !z.feedSeen.has(k)); }   // new since the last render: slides in
@@ -10487,14 +10518,15 @@
   function zCardFeedHTML(M){
     const z = ctx.zone, ev = zFeedEvents(M);
     if(!M.started && !(ev && ev.length)) return '';
-    const all = !!z.feedAll[M.L.id], n = 5;
+    const all = !!z.feedAll[M.L.id], n = 5, big = !!z.feedBig;
+    const shown = ev && big ? ev.filter(function(e){ return zBigLabel(e); }) : ev;
     const col = function(side){
-      const list = (ev || []).filter(function(e){ return e.side === side; });
-      if(!list.length) return '<div class="zf-col"><p class="zf-none">' + (ev ? 'Nothing yet' : 'Loading plays…') + '</p></div>';
+      const list = (shown || []).filter(function(e){ return e.side === side; });
+      if(!list.length) return '<div class="zf-col"><p class="zf-none">' + (ev ? (big && ev.length ? 'No big plays yet' : 'Nothing yet') : 'Loading plays…') + '</p></div>';
       return '<div class="zf-col">' + (all ? list : list.slice(0, n)).map(function(e){ return zEvHTML(e, zFeedFresh(M.L.id + '|' + e.k)); }).join('') + '</div>';
     };
-    const more = ev && (ev.filter(function(e){ return e.side === 'me'; }).length > n || ev.filter(function(e){ return e.side === 'opp'; }).length > n);
-    return '<div class="zf-card"><div class="zf-h"><b>Live feed</b>' + (z.feedDiff ? '<span class="zf-warn">Play details unavailable · score changes only</span>' : '') +
+    const more = shown && (shown.filter(function(e){ return e.side === 'me'; }).length > n || shown.filter(function(e){ return e.side === 'opp'; }).length > n);
+    return '<div class="zf-card"><div class="zf-h"><b>Live feed</b>' + (z.feedDiff ? '<span class="zf-warn">Play details unavailable · score changes only</span>' : '<button type="button" class="zf-bigtg" data-zf-big aria-pressed="' + big + '" title="Show only touchdowns, turnovers, long plays and plays worth 3+ points">Big plays</button>') +
         (more ? '<button type="button" class="zf-more" data-zf-all="' + escapeHTML(M.L.id) + '">' + (all ? 'Show less' : 'Show all') + '</button>' : '') + '</div>' +
       '<div class="zf-cols' + (M.opp ? '' : ' solo') + '">' + col('me') + (M.opp ? col('opp') : '') + '</div></div>';
   }
@@ -10519,6 +10551,11 @@
     const t = function(it){ return it.lead ? it.lead.t : it.nfl ? it.nfl.t : it.e.pl.t; };
     const q = function(it){ return it.lead ? it.lead.t : it.nfl ? it.nfl.q : it.e.pl.q; };
     items.sort(function(a, b){ return (a.lead || b.lead) ? t(b) - t(a) : q(b) - q(a); });
+    if(z.feedBig) items = items.filter(function(it){
+      if(it.lead || it.nfl) return true;   // lead changes and league-wide scoring plays always show
+      const net = it.legs.reduce(function(a, l){ return a + (l.side === 'me' ? l.pts : -l.pts); }, 0);
+      return !!zBigNet(it.e, net);
+    });
     items = items.slice(0, 150);
     if(!items.length) return '<p class="zf-none">' + (models.some(function(M){ return M.started; }) ? 'No plays yet for your starters.' : 'Plays show up here once your players’ games kick off.') + '</p>';
     return items.map(function(it){
@@ -10526,10 +10563,10 @@
       if(it.nfl){ const pl = it.nfl; return '<div class="zf-ev imp-neu m1 nfl' + (zFeedFresh(it.k) ? ' new' : '') + '"><div class="zf-top"><span class="zf-chip">NFL</span><span class="zf-clk">' + escapeHTML(zClock(pl)) + '</span></div><div class="zf-d">' + escapeHTML(pl.d) + '</div></div>'; }
       const e = it.e, fo = it.legs.filter(function(l){ return l.side === 'me'; }), ag = it.legs.filter(function(l){ return l.side === 'opp'; });
       const net = it.legs.reduce(function(a, l){ return a + (l.side === 'me' ? l.pts : -l.pts); }, 0);
-      const imp = fo.length && ag.length ? 'mix' : net > 0.004 ? 'pos' : net < -0.004 ? 'neg' : 'neu';
+      const imp = fo.length && ag.length ? 'mix' : net > 0.004 ? 'pos' : net < -0.004 ? 'neg' : 'neu', big = zBigNet(e, net);
       const chip = fo.length && ag.length ? fo.length + ' for · ' + ag.length + ' against' : fo.length ? 'MINE' + (fo.length > 1 ? ' ×' + fo.length : '') : 'OPP' + (ag.length > 1 ? ' ×' + ag.length : '');
-      return '<div class="zf-ev imp-' + imp + ' m' + zMag(net) + (e.adj ? ' adj' : '') + (zFeedFresh(it.k) ? ' new' : '') + '" title="' + escapeHTML(it.legs.map(function(l){ return l.name + ': ' + (l.side === 'me' ? 'yours ' : 'opponent ') + zSign(l.pts); }).join('\n')) + '">' +
-        '<div class="zf-top"><span class="zf-chip">' + chip + '</span><span class="zf-pts">' + zSign(net) + '</span><span class="zf-clk">' + escapeHTML(zClock(e.pl)) + '</span></div>' +
+      return '<div class="zf-ev imp-' + imp + ' m' + zMag(net) + (big ? ' big' : '') + (e.adj ? ' adj' : '') + (zFeedFresh(it.k) ? ' new' : '') + '" title="' + escapeHTML(it.legs.map(function(l){ return l.name + ': ' + (l.side === 'me' ? 'yours ' : 'opponent ') + zSign(l.pts); }).join('\n')) + '">' +
+        '<div class="zf-top"><span class="zf-chip">' + chip + '</span>' + zBigChip(big) + '<span class="zf-pts">' + zSign(net) + '</span><span class="zf-clk">' + escapeHTML(zClock(e.pl)) + '</span></div>' +
         '<div class="zf-d"><b>' + escapeHTML(zShortName(e.r)) + '</b> ' + escapeHTML(e.diff ? 'Points update' : e.pl.d || '') + '</div>' +
         '<div class="zf-lg">' + escapeHTML(it.legs.map(function(l){ return l.name; }).join(' · ')) + '</div></div>';
     }).join('');
@@ -10822,6 +10859,7 @@
           '<div class="zn-tiles"></div></div>' +
           '<aside class="zn-feedph" aria-label="Live feed"><div class="zf-head"><b>Live feed</b><button type="button" class="zf-tg" data-zn-feed aria-label="Collapse the live feed" title="Collapse">' + ICO.fold + '</button></div>' +
             '<div class="wk-seg zf-modes" role="group" aria-label="Feed"><button type="button" data-zf-mode="mine">My players</button><button type="button" data-zf-mode="all">All NFL</button></div>' +
+            '<button type="button" class="zf-bigtg" data-zf-big aria-pressed="false" title="Show only touchdowns, turnovers, long plays and plays worth 3+ points">Big plays only</button>' +
             '<div class="zf-note" data-zf-note hidden></div><div class="zf-list" data-zfeed></div>' +
             '<button type="button" class="zf-rail" data-zn-feed aria-label="Expand the live feed" title="Expand the live feed">' + ICO.unfold + '<span>Live feed</span></button></aside>' +
         '</div></main>' +
@@ -10964,6 +11002,7 @@
     const z = ctx.zone, list = zoneView.querySelector('[data-zfeed]');
     if(!list) return;
     zoneView.querySelectorAll('[data-zf-mode]').forEach(function(b){ b.setAttribute('aria-pressed', String(b.getAttribute('data-zf-mode') === z.feedMode)); });
+    zoneView.querySelectorAll('.zn-feedph [data-zf-big]').forEach(function(b){ b.setAttribute('aria-pressed', String(!!z.feedBig)); });
     const note = zoneView.querySelector('[data-zf-note]');
     note.hidden = !z.feedDiff; note.textContent = z.feedDiff ? 'Play-by-play is unavailable right now: showing each starter’s point changes between refreshes.' : '';
     if(z.mode !== 'alt' || !zoneWide()) return;   // only built while the grid is on screen
@@ -11321,6 +11360,7 @@
     if(t.closest('[data-zn-mode]')){ zoneSetMode(ctx.zone.mode === 'alt' ? 'car' : 'alt'); return; }
     const fa = t.closest('[data-zf-all]');
     if(fa){ const id = fa.getAttribute('data-zf-all'); ctx.zone.feedAll[id] = !ctx.zone.feedAll[id]; zoneRender(false); return; }
+    if(t.closest('[data-zf-big]')){ ctx.zone.feedBig = !ctx.zone.feedBig; zSave('rv-zone-feedbig', ctx.zone.feedBig ? '1' : '0'); zoneRender(false); return; }
     const fm = t.closest('[data-zf-mode]');
     if(fm){ ctx.zone.feedMode = fm.getAttribute('data-zf-mode'); zSave('rv-zone-feedmode', ctx.zone.feedMode); zoneRender(false); return; }
     if(t.closest('[data-zn-feed]')){
@@ -11416,6 +11456,8 @@
       'The feed lists the plays that change your matchups: under each card, your players’ plays under you and your opponent’s under them; on desktop, the grid’s right column combines every league. It comes from Sleeper’s play-by-play, checked about every 30 seconds for the games your and your opponents’ players are in, only while those games are on and the app is on screen.',
       'Each play is scored with that league’s own settings: a player’s stats are added up play by play and each play is worth the change in their total. Bonuses and a team defense’s points-allowed tier are worked out as the game goes; anything Sleeper only settles at the end shows as one “Scoring adjustment” line, so the feed always adds up to Sleeper’s points.',
       'Plays are kept on this device for the current week (opening mid-game still shows what already happened) and cleared when the week rolls over. If Sleeper’s play-by-play is unavailable, the feed shows each starter’s point changes between refreshes instead, without play text, until it’s back.'] },
+    { t: 'Big plays', b: [
+      'Touchdowns, turnovers (interceptions, lost fumbles), gains of 40+ yards, field goals and any play worth 3 or more points to a player get a badge (<b>TD</b>, <b>INT</b>, <b>FUM</b>, <b>LONG 52</b>, <b>FG</b>, <b>BIG</b>) and a stronger edge. Tap <b>Big plays</b> above a feed to hide everything smaller, like a 2-yard run; tap it again for the full feed. The choice is remembered on this device.'] },
     { t: 'Impact colors', b: [
       'Color is always what a play does to you, never whose player it is: <b class="imp-t pos">green ▲</b> helps you (your player scores, or your opponent’s player loses points), <b class="imp-t neg">red ▼</b> hurts you, <b class="imp-t mix">amber</b> is mixed (the player is for you in one league and against you in another), gray is no change. A bigger swing, like a touchdown, has a stronger tint. Signs and arrows are always there too.'] },
     { t: 'MINE, OPP and multi-league chips', b: [
