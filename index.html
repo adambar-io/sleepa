@@ -2477,6 +2477,8 @@
   .zn-entry svg{ width: 18px; height: 18px; color: var(--accent); flex-shrink: 0; }
   .zn-entry small{ margin-left: auto; font-size: 11.5px; font-weight: 500; color: var(--text-3); }
   .zn-entry:active{ transform: scale(.985); }
+  .side-zone{ margin: 0; background: var(--surface); box-shadow: var(--shadow); border-radius: var(--radius); padding: 11px 12px; transition: background .15s var(--ease); }
+  .side-zone:hover{ background: var(--surface-2); }
   .zn-set-btns{ display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
   .set-card .zn-set-btns .quiet-btn{ margin-top: 0; }
   /* ============ Sleepa Zone: live feed (Phase 2) ============ */
@@ -2790,6 +2792,7 @@
 <div class="shell" id="roster-screen" style="display:none;">
   <aside class="side">
     <div class="brand" data-home role="button" tabindex="0" aria-label="sleepa: go to your lineup"><svg class="brand-mark" viewBox="0 0 200 200" aria-hidden="true"><use href="#sleepa-mark"/></svg><span class="wordmark">sleepa</span></div>
+    <button type="button" class="zn-entry side-zone" data-zone-open title="Every league at once"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg><span data-zone-name>Sleepa Zone</span><small>all leagues</small></button>
     <div class="league-switch">
       <button type="button" class="league-card" id="league-card" aria-haspopup="true" aria-expanded="false" title="Switch league">
         <span class="league-av"></span><div class="league-txt"><b id="team-name">—</b><span><span id="league-name">—</span> · <span id="team-record"></span></span></div>
