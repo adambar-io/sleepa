@@ -1851,6 +1851,65 @@
   @media (max-width: 1023px){ .h2h-tray{ bottom: calc(100px + env(safe-area-inset-bottom)); } body.no-scroll .h2h-tray{ bottom: calc(14px + env(safe-area-inset-bottom)); } }
   @media (max-width: 420px){ .h2h-go{ padding: 0 12px; } .h2h-tray{ gap: 5px; padding: 6px; } .h2h-slot{ padding-right: 8px; gap: 5px; } .h2h-tav{ width: 28px; height: 28px; } }
   .h2h{ max-width: 760px; margin: 0 auto; }
+  .ss-tmsg{ flex: 1; min-width: 0; padding: 0 10px; font-size: 13.5px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ss-tmsg b{ color: var(--text); }
+  .ss-tx{ flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%; background: none; color: var(--text-3); font-size: 14px; padding: 0; }
+  .nav-btn, .tab-btn{ position: relative; }
+  .nav-badge{ position: absolute; top: 4px; right: 6px; min-width: 17px; height: 17px; padding: 0 5px; border-radius: 999px; background: var(--accent); color: var(--on-accent); font-size: 10.5px; font-weight: 800; line-height: 17px; text-align: center; box-sizing: border-box; }
+  .nav-btn .nav-badge{ top: 50%; right: 10px; transform: translateY(-50%); }
+  .tab-btn .nav-badge{ top: 2px; right: calc(50% - 22px); }
+  .cmp-hub{ align-items: center; gap: 10px; flex-wrap: wrap; }
+  .cmp-back{ min-height: 36px; padding: 0 14px; border-radius: 999px; background: var(--surface-2); color: var(--text); font-weight: 600; font-size: 13px; }
+  .cmp-back[hidden]{ display: none; }
+  .ss{ max-width: 900px; }
+  .ss-pick{ padding: 12px 14px; margin-bottom: 12px; }
+  .ss-chips{ display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .ss-chip{ position: relative; display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 12px 0 4px; border-radius: 999px; background: var(--surface-2); color: var(--text); font-weight: 600; font-size: 13.5px; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--pc) 55%, transparent); }
+  .ss-chip i{ font-style: normal; color: var(--text-3); margin-left: 2px; }
+  .ss-cav{ width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
+  .ss-empty{ font-size: 13px; color: var(--text-2); } .ss-empty b{ color: var(--text); font-weight: 800; font-size: 11.5px; }
+  .ss-clear{ margin-left: auto; min-height: 30px; padding: 0 12px; border-radius: 999px; background: none; color: var(--text-3); font-size: 12.5px; }
+  .ss-search{ margin-top: 10px; }
+  .ss-hits{ display: grid; gap: 2px; margin-top: 6px; }
+  .ss-hits:empty{ display: none; }
+  .ss-hit{ display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 10px; background: none; color: var(--text); text-align: left; }
+  .ss-hit:hover{ background: var(--surface-2); }
+  .ss-hit b{ display: block; font-size: 14px; } .ss-hit small{ font-size: 11.5px; color: var(--text-3); }
+  .ss-hav{ width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+  .ss-hp{ font-weight: 700; font-variant-numeric: tabular-nums; }
+  .ss-none{ font-size: 12.5px; color: var(--text-3); padding: 6px 8px; }
+  .ss-mine{ margin-top: 10px; }
+  .ss-mine-row{ display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 6px 0 2px; }
+  .ss-mchip{ position: relative; flex: none; height: 32px; padding: 0 10px 0 12px; border-radius: 999px; background: var(--surface-2); color: var(--text); font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; }
+  .ss-mchip::before{ content: ''; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px; border-radius: 0 3px 3px 0; background: var(--pc); }
+  .ss-mchip b{ font-size: 10px; color: var(--text-3); margin-right: 2px; }
+  .ss-verdict{ padding: 14px 16px; margin-bottom: 12px; border-radius: var(--radius-lg); background: color-mix(in srgb, var(--accent) 9%, var(--surface)); }
+  .ss-vt{ font-size: 17px; line-height: 1.4; margin-top: 4px; } .ss-vt b{ font-weight: 750; }
+  .ss-gap{ color: var(--accent); font-weight: 800; font-variant-numeric: tabular-nums; }
+  .ss-vn{ font-size: 12px; color: var(--text-3); margin-top: 6px; }
+  .ss-bar{ display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .ss-table{ padding: 6px 12px 10px; overflow-x: auto; }
+  .ss-row{ display: grid; grid-template-columns: minmax(96px, 1.1fr) repeat(var(--n), minmax(92px, 1fr)); align-items: center; gap: 8px; padding: 8px 0; border-top: 1px solid var(--hair); }
+  .ss-row.ss-heads{ border-top: none; align-items: end; }
+  .ss-lbl{ font-size: 12px; color: var(--text-3); font-weight: 600; }
+  .ss-v{ text-align: center; font-size: 14px; font-variant-numeric: tabular-nums; color: var(--text-2); }
+  .ss-v small{ display: block; font-size: 11px; color: var(--text-3); }
+  .ss-v.win{ color: var(--accent); font-weight: 750; }
+  .ss-head{ display: grid; justify-items: center; gap: 6px; text-align: center; min-width: 0; }
+  .ss-hd{ display: grid; justify-items: center; gap: 2px; background: none; color: var(--text); padding: 0; min-width: 0; max-width: 100%; }
+  .ss-hd b{ font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; } .ss-hd small{ font-size: 11px; color: var(--text-3); }
+  .ss-hav2{ width: 52px; height: 52px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2px var(--pc); }
+  .ss-tag{ font-size: 10px; font-weight: 800; letter-spacing: .06em; padding: 3px 8px; border-radius: 6px; }
+  .ss-tag.start{ color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); }
+  .ss-tag.sit{ color: var(--text-3); background: var(--surface-2); }
+  .ss-cards{ display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-bottom: 12px; }
+  .ss-cards .cd{ --cdw: clamp(140px, 42vw, 200px); cursor: pointer; }
+  @media (max-width: 600px){
+    .ss-row{ grid-template-columns: 70px repeat(var(--n), minmax(68px, 1fr)); gap: 4px; }
+    .ss-lbl{ font-size: 11px; } .ss-v{ font-size: 13px; }
+    .ss-hav2{ width: 40px; height: 40px; }
+    .ss-table{ padding: 4px 8px 8px; }
+  }
   .h2h-head{ display: grid; grid-template-columns: 1fr auto 1fr; align-items: start; gap: 10px; margin-bottom: 14px; }
   .h2h-who{ display: grid; justify-items: center; text-align: center; gap: 4px; padding: 16px 10px; border-radius: var(--radius);
     background: linear-gradient(160deg, color-mix(in srgb, var(--team) 30%, transparent), transparent 70%), var(--surface); cursor: pointer; min-width: 0; }
@@ -2962,9 +3021,10 @@
         </section>
 
         <section class="view" id="compare-view" style="display:none;">
-          <div class="cmp-hub"><div class="wk-seg cmp-tabs" role="group" aria-label="Compare">
-            <button type="button" data-cmp-sec="trades">Trades</button><button type="button" data-cmp-sec="lineup">Lineup changes</button>
+          <div class="cmp-hub"><button type="button" class="cmp-back" data-cmp-back hidden>‹ Back</button><div class="wk-seg cmp-tabs" role="group" aria-label="Compare">
+            <button type="button" data-cmp-sec="ss">Start / Sit</button><button type="button" data-cmp-sec="trades">Trades</button><button type="button" data-cmp-sec="lineup">Lineup changes</button>
           </div></div>
+          <div class="cmp-sec" id="cmp-ss" data-sec="ss"></div>
           <div class="cmp-sec" id="cmp-trades" data-sec="trades"></div>
           <div class="cmp-sec" id="cmp-lineup" data-sec="lineup">
           <div class="cmp-empty" id="cmp-empty" style="display:none;">No changes yet. Swap players on the Lineup tab and they'll show up here, side by side.</div>
@@ -5655,7 +5715,7 @@
           '<button type="button" class="tr-info" data-open="' + escapeHTML(pid) + '" aria-label="' + escapeHTML(playerName(p)) + ': full details">›</button></div>';
       }).join('') || '<div class="empty-state">No players.</div>';
     };
-    const r = tradeResult(), any = r.give.length || r.get.length;
+    const r = tradeResult(), any = r.give.length && r.get.length;   // a trade needs players on both sides (no giveaways)
     const perWk = function(k){ return r.weeks.length ? r.weeks.reduce(function(a, x){ return a + x[k]; }, 0) / r.weeks.length : 0; };   // unweighted, even with playoffs 2×
     const sendMine = byRos(r.give), sendTheirs = byRos(r.get);
     // what's moving: list cells or trading cards
@@ -5693,7 +5753,7 @@
     };
     const rosterNotes = moves(r.me, 'You').concat(moves(r.them, 'They'));
     const mktThem = r.fcGet && r.fcGive ? r.fcGive.v - r.fcGet.v : null;
-    const board = !any ? '<p class="tr-intro">Tick players on each side to see the numbers.</p>' :
+    const board = !any ? '<p class="tr-intro">' + (r.give.length || r.get.length ? 'A trade needs players on both sides: tick at least one player you get and one you send.' : 'Tick players on each side to see the numbers.') + '</p>' :
       '<div class="card tb-board-card">' +
         '<div class="tb-board"><div class="tb-side"><span class="eyebrow">Your lineup</span><b class="tb-num' + tone(r.me.d) + '">' + signed(r.me.d) + '</b><span class="tb-sub">' + signed(perWk('d')) + ' per week · playoffs ' + signed(r.playoffs) + '</span></div>' +
           '<div class="tb-vs">vs</div>' +
@@ -6579,10 +6639,21 @@
   }
 
   // ---- Compare: one hub, a section per question (Trades, Lineup changes; Start / Sit and Team needs to come) ----
-  try{ ctx.cmpSec = localStorage.getItem('rv-cmp-sec') || 'trades'; }catch(e){ ctx.cmpSec = 'trades'; }
-  const CMP_SUB = { trades: 'What a trade does to both teams’ best lineups for the rest of the season.', lineup: 'Your Sleeper lineup next to your plan. Nothing is sent to Sleeper.' };
+  try{ ctx.cmpSec = localStorage.getItem('rv-cmp-sec') || 'ss'; ctx.ssView = localStorage.getItem('rv-ss-view') || 'list'; }catch(e){ ctx.cmpSec = 'ss'; }
+  const CMP_SUB = { ss: 'Who should start this week: what each player adds to your best lineup.', trades: 'What a trade does to both teams’ best lineups for the rest of the season.', lineup: 'Your Sleeper lineup next to your plan. Nothing is sent to Sleeper.' };
   function renderCompare(){
-    if(!CMP_SUB[ctx.cmpSec]) ctx.cmpSec = 'trades';
+    if(!CMP_SUB[ctx.cmpSec]) ctx.cmpSec = 'ss';
+    const back = document.querySelector('[data-cmp-back]');
+    if(back) back.hidden = !ctx.cmpReturn;
+    if(ctx.cmpSec === 'ss' && ctx.view === 'compare'){ els.pageSub.textContent = CMP_SUB.ss; document.querySelector('.top-actions').style.display = 'none'; }
+    if(ctx.cmpSec === 'ss'){
+      document.querySelectorAll('[data-cmp-sec]').forEach(function(b){ b.setAttribute('aria-pressed', String(b.getAttribute('data-cmp-sec') === 'ss')); });
+      document.querySelectorAll('#compare-view .cmp-sec').forEach(function(el){ el.hidden = el.getAttribute('data-sec') !== 'ss'; });
+      const h = document.getElementById('cmp-ss'), qf = document.activeElement && document.activeElement.id === 'ss-q';
+      h.innerHTML = ssHTML();
+      if(qf){ const q = document.getElementById('ss-q'); if(q){ q.focus(); q.setSelectionRange(q.value.length, q.value.length); } }
+      return;
+    }
     document.querySelectorAll('[data-cmp-sec]').forEach(function(b){ b.setAttribute('aria-pressed', String(b.getAttribute('data-cmp-sec') === ctx.cmpSec)); });
     document.querySelectorAll('#compare-view .cmp-sec').forEach(function(el){ el.hidden = el.getAttribute('data-sec') !== ctx.cmpSec; });
     if(ctx.view === 'compare'){ els.pageSub.textContent = CMP_SUB[ctx.cmpSec]; document.querySelector('.top-actions').style.display = ctx.cmpSec === 'lineup' ? '' : 'none'; }
@@ -6593,6 +6664,20 @@
   document.getElementById('compare-view').addEventListener('click', function(e){
     const sb = e.target.closest('[data-cmp-sec]');
     if(sb){ setCmpSec(sb.getAttribute('data-cmp-sec')); return; }
+    if(e.target.closest('[data-cmp-back]')){ cmpGoBack(); return; }
+    if(e.target.closest('#cmp-ss')){
+      const add = e.target.closest('[data-ss-add]');
+      if(add){ const pid = add.getAttribute('data-ss-add'); if(ctx.h2h.indexOf(pid) === -1){ if(ctx.h2h.length >= SS_MAX) ctx.h2h.shift(); ctx.h2h.push(pid); } ctx.ssQ = ''; syncVsButtons(); renderH2HTray(); renderCompare(); return; }
+      const rm = e.target.closest('[data-ss-remove]');
+      if(rm){ ctx.h2h = ctx.h2h.filter(function(x){ return x !== rm.getAttribute('data-ss-remove'); }); syncVsButtons(); renderH2HTray(); renderCompare(); return; }
+      if(e.target.closest('[data-ss-clear]')){ ctx.h2h = []; syncVsButtons(); renderH2HTray(); renderCompare(); return; }
+      const sv = e.target.closest('[data-ss-view]');
+      if(sv){ ctx.ssView = sv.getAttribute('data-ss-view'); try{ localStorage.setItem('rv-ss-view', ctx.ssView); }catch(err){} renderCompare(); return; }
+      if(e.target.closest('[data-ss-full]')){ const r = ssResult(ctx.h2h.filter(function(pid){ return ctx.players[pid]; })); if(r.rows.length >= 2) openMax({ kind: 'h2h', pids: [r.rows[0].pid, r.rows[1].pid] }, e.target); return; }
+      const op = e.target.closest('[data-open]');
+      if(op){ openMax({ kind: 'player', pid: op.getAttribute('data-open') }, op); }
+      return;
+    }
     if(!e.target.closest('#cmp-trades')) return;
     const po = e.target.closest('[data-trade-po]');
     if(po){ ctx.trade.po2x = po.getAttribute('data-trade-po') === '1'; try{ localStorage.setItem('rv-trade-po', ctx.trade.po2x ? '1' : '0'); }catch(err){} rerenderTrade(); return; }
@@ -6606,6 +6691,11 @@
     }
     const op = e.target.closest('[data-open]');
     if(op){ openMax({ kind: 'player', pid: op.getAttribute('data-open') }, op); }
+  });
+  document.getElementById('compare-view').addEventListener('input', function(e){
+    if(e.target.id !== 'ss-q') return;
+    ctx.ssQ = e.target.value;
+    const hits = document.getElementById('ss-hits'); if(hits) hits.innerHTML = ssSearchHTML(ctx.ssQ);   // just the results: the keyboard stays up
   });
   document.getElementById('compare-view').addEventListener('change', function(e){
     if(e.target.matches('[data-trade-team]')){ ctx.trade = Object.assign({}, ctx.trade, { team: Number(e.target.value) || null, get: [] }); rerenderTrade(); }
@@ -8288,6 +8378,7 @@
   }
   function setView(view){
     const changed = ctx.view !== view;
+    if(changed && ctx.view === 'compare' && view !== 'compare') ctx.cmpReturn = null;
     ctx.view = view;
     els.navBtns.forEach(function(t){
       if(t.getAttribute('data-view') === view) t.setAttribute('aria-current', 'page'); else t.removeAttribute('aria-current');
@@ -10059,14 +10150,16 @@
     return '<span class="dvp-chip ' + (i.early ? 'early' : i.tone) + '" title="' + escapeHTML(dvpSentence(i)) + '">' + dvpLabel(i, short) + (i.early && !short ? ' · ' + i.g + ' gm' + (i.g > 1 ? 's' : '') : '') + '</span>';
   }
 
-  // ---- head-to-head: pick any two players (VS buttons) and compare them stat by stat ----
-  // Selection lives in a tray pinned to the bottom of the screen; picking the second player opens the comparison.
+  // ---- Start / Sit (Compare): pick 2–4 players (VS buttons anywhere, search, or your roster) ----
+  // VS adds a player to ctx.h2h (up to SS_MAX) and shows a toast with a link to Compare → Start / Sit; there's no tray to
+  // clear. Opening Compare from the toast remembers where you were (ctx.cmpReturn) for the ‹ Back button.
   ctx.h2h = [];
+  const SS_MAX = 4;
   function lastName(pid){ const p = ctx.players[pid]; return p ? (p.last_name || playerName(p).split(' ').slice(-1)[0] || playerName(p)) : '?'; }
   function vsBtn(pid){
     const on = ctx.h2h.indexOf(pid) !== -1;
-    return '<button type="button" class="vs-btn' + (on ? ' on' : '') + '" data-vs="' + escapeHTML(pid) + '" aria-pressed="' + on + '" aria-label="Compare ' +
-      escapeHTML(playerName(ctx.players[pid])) + ' head-to-head" title="Compare head-to-head">VS</button>';
+    return '<button type="button" class="vs-btn' + (on ? ' on' : '') + '" data-vs="' + escapeHTML(pid) + '" aria-pressed="' + on + '" aria-label="' + (on ? 'Remove ' : 'Add ') +
+      escapeHTML(playerName(ctx.players[pid])) + (on ? ' from' : ' to') + ' Start / Sit" title="' + (on ? 'In Start / Sit: tap to remove' : 'Add to Start / Sit') + '">VS</button>';
   }
   function syncVsButtons(){
     document.querySelectorAll('[data-vs]').forEach(function(b){
@@ -10074,42 +10167,166 @@
       b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
     });
   }
-  function toggleH2H(pid, fromEl){
+  function toggleH2H(pid){
     if(!pid || !ctx.players[pid]) return;
-    const i = ctx.h2h.indexOf(pid);
-    if(i !== -1) ctx.h2h.splice(i, 1);
-    else if(ctx.h2h.length < 2) ctx.h2h.push(pid);
-    else ctx.h2h[1] = pid; // a third pick replaces the second
-    syncVsButtons(); renderH2HTray();
-    if(i === -1 && ctx.h2h.length === 2) openMax({ kind: 'h2h', pids: ctx.h2h.slice() }, fromEl);
+    const i = ctx.h2h.indexOf(pid), adding = i === -1;
+    if(!adding) ctx.h2h.splice(i, 1);
+    else { if(ctx.h2h.length >= SS_MAX) ctx.h2h.shift(); ctx.h2h.push(pid); }   // a fifth pick drops the oldest
+    syncVsButtons(); renderH2HTray(adding ? pid : null, !adding ? pid : null);
+    if(ctx.view === 'compare' && ctx.cmpSec === 'ss') renderCompare();
   }
-  function renderH2HTray(){
+  // The toast (bottom, a few seconds) and the count badge on the Compare tab.
+  function renderH2HTray(added, removed){
+    const n = ctx.h2h.length;
+    document.querySelectorAll('[data-view="compare"]').forEach(function(b){
+      let bd = b.querySelector('.nav-badge');
+      if(!n){ if(bd) bd.remove(); return; }
+      if(!bd){ bd = document.createElement('span'); bd.className = 'nav-badge'; b.appendChild(bd); }
+      bd.textContent = n; bd.setAttribute('aria-label', n + ' in Start / Sit');
+    });
     const t = document.getElementById('h2h-tray');
-    const sel = ctx.h2h;
-    t.hidden = !sel.length;
-    document.body.classList.toggle('has-tray', !!sel.length); // room at the bottom so the tray never hides the last row
-    if(!sel.length){ t.innerHTML = ''; return; }
-    const slot = function(pid){
-      if(!pid) return '<div class="h2h-hint">Tap <b>VS</b> on another player to compare</div>';
-      return '<button type="button" class="h2h-slot" data-h2h-remove="' + escapeHTML(pid) + '" aria-label="Remove ' + escapeHTML(playerName(ctx.players[pid])) + '">' +
-        avatarTag(pid, 'h2h-tav') + '<span class="h2h-tn">' + escapeHTML(lastName(pid)) + '</span><span class="h2h-tx" aria-hidden="true">×</span></button>';
-    };
-    t.innerHTML = sel.length < 2 ? slot(sel[0]) + slot(null)
-      : slot(sel[0]) + '<span class="h2h-tvs">vs</span>' + slot(sel[1]) + '<button type="button" class="h2h-go">Compare</button>';
+    document.body.classList.remove('has-tray');
+    if(!added && !removed){ t.hidden = true; return; }
+    const who = escapeHTML(lastName(added || removed));
+    t.innerHTML = '<span class="ss-tmsg">' + (added ? 'Added <b>' + who + '</b>' : 'Removed <b>' + who + '</b>') + '</span>' +
+      (n && !(ctx.view === 'compare' && ctx.cmpSec === 'ss') ? '<button type="button" class="h2h-go" data-ss-open>Start / Sit (' + n + ') ›</button>' : '') +
+      '<button type="button" class="ss-tx" data-ss-toast-x aria-label="Dismiss">✕</button>';
+    t.hidden = false; t.style.animation = 'none'; void t.offsetWidth; t.style.animation = '';
+    clearTimeout(t._t); t._t = setTimeout(function(){ t.hidden = true; }, 5000);
+  }
+  // Open Compare → Start / Sit, remembering the screen (and scroll) to come back to.
+  function openStartSit(){
+    if(ctx.view !== 'compare') ctx.cmpReturn = { view: ctx.view, y: window.scrollY, pane: document.querySelector('.pane-main') ? document.querySelector('.pane-main').scrollTop : 0 };
+    if(typeof maxOpen === 'function' && maxOpen()) closeMax();
+    ctx.cmpSec = 'ss'; setView('compare');
+    document.getElementById('h2h-tray').hidden = true;
+  }
+  function cmpGoBack(){
+    const r = ctx.cmpReturn;
+    ctx.cmpReturn = null;
+    if(!r){ renderCompare(); return; }
+    setView(r.view);
+    requestAnimationFrame(function(){ window.scrollTo(0, r.y); const pm = document.querySelector('.pane-main'); if(pm) pm.scrollTop = r.pane; });
   }
   document.getElementById('h2h-tray').addEventListener('click', function(e){
-    const rm = e.target.closest('[data-h2h-remove]');
-    if(rm){ toggleH2H(rm.getAttribute('data-h2h-remove')); return; }
-    const go = e.target.closest('.h2h-go');
-    if(go && ctx.h2h.length === 2) openMax({ kind: 'h2h', pids: ctx.h2h.slice() }, go);
+    if(e.target.closest('[data-ss-open]')){ openStartSit(); return; }
+    if(e.target.closest('[data-ss-toast-x]')) document.getElementById('h2h-tray').hidden = true;
   });
   // Capture phase: a VS button inside a clickable row/card must not also open that row.
   document.addEventListener('click', function(e){
     const b = e.target.closest && e.target.closest('[data-vs]');
     if(!b) return;
     e.preventDefault(); e.stopPropagation();
-    toggleH2H(b.getAttribute('data-vs'), b);
+    toggleH2H(b.getAttribute('data-vs'));
   }, true);
+
+  // The verdict: my roster without the candidates, plus each candidate on his own (what he adds to my best lineup this
+  // week), and all of them together (who actually starts). Players not on my team are valued as if they were.
+  function ssResult(pids){
+    const sc = (ctx.league && ctx.league.scoring_settings) || {}, w = ctx.week;
+    const base = rosterActive(ctx.myRoster).filter(function(pid){ return pids.indexOf(pid) === -1; });
+    const L = function(list){ return bestLineup(list, ctx.rosterPositions, sc, w); };
+    const b0 = L(base).total, all = L(base.concat(pids));
+    const starts = new Set(all.slots.map(function(x){ return x.pid; }).filter(Boolean));
+    const rows = pids.map(function(pid){
+      const one = L(base.concat([pid]));
+      const slot = one.slots.find(function(x){ return x.pid === pid; });
+      return { pid: pid, add: one.total - b0, start: starts.has(pid), slot: slot ? slot.slot : null, pts: lineupPts(pid, w, sc) };
+    }).sort(function(a, b){ return b.add - a.add || b.pts - a.pts; });
+    return { rows: rows, starts: rows.filter(function(r){ return r.start; }), sits: rows.filter(function(r){ return !r.start; }) };
+  }
+  function ssAllPlayers(){
+    if(plMemo.ssAll) return plMemo.ssAll;
+    const lp = leaguePositions();
+    return (plMemo.ssAll = Object.keys(ctx.players).filter(function(pid){ const p = ctx.players[pid]; return p.team && lp.indexOf(posGroup(pid)) !== -1; })
+      .sort(function(a, b){ return (ctx.projections[b] || 0) - (ctx.projections[a] || 0); }));
+  }
+  function ssSearchHTML(q){
+    const nq = normName(q || '').trim();
+    if(!nq) return '';
+    const words = nq.split(/\s+/);
+    const hits = ssAllPlayers().filter(function(pid){ const k = searchKey(pid); return ctx.h2h.indexOf(pid) === -1 && words.every(function(w){ return k.indexOf(' ' + w) !== -1; }); }).slice(0, 8);
+    return hits.map(function(pid){
+      const p = ctx.players[pid];
+      return '<button type="button" class="ss-hit" data-ss-add="' + escapeHTML(pid) + '">' + avatarTag(pid, 'ss-hav') + '<span><b>' + escapeHTML(playerName(p)) + '</b><small>' + escapeHTML(eligLabel(pid)) + ' · ' + escapeHTML(p.team || 'FA') + (isMine(pid) ? ' · yours' : isAvailable(pid) ? ' · available' : '') + '</small></span><span class="ss-hp">' + fmtPts(ctx.projections[pid]) + '</span></button>';
+    }).join('') || '<div class="ss-none">No players match.</div>';
+  }
+  function ssHTML(){
+    const pids = ctx.h2h.filter(function(pid){ return ctx.players[pid]; });
+    const view = ctx.ssView === 'cards' ? 'cards' : 'list';
+    const chips = pids.map(function(pid){
+      return '<button type="button" class="ss-chip" data-ss-remove="' + escapeHTML(pid) + '" style="--pc:' + posColor(posGroup(pid)) + '" aria-label="Remove ' + escapeHTML(playerName(ctx.players[pid])) + '">' + avatarTag(pid, 'ss-cav') + '<span>' + escapeHTML(lastName(pid)) + '</span><i aria-hidden="true">×</i></button>';
+    }).join('');
+    const mine = rosterActive(ctx.myRoster).filter(function(pid){ return pids.indexOf(pid) === -1; }).sort(function(a, b){ return (ctx.projections[b] || 0) - (ctx.projections[a] || 0); });
+    const pickers = '<div class="card ss-pick">' +
+      '<div class="ss-chips">' + (chips || '<span class="ss-empty">Pick 2–' + SS_MAX + ' players: tap <b>VS</b> on any player, search, or tap one of yours below.</span>') +
+        (pids.length ? '<button type="button" class="ss-clear" data-ss-clear>Clear</button>' : '') + '</div>' +
+      (pids.length < SS_MAX ? '<label class="pl-search ss-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg><input id="ss-q" type="search" placeholder="Add any player by name" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" value="' + escapeHTML(ctx.ssQ || '') + '"></label><div class="ss-hits" id="ss-hits">' + ssSearchHTML(ctx.ssQ) + '</div>' +
+        '<div class="ss-mine"><span class="eyebrow">Your players</span><div class="ss-mine-row">' + mine.map(function(pid){ return '<button type="button" class="ss-mchip" data-ss-add="' + escapeHTML(pid) + '" style="--pc:' + posColor(posGroup(pid)) + '"><b>' + escapeHTML(posGroup(pid)) + '</b> ' + escapeHTML(lastName(pid)) + '</button>'; }).join('') + '</div></div>' : '') +
+      '</div>';
+    if(pids.length < 2) return '<div class="ss">' + pickers + '</div>';
+    const r = ssResult(pids), top = r.rows[0], next = r.rows[1];
+    const nm = function(pid){ return escapeHTML(playerName(ctx.players[pid])); };
+    // the answer first: who starts (all of them may fit your lineup), and by how much
+    let verdict;
+    if(!r.sits.length) verdict = '<b>Start them all.</b> Every one of them makes your best lineup this week.';
+    else if(!r.starts.length) verdict = '<b>Start none of them.</b> Your current starters project higher than all of them.';
+    else{
+      const firstSit = r.sits[0], lastStart = r.starts[r.starts.length - 1];
+      verdict = '<b>Start ' + r.starts.map(function(x){ return nm(x.pid); }).join(' and ') + '</b>' +
+        (r.starts.length === 1 && firstSit ? ' over ' + nm(firstSit.pid) + ': <span class="ss-gap">+' + Math.max(0, lastStart.add - firstSit.add).toFixed(2) + '</span> to your lineup' : ' · sit ' + r.sits.map(function(x){ return nm(x.pid); }).join(', '));
+    }
+    const notMine = pids.filter(function(pid){ return !isMine(pid); });
+    // side-by-side rows: the better value in each row stands out
+    const cols = r.rows.map(function(x){ return x.pid; });
+    const hasBest = function(vals, dir){
+      const nums = vals.filter(function(v){ return typeof v === 'number'; });
+      if(nums.length < 2) return function(){ return false; };
+      const best = dir === 'low' ? Math.min.apply(null, nums) : Math.max.apply(null, nums), ties = nums.filter(function(v){ return Math.abs(v - best) < 0.005; }).length;
+      return function(v){ return typeof v === 'number' && Math.abs(v - best) < 0.005 && ties < nums.length; };
+    };
+    const row = function(label, vals, fmt, dir){
+      const win = dir ? hasBest(vals, dir) : function(){ return false; };
+      return '<div class="ss-row"><div class="ss-lbl">' + label + '</div>' + vals.map(function(v){ return '<div class="ss-v' + (win(v) ? ' win' : '') + '">' + (v === null || v === undefined || (typeof v === 'number' && isNaN(v)) ? '—' : fmt ? fmt(v) : v) + '</div>'; }).join('') + '</div>';
+    };
+    const rng = function(pid){ const g = weekRange(pid); return g && g.ok ? Math.round(g.floor) + '–' + Math.round(g.ceil) : null; };
+    const kick = function(pid){ const p = ctx.players[pid], k = kickoff(p.team, ctx.week), m = matchup(p.team, ctx.week); return m && m.bye ? '<span class="opp bye">BYE</span>' : (m ? escapeHTML(m.text) : '—') + (k ? '<small>' + escapeHTML(zKickShort(k)) + (isLocked(pid) ? ' · started' : '') + '</small>' : ''); };
+    const status = function(pid){ const st = effectiveStatus(pid); return st && st !== 'Healthy' ? injuryChip(st) : '<span class="dim">Healthy</span>'; };
+    const rank = function(pid){ const c = ranksOf(pid).w.cons; return typeof c === 'number' ? c : null; };
+    const heads = cols.map(function(pid){
+      const x = r.rows.find(function(y){ return y.pid === pid; }), p = ctx.players[pid];
+      return '<div class="ss-head" style="--pc:' + posColor(posGroup(pid)) + '"><button type="button" class="ss-hd" data-open="' + escapeHTML(pid) + '">' + avatarTag(pid, 'ss-hav2') +
+        '<b>' + escapeHTML(lastName(pid)) + '</b><small>' + escapeHTML(eligLabel(pid)) + ' · ' + escapeHTML(p.team || 'FA') + '</small></button>' +
+        '<span class="ss-tag ' + (x.start ? 'start' : 'sit') + '">' + (x.start ? 'START' + (x.slot ? ' · ' + escapeHTML(slotShort(x.slot)) : '') : 'SIT') + '</span></div>';
+    }).join('');
+    const table = '<div class="card ss-table" style="--n:' + cols.length + '"><div class="ss-row ss-heads"><div class="ss-lbl"></div>' + heads + '</div>' +
+      row('Adds to your lineup', cols.map(function(pid){ return r.rows.find(function(y){ return y.pid === pid; }).add; }), function(v){ return '+' + v.toFixed(2); }, 'high') +
+      row('Projection', cols.map(function(pid){ return ctx.projections[pid]; }), fmtPts, 'high') +
+      row('Rank this week', cols.map(rank), function(v){ return '#' + v; }, 'low') +
+      row('Matchup', cols.map(function(pid){ return dvpChipHTML(pid) || '—'; })) +
+      row('Game', cols.map(kick)) +
+      row('Last 3 avg', cols.map(function(pid){ return hist(pid) && hist(pid).length ? last3Avg(pid) : null; }), fmtPts, 'high') +
+      row('Season avg', cols.map(seasonAvgPts), fmtPts, 'high') +
+      row('Typical week', cols.map(rng)) +
+      row('Snap share', cols.map(function(pid){ return seasonShare(pid, 's'); }), pct, 'high') +
+      row('Status', cols.map(status)) +
+    '</div>';
+    const cards = '<div class="ss-cards">' + cols.map(function(pid){
+      const x = r.rows.find(function(y){ return y.pid === pid; }), p = ctx.players[pid], i = dvpInfo(pid), tier = x.start ? (x === top ? 'holo' : 'gold') : 'base';
+      return '<div class="ss-cardwrap"><div class="cd tc-card t-' + tier + '" data-open="' + escapeHTML(pid) + '" role="button" tabindex="0" style="--pc:' + posColor(posGroup(pid)) + (i ? ';--mc:' + CD_TONE[i.tone] : '') + '" aria-label="' + escapeHTML(playerName(p)) + '">' +
+        '<div class="cd-in">' + cdFrontHTML({ name: x.start ? 'START' + (x.slot ? ' · ' + slotShort(x.slot) : '') : 'SIT' }, pid, tier, cols.indexOf(pid) + 1, { nums: [[fmtPts(ctx.projections[pid]), 'PROJ'], ['+' + x.add.toFixed(1), 'ADDS']] }) + '</div></div></div>';
+    }).join('') + '</div>';
+    const missing = cols.filter(function(pid){ return !hist(pid); });
+    if(missing.length && !ssHTML.pending){ ssHTML.pending = true; Promise.all(missing.map(ensureHistory)).then(function(){ ssHTML.pending = false; if(ctx.view === 'compare' && ctx.cmpSec === 'ss') renderCompare(); }); }
+    return '<div class="ss">' + pickers +
+      '<div class="card ss-verdict"><div class="eyebrow">This week · week ' + ctx.week + '</div><div class="ss-vt">' + verdict + '</div>' +
+        (notMine.length ? '<div class="ss-vn">' + notMine.map(nm).join(', ') + (notMine.length === 1 ? ' isn’t' : ' aren’t') + ' on your team: valued as if you had ' + (notMine.length === 1 ? 'him' : 'them') + '.</div>' : '') + '</div>' +
+      '<div class="ss-bar"><div class="wk-seg" role="group" aria-label="View"><button type="button" data-ss-view="list" aria-pressed="' + (view === 'list') + '">Table</button><button type="button" data-ss-view="cards" aria-pressed="' + (view === 'cards') + '">Cards</button></div>' +
+        '<button type="button" class="quiet-btn" data-ss-full>Full stats' + (cols.length > 2 ? ' (top 2)' : '') + ' ›</button></div>' +
+      (view === 'cards' ? cards : table) +
+      '<p class="tr-note">“Adds to your lineup” = your best lineup this week with that player minus without any of them, from Sleeper’s projections in your league’s scoring (most restrictive slots first, so a flex choice across positions is handled). START / SIT = your best lineup with all of them available.</p>' +
+    '</div>';
+  }
 
   // Which way is better. Lower wins for mistakes and things a defense gives up; DEF takeaways (int, sack, fum_rec)
   // are separate keys from the passer's pass_int / pass_sack, so they stay "higher is better".

@@ -41,7 +41,7 @@ A single-file local web app for viewing a Sleeper fantasy football roster with c
 - **Compare hub + trade rework (plan agreed Oct 5 2026)**. Steps:
   1. **Done**: `lineupDelta` groundwork plus trade fixes.
   2. **Done**: Compare hub, with the builder moved in.
-  3. Start / Sit and the VS → Compare flow. VS adds the player and shows a toast "Added X · Compare (n) ›"; opening Compare from it shows a ‹ Back to the previous screen; a badge on the tab; the bottom tray is retired.
+  3. **Done (Oct 5 2026)**: Start / Sit and the VS → Compare flow (details under "Start / Sit" below).
   4. Team needs grid.
   5. Trade Finder: 1-for-1 and 2-for-1 across all teams, with a team filter. Ranked by my gain, boosted when their gain is high (need/surplus). Reason tags.
   6. 2-for-2 behind "Search deeper", plus copy-trade-summary text.
@@ -61,6 +61,12 @@ A single-file local web app for viewing a Sleeper fantasy football roster with c
   - Cards: `tradeCardHTML` reuses the Huddle card front (`cdFrontHTML(…, opts)`: `noLock`, `nums` = ROS points + FantasyCalc value). Tier comes from the ROS positional rank (`rosRank`: top 3 holo, 12 gold, 24 silver).
   - Compare sections: `ctx.cmpSec` (`rv-cmp-sec`): Trades, and Lineup changes (the old plan-vs-Sleeper diff, `renderLineupDiff`; the Lineup page's Compare button and the Huddle's "See them" open it).
   - Verified in BATTLEBALL: a 1-for-1 matched an independent sum of `bestLineup` differences (79.95). In a 2-for-1, my freed spot was filled with Malik Willis and their extra player meant dropping Ventrell Miller. Giving away an IR player frees no spot.
+- **Start / Sit (Compare, Oct 5 2026)** (`ssHTML`, `ssResult`, `#cmp-ss`; the default Compare section):
+  - **Picking players:** `ctx.h2h` (kept name) holds up to `SS_MAX` (4); a fifth pick drops the oldest. A VS button anywhere toggles a player: the bottom tray is now a 5-second toast ("Added X · Start / Sit (n) ›"), and the Compare nav / tab buttons get a count badge (`.nav-badge`). You can also add players by name search (`ssSearchHTML`, which updates only the results so the keyboard stays up) or with "Your players" chips.
+  - **Back:** `openStartSit()` remembers the screen and scroll position (`ctx.cmpReturn`) for the ‹ Back button; leaving Compare any other way forgets it.
+  - **Verdict:** base = my active roster minus the candidates; each candidate's "adds to your lineup" = bestLineup(base + him) − bestLineup(base) this week; START / SIT comes from bestLineup(base + all of them). Players not on my team are valued as if they were mine.
+  - **Views:** Table (adds, projection, consensus rank this week, matchup, game, L3, season average, typical week, snap share, status; the best value in each row is highlighted) or Cards (Huddle card fronts showing START · slot or SIT). "Full stats ›" opens the old head-to-head (`h2hHTML`) for the top two.
+  - **Verified:** the adds matched a brute-force optimum, e.g. three BATTLEBALL WRs: St. Brown +15.60 and Adams +11.03 start, Nabers +9.86 sits.
 - **Lineup check in Sleepa Zone (Oct 5 2026)** (`zLineupCheck`, `zLcHTML`, `[data-lc]` in each card and grid tile): my Sleeper lineup vs `bestLineup` with that league's slots, scoring and Zone projections (`zProj`).
   - A starter whose game has started is locked in his slot (`opts.fixed`), and a locked bench player can't come in. Ruled-out starters (`cantPlay`), byes and empty slots score zero and are flagged.
   - It shows "✓ Best lineup set", or "9.25 below your best lineup · Bye: R. Rice", with Start / Sit names; gaps under `LC_MIN` (0.05) are ignored. Nothing is shown once every starter is locked.
