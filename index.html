@@ -2551,7 +2551,12 @@
   .zn-team{ display: flex; align-items: center; gap: 7px; min-width: 0; max-width: 100%; font-size: 13px; color: var(--text-2); font-weight: 600; }
   .zn-side.them .zn-team{ flex-direction: row-reverse; }
   .zn-team span{ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .zn-team img{ width: 24px; height: 24px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: var(--surface-2); }
+  .zn-team .t-av{ width: 26px; height: 26px; } .zn-team .t-av b{ font-size: 9.5px; }
+  .t-av.zav-xs{ width: 20px; height: 20px; } .t-av.zav-xs b{ font-size: 8px; }
+  .zt-side small{ display: inline-flex !important; align-items: center; gap: 6px; }
+  .zt-side small span{ min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .zt-side.them small{ flex-direction: row-reverse; }
+  .zt-h{ display: flex; align-items: center; gap: 7px; } .zt-h span{ min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .zn-num{ font-size: clamp(30px, 10cqw, 46px); font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; font-variant-numeric: tabular-nums; color: var(--text-2); margin-top: 4px; transition: color .4s; }
   .zn-side.lead .zn-num{ color: var(--text); }
   .zn-num.proj{ font-weight: 600; color: var(--text-3); }
@@ -12483,7 +12488,13 @@
     if(typeof v !== 'number' || isNaN(v)){ el._countRun = (el._countRun || 0) + 1; el.textContent = '—'; return; }
     if(anim && el.textContent !== '—') countTo(el, v, 420); else { el._countRun = (el._countRun || 0) + 1; el.textContent = v.toFixed(2); }
   }
-  function zTeamHTML(t){ return t ? (t.av ? '<img src="' + escapeHTML(t.av) + '" alt="" loading="lazy" onerror="this.remove()">' : '') + '<span>' + escapeHTML(t.name) + '</span>' : ''; }
+  // a fantasy team's picture: the manager's Sleeper avatar, or the team's initials (same look as Compare's teamAvHTML)
+  function zAvHTML(t, cls){
+    if(!t) return '';
+    const ini = String(t.name || '').replace(/[^A-Za-z0-9 ]/g, '').split(/s+/).filter(Boolean).slice(0, 2).map(function(w){ return w.charAt(0).toUpperCase(); }).join('') || '?';
+    return '<span class="t-av ' + (cls || '') + '" aria-hidden="true"><b>' + escapeHTML(ini) + '</b>' + (t.av ? '<img src="' + escapeHTML(t.av) + '" alt="" loading="lazy" onerror="this.remove()">' : '') + '</span>';
+  }
+  function zTeamHTML(t){ return t ? zAvHTML(t, 'zav') + '<span>' + escapeHTML(t.name) + '</span>' : ''; }
   function zoneRender(anim){
     const z = ctx.zone;
     if(!z.built) return;
@@ -12529,7 +12540,8 @@
       const n = side === 'me' ? a : b, t = side === 'me' ? M.me : M.oppTeam;
       const cardTm = card.querySelector('[data-tm="' + side + '"]'), html = side === 'opp' && !M.opp && M.kind === 'ok' ? '<span>No opponent</span>' : zTeamHTML(t);
       if(cardTm.innerHTML !== html) cardTm.innerHTML = html;
-      tile.querySelector('[data-tm="' + side + '"]').textContent = side === 'opp' && !M.opp ? (M.kind === 'ok' ? 'No opponent' : '') : (t ? t.name : '');
+      const tileTm = tile.querySelector('[data-tm="' + side + '"]'), th = side === 'opp' && !M.opp ? (M.kind === 'ok' ? '<span>No opponent</span>' : '') : t ? zAvHTML(t, 'zav-xs') + '<span>' + escapeHTML(t.name) + '</span>' : '';
+      if(tileTm._h !== th){ tileTm.innerHTML = th; tileTm._h = th; }
       [card.querySelector('[data-n="' + side + '"]'), tile.querySelector('[data-n="' + side + '"]')].forEach(function(el){
         el.classList.toggle('proj', !!(n && n.kind === 'proj'));
         zSetNum(el, n ? n.v : NaN, anim && same);
@@ -12575,7 +12587,7 @@
       cb.setAttribute('aria-label', (hide ? 'Show ' : 'Hide ') + L.name + ' players'); cb.title = hide ? 'Show players' : 'Hide players';
       if(hide){ set('[data-compact]', ''); set('[data-full]', ''); }
       else if(detailed){
-        const col = function(t, rows){ return '<div class="zt-col"><div class="zt-h">' + escapeHTML(t ? t.name : '') + '</div><div class="zg-rows">' + zRichHTML(rows, M.week, L.id) + '</div></div>'; };
+        const col = function(t, rows){ return '<div class="zt-col"><div class="zt-h">' + zAvHTML(t, 'zav-xs') + '<span>' + escapeHTML(t ? t.name : '') + '</span></div><div class="zg-rows">' + zRichHTML(rows, M.week, L.id) + '</div></div>'; };
         set('[data-full]', col(M.me, M.my.rows) + (M.opp ? col(M.oppTeam, M.opp.rows) : ''));
         set('[data-compact]', '');
       }else{ set('[data-compact]', zCompactHTML(M)); set('[data-full]', ''); }
