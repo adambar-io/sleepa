@@ -1976,6 +1976,131 @@
   .ss-tag.sit{ color: var(--text-3); background: var(--surface-2); }
   .ss-cards{ display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-bottom: 12px; }
   .ss-cards .cd{ --cdw: clamp(140px, 42vw, 200px); cursor: pointer; }
+  /* ---- Start / Sit redesign: desktop .ssd (rail + grid), phone .ssp (cards + sheet) ---- */
+  .ss2{ --mt-fav: var(--accent); --mt-neu: var(--warn); --mt-tough: var(--danger); }
+  .ss-lbl{ font-size: 10.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3); }
+  .ss-lbl.g{ color: var(--accent); }
+  .ssd{ display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 20px; align-items: start; }
+  .ssp{ display: none; }
+  .ssd-rail{ position: sticky; top: 12px; display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 16px; background: var(--surface); box-shadow: 0 0 0 1px var(--hair); max-height: calc(100vh - 24px); box-sizing: border-box; }
+  .ssd-rh{ display: flex; align-items: center; justify-content: space-between; }
+  .ssd-hint{ font-size: 12px; color: var(--text-2); }
+  .ssd-clear{ background: none; color: var(--text-2); font-size: 12px; padding: 0; min-height: 0; }
+  .ss-seg{ display: flex; gap: 4px; padding: 3px; border-radius: 999px; background: var(--bg); }
+  .ss-seg button{ flex: 1; padding: 7px 0; min-height: 0; border-radius: 999px; background: none; color: var(--text-2); font-size: 12px; font-weight: 600; }
+  .ss-seg button[aria-pressed="true"]{ background: var(--surface-3); color: var(--text); font-weight: 700; }
+  .ss-q{ display: flex; align-items: center; gap: 8px; padding: 0 12px; border-radius: 10px; background: var(--bg); color: var(--text-3); }
+  .ss-q input{ flex: 1; min-width: 0; min-height: 36px; border: none; background: none; color: var(--text); font: inherit; font-size: 13px; padding: 0; box-shadow: none; outline: none; }
+  .ss-chipsrow{ display: flex; flex-wrap: wrap; gap: 6px; }
+  .ss-chipsrow button{ min-height: 0; padding: 5px 10px; border-radius: 999px; background: color-mix(in srgb, var(--pc, var(--text-2)) 14%, transparent); color: var(--pc, var(--text-2)); font-size: 11px; font-weight: 700; }
+  .ss-chipsrow button[aria-pressed="true"]{ background: var(--text); color: var(--bg); }
+  .ssd-list{ min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 4px; margin: 0 -4px; padding: 0 4px; }
+  .ssr{ display: grid; grid-template-columns: 20px 32px minmax(0, 1fr) auto; align-items: center; gap: 10px; width: 100%; padding: 7px 8px; min-height: 0; border-radius: 12px; background: none; color: var(--text); text-align: left; }
+  .ssr:hover{ background: var(--surface-2); }
+  .ssr.on{ background: color-mix(in srgb, var(--accent) 8%, transparent); }
+  .ssr-box{ display: grid; place-items: center; width: 18px; height: 18px; border-radius: 5px; box-shadow: inset 0 0 0 1.5px var(--text-3); color: var(--on-accent); font-size: 12px; font-weight: 900; }
+  .ssr.on .ssr-box{ background: var(--accent); box-shadow: none; }
+  .ssr-av{ width: 32px; height: 32px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2px var(--pc); background: var(--surface-2); }
+  .ssr-t{ min-width: 0; } .ssr-t b{ display: block; font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .ssr-t small{ font-size: 11px; color: var(--text-3); }
+  .ssr-st{ font-style: normal; font-size: 9.5px; font-weight: 800; } .ssr-st.st-warn{ color: var(--warn); } .ssr-st.st-doubt, .ssr-st.st-out{ color: var(--danger); }
+  .ssr-p{ font-size: 14px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .ssd-main{ display: flex; flex-direction: column; gap: 14px; min-width: 0; container-type: inline-size; }
+  @container (max-width: 900px){
+    .ssd-main .ssd-detail{ grid-template-columns: 120px minmax(0, 1fr); }
+    .ssd-main .ssd-dph{ width: 120px; height: 120px; }
+    .ssd-main .ssd-dn{ font-size: 32px; }
+    .ssd-main .ssd-dwhy{ grid-column: 1 / -1; }
+  }
+  .ss-banner{ display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 14px 18px; border-radius: 16px; background: color-mix(in srgb, var(--accent) 9%, var(--surface)); box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent); }
+  .ss-banner > b{ font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
+  .ss-bsub{ font-size: 13px; color: var(--text-2); }
+  .ss-cta{ margin-left: auto; padding: 9px 16px; min-height: 0; border-radius: 12px; background: var(--accent); color: var(--on-accent); font-size: 13px; font-weight: 800; white-space: nowrap; }
+  .ss-cta.done{ background: none; color: var(--accent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 40%, transparent); }
+  .ss-ph{ width: 100%; height: 100%; border-radius: inherit; object-fit: cover; display: block; }
+  .ssd-detail{ display: grid; grid-template-columns: 150px minmax(0, 1fr) minmax(200px, 300px); gap: 22px; padding: 18px; border-radius: 18px; background: var(--surface); box-shadow: 0 0 0 1px var(--hair); align-items: start; }
+  .ssd-dph{ width: 150px; height: 150px; border-radius: 16px; overflow: hidden; background: color-mix(in srgb, var(--pc) 14%, var(--surface-2)); box-shadow: 0 0 40px -8px var(--mc, transparent); }
+  .ssd-dmid{ display: grid; gap: 4px; min-width: 0; }
+  .ssd-dn{ font-size: 40px; font-weight: 800; letter-spacing: -.03em; line-height: 1.05; }
+  .ssd-dm{ font-size: 13px; color: var(--text-2); }
+  .ssd-dnums{ display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; margin: 8px 0 10px; }
+  .ssd-dnums .big{ font-size: 44px; font-weight: 800; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+  .ssd-dnums .win{ font-size: 30px; font-weight: 800; color: var(--accent); margin-left: 12px; font-variant-numeric: tabular-nums; }
+  .ssd-dnums small{ font-size: 10px; font-weight: 800; letter-spacing: .1em; color: var(--text-3); line-height: 1.2; }
+  .ss-odds{ display: flex; gap: 3px; height: 8px; }
+  .ss-odds i{ border-radius: 999px; background: color-mix(in srgb, var(--pc) 45%, transparent); }
+  .ss-odds i.on{ background: var(--pc); }
+  .ssd-dwhy{ display: grid; gap: 8px; }
+  .ss-why{ list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; font-size: 13px; line-height: 1.45; color: var(--text-2); }
+  .ss-why li{ position: relative; padding-left: 16px; } .ss-why li::before{ content: '+'; position: absolute; left: 0; color: var(--accent); font-weight: 800; }
+  .ssd-close{ justify-self: start; min-height: 0; padding: 7px 14px; border-radius: 10px; background: var(--surface-2); color: var(--text-2); font-size: 12px; font-weight: 700; }
+  .ssg{ display: grid; grid-template-columns: 120px repeat(var(--n), minmax(0, 1fr)); column-gap: 10px; align-items: stretch; container-type: inline-size; }
+  .ssg-l{ display: flex; align-items: center; padding: 10px 0; border-top: 1px solid var(--hair); font-size: 10.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); }
+  .ssg > .ssg-l:first-child{ border-top: none; }
+  .ssg-c{ display: flex; align-items: center; padding: 10px 14px; border-top: 1px solid var(--hair); font-size: 14px; font-variant-numeric: tabular-nums; color: var(--text); background: var(--surface); }
+  @container (min-width: 820px){   /* room for the design's full-size column headers */
+    .ssg .ssg-h{ grid-template-columns: 72px minmax(0, 1fr); padding: 14px; }
+    .ssg .ssg-ph{ width: 72px; height: 72px; }
+    .ssg .ssg-pj{ font-size: 30px; }
+  }
+  .ssg-c.best{ color: var(--accent); font-weight: 800; }
+  .ssg-c.l5{ align-items: flex-end; gap: 4px; height: 48px; box-sizing: content-box; }
+  .ssg-c.l5 i{ flex: 1; border-radius: 3px 3px 1px 1px; background: var(--pc); opacity: .85; }
+  .ssg-h{ display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 6px 10px; align-items: center; padding: 12px; border-radius: 16px 16px 0 0; background: var(--surface); min-width: 0; }
+  .ssg-h.top{ box-shadow: inset 0 0 0 2px var(--accent); }
+  .ssg-h.open{ box-shadow: inset 0 0 0 2px var(--text); }
+  .ssg-hp{ padding: 0; min-height: 0; background: none; border-radius: 14px; }
+  .ssg-ph{ display: block; width: 52px; height: 52px; border-radius: 14px; overflow: hidden; background: color-mix(in srgb, var(--pc) 14%, var(--surface-2)); box-shadow: 0 0 22px -6px var(--mc, transparent); }
+  .ssg-hi{ min-width: 0; display: grid; } .ssg-hi b{ font-size: 15px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .ssg-hi small{ font-size: 11px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ssg-pj{ font-size: 24px; font-weight: 800; letter-spacing: -.03em; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .ss-tag2{ justify-self: start; white-space: nowrap; font-size: 9.5px; font-weight: 800; letter-spacing: .08em; padding: 2px 7px; border-radius: 6px; }
+  .ss-tag2.start{ color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); } .ss-tag2.sit{ color: var(--text-3); background: var(--surface-2); }
+  .ssg-det{ grid-column: 1 / -1; min-height: 0; padding: 7px 0; border-radius: 10px; background: var(--surface-2); color: var(--text-2); font-size: 12px; font-weight: 700; }
+  .ss-mtx.favorable{ color: var(--accent); } .ss-mtx.neutral{ color: var(--warn); } .ss-mtx.tough{ color: var(--danger); }
+  .ss-nm{ font-size: 12px; color: var(--text-3); margin: 0; }
+  .ss-empty2{ display: grid; gap: 8px; justify-items: start; padding: 28px; border-radius: 16px; background: var(--surface); box-shadow: 0 0 0 1px var(--hair); color: var(--text-2); font-size: 14px; line-height: 1.55; }
+  .ss-empty2 b{ font-size: 24px; color: var(--text); letter-spacing: -.02em; }
+  .only-phone{ display: none; }
+  @media (max-width: 1023px){
+    .ssd{ display: none; }
+    .ssp{ display: flex; flex-direction: column; gap: 12px; padding-bottom: 76px; }
+    .only-phone{ display: inline-flex; }
+    .ssp-verdict{ display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 14px; border-radius: 18px; background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 16%, var(--surface)), var(--surface)); box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent); }
+    .ssp-vph{ display: block; width: 72px; height: 72px; border-radius: 14px; overflow: hidden; background: var(--surface-2); }
+    .ssp-vt{ display: grid; min-width: 0; } .ssp-vt b{ font-size: 24px; font-weight: 800; letter-spacing: -.02em; } .ssp-vt small{ font-size: 12px; color: var(--text-2); }
+    .ssp-vd{ font-size: 30px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
+    .ssp-card{ display: grid; gap: 12px; padding: 14px; border-radius: 18px; background: var(--surface); box-shadow: 0 0 0 1px var(--hair); cursor: pointer; }
+    .ssp-card.top{ box-shadow: 0 0 0 1.5px var(--accent); }
+    .sspc-h{ display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+    .sspc-ph{ display: block; width: 64px; height: 64px; border-radius: 14px; overflow: hidden; background: color-mix(in srgb, var(--pc) 14%, var(--surface-2)); }
+    .sspc-t{ display: grid; gap: 2px; min-width: 0; } .sspc-t b{ font-size: 17px; font-weight: 800; } .sspc-t small{ font-size: 12px; color: var(--text-3); }
+    .sspc-p{ font-size: 32px; font-weight: 800; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+    .sspc-bar{ position: relative; height: 6px; border-radius: 999px; background: var(--surface-2); }
+    .sspc-bar i{ position: absolute; top: 0; bottom: 0; border-radius: 999px; background: color-mix(in srgb, var(--pc) 55%, transparent); }
+    .sspc-bar u{ position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; background: var(--text); border-radius: 2px; }
+    .sspc-stats{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; } .sspc-stats div{ display: grid; gap: 2px; } .sspc-stats b{ font-size: 14px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .sspc-more{ display: grid; gap: 10px; padding-top: 6px; border-top: 1px solid var(--hair); }
+    .sspc-win{ display: flex; align-items: baseline; gap: 8px; } .sspc-win b{ font-size: 28px; font-weight: 800; color: var(--accent); } .sspc-win span{ font-size: 12px; color: var(--text-2); }
+    .sspc-hint{ justify-self: center; font-size: 12px; color: var(--text-3); font-weight: 600; }
+    .ssp-foot{ position: fixed; left: 12px; right: 12px; bottom: calc(96px + env(safe-area-inset-bottom)); z-index: 40; display: flex; gap: 10px; }
+    .ssp-add, .ssp-start{ flex: 1; min-height: 48px; border-radius: 14px; font-size: 15px; font-weight: 800; justify-content: center; }
+    .ssp-add{ background: var(--surface-3); color: var(--text); box-shadow: var(--shadow-lg); }
+    .ssp-start{ background: var(--accent); color: var(--on-accent); box-shadow: var(--shadow-lg); }
+    .ss-empty2 .ssp-add{ flex: none; padding: 0 20px; }
+  }
+  .ssp-scrim{ position: fixed; inset: 0; z-index: 70; background: rgba(0,0,0,.55); }
+  .ssp-sheet{ position: fixed; left: 0; right: 0; bottom: 0; z-index: 71; height: min(600px, 86vh); display: flex; flex-direction: column; gap: 12px; padding: 10px 16px calc(16px + env(safe-area-inset-bottom)); border-radius: 28px 28px 0 0; background: var(--surface); box-shadow: 0 -10px 40px rgba(0,0,0,.4); box-sizing: border-box; animation: sspIn .28s var(--ease); }
+  @keyframes sspIn{ from{ transform: translateY(40px); opacity: 0; } to{ transform: none; opacity: 1; } }
+  @media (prefers-reduced-motion: reduce){ .ssp-sheet{ animation: none; } }
+  .ssp-handle{ align-self: center; width: 40px; height: 5px; border-radius: 999px; background: var(--surface-3); }
+  .ssp-sh{ display: flex; align-items: center; gap: 8px; } .ssp-sh b{ font-size: 19px; font-weight: 800; } .ssp-sh span{ color: var(--text-3); font-size: 13px; }
+  .ssp-go{ margin-left: auto; min-height: 0; padding: 8px 16px; border-radius: 999px; background: var(--accent); color: var(--on-accent); font-weight: 800; font-size: 13px; }
+  .ssp-list{ flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 6px; }
+  .ssp-list > *, .ssd-list > *{ flex: none; }
+  .ssr.sheet{ grid-template-columns: 40px minmax(0, 1fr) auto 26px; padding: 8px 10px; background: var(--surface-2); }
+  .ssr.sheet.on{ background: color-mix(in srgb, var(--accent) 10%, var(--surface-2)); }
+  .ssr.sheet .ssr-av{ width: 40px; height: 40px; }
+  .ssr-ck{ display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--text-3); color: var(--on-accent); font-weight: 900; font-size: 13px; }
+  .ssr.on .ssr-ck{ background: var(--accent); box-shadow: none; }
   /* the picker list with photos everywhere: stacked above the comparison, side by side when there's room */
   .ss{ max-width: 1240px; }
   .ss-layout{ display: grid; gap: 14px; }
@@ -7066,10 +7191,11 @@
     if(ctx.cmpSec === 'ss'){
       document.querySelectorAll('[data-cmp-sec]').forEach(function(b){ b.setAttribute('aria-pressed', String(b.getAttribute('data-cmp-sec') === 'ss')); });
       document.querySelectorAll('#compare-view .cmp-sec').forEach(function(el){ el.hidden = el.getAttribute('data-sec') !== 'ss'; });
-      const h = document.getElementById('cmp-ss'), qf = document.activeElement && (document.activeElement.id === 'ss-q' || document.activeElement.id === 'ss-q2') ? document.activeElement.id : null;
-      const ls = document.getElementById('ss-list'), ly = ls ? ls.scrollTop : 0;
+      const h = document.getElementById('cmp-ss'), ae = document.activeElement, qf = ae && /^ss-q[23]$/.test(ae.id) ? ae.id : null;
+      const keep = ['ss-list', 'ss-list-sheet'].map(function(id){ const el = document.getElementById(id); return el ? el.scrollTop : 0; });
       h.innerHTML = ssHTML();
-      const ls2 = document.getElementById('ss-list'); if(ls2) ls2.scrollTop = ly;   // picking from the list keeps its place
+      ['ss-list', 'ss-list-sheet'].forEach(function(id, i){ const el = document.getElementById(id); if(el) el.scrollTop = keep[i]; });   // picking keeps the list's place
+      document.body.classList.toggle('no-scroll', !!ctx.ssSheet && ctx.view === 'compare');
       if(qf){ const q = document.getElementById(qf); if(q){ q.focus(); q.setSelectionRange(q.value.length, q.value.length); } }
       return;
     }
@@ -7090,6 +7216,15 @@
     if(e.target.closest('#cmp-ss')){
       const add = e.target.closest('[data-ss-add]');
       if(add){ const pid = add.getAttribute('data-ss-add'); if(ctx.h2h.indexOf(pid) === -1){ if(ctx.h2h.length >= SS_MAX) ctx.h2h.shift(); ctx.h2h.push(pid); } ctx.ssQ = ''; syncVsButtons(); renderH2HTray(); renderCompare(); return; }
+      const so = e.target.closest('[data-ss-open]');
+      if(so && !e.target.closest('[data-open]')){ ctx.ssOpen = so.getAttribute('data-ss-open') || null; renderCompare(); return; }
+      const sh = e.target.closest('[data-ss-sheet]');
+      if(sh){ ctx.ssSheet = sh.getAttribute('data-ss-sheet') === '1'; renderCompare(); return; }
+      if(e.target.closest('[data-ss-set]')){
+        const moved = ssSetPlan(ctx.h2h.filter(function(pid){ return ctx.players[pid]; }));
+        ssToast(moved.length ? 'Your plan now starts <b>' + moved.map(function(pid){ return escapeHTML(lastName(pid)); }).join(' & ') + '</b>. Make the same change in Sleeper.' : 'Nothing to change in your plan.');
+        renderCompare(); return;
+      }
       const tg = e.target.closest('[data-ss-toggle]');
       if(tg){ const pid = tg.getAttribute('data-ss-toggle'); if(ctx.h2h.indexOf(pid) !== -1) ctx.h2h = ctx.h2h.filter(function(x){ return x !== pid; }); else { if(ctx.h2h.length >= SS_MAX) ctx.h2h.shift(); ctx.h2h.push(pid); } syncVsButtons(); renderH2HTray(); renderCompare(); return; }
       const sr = e.target.closest('[data-ss-src]');
@@ -7133,14 +7268,18 @@
   document.getElementById('compare-view').addEventListener('input', function(e){
     if(!e.target.matches('[data-ss-q]')) return;
     ctx.ssQ = e.target.value;
-    const hits = document.getElementById('ss-hits'); if(hits) hits.innerHTML = ssSearchHTML(ctx.ssQ);   // just the results: the keyboard stays up
-    const list = document.getElementById('ss-list'); if(list) list.innerHTML = ssListHTML(ctx.h2h.filter(function(pid){ return ctx.players[pid]; }));
+    const pids = ctx.h2h.filter(function(pid){ return ctx.players[pid]; });   // just the results: the keyboard stays up
+    const list = document.getElementById('ss-list'); if(list) list.innerHTML = ssListHTML(pids, 'rail');
+    const ls = document.getElementById('ss-list-sheet'); if(ls) ls.innerHTML = ssListHTML(pids, 'sheet');
   });
   document.getElementById('compare-view').addEventListener('change', function(e){
     if(e.target.matches('[data-tf-team]')){ ctx.tf.team = Number(e.target.value) || 0; rerenderTrade(); return; }
     if(e.target.matches('[data-trade-team]')){ ctx.trade = Object.assign({}, ctx.trade, { team: Number(e.target.value) || null, get: [] }); rerenderTrade(); }
   });
   document.getElementById('compare-view').addEventListener('keydown', function(e){
+    const pc = e.target.closest && e.target.closest('.ssp-card[data-ss-open]');
+    if(pc && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); ctx.ssOpen = pc.getAttribute('data-ss-open') || null; renderCompare(); return; }
+    if(e.key === 'Escape' && ctx.ssSheet){ ctx.ssSheet = false; renderCompare(); return; }
     const nr = e.target.closest && e.target.closest('.nd-r[data-nd-trade]');
     if(nr && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); openTrade(Number(nr.getAttribute('data-nd-trade'))); return; }
     const c = e.target.closest && e.target.closest('.tc-card');
@@ -8820,7 +8959,7 @@
   }
   function setView(view){
     const changed = ctx.view !== view;
-    if(changed && ctx.view === 'compare' && view !== 'compare') ctx.cmpReturn = null;
+    if(changed && ctx.view === 'compare' && view !== 'compare'){ ctx.cmpReturn = null; ctx.ssSheet = false; document.body.classList.remove('no-scroll'); }
     ctx.view = view;
     els.navBtns.forEach(function(t){
       if(t.getAttribute('data-view') === view) t.setAttribute('aria-current', 'page'); else t.removeAttribute('aria-current');
@@ -10797,6 +10936,12 @@
     t.hidden = false; t.style.animation = 'none'; void t.offsetWidth; t.style.animation = '';
     clearTimeout(t._t); t._t = setTimeout(function(){ t.hidden = true; }, 5000);
   }
+  function ssToast(html){
+    const t = document.getElementById('h2h-tray');
+    t.innerHTML = '<span class="ss-tmsg">' + html + '</span><button type="button" class="ss-tx" data-ss-toast-x aria-label="Dismiss">✕</button>';
+    t.hidden = false; t.style.animation = 'none'; void t.offsetWidth; t.style.animation = '';
+    clearTimeout(t._t); t._t = setTimeout(function(){ t.hidden = true; }, 6000);
+  }
   // Open Compare → Start / Sit, remembering the screen (and scroll) to come back to.
   function openStartSit(){
     if(ctx.view !== 'compare') ctx.cmpReturn = { view: ctx.view, y: window.scrollY, pane: document.querySelector('.pane-main') ? document.querySelector('.pane-main').scrollTop : 0 };
@@ -10854,127 +10999,212 @@
       return '<button type="button" class="ss-hit" data-ss-add="' + escapeHTML(pid) + '">' + avatarTag(pid, 'ss-hav') + '<span><b>' + escapeHTML(playerName(p)) + '</b><small>' + escapeHTML(eligLabel(pid)) + ' · ' + escapeHTML(p.team || 'FA') + (isMine(pid) ? ' · yours' : isAvailable(pid) ? ' · available' : '') + '</small></span><span class="ss-hp">' + fmtPts(ctx.projections[pid]) + '</span></button>';
     }).join('') || '<div class="ss-none">No players match.</div>';
   }
-  // Desktop picker: a full player list beside the comparison (phones keep the compact picker above it).
-  // Your team grouped by position, Available, or All players; position chips; search. With a player picked, Available /
-  // All show players who fit the same slots as him first (flex-aware), so the list is the real choice for that spot.
+  // ============ Start / Sit (design "Turn 2", Oct 2026): checklist rail + shared comparison grid on desktop, stacked
+  // player cards + bottom-sheet picker on phones. Handoff: design/start-sit/START-SIT.md.
+  // State: ctx.h2h = picked players (2–4), ctx.ssOpen = player whose details are open, ctx.ssSheet = phone picker open,
+  // ctx.ssSrc / ctx.ssPos / ctx.ssQ = picker list source, position chip, search.
   try{ ctx.ssSrc = localStorage.getItem('rv-ss-src') || 'mine'; }catch(e){ ctx.ssSrc = 'mine'; }
-  ctx.ssPos = '';
-  function ssListHTML(pids){
+  ctx.ssPos = ''; ctx.ssOpen = null; ctx.ssSheet = false;
+  // ---- the picker list (desktop rail and phone sheet share it) ----
+  function ssPool(pids){
     const src = ctx.ssSrc || 'mine', q = normName(ctx.ssQ || '').trim(), words = q ? q.split(/\s+/) : [];
     let pool = src === 'mine' ? rosterActive(ctx.myRoster)
       : src === 'avail' ? [].concat.apply([], leaguePositions().map(function(pos){ return ctx.freeAgents[pos] || []; })).filter(function(pid, i, arr){ return arr.indexOf(pid) === i; })
       : ssAllPlayers();
     let fit = '';
     if(ctx.ssPos) pool = pool.filter(function(pid){ return posGroup(pid) === ctx.ssPos || fantasyPositions(pid).indexOf(ctx.ssPos) !== -1; });
-    else if(src !== 'mine' && pids.length){
+    else if(src !== 'mine' && pids.length){   // with a pick: players who fit the same lineup slots as him (flex-aware)
       const slots0 = new Set(eligibleSlotIndexes(pids[0]).map(function(i){ return ctx.rosterPositions[i]; }));
       pool = pool.filter(function(pid){ return eligibleSlotIndexes(pid).some(function(i){ return slots0.has(ctx.rosterPositions[i]); }); });
-      fit = 'Players who fit the same slots as ' + escapeHTML(lastName(pids[0]));
+      fit = 'Players who fit the same slots as ' + lastName(pids[0]);
     }
     if(words.length) pool = pool.filter(function(pid){ const k = searchKey(pid); return words.every(function(w){ return k.indexOf(' ' + w) !== -1; }); });
     pool = pool.slice().sort(function(a, b){ return (ctx.projections[b] || 0) - (ctx.projections[a] || 0); });
     if(src !== 'mine') pool = pool.slice(0, 40);
-    if(!pool.length) return '<div class="ss-none">No players match.</div>';
-    const starting = new Set(ctx.originalStarters || []);
-    const row = function(pid){
-      const p = ctx.players[pid], on = pids.indexOf(pid) !== -1, m = matchup(p.team, ctx.week), k = kickoff(p.team, ctx.week);
-      const st = statusInfo(effectiveStatus(pid)), tag = src === 'mine' && starting.has(pid) ? 'Starting' : src !== 'mine' && isMine(pid) ? 'Yours' : '';
-      return '<button type="button" class="ss-tile' + (on ? ' on' : '') + '" data-ss-toggle="' + escapeHTML(pid) + '" aria-pressed="' + on + '" style="--pc:' + posColor(posGroup(pid)) + '"' +
-          ' title="' + escapeHTML(playerName(p) + ' · ' + eligLabel(pid) + ' · ' + (p.team || 'FA') + (m ? ' · ' + (m.bye ? 'BYE' : m.text) : '') + (k ? ' · ' + zKickShort(k) : '')) + '">' +
-        '<span class="ss-tph">' + avatarTag(pid, 'ss-tav') + '<span class="ss-tck" aria-hidden="true">' + (on ? '✓' : '+') + '</span>' + (st ? '<span class="ss-tst st-' + st.tone + '">' + escapeHTML(st.short) + '</span>' : '') + '</span>' +
-        '<b class="ss-tn">' + escapeHTML(lastName(pid)) + '</b>' +
-        '<small class="ss-tm">' + escapeHTML(posGroup(pid)) + ' · ' + escapeHTML(p.team || 'FA') + (m && m.bye ? ' · BYE' : '') + '</small>' +
-        '<span class="ss-tp">' + fmtPts(ctx.projections[pid]) + '</span>' +
-        (tag ? '<span class="ss-ttag">' + tag + '</span>' : '') + '</button>';
-    };
-    if(src === 'mine' && !ctx.ssPos && !words.length){
-      return leaguePositions().map(function(g){
-        const list = pool.filter(function(pid){ return posGroup(pid) === g; });
-        return list.length ? '<div class="ss-lg" style="color:' + posColor(g) + '">' + g + '</div><div class="ss-grid">' + list.map(row).join('') + '</div>' : '';
-      }).join('');
-    }
-    return (fit ? '<div class="ss-fit">' + fit + '</div>' : '') + '<div class="ss-grid">' + pool.map(row).join('') + '</div>';
+    else pool = pool.filter(function(pid){ return pids.indexOf(pid) !== -1; }).concat(pool.filter(function(pid){ return pids.indexOf(pid) === -1; }));   // picked first
+    return { pool: pool, fit: fit };
   }
-  function ssSideHTML(pids){
-    const src = ctx.ssSrc || 'mine';
-    const picked = pids.map(function(pid){
-      return '<button type="button" class="ss-chip" data-ss-remove="' + escapeHTML(pid) + '" style="--pc:' + posColor(posGroup(pid)) + '" aria-label="Remove ' + escapeHTML(playerName(ctx.players[pid])) + '">' + avatarTag(pid, 'ss-cav') + '<span>' + escapeHTML(lastName(pid)) + '</span><i aria-hidden="true">×</i></button>';
+  function ssShort(pid){ const p = ctx.players[pid]; return !p ? pid : p.position === 'DEF' ? (p.team || pid) + ' D/ST' : (p.first_name ? p.first_name.charAt(0) + '. ' : '') + (p.last_name || playerName(p)); }
+  function ssListHTML(pids, variant){
+    const L = ssPool(pids), sheet = variant === 'sheet';
+    if(!L.pool.length) return '<div class="ss-none">No players match.</div>';
+    return (L.fit ? '<div class="ss-fit">' + escapeHTML(L.fit) + '</div>' : '') + L.pool.map(function(pid){
+      const p = ctx.players[pid], on = pids.indexOf(pid) !== -1, st = statusInfo(effectiveStatus(pid));
+      return '<button type="button" class="ssr' + (sheet ? ' sheet' : '') + (on ? ' on' : '') + '" data-ss-toggle="' + escapeHTML(pid) + '" aria-pressed="' + on + '" style="--pc:' + posColor(posGroup(pid)) + '">' +
+        (sheet ? '' : '<span class="ssr-box" aria-hidden="true">' + (on ? '✓' : '') + '</span>') +
+        avatarTag(pid, 'ssr-av') +
+        '<span class="ssr-t"><b>' + escapeHTML(ssShort(pid)) + (st ? ' <i class="ssr-st st-' + st.tone + '">' + escapeHTML(st.short) + '</i>' : '') + '</b><small>' + escapeHTML(eligLabel(pid)) + ' · ' + escapeHTML(p.team || 'FA') + '</small></span>' +
+        '<span class="ssr-p">' + fmtPts(ctx.projections[pid]) + '</span>' +
+        (sheet ? '<span class="ssr-ck" aria-hidden="true">' + (on ? '✓' : '') + '</span>' : '') + '</button>';
     }).join('');
-    return '<aside class="card ss-side" aria-label="Pick players to compare">' +
-      '<div class="ss-sh"><span class="eyebrow">Comparing · ' + pids.length + ' of ' + SS_MAX + '</span>' + (pids.length ? '<button type="button" class="ss-clear" data-ss-clear>Clear</button>' : '') + '</div>' +
-      '<div class="ss-chips ss-picked">' + (picked || '<span class="ss-empty">Pick 2–' + SS_MAX + ' players from the list below.</span>') + '</div>' +
-      '<div class="wk-seg ss-src" role="group" aria-label="Players"><button type="button" data-ss-src="mine" aria-pressed="' + (src === 'mine') + '">Your team</button><button type="button" data-ss-src="avail" aria-pressed="' + (src === 'avail') + '">Available</button><button type="button" data-ss-src="all" aria-pressed="' + (src === 'all') + '">All</button></div>' +
-      '<label class="pl-search ss-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg><input id="ss-q2" data-ss-q type="search" placeholder="Search players" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" value="' + escapeHTML(ctx.ssQ || '') + '"></label>' +
-      '<div class="ss-pos"><button type="button" data-ss-pos="" aria-pressed="' + !ctx.ssPos + '">All</button>' + leaguePositions().map(function(p){ return '<button type="button" data-ss-pos="' + p + '" aria-pressed="' + (ctx.ssPos === p) + '" style="--pc:' + posColor(p) + '">' + p + '</button>'; }).join('') + '</div>' +
-      '<div class="ss-list" id="ss-list">' + ssListHTML(pids) + '</div>' +
-    '</aside>';
+  }
+  function ssPickerTools(id){
+    const src = ctx.ssSrc || 'mine';
+    return '<div class="ss-seg" role="group" aria-label="Players"><button type="button" data-ss-src="mine" aria-pressed="' + (src === 'mine') + '">Your team</button><button type="button" data-ss-src="avail" aria-pressed="' + (src === 'avail') + '">Available</button><button type="button" data-ss-src="all" aria-pressed="' + (src === 'all') + '">All</button></div>' +
+      '<label class="ss-q"><span aria-hidden="true">⌕</span><input id="' + id + '" data-ss-q type="search" placeholder="Search players" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" value="' + escapeHTML(ctx.ssQ || '') + '"></label>' +
+      '<div class="ss-chipsrow"><button type="button" data-ss-pos="" aria-pressed="' + !ctx.ssPos + '">All</button>' + leaguePositions().map(function(p){ return '<button type="button" data-ss-pos="' + p + '" aria-pressed="' + (ctx.ssPos === p) + '" style="--pc:' + posColor(p) + '">' + p + '</button>'; }).join('') + '</div>';
+  }
+  // ---- per-player numbers ----
+  function ssUsage(pid){
+    const g = posGroup(pid);
+    if(IDP_GROUPS.indexOf(g) !== -1){ const k = seasonShare(pid, 'k'); return typeof k === 'number' ? Math.round(k * 100) + '% tackle share' : null; }
+    if(g === 'RB' || g === 'WR' || g === 'TE'){ const t = seasonShare(pid, 't'); if(typeof t === 'number') return Math.round(t * 100) + '% target share'; }
+    const s = seasonShare(pid, 's');
+    return typeof s === 'number' ? Math.round(s * 100) + '% of snaps' : null;
+  }
+  function ssData(pid, row){
+    const p = ctx.players[pid], m = matchup(p.team, ctx.week), d = dvpInfo(pid), r = weekRange(pid), h = (hist(pid) || []).map(function(w){ return w.pts; });
+    return { pid: pid, p: p, short: ssShort(pid), last: lastName(pid), pos: posGroup(pid), team: p.team || 'FA', opp: m ? (m.bye ? 'BYE' : m.text) : '—',
+      kick: kickoff(p.team, ctx.week), proj: ctx.projections[pid] || 0, floor: r && r.ok ? r.floor : null, ceil: r && r.ok ? r.ceil : null,
+      l3: h.length ? last3Avg(pid) : null, dvp: d, tag: d ? (d.tone === 'easy' ? 'Favorable' : d.tone === 'hard' ? 'Tough' : 'Neutral') : null,
+      usage: ssUsage(pid), st: statusInfo(effectiveStatus(pid)), last5: h.slice(-5), add: row ? row.add : 0, start: row ? row.start : false, slot: row ? row.slot : null, mine: isMine(pid) };
+  }
+  // Chance each scores the most: the same per-player spread as the matchup win probability (projection × a typical
+  // week-to-week swing, the player's own when he has 3+ games), simulated together. Seeded, so it doesn't jitter. Always
+  // from projections (a start / sit call is made before kickoff), even once games have been played.
+  function ssOdds(list){
+    let seed = 20261005;
+    const rnd = function(){ seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+    const gauss = function(){ let u = 0, v = 0; while(!u) u = rnd(); while(!v) v = rnd(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+    const dist = list.map(function(d){
+      const own = volatility(d.pid), base = WP_CV[d.pos] || 0.5, cv = own ? (base + Math.max(0.3, Math.min(1, own))) / 2 : base;
+      return { m: d.proj, sd: Math.max(3, d.proj) * cv };
+    });
+    const wins = list.map(function(){ return 0; }), N = 4000;
+    for(let k = 0; k < N; k++){
+      let best = -Infinity, bi = 0;
+      dist.forEach(function(x, i){ const v = x.m + x.sd * gauss(); if(v > best){ best = v; bi = i; } });
+      wins[bi]++;
+    }
+    const pct = wins.map(function(w){ return Math.round(100 * w / N); }), diff = 100 - pct.reduce(function(a, b){ return a + b; }, 0);
+    if(pct.length) pct[pct.indexOf(Math.max.apply(null, pct))] += diff;   // rounding goes to the favorite
+    return pct;
+  }
+  function ssReasons(d, n){
+    const out = [];
+    if(d.dvp) out.push((d.tag === 'Favorable' ? 'Favorable' : d.tag === 'Tough' ? 'Tough' : 'Neutral') + ' matchup: ' + d.opp.replace(/^(vs|@)s*/, '') + ' gives up the ' + dvpLabel(d.dvp) + (d.dvp.early ? ' (early-season sample)' : '') + '.');
+    else out.push(d.opp === 'BYE' ? 'On bye this week.' : 'No matchup ranking for ' + d.pos + 's.');
+    out.push('Projected ' + d.proj.toFixed(1) + (d.floor !== null ? '; his typical week so far is ' + d.floor.toFixed(1) + ' to ' + d.ceil.toFixed(1) : '') + '.');
+    if(d.l3 !== null){ const diff = d.l3 - d.proj; out.push('Averaging ' + d.l3.toFixed(1) + ' over his last ' + Math.min(3, (hist(d.pid) || []).length) + ', ' + (Math.abs(diff) < 1.5 ? 'right at' : diff > 0 ? 'above' : 'below') + ' his projection.'); }
+    out.push((d.st ? d.st.label : 'Healthy') + (d.usage ? '. ' + d.usage.charAt(0).toUpperCase() + d.usage.slice(1) + '.' : '.'));
+    return out.slice(0, 4);
+  }
+  // "Set X in lineup": puts the recommended starters into your sleepa plan (Sleeper can't be changed from here)
+  // Which recommended starters can go into your plan, and where: yours, not yet in the plan, and neither he nor the
+  // player in his target slot has kicked off (locked players can't move).
+  function ssPlanTargets(pids, starts){
+    const sc = (ctx.league && ctx.league.scoring_settings) || {};
+    const base = rosterActive(ctx.myRoster).filter(function(pid){ return pids.indexOf(pid) === -1; });
+    const all = bestLineup(base.concat(pids), ctx.rosterPositions, sc, ctx.week).slots;
+    return starts.map(function(x){
+      if(!isMine(x.pid) || isLocked(x.pid) || ctx.draftStarters.indexOf(x.pid) !== -1) return null;
+      const i = all.findIndex(function(sl){ return sl.pid === x.pid; }), occ = i === -1 ? null : ctx.draftStarters[i];
+      return i === -1 || (occ && occ !== '0' && isLocked(occ)) ? null : { pid: x.pid, i: i };
+    }).filter(Boolean);
+  }
+  function ssSetPlan(pids){
+    const moved = [];
+    ssPlanTargets(pids, ssResult(pids).starts).forEach(function(t){ swapIntoSlot(t.i, t.pid); moved.push(t.pid); });
+    return moved;
   }
   function ssHTML(){
     const pids = ctx.h2h.filter(function(pid){ return ctx.players[pid]; });
-    const view = ctx.ssView === 'cards' ? 'cards' : 'list';
-    const side = ssSideHTML(pids);
-    if(pids.length < 2) return '<div class="ss"><div class="ss-layout">' + side + '<div class="ss-main"><div class="card ss-empty-main"><b>Who should start?</b><span>Pick ' + (pids.length ? 'one more player' : 'two to ' + SS_MAX + ' players') + ' from the list: your own, available, or anyone in the league. You’ll see who makes your best lineup this week and by how much.</span></div></div></div></div>';
-    const r = ssResult(pids), top = r.rows[0], next = r.rows[1];
-    const nm = function(pid){ return escapeHTML(playerName(ctx.players[pid])); };
-    // the answer first: who starts (all of them may fit your lineup), and by how much
-    let verdict;
-    if(!r.sits.length) verdict = '<b>Start them all.</b> Every one of them makes your best lineup this week.';
-    else if(!r.starts.length) verdict = '<b>Start none of them.</b> Your current starters project higher than all of them.';
-    else{
-      const firstSit = r.sits[0], lastStart = r.starts[r.starts.length - 1];
-      verdict = '<b>Start ' + r.starts.map(function(x){ return nm(x.pid); }).join(' and ') + '</b>' +
-        (r.starts.length === 1 && firstSit ? ' over ' + nm(firstSit.pid) + ': <span class="ss-gap">+' + Math.max(0, lastStart.add - firstSit.add).toFixed(2) + '</span> to your lineup' : ' · sit ' + r.sits.map(function(x){ return nm(x.pid); }).join(', '));
+    if(ctx.ssOpen && pids.indexOf(ctx.ssOpen) === -1) ctx.ssOpen = null;
+    const n = pids.length;
+    // ---- desktop rail ----
+    const rail = '<aside class="ssd-rail" aria-label="Pick players to compare">' +
+      '<div class="ssd-rh"><span class="ss-lbl">COMPARING · ' + n + ' OF ' + SS_MAX + '</span>' + (n ? '<button type="button" class="ssd-clear" data-ss-clear>Clear</button>' : '<span class="ssd-hint">2–4 players</span>') + '</div>' +
+      ssPickerTools('ss-q2') +
+      '<div class="ssd-list" id="ss-list">' + ssListHTML(pids, 'rail') + '</div></aside>';
+    const sheet = ctx.ssSheet ? '<div class="ssp-scrim" data-ss-sheet="0"></div><div class="ssp-sheet" role="dialog" aria-label="Add players">' +
+        '<div class="ssp-handle" aria-hidden="true"></div>' +
+        '<div class="ssp-sh"><b>Add players</b> <span>' + n + ' of ' + SS_MAX + '</span><button type="button" class="ssp-go" data-ss-sheet="0">' + (n >= 2 ? 'Compare' : 'Done') + '</button></div>' +
+        ssPickerTools('ss-q3') +
+        '<div class="ssp-list" id="ss-list-sheet">' + ssListHTML(pids, 'sheet') + '</div></div>' : '';
+    if(n < 2){
+      const empty = '<div class="ss-empty2"><div class="ss-lbl">START / SIT</div><b>Who should start?</b><span>Pick ' + (n ? 'one more player' : '2 to ' + SS_MAX + ' players') + ' to compare: your own, available, or anyone in the league. You’ll see who makes your best lineup this week, his chance to score the most, and why.</span>' +
+        '<button type="button" class="ssp-add only-phone" data-ss-sheet="1">+ Add players</button></div>';
+      return '<div class="ss2"><div class="ssd">' + rail + '<div class="ssd-main">' + empty + '</div></div>' +
+        '<div class="ssp">' + empty + '</div>' + sheet + '</div>';
     }
-    const notMine = pids.filter(function(pid){ return !isMine(pid); });
-    // side-by-side rows: the better value in each row stands out
-    const cols = r.rows.map(function(x){ return x.pid; });
-    const hasBest = function(vals, dir){
+    const res = ssResult(pids), rows = res.rows, data = rows.map(function(x){ return ssData(x.pid, x); }), odds = ssOdds(data);
+    data.forEach(function(d, i){ d.win = odds[i]; d.rank = i + 1; });
+    const top = data[0], second = data[1], nm = function(d){ return escapeHTML(d.short); };
+    const missing = pids.filter(function(pid){ return !hist(pid); });
+    if(missing.length && !ssHTML.pending){ ssHTML.pending = true; Promise.all(missing.map(ensureHistory)).then(function(){ ssHTML.pending = false; if(ctx.view === 'compare' && ctx.cmpSec === 'ss') renderCompare(); }); }
+    // the answer: who starts and by how much
+    const starts = data.filter(function(d){ return d.start; }), sits = data.filter(function(d){ return !d.start; });
+    let head, sub, delta = null;
+    if(!sits.length){ head = 'Start ' + (data.length === 2 ? 'both' : 'all ' + data.length); sub = 'Every one of them makes your best lineup this week'; }
+    else if(!starts.length){ head = 'Sit all ' + data.length; sub = 'Your current starters project higher than all of them'; }
+    else if(starts.length === 1){ delta = Math.max(0, starts[0].add - sits[0].add); head = starts[0].short; sub = '+' + delta.toFixed(2) + ' over ' + sits[0].short + ' · ' + starts[0].win + '% chance to score most'; }
+    else { head = starts.map(function(d){ return d.short; }).join(' & '); sub = 'Sit ' + sits.map(function(d){ return d.short; }).join(', '); }
+    const targets = ssPlanTargets(pids, starts), setable = starts.filter(function(d){ return targets.some(function(t){ return t.pid === d.pid; }); });
+    const cta = setable.length ? '<button type="button" class="ss-cta" data-ss-set>Set ' + escapeHTML(setable.map(function(d){ return d.last; }).join(' & ')) + ' in lineup</button>'
+      : starts.length && starts.every(function(d){ return ctx.draftStarters.indexOf(d.pid) !== -1; }) ? '<span class="ss-cta done">Already in your lineup</span>' : '';
+    const banner = '<div class="ss-banner"><span class="ss-lbl g">' + (starts.length ? 'START' : 'SIT') + '</span><b>' + escapeHTML(head) + '</b><span class="ss-bsub">' + escapeHTML(sub) + '</span>' + cta + '</div>';
+    const notMine = data.filter(function(d){ return !d.mine; });
+    const note = notMine.length ? '<p class="ss-nm">' + notMine.map(nm).join(', ') + (notMine.length === 1 ? ' isn’t' : ' aren’t') + ' on your team: valued as if you had ' + (notMine.length === 1 ? 'him' : 'them') + '.</p>' : '';
+    // odds bar: one segment per player in his position color; the open (or top) player is brightest
+    const oddsBar = function(focus){ return '<div class="ss-odds" role="img" aria-label="Chance to score most: ' + escapeHTML(data.map(function(d){ return d.short + ' ' + d.win + '%'; }).join(', ')) + '">' + data.map(function(d){ return '<i style="flex:' + Math.max(1, d.win) + ';--pc:' + posColor(d.pos) + '"' + (d.pid === focus ? ' class="on"' : '') + ' title="' + escapeHTML(d.short + ' ' + d.win + '%') + '"></i>'; }).join('') + '</div>'; };
+    const why = function(d){ return '<ul class="ss-why">' + ssReasons(d, data.length).map(function(t){ return '<li>' + escapeHTML(t) + '</li>'; }).join('') + '</ul>'; };
+    const mtag = function(d){ return d.tag ? '<span class="ss-mt ' + d.tag.toLowerCase() + '">' + d.tag + '</span>' : ''; };
+    const photo = function(d, cls){ return '<span class="' + cls + '" style="--pc:' + posColor(d.pos) + (d.dvp ? ';--mc:' + CD_TONE[d.dvp.tone] : '') + '">' + avatarTag(d.pid, 'ss-ph') + '</span>'; };
+    // ---- desktop: detail panel + grid ----
+    const open = data.find(function(d){ return d.pid === ctx.ssOpen; });
+    const detail = open ? '<div class="ssd-detail">' + photo(open, 'ssd-dph') +
+        '<div class="ssd-dmid"><span class="ss-lbl">#' + open.rank + ' OF ' + data.length + (open.tag ? ' · ' + open.tag + ' matchup' : '') + '</span><b class="ssd-dn">' + nm(open) + '</b><span class="ssd-dm">' + escapeHTML(open.pos + ' · ' + open.team + ' · ' + open.opp) + '</span>' +
+          '<div class="ssd-dnums"><b class="big">' + open.proj.toFixed(2) + '</b><small>PROJ</small><b class="win">' + open.win + '%</b><small>TO SCORE<br>MOST</small></div>' + oddsBar(open.pid) + '</div>' +
+        '<div class="ssd-dwhy"><span class="ss-lbl">WHY</span>' + why(open) + '<button type="button" class="ssd-close" data-ss-open="">Close</button></div></div>' : '';
+    const best = function(vals, low){
       const nums = vals.filter(function(v){ return typeof v === 'number'; });
       if(nums.length < 2) return function(){ return false; };
-      const best = dir === 'low' ? Math.min.apply(null, nums) : Math.max.apply(null, nums), ties = nums.filter(function(v){ return Math.abs(v - best) < 0.005; }).length;
-      return function(v){ return typeof v === 'number' && Math.abs(v - best) < 0.005 && ties < nums.length; };
+      const b = low ? Math.min.apply(null, nums) : Math.max.apply(null, nums), ties = nums.filter(function(v){ return Math.abs(v - b) < 0.005; }).length;
+      return function(v){ return typeof v === 'number' && Math.abs(v - b) < 0.005 && ties < nums.length; };
     };
-    const row = function(label, vals, fmt, dir){
-      const win = dir ? hasBest(vals, dir) : function(){ return false; };
-      return '<div class="ss-row"><div class="ss-lbl">' + label + '</div>' + vals.map(function(v){ return '<div class="ss-v' + (win(v) ? ' win' : '') + '">' + (v === null || v === undefined || (typeof v === 'number' && isNaN(v)) ? '—' : fmt ? fmt(v) : v) + '</div>'; }).join('') + '</div>';
+    const grow = function(label, vals, fmt, low, raw){
+      const w = raw ? function(){ return false; } : best(vals, low);
+      return '<div class="ssg-l">' + label + '</div>' + vals.map(function(v){ return '<div class="ssg-c' + (w(v) ? ' best' : '') + '">' + (v === null || v === undefined ? '—' : fmt ? fmt(v) : v) + '</div>'; }).join('');
     };
-    const rng = function(pid){ const g = weekRange(pid); return g && g.ok ? Math.round(g.floor) + '–' + Math.round(g.ceil) : null; };
-    const kick = function(pid){ const p = ctx.players[pid], k = kickoff(p.team, ctx.week), m = matchup(p.team, ctx.week); return m && m.bye ? '<span class="opp bye">BYE</span>' : (m ? escapeHTML(m.text) : '—') + (k ? '<small>' + escapeHTML(zKickShort(k)) + (isLocked(pid) ? ' · started' : '') + '</small>' : ''); };
-    const status = function(pid){ const st = effectiveStatus(pid); return st && st !== 'Healthy' ? injuryChip(st) : '<span class="dim">Healthy</span>'; };
-    const rank = function(pid){ const c = ranksOf(pid).w.cons; return typeof c === 'number' ? c : null; };
-    const heads = cols.map(function(pid){
-      const x = r.rows.find(function(y){ return y.pid === pid; }), p = ctx.players[pid];
-      return '<div class="ss-head" style="--pc:' + posColor(posGroup(pid)) + '"><button type="button" class="ss-hd" data-open="' + escapeHTML(pid) + '">' + avatarTag(pid, 'ss-hav2') +
-        '<b>' + escapeHTML(lastName(pid)) + '</b><small>' + escapeHTML(eligLabel(pid)) + ' · ' + escapeHTML(p.team || 'FA') + '</small></button>' +
-        '<span class="ss-tag ' + (x.start ? 'start' : 'sit') + '">' + (x.start ? 'START' + (x.slot ? ' · ' + escapeHTML(slotShort(x.slot)) : '') : 'SIT') + '</span></div>';
+    const f2 = function(v){ return v.toFixed(2); }, f1 = function(v){ return v.toFixed(1); };
+    const maxL5 = Math.max.apply(null, [1].concat([].concat.apply([], data.map(function(d){ return d.last5; }))));
+    const heads = data.map(function(d, i){
+      return '<div class="ssg-h' + (i === 0 ? ' top' : '') + (d.pid === ctx.ssOpen ? ' open' : '') + '">' +
+        '<button type="button" class="ssg-hp" data-open="' + escapeHTML(d.pid) + '" title="Player page">' + photo(d, 'ssg-ph') + '</button>' +
+        '<div class="ssg-hi"><b>' + nm(d) + '</b><small>' + escapeHTML(d.pos + ' · ' + d.team + ' · ' + d.opp) + '</small><span class="ssg-pj">' + d.proj.toFixed(2) + '</span></div>' +
+        '<span class="ss-tag2 ' + (d.start ? 'start' : 'sit') + '">' + (d.start ? 'START' + (d.slot ? ' · ' + escapeHTML(slotShort(d.slot)) : '') : 'SIT') + '</span>' +
+        '<button type="button" class="ssg-det" data-ss-open="' + (d.pid === ctx.ssOpen ? '' : escapeHTML(d.pid)) + '">' + (d.pid === ctx.ssOpen ? 'Hide details ▴' : 'Details ▾') + '</button></div>';
     }).join('');
-    const table = '<div class="card ss-table" style="--n:' + cols.length + '"><div class="ss-row ss-heads"><div class="ss-lbl"></div>' + heads + '</div>' +
-      row('Adds to your lineup', cols.map(function(pid){ return r.rows.find(function(y){ return y.pid === pid; }).add; }), function(v){ return '+' + v.toFixed(2); }, 'high') +
-      row('Projection', cols.map(function(pid){ return ctx.projections[pid]; }), fmtPts, 'high') +
-      row('Rank this week', cols.map(rank), function(v){ return '#' + v; }, 'low') +
-      row('Matchup', cols.map(function(pid){ return dvpChipHTML(pid) || '—'; })) +
-      row('Game', cols.map(kick)) +
-      row('Last 3 avg', cols.map(function(pid){ return hist(pid) && hist(pid).length ? last3Avg(pid) : null; }), fmtPts, 'high') +
-      row('Season avg', cols.map(seasonAvgPts), fmtPts, 'high') +
-      row('Typical week', cols.map(rng)) +
-      row('Snap share', cols.map(function(pid){ return seasonShare(pid, 's'); }), pct, 'high') +
-      row('Status', cols.map(status)) +
+    const grid = '<div class="ssg" style="--n:' + data.length + '"><div class="ssg-l"></div>' + heads +
+      grow('Chance to score most', data.map(function(d){ return d.win; }), function(v){ return v + '%'; }) +
+      grow('Adds to your lineup', data.map(function(d){ return d.add; }), function(v){ return '+' + v.toFixed(2); }) +
+      grow('Projection', data.map(function(d){ return d.proj; }), f2) +
+      grow('Floor', data.map(function(d){ return d.floor; }), f1) +
+      grow('Ceiling', data.map(function(d){ return d.ceil; }), f1) +
+      grow('L3 average', data.map(function(d){ return d.l3; }), f1) +
+      grow('Opp. vs position', data.map(function(d){ return d.dvp ? d.dvp.rank : null; }), function(v){ const d = data.find(function(x){ return x.dvp && x.dvp.rank === v; }); return d ? '<span class="ss-mtx ' + d.tag.toLowerCase() + '">' + dvpLabel(d.dvp, true) + '</span>' : '—'; }, true) +
+      grow('Usage', data.map(function(d){ return d.usage; }), null, false, true) +
+      grow('Status', data.map(function(d){ return d.st ? '<span class="st-' + d.st.tone + '">' + escapeHTML(d.st.label) + '</span>' : 'Healthy'; }), null, false, true) +
+      '<div class="ssg-l">Last 5</div>' + data.map(function(d){ return '<div class="ssg-c l5">' + (d.last5.length ? d.last5.map(function(v){ return '<i style="height:' + Math.max(6, Math.round(100 * Math.max(0, v) / maxL5)) + '%;--pc:' + posColor(d.pos) + '" title="' + v.toFixed(1) + '"></i>'; }).join('') : '<span class="dim">No games yet</span>') + '</div>'; }).join('') +
     '</div>';
-    const cards = '<div class="ss-cards">' + cols.map(function(pid){
-      const x = r.rows.find(function(y){ return y.pid === pid; }), p = ctx.players[pid], i = dvpInfo(pid), tier = x.start ? (x === top ? 'holo' : 'gold') : 'base';
-      return '<div class="ss-cardwrap"><div class="cd tc-card t-' + tier + '" data-open="' + escapeHTML(pid) + '" role="button" tabindex="0" style="--pc:' + posColor(posGroup(pid)) + (i ? ';--mc:' + CD_TONE[i.tone] : '') + '" aria-label="' + escapeHTML(playerName(p)) + '">' +
-        '<div class="cd-in">' + cdFrontHTML({ name: x.start ? 'START' + (x.slot ? ' · ' + slotShort(x.slot) : '') : 'SIT' }, pid, tier, cols.indexOf(pid) + 1, { nums: [[fmtPts(ctx.projections[pid]), 'PROJ'], ['+' + x.add.toFixed(1), 'ADDS']] }) + '</div></div></div>';
-    }).join('') + '</div>';
-    const missing = cols.filter(function(pid){ return !hist(pid); });
-    if(missing.length && !ssHTML.pending){ ssHTML.pending = true; Promise.all(missing.map(ensureHistory)).then(function(){ ssHTML.pending = false; if(ctx.view === 'compare' && ctx.cmpSec === 'ss') renderCompare(); }); }
-    return '<div class="ss"><div class="ss-layout">' + side + '<div class="ss-main">' +
-      '<div class="card ss-verdict"><div class="eyebrow">This week · week ' + ctx.week + '</div><div class="ss-vt">' + verdict + '</div>' +
-        (notMine.length ? '<div class="ss-vn">' + notMine.map(nm).join(', ') + (notMine.length === 1 ? ' isn’t' : ' aren’t') + ' on your team: valued as if you had ' + (notMine.length === 1 ? 'him' : 'them') + '.</div>' : '') + '</div>' +
-      '<div class="ss-bar"><div class="wk-seg" role="group" aria-label="View"><button type="button" data-ss-view="list" aria-pressed="' + (view === 'list') + '">Table</button><button type="button" data-ss-view="cards" aria-pressed="' + (view === 'cards') + '">Cards</button></div>' +
-        '<button type="button" class="quiet-btn" data-ss-full>Full stats' + (cols.length > 2 ? ' (top 2)' : '') + ' ›</button></div>' +
-      (view === 'cards' ? cards : table) +
-      '<p class="tr-note">“Adds to your lineup” = your best lineup this week with that player minus without any of them, from Sleeper’s projections in your league’s scoring (most restrictive slots first, so a flex choice across positions is handled). START / SIT = your best lineup with all of them available.</p>' +
-    '</div></div></div>';
+    // ---- phone: verdict card + one big card per player ----
+    const lo = Math.min.apply(null, data.map(function(d){ return d.floor !== null ? d.floor : d.proj * 0.6; }).concat([0])), hi = Math.max.apply(null, data.map(function(d){ return d.ceil !== null ? d.ceil : d.proj * 1.4; }).concat([10]));
+    const pctAt = function(v){ return Math.max(0, Math.min(100, 100 * (v - lo) / Math.max(1, hi - lo))); };
+    const pv = '<div class="ssp-verdict">' + (starts.length ? photo(starts[0], 'ssp-vph') : '') + '<div class="ssp-vt"><span class="ss-lbl g">' + (starts.length ? 'START' : 'SIT') + '</span><b>' + escapeHTML(starts.length === 1 ? starts[0].last : head) + '</b><small>' + (starts.length === 1 ? starts[0].win + '% to score most' : escapeHTML(sub)) + '</small></div>' + (delta !== null ? '<b class="ssp-vd">+' + delta.toFixed(1) + '</b>' : '') + '</div>';
+    const pcards = data.map(function(d, i){
+      const op = d.pid === ctx.ssOpen;
+      return '<div class="ssp-card' + (i === 0 ? ' top' : '') + (op ? ' open' : '') + '" data-ss-open="' + (op ? '' : escapeHTML(d.pid)) + '" role="button" tabindex="0" aria-expanded="' + op + '">' +
+        '<div class="sspc-h">' + photo(d, 'sspc-ph') + '<div class="sspc-t"><b>' + nm(d) + '</b><small>' + escapeHTML(d.pos + ' · ' + d.team + ' · ' + d.opp) + '</small><span class="ss-tag2 ' + (d.start ? 'start' : 'sit') + '">' + (d.start ? 'START' + (d.slot ? ' · ' + escapeHTML(slotShort(d.slot)) : '') : 'SIT') + '</span></div><b class="sspc-p">' + d.proj.toFixed(2) + '</b></div>' +
+        (d.floor !== null ? '<div class="sspc-bar"><i style="left:' + pctAt(d.floor).toFixed(1) + '%;right:' + (100 - pctAt(d.ceil)).toFixed(1) + '%;--pc:' + posColor(d.pos) + '"></i><u style="left:' + pctAt(d.proj).toFixed(1) + '%"></u></div>' : '') +
+        '<div class="sspc-stats"><div><span class="ss-lbl">RANGE</span><b>' + (d.floor !== null ? d.floor.toFixed(1) + '–' + d.ceil.toFixed(1) : '—') + '</b></div><div><span class="ss-lbl">L3</span><b>' + (d.l3 !== null ? d.l3.toFixed(1) : '—') + '</b></div><div><span class="ss-lbl">MATCHUP</span><b class="ss-mtx ' + (d.tag ? d.tag.toLowerCase() : '') + '">' + (d.tag || '—') + '</b></div></div>' +
+        (op ? '<div class="sspc-more"><div class="sspc-win"><b>' + d.win + '%</b><span>chance to score most</span></div>' + oddsBar(d.pid) + why(d) + '<span class="sspc-hint">Hide details ▴</span></div>' : '<span class="sspc-hint">Details ▾</span>') +
+      '</div>';
+    }).join('');
+    const foot = '<div class="ssp-foot"><button type="button" class="ssp-add" data-ss-sheet="1">+ Add player</button>' + (setable.length ? '<button type="button" class="ssp-start" data-ss-set>Start ' + escapeHTML(setable.map(function(d){ return d.last; }).join(' & ')) + '</button>' : '') + '</div>';
+    return '<div class="ss2">' +
+      '<div class="ssd">' + rail + '<div class="ssd-main">' + banner + detail + grid + note +
+        '<p class="tr-note">“Chance to score most” simulates each player’s projection with his typical week-to-week swing. “Adds to your lineup” = your best lineup this week with him minus without any of them (flex-aware); START / SIT = your best lineup with all of them available.</p></div></div>' +
+      '<div class="ssp">' + pv + pcards + note + foot + '</div>' + sheet + '</div>';
   }
 
   // Which way is better. Lower wins for mistakes and things a defense gives up; DEF takeaways (int, sack, fum_rec)

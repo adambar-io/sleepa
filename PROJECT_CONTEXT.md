@@ -88,6 +88,24 @@ A single-file local web app for viewing a Sleeper fantasy football roster with c
   - Cards: `tradeCardHTML` reuses the Huddle card front (`cdFrontHTML(…, opts)`: `noLock`, `nums` = ROS points + FantasyCalc value). Tier comes from the ROS positional rank (`rosRank`: top 3 holo, 12 gold, 24 silver).
   - Compare sections: `ctx.cmpSec` (`rv-cmp-sec`): Trades, and Lineup changes (the old plan-vs-Sleeper diff, `renderLineupDiff`; the Lineup page's Compare button and the Huddle's "See them" open it).
   - Verified in BATTLEBALL: a 1-for-1 matched an independent sum of `bestLineup` differences (79.95). In a 2-for-1, my freed spot was filled with Malik Willis and their extra player meant dropping Ventrell Miller. Giving away an IR player frees no spot.
+- **Start / Sit redesign (Oct 5 2026; owner's design "Turn 2", handoff in `design/start-sit/START-SIT.md` + `Sleepa Start-Sit Redesign.dc.html`, which needs the design tool's support.js, not copied)**. `ssHTML` renders a desktop layout `.ssd` and a phone layout `.ssp`; CSS shows one (phone below 1024px).
+  - **Desktop:**
+    - 290px checklist rail (`.ssd-rail`): Comparing · n of 4, Your team / Available / All, search `#ss-q2`, position chips, rows with a checkbox, 32px ringed photo, name, pos · team and projection.
+    - Verdict banner: START + name(s), "+delta over X · n% chance to score most", "Set X in lineup".
+    - Optional detail panel (`ctx.ssOpen`): 150px photo, #rank of n · matchup, name, projection, win %, odds bar, "Why" (4 reasons from `ssReasons`), Close.
+    - Comparison grid (`.ssg`: label column + one column per player, ordered by what each adds): header card (photo with matchup glow, name, pos · team · opp, projection, START/SIT tag, Details), then rows: chance to score most, adds to lineup, projection, floor, ceiling, L3, opponent vs position, usage, status, last 5 bars. The best value per row is green; the top column has a green ring, the open column a white one.
+    - Container queries: the full-size 72px headers from 820px of grid width; the detail panel stacks "Why" below under 900px.
+  - **Phone:**
+    - Verdict card (photo, START, name, n% to score most, +delta).
+    - One big card per player: photo, name, projection, floor–ceiling bar with a projection tick, RANGE / L3 / MATCHUP. Tap to expand: win %, odds bar, reasons.
+    - Sticky footer: "+ Add player", which opens the bottom sheet (`ctx.ssSheet`, 600px / 86vh, 28px radius; scrim, Compare / Done or Esc closes; body scroll locked), and "Start X".
+  - **Real data instead of the prototype's placeholders:**
+    - Chance to score most (`ssOdds`): 4,000 seeded draws from each player's projection with the same spread as the matchup win probability (`WP_CV` blended with his own volatility), always from projections.
+    - Floor / ceiling = `weekRange`; matchup tag from `dvpInfo` tone (Favorable / Neutral / Tough).
+    - Usage = target share (RB/WR/TE), tackle share (IDP) or snap share.
+    - The verdict and START / SIT still come from `ssResult` (lineup-aware, flex-aware).
+  - **"Set X in lineup":** sleepa can't change Sleeper, so it puts the recommended starters into your sleepa plan (`ssPlanTargets` / `ssSetPlan` → `swapIntoSlot`) and shows "Your plan now starts X. Make the same change in Sleeper." It's offered only when he's yours, not already in the plan, and neither he nor the player in his target slot has kicked off; "Already in your lineup" when they all start.
+  - The old table / cards views and the separate picker were removed.
 - **Start / Sit (Compare, Oct 5 2026)** (`ssHTML`, `ssResult`, `#cmp-ss`; the default Compare section):
   - **Picking players:** `ctx.h2h` (kept name) holds up to `SS_MAX` (4); a fifth pick drops the oldest. A VS button anywhere toggles a player: the bottom tray is now a 5-second toast ("Added X · Start / Sit (n) ›"), and the Compare nav / tab buttons get a count badge (`.nav-badge`). You can also add players by name search (`ssSearchHTML`, which updates only the results so the keyboard stays up) or with "Your players" chips.
   - **Back:** `openStartSit()` remembers the screen and scroll position (`ctx.cmpReturn`) for the ‹ Back button; leaving Compare any other way forgets it.
