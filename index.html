@@ -1514,6 +1514,14 @@
   .tf-v{ margin-left: auto; flex: none; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; }
   .tf-v.v-both{ color: var(--accent); background: color-mix(in srgb, var(--accent) 13%, transparent); }
   .tf-v.v-cons{ color: var(--accent); background: color-mix(in srgb, var(--accent) 13%, transparent); }
+  .lm{ margin-top: 10px; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); font-size: 13px; line-height: 1.5; color: var(--text-2); }
+  .lm .eyebrow{ display: block; margin-bottom: 2px; }
+  .lm-r{ display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; }
+  .lm-r b{ color: var(--text); font-weight: 650; }
+  .lm-p{ font-size: 11.5px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+  .lm-t{ flex: none; width: 30px; font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+  .lm-t.out{ color: var(--danger); } .lm-t.in{ color: var(--accent); } .lm-t.mv{ color: var(--text-3); width: auto; margin-right: 4px; }
+  .lm-n{ font-size: 12px; color: var(--text-3); margin-top: 2px; font-variant-numeric: tabular-nums; }
   .tf-val{ font-size: 12.5px; color: var(--text-2); margin-top: 2px; }
   .tf-tag.cons{ color: var(--accent); background: color-mix(in srgb, var(--accent) 11%, transparent); font-weight: 700; }
   .tb-verdict.v-over{ color: var(--danger); background: color-mix(in srgb, var(--danger) 10%, transparent); }
@@ -1968,15 +1976,15 @@
   .ss-tag.sit{ color: var(--text-3); background: var(--surface-2); }
   .ss-cards{ display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-bottom: 12px; }
   .ss-cards .cd{ --cdw: clamp(140px, 42vw, 200px); cursor: pointer; }
-  .ss-side, .ss-empty-main{ display: none; }
-  .ss-layout{ display: block; }
-  @media (min-width: 1280px){   /* side-by-side only when the comparison still gets ~600px */
-    .ss{ max-width: 1240px; }
-    .ss-compact{ display: none; }
-    .ss-layout{ display: grid; grid-template-columns: minmax(300px, 360px) minmax(0, 1fr); gap: 16px; align-items: start; }
-    .ss-side{ display: flex; flex-direction: column; gap: 10px; position: sticky; top: 12px; max-height: calc(100vh - 24px); padding: 14px; box-sizing: border-box; }
-    .ss-empty-main{ display: grid; gap: 6px; padding: 28px 24px; text-align: center; color: var(--text-2); font-size: 14px; line-height: 1.5; }
-    .ss-empty-main b{ font-size: 18px; color: var(--text); }
+  /* the picker list with photos everywhere: stacked above the comparison, side by side when there's room */
+  .ss{ max-width: 1240px; }
+  .ss-layout{ display: grid; gap: 14px; }
+  .ss-side{ display: flex; flex-direction: column; gap: 10px; padding: 14px; box-sizing: border-box; max-height: 460px; }
+  .ss-empty-main{ display: grid; gap: 6px; padding: 24px 20px; text-align: center; color: var(--text-2); font-size: 14px; line-height: 1.5; }
+  .ss-empty-main b{ font-size: 18px; color: var(--text); }
+  @media (min-width: 1180px){
+    .ss-layout{ grid-template-columns: minmax(300px, 360px) minmax(0, 1fr); gap: 16px; align-items: start; }
+    .ss-side{ position: sticky; top: 12px; max-height: calc(100vh - 24px); }
   }
   .ss-sh{ display: flex; align-items: center; justify-content: space-between; }
   .ss-sh .ss-clear{ margin: 0; }
@@ -5783,7 +5791,8 @@
     let open = null;
     if(myAfter.length < rosterSize() && me.after.weeks.length){ const f = tvValue(myAfter, { po2x: !!t.po2x }); if(f.adds.length && f.total - me.after.total > 0.05) open = { adds: f.adds, d: f.total - me.after.total }; }
     const cons = isConsolidation(give, get, startCounts(mine, me.before.weeks), me.before.weeks.length), vc = valueCheck(give, get, cons);
-    return { give: give, get: get, me: me, them: th, weeks: weeks, ps: ps, playoffs: po(weeks), rosGive: ros(give), rosGet: ros(get), fcGet: fcGet, fcGive: fcGive, open: open, cons: cons, vc: vc,
+    const moves = me.before.weeks.length ? lineupMoves(mine, myAfter, me.before.weeks[0]) : null;
+    return { give: give, get: get, me: me, them: th, weeks: weeks, ps: ps, playoffs: po(weeks), rosGive: ros(give), rosGet: ros(get), fcGet: fcGet, fcGive: fcGive, open: open, cons: cons, vc: vc, moves: moves,
       verdict: tradeVerdict(me, th, fcGet && fcGive ? fcGive.v - fcGet.v : 0) };
   }
   // Full name, plus last name only for narrow phone columns (CSS picks which one shows; the position sits next to it).
@@ -5862,7 +5871,7 @@
       return out;
     };
     const rosterNotes = moves(r.me, 'You').concat(moves(r.them, 'They'));
-    if(r.open) rosterNotes.push('It frees a roster spot: adding <b>' + names(r.open.adds) + '</b> from waivers would add ' + signed(r.open.d) + ' more (not counted above: you could make a waiver move without trading)');
+    if(r.open) rosterNotes.push('It also frees a roster spot (not counted above)');
     const vtxt = valueText(r.vc), over = r.me.d >= TR_MIN && !r.vc.ok;
     const vk = over ? 'over' : r.verdict.k, vt = over ? 'Your lineup gains, but you overpay: ' + vtxt : r.verdict.t + (vtxt ? ' · ' + vtxt : '') + (r.cons ? ' · consolidation upgrade' : '');
     const mktThem = r.fcGet && r.fcGive ? r.fcGive.v - r.fcGet.v : null;
@@ -5872,6 +5881,7 @@
           '<div class="tb-vs">vs</div>' +
           '<div class="tb-side them"><span class="eyebrow">' + escapeHTML(rosterName(t.team)) + '</span><b class="tb-num' + tone(r.them.d) + '">' + signed(r.them.d) + '</b><span class="tb-sub">' + signed(perWk('td')) + ' per week</span></div></div>' +
         '<div class="tb-verdict v-' + vk + '">' + escapeHTML(vt) + '<button type="button" class="tb-copy" data-trade-copy>Copy for league chat</button></div>' +
+        lineupMovesHTML(r.moves) +
         (rosterNotes.length ? '<div class="tb-notes">' + rosterNotes.map(function(x){ return '<div>' + x + '</div>'; }).join('') + '</div>' : '') +
         '<div class="tb-cap">Change in each team’s best starting lineup, ' + span + '. A team left over the roster limit drops its least useful player; an open spot isn’t filled. ' + (weekUnderway() ? 'This week’s games have started, so it counts from week ' + wk0 + '.' : '') + '</div>' +
       '</div>' +
@@ -5944,6 +5954,10 @@
       const me = N.teams.find(function(t){ return t.mine; });
       const teams = N.teams.filter(function(t){ return !t.mine && (!tf.team || t.id === tf.team); });
       const ros = function(pid){ const v = rosValue(pid); return v ? v.pts : 0; };
+      const tradeable = function(pid){ const g = posGroup(pid); return g !== 'K' && g !== 'DEF' && (sf || g !== 'QB'); };   // nobody trades starters for a kicker or a defense
+      // QBs: in a one-QB league anyone can stream a backup, so QBs only move as a QB-for-QB swap
+      // (1-for-1, or inside a 2-for-2 with one more player each way). Superflex / 2-QB leagues trade QBs like any starter.
+      const sf = (ctx.rosterPositions || []).filter(function(sl){ return sl === 'QB' || sl === 'SUPER_FLEX' || sl === 'QB_FLEX'; }).length > 1;
       const without = function(list, out){ return list.filter(function(x){ return out.indexOf(x) === -1; }); };
       // each team's starting point, week by week: its best lineup's total, who starts, and its weakest starter. A trade
       // changes a week only if a player leaving starts that week or a player arriving beats that weakest starter; other
@@ -5993,18 +6007,27 @@
         return v;
       };
       const P0 = prep(me);
-      const myGive = me.act.filter(function(pid){ return ros(pid) > 0 && (!tf.keep || (me.starts[pid] || 0) < weeks.length / 2); }).sort(function(a, b){ return ros(b) - ros(a); }).slice(0, 10);
+      const myGive = me.act.filter(function(pid){ return tradeable(pid) && ros(pid) > 0 && (!tf.keep || (me.starts[pid] || 0) < weeks.length / 2); }).sort(function(a, b){ return ros(b) - ros(a); }).slice(0, 10);
       const cands = [], mine = [];
       let done = 0, total = 0;
       const plans = teams.map(function(t){
         // players of theirs who could help me: what each adds to my lineup on his own is an upper bound on any deal for him
-        const get = t.act.filter(function(pid){ return ros(pid) > 0 && weeks.some(function(w, i){ return lineupPts(pid, w, sc) > P0.floors[i]; }) && P0.add(pid) >= TR_MIN; }).sort(function(a, b){ return P0.add(b) - P0.add(a); }).slice(0, 7);
+        const get = t.act.filter(function(pid){ return tradeable(pid) && ros(pid) > 0 && weeks.some(function(w, i){ return lineupPts(pid, w, sc) > P0.floors[i]; }) && P0.add(pid) >= TR_MIN; }).sort(function(a, b){ return P0.add(b) - P0.add(a); }).slice(0, 7);
         const deals = [];
         // 1-for-1s are also the building blocks of 2-for-2s, so they're scored (not shown) when only 2-for-2 is on
         if(tf.sizes.s11 || tf.sizes.s22) myGive.forEach(function(g){ get.forEach(function(x){ deals.push([[g], [x], !tf.sizes.s11]); }); });
+        // one-QB leagues: QBs only as a swap, my QB for theirs, alone or with one more player each way
+        if(!sf){
+          const qb = function(list){ return list.filter(function(p){ return posGroup(p) === 'QB' && ros(p) > 0; }); };
+          const mq = qb(me.act), tq = qb(t.act);
+          mq.forEach(function(a){ tq.forEach(function(b){
+            if(tf.sizes.s11) deals.push([[a], [b]]);
+            myGive.slice(0, 5).forEach(function(g){ get.slice(0, 4).forEach(function(x){ deals.push([[a, g], [b, x]]); }); });   // QB swaps with one more each way: always searched (it's where QBs belong)
+          }); });
+        }
         // consolidation: one of my starters + one of my bench players for a player who projects more per week than either
         if(tf.sizes.cons && !tf.keep){
-          const nW = weeks.length, bench = me.act.filter(function(p){ return ros(p) > 0 && (me.starts[p] || 0) < nW / 2; }).sort(function(a, b){ return ros(b) - ros(a); }).slice(0, 6);
+          const nW = weeks.length, bench = me.act.filter(function(p){ return tradeable(p) && ros(p) > 0 && (me.starts[p] || 0) < nW / 2; }).sort(function(a, b){ return ros(b) - ros(a); }).slice(0, 6);
           const st = myGive.filter(function(p){ return (me.starts[p] || 0) >= nW / 2; }).slice(0, 8);
           get.forEach(function(x){ st.forEach(function(sp){ bench.forEach(function(b){ if(perWeekRos(x) > perWeekRos(sp) && perWeekRos(x) > perWeekRos(b)) deals.push([[sp, b], [x]]); }); }); });
         }
@@ -6174,6 +6197,7 @@
             (valueText(c.vc) ? '<div class="tf-val">Market value: ' + escapeHTML(valueText(c.vc)) + '</div>' : '') +
             (c.tags.length ? '<div class="tf-tags">' + c.tags.map(function(t){ return '<span class="tf-tag ' + t.k + '">' + escapeHTML(t.t) + '</span>'; }).join('') + '</div>' : '') +
             ((c.myAdds && c.myAdds.length) || (c.theirDrops && c.theirDrops.length) ? '<div class="tb-notes">' + (c.myAdds && c.myAdds.length ? '<div>You could add <b>' + c.myAdds.map(nm).join(', ') + '</b> from waivers</div>' : '') + (c.theirDrops && c.theirDrops.length ? '<div>They would have to drop <b>' + c.theirDrops.map(nm).join(', ') + '</b></div>' : '') + '</div>' : '') +
+            lineupMovesHTML(c.moves || (c.moves = lineupMoves(rosterActive(ctx.myRoster), rosterActive(ctx.myRoster).filter(function(p){ return c.give.indexOf(p) === -1; }).concat(c.get), (tvWeeks()[0] || ctx.week)))) +
             '<div class="tf-acts"><button type="button" class="quiet-btn" data-tf-copy="' + i + '">Copy for league chat</button><button type="button" class="quiet-btn" data-tf-open="' + i + '">Open in builder ›</button></div></div>';
         }).join('');
     }
@@ -9218,6 +9242,27 @@
     const pct = vc.give ? vc.d / vc.give : 0;
     return Math.abs(pct) < 0.05 ? 'value about even' : vc.d > 0 ? 'you gain ' + Math.round(vc.d).toLocaleString() + ' in value' : 'you pay ' + Math.round(-vc.d).toLocaleString() + ' in value';
   }
+  // Who leaves my starting lineup and who comes in after a trade, in a given week (the first week it counts): makes the
+  // slot logic visible (an RB sent away is replaced by my next RB, not by the WR I get).
+  function lineupMoves(before, after, week){
+    const sc = (ctx.league && ctx.league.scoring_settings) || {};
+    const b = bestLineup(before, ctx.rosterPositions, sc, week).slots, a = bestLineup(after, ctx.rosterPositions, sc, week).slots;
+    const inB = {}, inA = {};
+    b.forEach(function(x){ if(x.pid) inB[x.pid] = x; }); a.forEach(function(x){ if(x.pid) inA[x.pid] = x; });
+    // players who stay but change slot type (an RB moving from FLEX into the RB spot the traded RB left)
+    const moved = a.filter(function(x){ return x.pid && inB[x.pid] && inB[x.pid].slot !== x.slot; }).map(function(x){ return { pid: x.pid, from: inB[x.pid].slot, to: x.slot, pts: x.pts }; });
+    return { week: week, out: b.filter(function(x){ return x.pid && !inA[x.pid]; }), in: a.filter(function(x){ return x.pid && !inB[x.pid]; }), moved: moved };
+  }
+  function lineupMovesHTML(mv){
+    if(!mv || (!mv.out.length && !mv.in.length)) return '';
+    const one = function(x){ const p = ctx.players[x.pid]; return '<b>' + escapeHTML(p.position === 'DEF' ? (p.team || x.pid) + ' D/ST' : (p.first_name ? p.first_name.charAt(0) + '. ' : '') + (p.last_name || playerName(p))) + '</b> <span class="lm-p">' + escapeHTML(posGroup(x.pid)) + ' ' + x.pts.toFixed(1) + '</span>'; };
+    const tot = function(list){ return list.reduce(function(a, x){ return a + x.pts; }, 0); };
+    return '<div class="lm"><span class="eyebrow">Your lineup, week ' + mv.week + '</span>' +
+      '<div class="lm-r"><span class="lm-t out">Out</span>' + (mv.out.map(one).join(', ') || '—') + '</div>' +
+      '<div class="lm-r"><span class="lm-t in">In</span>' + (mv.in.map(one).join(', ') || '—') + '</div>' +
+      (mv.moved.length ? '<div class="lm-r"><span class="lm-t mv">Moves</span>' + mv.moved.map(function(x){ return one(x) + ' <span class="lm-p">' + escapeHTML(slotShort(x.from)) + ' → ' + escapeHTML(slotShort(x.to)) + '</span>'; }).join(', ') + '</div>' : '') +
+      '<div class="lm-n">' + signed(tot(mv.in) - tot(mv.out)) + ' that week</div></div>';
+  }
   function tradeVerdict(me, them, mktThem){
     const tol = TR_TOL * Math.max(1, them.before.total);
     if(me.d >= TR_MIN && them.d >= -TR_MIN) return { k: 'both', t: 'Good for both teams: worth proposing' };
@@ -10851,18 +10896,8 @@
   function ssHTML(){
     const pids = ctx.h2h.filter(function(pid){ return ctx.players[pid]; });
     const view = ctx.ssView === 'cards' ? 'cards' : 'list';
-    const chips = pids.map(function(pid){
-      return '<button type="button" class="ss-chip" data-ss-remove="' + escapeHTML(pid) + '" style="--pc:' + posColor(posGroup(pid)) + '" aria-label="Remove ' + escapeHTML(playerName(ctx.players[pid])) + '">' + avatarTag(pid, 'ss-cav') + '<span>' + escapeHTML(lastName(pid)) + '</span><i aria-hidden="true">×</i></button>';
-    }).join('');
-    const mine = rosterActive(ctx.myRoster).filter(function(pid){ return pids.indexOf(pid) === -1; }).sort(function(a, b){ return (ctx.projections[b] || 0) - (ctx.projections[a] || 0); });
-    const pickers = '<div class="card ss-pick ss-compact">' +
-      '<div class="ss-chips">' + (chips || '<span class="ss-empty">Pick 2–' + SS_MAX + ' players: tap <b>VS</b> on any player, search, or tap one of yours below.</span>') +
-        (pids.length ? '<button type="button" class="ss-clear" data-ss-clear>Clear</button>' : '') + '</div>' +
-      (pids.length < SS_MAX ? '<label class="pl-search ss-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg><input id="ss-q" data-ss-q type="search" placeholder="Add any player by name" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" value="' + escapeHTML(ctx.ssQ || '') + '"></label><div class="ss-hits" id="ss-hits">' + ssSearchHTML(ctx.ssQ) + '</div>' +
-        '<div class="ss-mine"><span class="eyebrow">Your players</span><div class="ss-mine-row">' + mine.map(function(pid){ return '<button type="button" class="ss-mchip" data-ss-add="' + escapeHTML(pid) + '" style="--pc:' + posColor(posGroup(pid)) + '"><b>' + escapeHTML(posGroup(pid)) + '</b> ' + escapeHTML(lastName(pid)) + '</button>'; }).join('') + '</div></div>' : '') +
-      '</div>';
     const side = ssSideHTML(pids);
-    if(pids.length < 2) return '<div class="ss">' + pickers + '<div class="ss-layout">' + side + '<div class="ss-main"><div class="card ss-empty-main"><b>Who should start?</b><span>Pick ' + (pids.length ? 'one more player' : 'two to ' + SS_MAX + ' players') + ' from the list: your own, available, or anyone in the league. You’ll see who makes your best lineup this week and by how much.</span></div></div></div></div>';
+    if(pids.length < 2) return '<div class="ss"><div class="ss-layout">' + side + '<div class="ss-main"><div class="card ss-empty-main"><b>Who should start?</b><span>Pick ' + (pids.length ? 'one more player' : 'two to ' + SS_MAX + ' players') + ' from the list: your own, available, or anyone in the league. You’ll see who makes your best lineup this week and by how much.</span></div></div></div></div>';
     const r = ssResult(pids), top = r.rows[0], next = r.rows[1];
     const nm = function(pid){ return escapeHTML(playerName(ctx.players[pid])); };
     // the answer first: who starts (all of them may fit your lineup), and by how much
@@ -10916,7 +10951,7 @@
     }).join('') + '</div>';
     const missing = cols.filter(function(pid){ return !hist(pid); });
     if(missing.length && !ssHTML.pending){ ssHTML.pending = true; Promise.all(missing.map(ensureHistory)).then(function(){ ssHTML.pending = false; if(ctx.view === 'compare' && ctx.cmpSec === 'ss') renderCompare(); }); }
-    return '<div class="ss">' + pickers + '<div class="ss-layout">' + side + '<div class="ss-main">' +
+    return '<div class="ss"><div class="ss-layout">' + side + '<div class="ss-main">' +
       '<div class="card ss-verdict"><div class="eyebrow">This week · week ' + ctx.week + '</div><div class="ss-vt">' + verdict + '</div>' +
         (notMine.length ? '<div class="ss-vn">' + notMine.map(nm).join(', ') + (notMine.length === 1 ? ' isn’t' : ' aren’t') + ' on your team: valued as if you had ' + (notMine.length === 1 ? 'him' : 'them') + '.</div>' : '') + '</div>' +
       '<div class="ss-bar"><div class="wk-seg" role="group" aria-label="View"><button type="button" data-ss-view="list" aria-pressed="' + (view === 'list') + '">Table</button><button type="button" data-ss-view="cards" aria-pressed="' + (view === 'cards') + '">Cards</button></div>' +
