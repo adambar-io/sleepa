@@ -1811,6 +1811,10 @@
   .mu-link{ font-size: 12.5px; font-weight: 600; color: var(--accent); white-space: nowrap; }
   .mu-row{ display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; }
   .mu-side{ min-width: 0; } .mu-side.opp{ text-align: right; }
+  .mu-name, .vs-tn{ display: flex; align-items: center; gap: 7px; min-width: 0; }
+  .mu-name span, .vs-tn span{ min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mu-side.opp .mu-name, .vs-team.opp .vs-tn{ flex-direction: row-reverse; }
+  .t-av.mu-av{ width: 26px; height: 26px; } .t-av.mu-av b{ font-size: 9.5px; }
   .mu-name{ font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .mu-pts{ font-size: 30px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
   .mu-pts.up{ color: var(--accent); } .mu-pts.down{ color: var(--danger); }
@@ -1900,7 +1904,9 @@
   .st-row:first-child{ border-top: none; }
   .st-headrow{ font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--text-3); padding-top: 8px; padding-bottom: 8px; }
   .st-rank{ color: var(--text-3); font-variant-numeric: tabular-nums; }
-  .st-team{ font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .st-team{ font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .st-tn{ min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .t-av.st-av{ width: 24px; height: 24px; } .t-av.st-av b{ font-size: 9px; }
   .st-div{ margin-left: 6px; font-size: 10.5px; font-weight: 600; color: var(--text-3); }
   .st-rec, .st-num{ text-align: right; font-variant-numeric: tabular-nums; }
   .st-num{ color: var(--text-2); }
@@ -5799,10 +5805,10 @@
     return '<button type="button" class="mu-card" data-open-opp aria-label="This week’s matchup. Compare your lineup with ' + escapeHTML(mu.name) + '’s">' +
       '<div class="mu-head"><span class="eyebrow">Week ' + ctx.week + ' matchup · projected</span><span class="mu-link">Compare lineups ›</span></div>' +
       '<div class="mu-row">' +
-        '<div class="mu-side"><div class="mu-name">' + escapeHTML(els.teamName.textContent || 'You') + '</div><div class="mu-pts num' + tone + '" data-open-proj="lineup">' + mine.toFixed(2) + '</div>' +
+        '<div class="mu-side"><div class="mu-name">' + teamAvHTML(ctx.myRoster.roster_id, 'mu-av') + '<span>' + escapeHTML(els.teamName.textContent || 'You') + '</span></div><div class="mu-pts num' + tone + '" data-open-proj="lineup">' + mine.toFixed(2) + '</div>' +
           (dirty ? '<div class="mu-sub">Your plan · Sleeper lineup ' + sleeperTotal.toFixed(2) + '</div>' : '<div class="mu-sub">Your Sleeper lineup</div>') + '<span class="mu-bd" data-open-proj="lineup">Breakdown ›</span></div>' +
         '<div class="mu-vs" aria-hidden="true">vs</div>' +
-        '<div class="mu-side opp"><div class="mu-name">' + escapeHTML(mu.name) + '</div><div class="mu-pts num">' + oppTotal.toFixed(2) + '</div><div class="mu-sub">Their Sleeper lineup</div></div>' +
+        '<div class="mu-side opp"><div class="mu-name">' + teamAvHTML(mu.rosterId, 'mu-av') + '<span>' + escapeHTML(mu.name) + '</span></div><div class="mu-pts num">' + oppTotal.toFixed(2) + '</div><div class="mu-sub">Their Sleeper lineup</div></div>' +
       '</div>' + wpBarHTML(wp, false, false) +
       '<div class="mu-foot' + tone + '">' + (dirty
         ? 'With your changes you’re ' + marginText(planTotal - oppTotal) + ' <span class="dim">(Sleeper lineup: ' + marginText(sleeperTotal - oppTotal) + ')</span>'
@@ -5824,8 +5830,8 @@
     const tone = Math.abs(d) < 0.005 ? '' : d > 0 ? ' up' : ' down', nowTone = Math.abs(now) < 0.005 ? '' : now > 0 ? ' up' : ' down';
     const on = me.inG + op.inG > 0 || liveWindow();
     const dirty = JSON.stringify(ctx.draftStarters) !== JSON.stringify(ctx.originalStarters);
-    const side = function(cls, name, t, tn){
-      return '<div class="mu-side' + cls + '"><div class="mu-name">' + escapeHTML(name) + '</div><div class="mu-pts num' + tn + '"' + (cls ? '' : ' data-open-proj="live"') + '>' + t.pts.toFixed(2) + '</div>' +
+    const side = function(cls, name, t, tn, rid){
+      return '<div class="mu-side' + cls + '"><div class="mu-name">' + teamAvHTML(rid, 'mu-av') + '<span>' + escapeHTML(name) + '</span></div><div class="mu-pts num' + tn + '"' + (cls ? '' : ' data-open-proj="live"') + '>' + t.pts.toFixed(2) + '</div>' +
         '<div class="mu-sub">' + (done ? 'Final' : 'Proj. final <b>' + t.fin.toFixed(2) + '</b>') + '</div><div class="mu-left">' + playsLeftText(t) + '</div>' + (cls ? '' : '<span class="mu-bd" data-open-proj="live">Breakdown ›</span>') + '</div>';
     };
     const est = me.est || op.est;
@@ -5837,7 +5843,7 @@
     }
     return '<button type="button" class="mu-card live" data-open-opp aria-label="This week’s matchup, live. Compare your lineup with ' + escapeHTML(mu.name) + '’s">' +
       '<div class="mu-head"><span class="eyebrow">Week ' + ctx.week + ' · ' + (done ? 'final' : on ? '<span class="live-dot"></span>live' : 'in progress') + '</span><span class="mu-link">Compare lineups ›</span></div>' +
-      '<div class="mu-row">' + side('', els.teamName.textContent || 'You', me, nowTone) + '<div class="mu-vs" aria-hidden="true">vs</div>' + side(' opp', mu.name, op, '') + '</div>' + wpBarHTML(wp, true, done) +
+      '<div class="mu-row">' + side('', els.teamName.textContent || 'You', me, nowTone, ctx.myRoster.roster_id) + '<div class="mu-vs" aria-hidden="true">vs</div>' + side(' opp', mu.name, op, '', mu.rosterId) + '</div>' + wpBarHTML(wp, true, done) +
       '<div class="mu-foot' + tone + '">' + (done ? (Math.abs(d) < 0.005 ? 'Tied' : d > 0 ? 'You won by ' + d.toFixed(2) : 'You lost by ' + (-d).toFixed(2))
         : 'Projected to ' + (Math.abs(d) < 0.005 ? 'finish dead even' : (d > 0 ? 'win' : 'lose') + ' by ' + Math.abs(d).toFixed(2))) +
         '<span class="mu-ago" data-live-ago>Updated ' + liveAgoText() + '</span></div>' +
@@ -5927,14 +5933,14 @@
     return '<div class="vs-view">' +
       '<div class="vs-head">' +
         (live
-          ? '<div class="vs-team me"><div class="vs-tn">' + escapeHTML(els.teamName.textContent || 'You') + '</div><div class="vs-tp num">' + live.me.pts.toFixed(2) + '</div>' +
+          ? '<div class="vs-team me"><div class="vs-tn">' + teamAvHTML(ctx.myRoster.roster_id, 'mu-av') + '<span>' + escapeHTML(els.teamName.textContent || 'You') + '</span></div><div class="vs-tp num">' + live.me.pts.toFixed(2) + '</div>' +
               '<div class="vs-ts">Proj. final <b>' + live.me.fin.toFixed(2) + '</b> · ' + playsLeftText(live.me) + '</div></div>' +
             '<div class="vs-mid"><span>vs</span><small>Wk ' + ctx.week + (liveWindow() ? ' <span class="live-dot" title="Games in progress"></span>' : '') + '</small></div>' +
-            '<div class="vs-team opp"><div class="vs-tn">' + escapeHTML(mu.name) + '</div><div class="vs-tp num">' + live.op.pts.toFixed(2) + '</div><div class="vs-ts">Proj. final <b>' + live.op.fin.toFixed(2) + '</b> · ' + playsLeftText(live.op) + '</div></div>'
-          : '<div class="vs-team me"><div class="vs-tn">' + escapeHTML(els.teamName.textContent || 'You') + '</div><div class="vs-tp num' + tone + '">' + myTotal.toFixed(2) + '</div>' +
+            '<div class="vs-team opp"><div class="vs-tn">' + teamAvHTML(mu.rosterId, 'mu-av') + '<span>' + escapeHTML(mu.name) + '</span></div><div class="vs-tp num">' + live.op.pts.toFixed(2) + '</div><div class="vs-ts">Proj. final <b>' + live.op.fin.toFixed(2) + '</b> · ' + playsLeftText(live.op) + '</div></div>'
+          : '<div class="vs-team me"><div class="vs-tn">' + teamAvHTML(ctx.myRoster.roster_id, 'mu-av') + '<span>' + escapeHTML(els.teamName.textContent || 'You') + '</span></div><div class="vs-tp num' + tone + '">' + myTotal.toFixed(2) + '</div>' +
               '<div class="vs-ts">' + (dirty ? 'Your plan · Sleeper ' + sumProj(ctx.originalStarters).toFixed(2) : 'Your Sleeper lineup') + '</div></div>' +
             '<div class="vs-mid"><span>vs</span><small>Wk ' + ctx.week + '</small></div>' +
-            '<div class="vs-team opp"><div class="vs-tn">' + escapeHTML(mu.name) + '</div><div class="vs-tp num">' + oppTotal.toFixed(2) + '</div><div class="vs-ts">Their Sleeper lineup</div></div>') +
+            '<div class="vs-team opp"><div class="vs-tn">' + teamAvHTML(mu.rosterId, 'mu-av') + '<span>' + escapeHTML(mu.name) + '</span></div><div class="vs-tp num">' + oppTotal.toFixed(2) + '</div><div class="vs-ts">Their Sleeper lineup</div></div>') +
       '</div>' +
       '<div class="vs-sum' + tone + '">' + (Math.abs(d) < 0.005 ? (live ? 'Projected to finish dead even' : 'Dead even') : live ? 'Projected to ' + (d > 0 ? 'win' : 'lose') + ' by ' + Math.abs(d).toFixed(2) : 'You’re projected ' + marginText(d)) + ' · you win ' + myWins + ' of ' + ctx.rosterPositions.length + ' slots, they win ' + oppWins +
         (live ? ' <span class="mu-ago" data-live-ago>Updated ' + liveAgoText() + '</span>' : '') + '</div>' +
@@ -6447,7 +6453,7 @@
         const cut = n && i === n - 1 && i < rows.length - 1;
         return '<div class="st-row' + (r.mine ? ' mine' : ' tradeable') + (n && i < n ? ' in' : '') + (cut ? ' cut' : '') + '"' + (r.mine ? '' : ' data-open-trade="' + r.id + '" role="button" tabindex="0" title="Trade with ' + escapeHTML(r.name) + '"') + '>' +
           '<span class="st-rank">' + (i + 1) + '</span>' +
-          '<span class="st-team">' + escapeHTML(r.name) + (divs && r.div ? '<span class="st-div">Div ' + r.div + '</span>' : '') + '</span>' +
+          '<span class="st-team">' + teamAvHTML(r.id, 'st-av') + '<span class="st-tn">' + escapeHTML(r.name) + '</span>' + (divs && r.div ? '<span class="st-div">Div ' + r.div + '</span>' : '') + '</span>' +
           '<span class="st-rec">' + r.w + '-' + r.l + (hasTies ? '-' + r.t : '') + '</span>' +
           '<span class="st-num">' + r.pf.toFixed(2) + '</span><span class="st-num">' + r.pa.toFixed(2) + '</span></div>' +
           (cut ? '<div class="st-cutline"><span>Playoff line · top ' + n + '</span></div>' : '');
