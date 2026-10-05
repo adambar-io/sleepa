@@ -38,6 +38,29 @@ A single-file local web app for viewing a Sleeper fantasy football roster with c
   - **Rest of season (Oct 5 2026)**: a This week / Rest of season toggle (`ctx.wvMode`, `rv-wv-mode`). `lineupPts(pid, week, sc)` takes this week from the weekly projections; for later weeks it uses ros.json: the player's average projected week (`projPoints(r.s) / r.w`) in the weeks listed in `r.k`, zero otherwise. `waiverWeeks('ros')` = this week through `ros.through_week`. The values assume today's roster all season, so a backup QB shows up as bye or injury cover.
   - **Exact speed-ups**: in week w, an add who projects no more than the weakest player in my best lineup (and no slot is empty) can't raise it, and a player outside that week's best lineup costs nothing to drop, so those weeks are skipped. Checked against brute-force sums in BATTLEBALL weeks 4–17: 714 lineups matched, 25/25 adds, every drop and swap matched, and 0 of 142 random free agents left out were missed. It takes about 0.8 s in an IDP league and is memoized.
   - `bestLineup(…, opts)`: `opts.pts(pid)` overrides the points, and `opts.fixed` pre-places players (aligned with the non-bench slots). The **trade helper** now uses it (`bestLineupTotal`), so its lineup impact is pure points instead of Optimal Lineup's WR/RB/TE flex preference. Optimal Lineup itself still uses `fillLineup` + `pickFlex`.
+- **Compare hub + trade rework (plan agreed Oct 5 2026)**. Steps:
+  1. **Done**: `lineupDelta` groundwork plus trade fixes.
+  2. **Done**: Compare hub, with the builder moved in.
+  3. Start / Sit and the VS → Compare flow. VS adds the player and shows a toast "Added X · Compare (n) ›"; opening Compare from it shows a ‹ Back to the previous screen; a badge on the tab; the bottom tray is retired.
+  4. Team needs grid.
+  5. Trade Finder: 1-for-1 and 2-for-1 across all teams, with a team filter. Ranked by my gain, boosted when their gain is high (need/surplus). Reason tags.
+  6. 2-for-2 behind "Search deeper", plus copy-trade-summary text.
+
+  Owner's decisions:
+  - Keeper leagues use redraft FantasyCalc values for now.
+  - Fairness: show a trade if their lineup doesn't drop, or drops at most `TR_TOL` (3%) while FantasyCalc market value favors them.
+  - Styling follows Zone / Huddle, with trading cards as a view.
+- **Team value (`tvValue`, `lineupDelta`, Oct 5 2026)**: any roster's rest-of-season best lineups.
+  - Weeks (`tvWeeks`) run from this week to ros `through_week`, starting next week once any of this week's games has kicked off (`weekUnderway`). `opts.po2x` counts playoff weeks (`playoffStart()`) double.
+  - Roster spots: over `rosterSize()` (roster_positions minus IR/TAXI), the team drops the players whose loss hurts least; under it, open spots are filled from `tvFaPool()` (top 10 free agents per position by ROS) while they help.
+  - Per-week totals are memoized in `plMemo.tv`. `rosterActive(r)` = players minus reserve/taxi.
+- **Trades in Compare (Oct 5 2026)**: the builder lives in Compare → Trades (`#cmp-trades`, `tradeHTML`, `tradeResult`, `rerenderTrade`). League's standings rows and button call `openTrade(team)`, which switches to it; the full-screen `trade` kind is no longer opened.
+  - `tradeResult` computes `lineupDelta` for both teams and attaches a verdict (`tradeVerdict`: both / mkt / hard / them / no, `TR_MIN` 0.5).
+  - The board shows each team's change in big numbers, the per-week change (unweighted) and the playoff change, the verdict pill, and roster moves ("You could add X from waivers", "They would have to drop Y").
+  - Toggles: Weeks equal / Playoffs 2× (`rv-trade-po`) and List / Cards (`rv-trade-view`).
+  - Cards: `tradeCardHTML` reuses the Huddle card front (`cdFrontHTML(…, opts)`: `noLock`, `nums` = ROS points + FantasyCalc value). Tier comes from the ROS positional rank (`rosRank`: top 3 holo, 12 gold, 24 silver).
+  - Compare sections: `ctx.cmpSec` (`rv-cmp-sec`): Trades, and Lineup changes (the old plan-vs-Sleeper diff, `renderLineupDiff`; the Lineup page's Compare button and the Huddle's "See them" open it).
+  - Verified in BATTLEBALL: a 1-for-1 matched an independent sum of `bestLineup` differences (79.95). In a 2-for-1, my freed spot was filled with Malik Willis and their extra player meant dropping Ventrell Miller. Giving away an IR player frees no spot.
 - **Lineup check in Sleepa Zone (Oct 5 2026)** (`zLineupCheck`, `zLcHTML`, `[data-lc]` in each card and grid tile): my Sleeper lineup vs `bestLineup` with that league's slots, scoring and Zone projections (`zProj`).
   - A starter whose game has started is locked in his slot (`opts.fixed`), and a locked bench player can't come in. Ruled-out starters (`cantPlay`), byes and empty slots score zero and are flagged.
   - It shows "✓ Best lineup set", or "9.25 below your best lineup · Bye: R. Rice", with Start / Sit names; gaps under `LC_MIN` (0.05) are ignored. Nothing is shown once every starter is locked.
