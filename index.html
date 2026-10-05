@@ -1498,6 +1498,35 @@
   .tb-cards .cd:focus-visible{ outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 14px; }
   .tb-cards-none{ font-size: 12.5px; color: var(--text-3); padding: 24px 0; }
   .tb-cardside{ row-gap: 8px; }
+  .nd{ max-width: 900px; }
+  .nd-me, .nd-fit{ padding: 14px 16px; margin-bottom: 12px; border-radius: var(--radius-lg); }
+  .nd-me-t{ font-size: 16px; line-height: 1.45; margin-top: 4px; } .nd-me-t b{ color: var(--danger); font-weight: 700; }
+  .nd-me-s{ font-size: 13px; color: var(--text-2); margin-top: 6px; line-height: 1.5; } .nd-me-s b{ color: var(--text); }
+  .nd-fit-r{ display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; padding: 9px 0; border-top: 1px solid var(--hair); background: none; color: var(--text-2); font-size: 13px; text-align: left; line-height: 1.45; }
+  .nd-fit .eyebrow + .nd-fit-r{ border-top: none; }
+  .nd-fit-r b{ color: var(--text); }
+  .nd-grid{ padding: 8px 12px 12px; overflow-x: auto; }
+  .nd-r{ display: grid; grid-template-columns: minmax(110px, 1.6fr) repeat(var(--n), minmax(40px, 1fr)); align-items: center; gap: 6px; padding: 5px 4px; border-radius: 10px; }
+  .nd-r[data-nd-trade]{ cursor: pointer; }
+  .nd-r[data-nd-trade]:hover{ background: var(--surface-2); }
+  .nd-r.mine{ background: color-mix(in srgb, var(--accent) 8%, transparent); }
+  .nd-h{ position: sticky; top: 0; }
+  .nd-p{ text-align: center; font-size: 11px; font-weight: 800; letter-spacing: .04em; }
+  .nd-t{ font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .nd-t small{ font-size: 10px; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: .05em; margin-left: 4px; }
+  .nd-c{ position: relative; display: grid; place-items: center; height: 32px; border-radius: 8px; font-variant-numeric: tabular-nums; }
+  .nd-c b{ font-size: 13px; font-weight: 750; }
+  .nd-c i{ position: absolute; top: -5px; right: -4px; font-style: normal; font-size: 9.5px; font-weight: 800; padding: 1px 4px; border-radius: 6px; background: var(--accent); color: var(--on-accent); }
+  .nd-c.strong{ background: color-mix(in srgb, var(--accent) 22%, transparent); color: var(--accent); }
+  .nd-c.mid{ background: var(--surface-2); color: var(--text-2); }
+  .nd-c.need{ background: color-mix(in srgb, var(--danger) 18%, transparent); color: var(--danger); }
+  .nd-key{ display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-top: 10px; font-size: 11.5px; color: var(--text-3); }
+  .nd-key .nd-c{ display: inline-grid; width: 30px; height: 24px; }
+  @media (max-width: 600px){
+    .nd-r{ grid-template-columns: 84px repeat(var(--n), minmax(34px, 1fr)); gap: 4px; }
+    .nd-t{ font-size: 12px; position: sticky; left: -4px; z-index: 1; align-self: stretch; display: flex; align-items: center; background: var(--surface); }   /* team names stay put while the positions scroll */
+    .nd-r.mine .nd-t{ background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
+  }
   .tr-pick{ display: grid; gap: 6px; margin-bottom: 14px; }
   .tr-pick select{ font: inherit; font-size: 16px; min-height: 44px; padding: 8px 12px; border-radius: 12px; border: none; background: var(--surface); color: var(--text); box-shadow: var(--shadow), inset 0 0 0 1px var(--hair); }
   .tr-intro{ color: var(--text-2); font-size: 14px; }
@@ -3022,10 +3051,11 @@
 
         <section class="view" id="compare-view" style="display:none;">
           <div class="cmp-hub"><button type="button" class="cmp-back" data-cmp-back hidden>‹ Back</button><div class="wk-seg cmp-tabs" role="group" aria-label="Compare">
-            <button type="button" data-cmp-sec="ss">Start / Sit</button><button type="button" data-cmp-sec="trades">Trades</button><button type="button" data-cmp-sec="lineup">Lineup changes</button>
+            <button type="button" data-cmp-sec="ss">Start / Sit</button><button type="button" data-cmp-sec="trades">Trades</button><button type="button" data-cmp-sec="needs">Team needs</button><button type="button" data-cmp-sec="lineup">Lineup changes</button>
           </div></div>
           <div class="cmp-sec" id="cmp-ss" data-sec="ss"></div>
           <div class="cmp-sec" id="cmp-trades" data-sec="trades"></div>
+          <div class="cmp-sec" id="cmp-needs" data-sec="needs"></div>
           <div class="cmp-sec" id="cmp-lineup" data-sec="lineup">
           <div class="cmp-empty" id="cmp-empty" style="display:none;">No changes yet. Swap players on the Lineup tab and they'll show up here, side by side.</div>
           <div class="card cmp-card">
@@ -6640,7 +6670,7 @@
 
   // ---- Compare: one hub, a section per question (Trades, Lineup changes; Start / Sit and Team needs to come) ----
   try{ ctx.cmpSec = localStorage.getItem('rv-cmp-sec') || 'ss'; ctx.ssView = localStorage.getItem('rv-ss-view') || 'list'; }catch(e){ ctx.cmpSec = 'ss'; }
-  const CMP_SUB = { ss: 'Who should start this week: what each player adds to your best lineup.', trades: 'What a trade does to both teams’ best lineups for the rest of the season.', lineup: 'Your Sleeper lineup next to your plan. Nothing is sent to Sleeper.' };
+  const CMP_SUB = { ss: 'Who should start this week: what each player adds to your best lineup.', needs: 'Where every team is strong or thin, by position, for the rest of the season.', trades: 'What a trade does to both teams’ best lineups for the rest of the season.', lineup: 'Your Sleeper lineup next to your plan. Nothing is sent to Sleeper.' };
   function renderCompare(){
     if(!CMP_SUB[ctx.cmpSec]) ctx.cmpSec = 'ss';
     const back = document.querySelector('[data-cmp-back]');
@@ -6657,6 +6687,7 @@
     document.querySelectorAll('[data-cmp-sec]').forEach(function(b){ b.setAttribute('aria-pressed', String(b.getAttribute('data-cmp-sec') === ctx.cmpSec)); });
     document.querySelectorAll('#compare-view .cmp-sec').forEach(function(el){ el.hidden = el.getAttribute('data-sec') !== ctx.cmpSec; });
     if(ctx.view === 'compare'){ els.pageSub.textContent = CMP_SUB[ctx.cmpSec]; document.querySelector('.top-actions').style.display = ctx.cmpSec === 'lineup' ? '' : 'none'; }
+    if(ctx.cmpSec === 'needs'){ document.getElementById('cmp-needs').innerHTML = needsHTML(); if(!ctx.ros) loadRos().then(function(){ plReset(); if(ctx.view === 'compare' && ctx.cmpSec === 'needs') renderCompare(); }); return; }
     if(ctx.cmpSec === 'trades'){ const h = tradeHost(); h.innerHTML = tradeHTML(); if(!ctx.ros) loadRos().then(function(){ plReset(); rerenderTrade(); }); if(!ctx.fc && typeof loadFantasyCalc === 'function') loadFantasyCalc().then(rerenderTrade, function(){}); return; }
     renderLineupDiff();
   }
@@ -6665,6 +6696,8 @@
     const sb = e.target.closest('[data-cmp-sec]');
     if(sb){ setCmpSec(sb.getAttribute('data-cmp-sec')); return; }
     if(e.target.closest('[data-cmp-back]')){ cmpGoBack(); return; }
+    const nt = e.target.closest('[data-nd-trade]');
+    if(nt){ openTrade(Number(nt.getAttribute('data-nd-trade'))); return; }
     if(e.target.closest('#cmp-ss')){
       const add = e.target.closest('[data-ss-add]');
       if(add){ const pid = add.getAttribute('data-ss-add'); if(ctx.h2h.indexOf(pid) === -1){ if(ctx.h2h.length >= SS_MAX) ctx.h2h.shift(); ctx.h2h.push(pid); } ctx.ssQ = ''; syncVsButtons(); renderH2HTray(); renderCompare(); return; }
@@ -6701,6 +6734,8 @@
     if(e.target.matches('[data-trade-team]')){ ctx.trade = Object.assign({}, ctx.trade, { team: Number(e.target.value) || null, get: [] }); rerenderTrade(); }
   });
   document.getElementById('compare-view').addEventListener('keydown', function(e){
+    const nr = e.target.closest && e.target.closest('.nd-r[data-nd-trade]');
+    if(nr && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); openTrade(Number(nr.getAttribute('data-nd-trade'))); return; }
     const c = e.target.closest && e.target.closest('.tc-card');
     if(c && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); openMax({ kind: 'player', pid: c.getAttribute('data-open') }, c); }
   });
@@ -8795,6 +8830,92 @@
     return '<div class="cd tc-card t-' + tier + '" data-open="' + escapeHTML(pid) + '" role="button" tabindex="0" style="--pc:' + posColor(posGroup(pid)) + (i ? ';--mc:' + CD_TONE[i.tone] : '') + '"' +
       ' aria-label="' + escapeHTML(playerName(p) + ', ' + posGroup(pid) + (rk ? ' ranked ' + posGroup(pid) + rk + ' rest of season' : '') + '. Open player page') + '">' +
       '<div class="cd-in">' + cdFrontHTML({ name: posGroup(pid) + (rk ? ' · ROS ' + posGroup(pid) + rk : '') }, pid, tier, rk || 0, { noLock: true, nums: nums }) + '</div></div>';
+  }
+
+  // ---- Team needs: where every team is strong or thin, by position (Compare → Team needs; feeds the Trade Finder) ----
+  // For each team and each week left (tvWeeks), its best lineup (bestLineup); a position's strength = the points its
+  // players score in those lineups (flex spots included), summed. Ranked across the league: the bottom third is a need.
+  // Spare = a player good enough to start for a typical team (his rest-of-season points reach the league's "starter
+  // line" at his position: the Nth best, N = teams × the league's dedicated slots there) who sits on his own team's
+  // bench in most weeks. Memoized per data load (plReset clears it).
+  function needPositions(){ return leaguePositions().filter(function(p){ return (ctx.rosterPositions || []).some(function(sl){ return sl === p; }) || (ctx.rosterPositions || []).some(function(sl){ return (FLEX_GROUPS[sl] || []).indexOf(p) !== -1; }); }); }
+  function teamNeeds(){
+    if(plMemo.needs) return plMemo.needs;
+    if(!ctx.ros) return null;
+    const weeks = tvWeeks(), sc = (ctx.league && ctx.league.scoring_settings) || {}, P = needPositions();
+    const rosters = (ctx.lastRosters || []).filter(function(r){ return r.players && r.players.length; });
+    const teams = rosters.map(function(r){
+      const act = rosterActive(r), pos = {}, starts = {};
+      P.forEach(function(p){ pos[p] = { pts: 0, rank: 0, need: false, spare: [] }; });
+      weeks.forEach(function(w){
+        bestLineup(act, ctx.rosterPositions, sc, w).slots.forEach(function(x){
+          if(!x.pid) return;
+          starts[x.pid] = (starts[x.pid] || 0) + 1;
+          const g = posGroup(x.pid); if(pos[g]) pos[g].pts += x.pts;
+        });
+      });
+      return { id: r.roster_id, name: rosterName(r.roster_id), mine: ctx.myRoster && r.roster_id === ctx.myRoster.roster_id, act: act, starts: starts, pos: pos };
+    });
+    const n = teams.length;
+    P.forEach(function(p){
+      teams.slice().sort(function(a, b){ return b.pos[p].pts - a.pos[p].pts; }).forEach(function(t, i){ t.pos[p].rank = i + 1; t.pos[p].need = i + 1 > Math.ceil(n * 2 / 3); });
+      const ded = (ctx.rosterPositions || []).filter(function(sl){ return sl === p; }).length || 1;
+      const vals = [];
+      teams.forEach(function(t){ t.act.forEach(function(pid){ if(posGroup(pid) === p){ const v = rosValue(pid); if(v && v.pts > 0) vals.push(v.pts); } }); });
+      vals.sort(function(a, b){ return b - a; });
+      const line = vals.length ? vals[Math.min(vals.length, n * ded) - 1] : Infinity;
+      teams.forEach(function(t){
+        t.pos[p].spare = t.act.filter(function(pid){ const v = rosValue(pid); return posGroup(pid) === p && v && v.pts >= line && (t.starts[pid] || 0) < weeks.length / 2; })
+          .sort(function(a, b){ return rosValue(b).pts - rosValue(a).pts; });
+      });
+    });
+    return (plMemo.needs = { teams: teams, positions: P, weeks: weeks, n: n });
+  }
+  function ordinal(n){ const s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
+  function needsHTML(){
+    if(!ctx.ros) return '<div class="empty-state">Loading rest-of-season projections…</div>';
+    const N = teamNeeds();
+    if(!N || !N.teams.length) return '<div class="empty-state">No rosters to compare.</div>';
+    const me = N.teams.find(function(t){ return t.mine; });
+    const nm = function(pid){ return escapeHTML(lastName(pid)); };
+    let mine = '';
+    if(me){
+      const needs = N.positions.filter(function(p){ return me.pos[p].need; }), spare = N.positions.filter(function(p){ return me.pos[p].spare.length; });
+      const strong = N.positions.filter(function(p){ return me.pos[p].rank <= Math.max(1, Math.floor(N.n / 3)); });
+      mine = '<div class="card nd-me"><div class="eyebrow">Your team</div><div class="nd-me-t">' +
+        (needs.length ? 'Thin at <b>' + needs.map(function(p){ return p + ' (' + ordinal(me.pos[p].rank) + ')'; }).join(', ') + '</b>' : 'No position in the bottom third') +
+        (strong.length ? ' · strong at ' + strong.map(function(p){ return p + ' (' + ordinal(me.pos[p].rank) + ')'; }).join(', ') : '') + '.</div>' +
+        (spare.length ? '<div class="nd-me-s">Spare starters to trade: ' + spare.map(function(p){ return '<b>' + p + '</b> ' + me.pos[p].spare.map(nm).join(', '); }).join(' · ') + '</div>' : '<div class="nd-me-s">No spare starters: everyone good enough to start for a typical team already starts for you.</div>') +
+      '</div>';
+    }
+    // teams that need what I have spare: the start of a trade
+    let fits = '';
+    if(me){
+      const out = [];
+      N.positions.forEach(function(p){
+        if(!me.pos[p].spare.length) return;
+        N.teams.forEach(function(t){ if(!t.mine && t.pos[p].need) out.push({ t: t, p: p }); });
+      });
+      if(out.length) fits = '<div class="card nd-fit"><div class="eyebrow">Teams that need what you have spare</div>' + out.map(function(x){
+        const theirs = N.positions.filter(function(q){ return x.t.pos[q].spare.length && me.pos[q].need; });
+        return '<button type="button" class="nd-fit-r" data-nd-trade="' + x.t.id + '"><span><b>' + escapeHTML(x.t.name) + '</b> is ' + ordinal(x.t.pos[x.p].rank) + ' at ' + x.p + '; you have ' + me.pos[x.p].spare.map(nm).join(', ') +
+          (theirs.length ? '. They have spare ' + theirs.map(function(q){ return q + ' (' + x.t.pos[q].spare.map(nm).join(', ') + ')'; }).join(', ') + ', where you’re thin' : '') + '.</span><span class="mu-link">Trade ›</span></button>';
+      }).join('') + '</div>';
+    }
+    const cell = function(t, p){
+      const c = t.pos[p], tone = c.need ? 'need' : c.rank <= Math.max(1, Math.floor(N.n / 3)) ? 'strong' : 'mid';
+      return '<div class="nd-c ' + tone + '" title="' + escapeHTML(t.name + ': ' + ordinal(c.rank) + ' of ' + N.n + ' at ' + p + ', ' + c.pts.toFixed(1) + ' pts from ' + p + ' starters, weeks ' + N.weeks[0] + '–' + N.weeks[N.weeks.length - 1] + (c.spare.length ? '. Spare: ' + c.spare.map(function(pid){ return playerName(ctx.players[pid]); }).join(', ') : '')) + '">' +
+        '<b>' + c.rank + '</b>' + (c.spare.length ? '<i>+' + c.spare.length + '</i>' : '') + '</div>';
+    };
+    const order = N.teams.slice().sort(function(a, b){ return (b.mine ? 1 : 0) - (a.mine ? 1 : 0) || a.name.localeCompare(b.name); });
+    const grid = '<div class="card nd-grid" style="--n:' + N.positions.length + '"><div class="nd-r nd-h"><div class="nd-t"></div>' + N.positions.map(function(p){ return '<div class="nd-p" style="color:' + posColor(p) + '">' + p + '</div>'; }).join('') + '</div>' +
+      order.map(function(t){
+        return '<div class="nd-r' + (t.mine ? ' mine' : '') + '"' + (t.mine ? '' : ' data-nd-trade="' + t.id + '" role="button" tabindex="0" title="Trade with ' + escapeHTML(t.name) + '"') + '><div class="nd-t">' + escapeHTML(t.name) + (t.mine ? ' <small>you</small>' : '') + '</div>' +
+          N.positions.map(function(p){ return cell(t, p); }).join('') + '</div>';
+      }).join('') +
+      '<div class="nd-key"><span class="nd-c strong"><b>1</b></span> top third <span class="nd-c mid"><b>6</b></span> middle <span class="nd-c need"><b>11</b></span> bottom third (a need) <span class="nd-c mid"><b>4</b><i>+1</i></span> spare starters</div></div>';
+    return '<div class="nd">' + mine + fits + grid +
+      '<p class="tr-note">Rank = points each team’s best lineups get from that position, weeks ' + N.weeks[0] + '–' + N.weeks[N.weeks.length - 1] + ' (flex spots included), 1 = most. A spare starter would start for a typical team (his rest-of-season points reach the ' + N.n + '-team starter line at his position) but sits on his own team’s bench most weeks. Tap a team to open a trade with them.</p></div>';
   }
 
   // ---- trending on Sleeper (official /players/nfl/trending/{add|drop}, last 24 hours), cached 30 min ----

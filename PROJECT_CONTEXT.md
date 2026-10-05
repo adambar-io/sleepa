@@ -42,7 +42,7 @@ A single-file local web app for viewing a Sleeper fantasy football roster with c
   1. **Done**: `lineupDelta` groundwork plus trade fixes.
   2. **Done**: Compare hub, with the builder moved in.
   3. **Done (Oct 5 2026)**: Start / Sit and the VS → Compare flow (details under "Start / Sit" below).
-  4. Team needs grid.
+  4. **Done (Oct 5 2026)**: Team needs (Compare → Team needs, `teamNeeds()` memoized in `plMemo.needs`, `needsHTML`). For each team, its best lineup every week (`tvWeeks`); a position's strength = the points its players score in those lineups (flex included). Teams are ranked per position; the bottom third is a need (`need`). Spare = a player whose ROS points reach the league's starter line at his position (the (teams × dedicated slots)-th best rostered player) but who starts for his own team less than half the weeks. The section shows: your team ("Thin at QB (10th)… · strong at WR (2nd)", spare starters); "Teams that need what you have spare", each with a Trade › link (`openTrade`), plus what they have spare where you're thin; and the grid (rank per position, +n spare badge, your row highlighted, tap a row to trade; on phones the team column stays put while it scrolls sideways). Checked in BATTLEBALL: each team's position totals add up to its best-lineup totals.
   5. Trade Finder: 1-for-1 and 2-for-1 across all teams, with a team filter. Ranked by my gain, boosted when their gain is high (need/surplus). Reason tags.
   6. 2-for-2 behind "Search deeper", plus copy-trade-summary text.
 
