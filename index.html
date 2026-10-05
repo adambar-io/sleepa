@@ -1964,6 +1964,40 @@
   .ss-tag.sit{ color: var(--text-3); background: var(--surface-2); }
   .ss-cards{ display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-bottom: 12px; }
   .ss-cards .cd{ --cdw: clamp(140px, 42vw, 200px); cursor: pointer; }
+  .ss-side, .ss-empty-main{ display: none; }
+  .ss-layout{ display: block; }
+  @media (min-width: 1280px){   /* side-by-side only when the comparison still gets ~600px */
+    .ss{ max-width: 1240px; }
+    .ss-compact{ display: none; }
+    .ss-layout{ display: grid; grid-template-columns: minmax(300px, 360px) minmax(0, 1fr); gap: 16px; align-items: start; }
+    .ss-side{ display: flex; flex-direction: column; gap: 10px; position: sticky; top: 12px; max-height: calc(100vh - 24px); padding: 14px; box-sizing: border-box; }
+    .ss-empty-main{ display: grid; gap: 6px; padding: 28px 24px; text-align: center; color: var(--text-2); font-size: 14px; line-height: 1.5; }
+    .ss-empty-main b{ font-size: 18px; color: var(--text); }
+  }
+  .ss-sh{ display: flex; align-items: center; justify-content: space-between; }
+  .ss-sh .ss-clear{ margin: 0; }
+  .ss-picked{ min-height: 38px; }
+  .ss-src{ align-self: flex-start; }
+  .ss-side .ss-search{ margin: 0; }
+  .ss-pos{ display: flex; flex-wrap: wrap; gap: 5px; }
+  .ss-pos button{ min-height: 28px; padding: 0 10px; border-radius: 999px; background: var(--surface-2); color: var(--text-2); font-size: 11.5px; font-weight: 700; }
+  .ss-pos button[aria-pressed="true"]{ background: var(--text); color: var(--bg); }
+  .ss-list{ overflow-y: auto; overscroll-behavior: contain; margin: 0 -6px; padding: 0 6px; min-height: 120px; }
+  .ss-lg{ position: sticky; top: 0; z-index: 1; padding: 8px 4px 4px; font-size: 11px; font-weight: 800; letter-spacing: .06em; background: var(--surface); }
+  .ss-fit{ font-size: 11.5px; color: var(--text-3); padding: 4px 4px 6px; }
+  .ss-li{ position: relative; display: grid; grid-template-columns: 34px minmax(0, 1fr) auto 26px; align-items: center; gap: 10px; width: 100%; padding: 7px 8px 7px 10px; border-radius: 12px; background: none; color: var(--text); text-align: left; }
+  .ss-li::before{ content: ''; position: absolute; left: 0; top: 9px; bottom: 9px; width: 3px; border-radius: 0 3px 3px 0; background: var(--pc); opacity: .7; }
+  .ss-li:hover{ background: var(--surface-2); }
+  .ss-li.on{ background: color-mix(in srgb, var(--accent) 12%, var(--surface)); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--accent) 55%, transparent); }
+  .ss-lav{ width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
+  .ss-lt{ min-width: 0; }
+  .ss-lt b{ font-size: 13.5px; font-weight: 650; white-space: nowrap; }
+  .ss-lt small{ display: block; font-size: 11.5px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ss-lt i{ font-style: normal; color: var(--accent); font-weight: 600; }
+  .ss-lp{ text-align: right; font-weight: 700; font-size: 14px; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .ss-lp small{ display: block; font-size: 10px; font-weight: 600; color: var(--text-3); }
+  .ss-lx{ display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--surface-2); color: var(--text-2); font-weight: 800; font-size: 13px; }
+  .ss-li.on .ss-lx{ background: var(--accent); color: var(--on-accent); }
   @media (max-width: 600px){
     .ss-row{ grid-template-columns: 70px repeat(var(--n), minmax(68px, 1fr)); gap: 4px; }
     .ss-lbl{ font-size: 11px; } .ss-v{ font-size: 13px; }
@@ -6969,9 +7003,11 @@
     if(ctx.cmpSec === 'ss'){
       document.querySelectorAll('[data-cmp-sec]').forEach(function(b){ b.setAttribute('aria-pressed', String(b.getAttribute('data-cmp-sec') === 'ss')); });
       document.querySelectorAll('#compare-view .cmp-sec').forEach(function(el){ el.hidden = el.getAttribute('data-sec') !== 'ss'; });
-      const h = document.getElementById('cmp-ss'), qf = document.activeElement && document.activeElement.id === 'ss-q';
+      const h = document.getElementById('cmp-ss'), qf = document.activeElement && (document.activeElement.id === 'ss-q' || document.activeElement.id === 'ss-q2') ? document.activeElement.id : null;
+      const ls = document.getElementById('ss-list'), ly = ls ? ls.scrollTop : 0;
       h.innerHTML = ssHTML();
-      if(qf){ const q = document.getElementById('ss-q'); if(q){ q.focus(); q.setSelectionRange(q.value.length, q.value.length); } }
+      const ls2 = document.getElementById('ss-list'); if(ls2) ls2.scrollTop = ly;   // picking from the list keeps its place
+      if(qf){ const q = document.getElementById(qf); if(q){ q.focus(); q.setSelectionRange(q.value.length, q.value.length); } }
       return;
     }
     document.querySelectorAll('[data-cmp-sec]').forEach(function(b){ b.setAttribute('aria-pressed', String(b.getAttribute('data-cmp-sec') === ctx.cmpSec)); });
@@ -6991,6 +7027,12 @@
     if(e.target.closest('#cmp-ss')){
       const add = e.target.closest('[data-ss-add]');
       if(add){ const pid = add.getAttribute('data-ss-add'); if(ctx.h2h.indexOf(pid) === -1){ if(ctx.h2h.length >= SS_MAX) ctx.h2h.shift(); ctx.h2h.push(pid); } ctx.ssQ = ''; syncVsButtons(); renderH2HTray(); renderCompare(); return; }
+      const tg = e.target.closest('[data-ss-toggle]');
+      if(tg){ const pid = tg.getAttribute('data-ss-toggle'); if(ctx.h2h.indexOf(pid) !== -1) ctx.h2h = ctx.h2h.filter(function(x){ return x !== pid; }); else { if(ctx.h2h.length >= SS_MAX) ctx.h2h.shift(); ctx.h2h.push(pid); } syncVsButtons(); renderH2HTray(); renderCompare(); return; }
+      const sr = e.target.closest('[data-ss-src]');
+      if(sr){ ctx.ssSrc = sr.getAttribute('data-ss-src'); try{ localStorage.setItem('rv-ss-src', ctx.ssSrc); }catch(err){} renderCompare(); return; }
+      const sp = e.target.closest('[data-ss-pos]');
+      if(sp){ ctx.ssPos = sp.getAttribute('data-ss-pos'); renderCompare(); return; }
       const rm = e.target.closest('[data-ss-remove]');
       if(rm){ ctx.h2h = ctx.h2h.filter(function(x){ return x !== rm.getAttribute('data-ss-remove'); }); syncVsButtons(); renderH2HTray(); renderCompare(); return; }
       if(e.target.closest('[data-ss-clear]')){ ctx.h2h = []; syncVsButtons(); renderH2HTray(); renderCompare(); return; }
@@ -7026,9 +7068,10 @@
     if(op){ openMax({ kind: 'player', pid: op.getAttribute('data-open') }, op); }
   });
   document.getElementById('compare-view').addEventListener('input', function(e){
-    if(e.target.id !== 'ss-q') return;
+    if(!e.target.matches('[data-ss-q]')) return;
     ctx.ssQ = e.target.value;
     const hits = document.getElementById('ss-hits'); if(hits) hits.innerHTML = ssSearchHTML(ctx.ssQ);   // just the results: the keyboard stays up
+    const list = document.getElementById('ss-list'); if(list) list.innerHTML = ssListHTML(ctx.h2h.filter(function(pid){ return ctx.players[pid]; }));
   });
   document.getElementById('compare-view').addEventListener('change', function(e){
     if(e.target.matches('[data-tf-team]')){ ctx.tf.team = Number(e.target.value) || 0; rerenderTrade(); return; }
@@ -10707,6 +10750,59 @@
       return '<button type="button" class="ss-hit" data-ss-add="' + escapeHTML(pid) + '">' + avatarTag(pid, 'ss-hav') + '<span><b>' + escapeHTML(playerName(p)) + '</b><small>' + escapeHTML(eligLabel(pid)) + ' · ' + escapeHTML(p.team || 'FA') + (isMine(pid) ? ' · yours' : isAvailable(pid) ? ' · available' : '') + '</small></span><span class="ss-hp">' + fmtPts(ctx.projections[pid]) + '</span></button>';
     }).join('') || '<div class="ss-none">No players match.</div>';
   }
+  // Desktop picker: a full player list beside the comparison (phones keep the compact picker above it).
+  // Your team grouped by position, Available, or All players; position chips; search. With a player picked, Available /
+  // All show players who fit the same slots as him first (flex-aware), so the list is the real choice for that spot.
+  try{ ctx.ssSrc = localStorage.getItem('rv-ss-src') || 'mine'; }catch(e){ ctx.ssSrc = 'mine'; }
+  ctx.ssPos = '';
+  function ssListHTML(pids){
+    const src = ctx.ssSrc || 'mine', q = normName(ctx.ssQ || '').trim(), words = q ? q.split(/\s+/) : [];
+    let pool = src === 'mine' ? rosterActive(ctx.myRoster)
+      : src === 'avail' ? [].concat.apply([], leaguePositions().map(function(pos){ return ctx.freeAgents[pos] || []; })).filter(function(pid, i, arr){ return arr.indexOf(pid) === i; })
+      : ssAllPlayers();
+    let fit = '';
+    if(ctx.ssPos) pool = pool.filter(function(pid){ return posGroup(pid) === ctx.ssPos || fantasyPositions(pid).indexOf(ctx.ssPos) !== -1; });
+    else if(src !== 'mine' && pids.length){
+      const slots0 = new Set(eligibleSlotIndexes(pids[0]).map(function(i){ return ctx.rosterPositions[i]; }));
+      pool = pool.filter(function(pid){ return eligibleSlotIndexes(pid).some(function(i){ return slots0.has(ctx.rosterPositions[i]); }); });
+      fit = 'Players who fit the same slots as ' + escapeHTML(lastName(pids[0]));
+    }
+    if(words.length) pool = pool.filter(function(pid){ const k = searchKey(pid); return words.every(function(w){ return k.indexOf(' ' + w) !== -1; }); });
+    pool = pool.slice().sort(function(a, b){ return (ctx.projections[b] || 0) - (ctx.projections[a] || 0); });
+    if(src !== 'mine') pool = pool.slice(0, 40);
+    if(!pool.length) return '<div class="ss-none">No players match.</div>';
+    const starting = new Set(ctx.originalStarters || []);
+    const row = function(pid){
+      const p = ctx.players[pid], on = pids.indexOf(pid) !== -1, m = matchup(p.team, ctx.week), k = kickoff(p.team, ctx.week);
+      return '<button type="button" class="ss-li' + (on ? ' on' : '') + '" data-ss-toggle="' + escapeHTML(pid) + '" aria-pressed="' + on + '" style="--pc:' + posColor(posGroup(pid)) + '">' +
+        avatarTag(pid, 'ss-lav') +
+        '<span class="ss-lt"><b>' + escapeHTML(playerName(p)) + '</b> ' + injuryChip(p.injury_status) +
+          '<small>' + escapeHTML(eligLabel(pid)) + ' · ' + escapeHTML(p.team || 'FA') + (m ? ' · ' + (m.bye ? 'BYE' : escapeHTML(m.text)) : '') + (k ? ' · ' + escapeHTML(zKickShort(k)) : '') +
+          (src === 'mine' && starting.has(pid) ? ' · <i>starting</i>' : src !== 'mine' && isMine(pid) ? ' · <i>yours</i>' : '') + '</small></span>' +
+        '<span class="ss-lp">' + fmtPts(ctx.projections[pid]) + '<small>proj</small></span><span class="ss-lx" aria-hidden="true">' + (on ? '✓' : '+') + '</span></button>';
+    };
+    if(src === 'mine' && !ctx.ssPos && !words.length){
+      return leaguePositions().map(function(g){
+        const list = pool.filter(function(pid){ return posGroup(pid) === g; });
+        return list.length ? '<div class="ss-lg" style="color:' + posColor(g) + '">' + g + '</div>' + list.map(row).join('') : '';
+      }).join('');
+    }
+    return (fit ? '<div class="ss-fit">' + fit + '</div>' : '') + pool.map(row).join('');
+  }
+  function ssSideHTML(pids){
+    const src = ctx.ssSrc || 'mine';
+    const picked = pids.map(function(pid){
+      return '<button type="button" class="ss-chip" data-ss-remove="' + escapeHTML(pid) + '" style="--pc:' + posColor(posGroup(pid)) + '" aria-label="Remove ' + escapeHTML(playerName(ctx.players[pid])) + '">' + avatarTag(pid, 'ss-cav') + '<span>' + escapeHTML(lastName(pid)) + '</span><i aria-hidden="true">×</i></button>';
+    }).join('');
+    return '<aside class="card ss-side" aria-label="Pick players to compare">' +
+      '<div class="ss-sh"><span class="eyebrow">Comparing · ' + pids.length + ' of ' + SS_MAX + '</span>' + (pids.length ? '<button type="button" class="ss-clear" data-ss-clear>Clear</button>' : '') + '</div>' +
+      '<div class="ss-chips ss-picked">' + (picked || '<span class="ss-empty">Pick 2–' + SS_MAX + ' players from the list below.</span>') + '</div>' +
+      '<div class="wk-seg ss-src" role="group" aria-label="Players"><button type="button" data-ss-src="mine" aria-pressed="' + (src === 'mine') + '">Your team</button><button type="button" data-ss-src="avail" aria-pressed="' + (src === 'avail') + '">Available</button><button type="button" data-ss-src="all" aria-pressed="' + (src === 'all') + '">All</button></div>' +
+      '<label class="pl-search ss-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg><input id="ss-q2" data-ss-q type="search" placeholder="Search players" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" value="' + escapeHTML(ctx.ssQ || '') + '"></label>' +
+      '<div class="ss-pos"><button type="button" data-ss-pos="" aria-pressed="' + !ctx.ssPos + '">All</button>' + leaguePositions().map(function(p){ return '<button type="button" data-ss-pos="' + p + '" aria-pressed="' + (ctx.ssPos === p) + '" style="--pc:' + posColor(p) + '">' + p + '</button>'; }).join('') + '</div>' +
+      '<div class="ss-list" id="ss-list">' + ssListHTML(pids) + '</div>' +
+    '</aside>';
+  }
   function ssHTML(){
     const pids = ctx.h2h.filter(function(pid){ return ctx.players[pid]; });
     const view = ctx.ssView === 'cards' ? 'cards' : 'list';
@@ -10714,13 +10810,14 @@
       return '<button type="button" class="ss-chip" data-ss-remove="' + escapeHTML(pid) + '" style="--pc:' + posColor(posGroup(pid)) + '" aria-label="Remove ' + escapeHTML(playerName(ctx.players[pid])) + '">' + avatarTag(pid, 'ss-cav') + '<span>' + escapeHTML(lastName(pid)) + '</span><i aria-hidden="true">×</i></button>';
     }).join('');
     const mine = rosterActive(ctx.myRoster).filter(function(pid){ return pids.indexOf(pid) === -1; }).sort(function(a, b){ return (ctx.projections[b] || 0) - (ctx.projections[a] || 0); });
-    const pickers = '<div class="card ss-pick">' +
+    const pickers = '<div class="card ss-pick ss-compact">' +
       '<div class="ss-chips">' + (chips || '<span class="ss-empty">Pick 2–' + SS_MAX + ' players: tap <b>VS</b> on any player, search, or tap one of yours below.</span>') +
         (pids.length ? '<button type="button" class="ss-clear" data-ss-clear>Clear</button>' : '') + '</div>' +
-      (pids.length < SS_MAX ? '<label class="pl-search ss-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg><input id="ss-q" type="search" placeholder="Add any player by name" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" value="' + escapeHTML(ctx.ssQ || '') + '"></label><div class="ss-hits" id="ss-hits">' + ssSearchHTML(ctx.ssQ) + '</div>' +
+      (pids.length < SS_MAX ? '<label class="pl-search ss-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg><input id="ss-q" data-ss-q type="search" placeholder="Add any player by name" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" value="' + escapeHTML(ctx.ssQ || '') + '"></label><div class="ss-hits" id="ss-hits">' + ssSearchHTML(ctx.ssQ) + '</div>' +
         '<div class="ss-mine"><span class="eyebrow">Your players</span><div class="ss-mine-row">' + mine.map(function(pid){ return '<button type="button" class="ss-mchip" data-ss-add="' + escapeHTML(pid) + '" style="--pc:' + posColor(posGroup(pid)) + '"><b>' + escapeHTML(posGroup(pid)) + '</b> ' + escapeHTML(lastName(pid)) + '</button>'; }).join('') + '</div></div>' : '') +
       '</div>';
-    if(pids.length < 2) return '<div class="ss">' + pickers + '</div>';
+    const side = ssSideHTML(pids);
+    if(pids.length < 2) return '<div class="ss">' + pickers + '<div class="ss-layout">' + side + '<div class="ss-main"><div class="card ss-empty-main"><b>Who should start?</b><span>Pick ' + (pids.length ? 'one more player' : 'two to ' + SS_MAX + ' players') + ' from the list: your own, available, or anyone in the league. You’ll see who makes your best lineup this week and by how much.</span></div></div></div></div>';
     const r = ssResult(pids), top = r.rows[0], next = r.rows[1];
     const nm = function(pid){ return escapeHTML(playerName(ctx.players[pid])); };
     // the answer first: who starts (all of them may fit your lineup), and by how much
@@ -10774,14 +10871,14 @@
     }).join('') + '</div>';
     const missing = cols.filter(function(pid){ return !hist(pid); });
     if(missing.length && !ssHTML.pending){ ssHTML.pending = true; Promise.all(missing.map(ensureHistory)).then(function(){ ssHTML.pending = false; if(ctx.view === 'compare' && ctx.cmpSec === 'ss') renderCompare(); }); }
-    return '<div class="ss">' + pickers +
+    return '<div class="ss">' + pickers + '<div class="ss-layout">' + side + '<div class="ss-main">' +
       '<div class="card ss-verdict"><div class="eyebrow">This week · week ' + ctx.week + '</div><div class="ss-vt">' + verdict + '</div>' +
         (notMine.length ? '<div class="ss-vn">' + notMine.map(nm).join(', ') + (notMine.length === 1 ? ' isn’t' : ' aren’t') + ' on your team: valued as if you had ' + (notMine.length === 1 ? 'him' : 'them') + '.</div>' : '') + '</div>' +
       '<div class="ss-bar"><div class="wk-seg" role="group" aria-label="View"><button type="button" data-ss-view="list" aria-pressed="' + (view === 'list') + '">Table</button><button type="button" data-ss-view="cards" aria-pressed="' + (view === 'cards') + '">Cards</button></div>' +
         '<button type="button" class="quiet-btn" data-ss-full>Full stats' + (cols.length > 2 ? ' (top 2)' : '') + ' ›</button></div>' +
       (view === 'cards' ? cards : table) +
       '<p class="tr-note">“Adds to your lineup” = your best lineup this week with that player minus without any of them, from Sleeper’s projections in your league’s scoring (most restrictive slots first, so a flex choice across positions is handled). START / SIT = your best lineup with all of them available.</p>' +
-    '</div>';
+    '</div></div></div>';
   }
 
   // Which way is better. Lower wins for mistakes and things a defense gives up; DEF takeaways (int, sack, fum_rec)

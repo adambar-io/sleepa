@@ -80,6 +80,12 @@ A single-file local web app for viewing a Sleeper fantasy football roster with c
   - **Picking players:** `ctx.h2h` (kept name) holds up to `SS_MAX` (4); a fifth pick drops the oldest. A VS button anywhere toggles a player: the bottom tray is now a 5-second toast ("Added X · Start / Sit (n) ›"), and the Compare nav / tab buttons get a count badge (`.nav-badge`). You can also add players by name search (`ssSearchHTML`, which updates only the results so the keyboard stays up) or with "Your players" chips.
   - **Back:** `openStartSit()` remembers the screen and scroll position (`ctx.cmpReturn`) for the ‹ Back button; leaving Compare any other way forgets it.
   - **Verdict:** base = my active roster minus the candidates; each candidate's "adds to your lineup" = bestLineup(base + him) − bestLineup(base) this week; START / SIT comes from bestLineup(base + all of them). Players not on my team are valued as if they were mine.
+  - **Desktop picker (≥ 1280px, Oct 5 2026; owner: the compact top picker was hard to use on desktop)** (`ssSideHTML`, `ssListHTML`): a sticky player list beside the comparison.
+    - Header: "Comparing · n of 4" with the picked players and Clear.
+    - Your team / Available / All (`ctx.ssSrc`, `rv-ss-src`), search (`#ss-q2`, updates only the list), and position chips (`ctx.ssPos`).
+    - Your team is grouped by position with "starting" marks. Available / All list the top 40 by projection; with a player picked and no position chosen, they show only players who fit the same lineup slots as the first pick (flex-aware, `eligibleSlotIndexes`).
+    - Rows: photo, name, eligibility · team · opponent · kickoff, projection, and + / ✓. Tapping toggles the player; the list keeps its scroll position.
+    - With fewer than 2 picked, the right side explains what to do. Below 1280px the compact picker (`.ss-compact`) is used as before.
   - **Views:** Table (adds, projection, consensus rank this week, matchup, game, L3, season average, typical week, snap share, status; the best value in each row is highlighted) or Cards (Huddle card fronts showing START · slot or SIT). "Full stats ›" opens the old head-to-head (`h2hHTML`) for the top two.
   - **Verified:** the adds matched a brute-force optimum, e.g. three BATTLEBALL WRs: St. Brown +15.60 and Adams +11.03 start, Nabers +9.86 sits.
 - **Lineup check in Sleepa Zone (Oct 5 2026)** (`zLineupCheck`, `zLcHTML`, `[data-lc]` in each card and grid tile): my Sleeper lineup vs `bestLineup` with that league's slots, scoring and Zone projections (`zProj`).
