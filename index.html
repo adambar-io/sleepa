@@ -7209,6 +7209,12 @@
     }
   }
 
+  // "New" = not one of my Sleeper starters at all (by player ID, any slot). A Sleeper starter who only moved slots
+  // (RB2 → FLEX) isn't new.
+  function isNewStarter(pid){
+    if(!pid || pid === '0') return false;
+    return (ctx.originalStarters || []).indexOf(pid) === -1;
+  }
   function compareCell(pid, changed){
     const p = (pid && pid !== '0') ? ctx.players[pid] : null;
     const cls = 'cmp-cell' + (changed ? ' changed' : '');
@@ -7382,7 +7388,7 @@
     const pos = posGroup(playerId) || p.position || '';   // defenders: DL / LB / DB (their slot group), not DE / CB / S
     const team = p.team || 'FA';
     const color = posColor(slotLabel && FLEX_GROUPS[slotLabel] ? pos : (slotLabel || pos));
-    const isNewHere = !ro && slotIndex !== undefined && ctx.originalStarters[slotIndex] !== ctx.draftStarters[slotIndex];
+    const isNewHere = !ro && slotIndex !== undefined && isNewStarter(playerId);
     const statusChip = injuryChip(p.injury_status);
     const newChip = (isNewHere ? '<span class="status-chip new-tag">New</span>' : '') +
       (isLocked(playerId) ? '<span class="status-chip lock-tag" title="Game has started">Locked</span>' : '') +
@@ -7951,8 +7957,8 @@
     const slotHTML = ts.map(function(s){
       const pid = ctx.prWork[s.i], has = pid && pid !== '0' && ctx.players[pid];
       const target = selPid ? pid !== selPid && prCanPlace(selPid, s.i) : !!(sel && sel.slot === s.i);
-      const chg = (pid || '0') !== (ctx.originalStarters[s.i] || '0');   // differs from your Sleeper lineup: a change to copy over
-      const lbl = '<span class="pr-slot-lbl' + (chg ? ' chg" title="Changed from your Sleeper lineup' : '') + '">' + escapeHTML(s.name) + '</span>';
+      const chg = isNewStarter(pid);   // not a Sleeper starter at all (a starter who only moved slots isn't marked)
+      const lbl = '<span class="pr-slot-lbl' + (chg ? ' chg" title="New: not in your Sleeper lineup' : '') + '">' + escapeHTML(s.name) + '</span>';
       if(!has) return '<div class="pr-slot empty' + (target ? ' target' : '') + '" data-pr-slot="' + s.i + '" role="button" tabindex="0" aria-label="Empty ' + escapeHTML(s.name) + ' slot">' + lbl + PR_ICON.plus + '<span>' + (selPid ? 'Place here' : '<b>Pick your ' + escapeHTML(s.name) + '</b><small>tap a player below' + (hasFinePointer() ? ' or drag one here' : '') + '</small>') + '</span></div>';
       const slimSlot = ctx.players[pid].position === 'DEF' || ctx.players[pid].position === 'K';
       return '<div class="pr-slot' + (slimSlot ? ' slim' : '') + (target ? ' target' : '') + (prUnavail(pid) ? ' bad' : '') + '" data-pr-slot="' + s.i + '">' + lbl + prCardHTML(pid, 'slot') +
@@ -11426,7 +11432,7 @@
     function row(pid, slotLabel, slotIndex, i){
       if(!pid || pid === '0' || !ctx.players[pid]) return '<tr><td class="l slot">' + escapeHTML(slotLabel) + '</td><td class="l dim" colspan="' + (6 + weeks.length + extra) + '">Empty</td></tr>';
       const p = ctx.players[pid], games = hist(pid) || [];
-      const fresh = slotIndex != null && ctx.originalStarters[slotIndex] !== pid;
+      const fresh = slotIndex != null && isNewStarter(pid);
       const cls = (slotIndex != null && isOnBye(pid) ? 'bye ' : '') + (fresh ? 'fresh' : '');
       const byWeek = {}; games.forEach(function(h){ byWeek[h.week] = h.pts; });
       const t = isIdp(pid) ? '<span title="Tackle share">' + pct(seasonShare(pid, 'k')) + ' tkl</span>'
