@@ -1498,6 +1498,35 @@
   .tb-cards .cd:focus-visible{ outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 14px; }
   .tb-cards-none{ font-size: 12.5px; color: var(--text-3); padding: 24px 0; }
   .tb-cardside{ row-gap: 8px; }
+  .t-av{ position: relative; display: inline-grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 50%; overflow: hidden; vertical-align: middle; background: color-mix(in srgb, var(--accent) 18%, var(--surface-2)); color: var(--text); }
+  .t-av b{ font-size: 10px; font-weight: 800; letter-spacing: .02em; }
+  .t-av img{ position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .t-av.xs{ width: 18px; height: 18px; margin-right: 6px; } .t-av.xs b{ font-size: 7.5px; }
+  .t-av.sm{ width: 24px; height: 24px; margin-right: 8px; } .t-av.sm b{ font-size: 9px; }
+  .t-av.md{ width: 30px; height: 30px; }
+  .ts-head b{ display: flex; align-items: center; }
+  .tr-st{ display: flex; align-items: center; }
+  .tb-tn{ display: inline-flex; align-items: center; }
+  .tb-side.them .tb-tn{ justify-content: flex-end; }
+  .ts-av{ width: 26px; height: 26px; border-radius: 50%; object-fit: cover; background: var(--surface-2); box-shadow: 0 0 0 1.5px var(--pc, var(--hair)); }
+  .ts-cell{ grid-template-columns: 26px 26px minmax(0, 1fr) auto !important; }
+  .tr-who{ display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .tr-wt{ min-width: 0; display: block; }
+  .tr-av2{ flex: none; width: 30px; height: 30px; border-radius: 50%; object-fit: cover; background: var(--surface-2); box-shadow: 0 0 0 1.5px var(--pc, var(--hair)); }
+  .lm-av{ width: 20px; height: 20px; border-radius: 50%; object-fit: cover; vertical-align: -5px; margin-right: 4px; background: var(--surface-3); }
+  .nd-t{ display: flex !important; align-items: center; gap: 0; }
+  .nd-t span{ min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .nd-fit-r{ gap: 10px; } .nd-fit-r > span:not(.t-av):not(.mu-link){ flex: 1; }
+  .nd-meh{ display: flex; align-items: center; }
+  .tf-hd .t-av{ margin-right: 2px; }
+  .cmp-av{ flex: none; width: 34px; height: 34px; border-radius: 50%; object-fit: cover; background: var(--surface-2); }
+  .cmp-txt{ flex: 1; min-width: 0; }
+  @media (max-width: 600px){
+    .ts-cell{ grid-template-columns: 22px 22px minmax(0, 1fr) auto !important; } .ts-av{ width: 22px; height: 22px; }
+    .tr-av2{ width: 24px; height: 24px; } .tr-who{ gap: 6px; }
+    .cmp-av{ display: none; }
+    .nd-t .t-av{ display: none; }
+  }
   .tb-mode{ margin-bottom: 14px; }
   .tf-opts{ display: flex; flex-wrap: wrap; gap: 8px; margin: -4px 0 14px; }
   .tf-chip{ min-height: 34px; padding: 0 14px; border-radius: 999px; background: var(--surface-2); color: var(--text-2); font-size: 13px; font-weight: 600; box-shadow: inset 0 0 0 1px var(--hair); }
@@ -5663,6 +5692,14 @@
     try{ const m = await fetchJSON(API + '/league/' + leagueId + '/matchups/' + week); return Array.isArray(m) && m.length ? m : null; }
     catch(e){ console.warn('Matchups unavailable', e); return null; }
   }
+  // A fantasy team's picture: the manager's Sleeper avatar, or the team's initials on a tinted circle.
+  function teamAvHTML(rosterId, cls){
+    const r = (ctx.lastRosters || []).find(function(x){ return x.roster_id === rosterId; });
+    const u = r && (ctx.users || []).find(function(x){ return x.user_id === r.owner_id; });
+    const url = u ? (u.metadata && /^https:\/\//.test(u.metadata.avatar || '') ? u.metadata.avatar : u.avatar ? 'https://sleepercdn.com/avatars/thumbs/' + encodeURIComponent(u.avatar) : '') : '';
+    const name = rosterName(rosterId), ini = name.replace(/[^A-Za-z0-9 ]/g, '').split(/\s+/).filter(Boolean).slice(0, 2).map(function(w){ return w.charAt(0).toUpperCase(); }).join('') || '?';
+    return '<span class="t-av ' + (cls || '') + '" aria-hidden="true"><b>' + escapeHTML(ini) + '</b>' + (url ? '<img src="' + escapeHTML(url) + '" alt="" loading="lazy" onerror="this.remove()">' : '') + '</span>';
+  }
   function rosterName(rosterId){
     const r = (ctx.lastRosters || []).find(function(x){ return x.roster_id === rosterId; });
     const u = r && (ctx.users || []).find(function(x){ return x.user_id === r.owner_id; });
@@ -5968,8 +6005,8 @@
         return '<div class="tp-row"><button type="button" class="tr-player' + (on ? ' on' : '') + '" data-trade-' + side + '="' + escapeHTML(pid) + '" aria-pressed="' + on + '" style="--pc:' + posColor(posGroup(pid)) + '">' +
           '<span class="tr-check" aria-hidden="true">' + (on ? '✓' : '') + '</span>' +
           '<span class="tr-pos" style="color:' + posColor(posGroup(pid)) + '">' + escapeHTML(posGroup(pid)) + '</span>' +
-          '<span class="tr-who"><span class="tr-nm">' + tradeName(p) + ' ' + injuryChip(p.injury_status) + '</span>' +
-            '<span class="tr-sub">' + escapeHTML(p.team || 'FA') + (byeText(pid) ? ' · ' + byeText(pid) : '') + '</span></span>' +
+          '<span class="tr-who">' + avatarTag(pid, 'tr-av2') + '<span class="tr-wt"><span class="tr-nm">' + tradeName(p) + ' ' + injuryChip(p.injury_status) + '</span>' +
+            '<span class="tr-sub">' + escapeHTML(p.team || 'FA') + (byeText(pid) ? ' · ' + byeText(pid) : '') + '</span></span></span>' +
           '<span class="tr-ros"><b>' + (v ? v.pts.toFixed(2) : '—') + '</b><small>ROS</small></span></button>' +
           '<button type="button" class="tr-info" data-open="' + escapeHTML(pid) + '" aria-label="' + escapeHTML(playerName(p)) + ': full details">›</button></div>';
       }).join('') || '<div class="empty-state">No players.</div>';
@@ -5982,13 +6019,13 @@
       if(!pid) return '<div class="ts-cell empty"></div>';
       const p = ctx.players[pid], v = rosValue(pid);
       return '<button type="button" class="ts-cell" data-open="' + escapeHTML(pid) + '" style="--pc:' + posColor(posGroup(pid)) + '" aria-label="' + escapeHTML(playerName(p)) + ', ' + (v ? v.pts.toFixed(2) : 'no') + ' rest-of-season points. Full details">' +
-        '<span class="tr-pos" style="color:' + posColor(posGroup(pid)) + '">' + escapeHTML(posGroup(pid)) + '</span><span class="ts-nm">' + tradeName(p) + '</span><b>' + (v ? v.pts.toFixed(2) : '—') + '</b></button>';
+        '<span class="tr-pos" style="color:' + posColor(posGroup(pid)) + '">' + escapeHTML(posGroup(pid)) + '</span>' + avatarTag(pid, 'ts-av') + '<span class="ts-nm">' + tradeName(p) + '</span><b>' + (v ? v.pts.toFixed(2) : '—') + '</b></button>';
     };
     let moving;
     if(cards){
       const col = function(ids){ return '<div class="tb-cards">' + (ids.map(tradeCardHTML).join('') || '<div class="tb-cards-none">Tick players below</div>') + '</div>'; };
-      moving = '<div class="card tr-side tb-cardside"><div class="ts-head"><span class="eyebrow">You send</span><b>' + escapeHTML(els.teamName.textContent || 'You') + '</b></div>' +
-        '<div class="ts-head them"><span class="eyebrow">They send</span><b>' + escapeHTML(rosterName(t.team)) + '</b></div>' + col(sendMine) + col(sendTheirs) +
+      moving = '<div class="card tr-side tb-cardside"><div class="ts-head"><span class="eyebrow">You send</span><b>' + teamAvHTML(ctx.myRoster.roster_id, 'sm') + escapeHTML(els.teamName.textContent || 'You') + '</b></div>' +
+        '<div class="ts-head them"><span class="eyebrow">They send</span><b>' + teamAvHTML(t.team, 'sm') + escapeHTML(rosterName(t.team)) + '</b></div>' + col(sendMine) + col(sendTheirs) +
         '<div class="ts-tot"><b>' + r.rosGive.toFixed(2) + '</b><span>ROS pts</span></div><div class="ts-tot them"><b>' + r.rosGet.toFixed(2) + '</b><span>ROS pts</span></div></div>';
     }else{
       const n = Math.max(sendMine.length, sendTheirs.length, 1);
@@ -5997,8 +6034,8 @@
         pairs += i < sendMine.length || i < sendTheirs.length ? mini(sendMine[i]) + mini(sendTheirs[i])
           : '<div class="ts-cell empty"><span class="dim">Tick players below</span></div><div class="ts-cell empty"><span class="dim">Tick players below</span></div>';
       }
-      moving = '<div class="card tr-side"><div class="ts-head"><span class="eyebrow">You send</span><b>' + escapeHTML(els.teamName.textContent || 'You') + '</b></div>' +
-        '<div class="ts-head them"><span class="eyebrow">They send</span><b>' + escapeHTML(rosterName(t.team)) + '</b></div>' + pairs +
+      moving = '<div class="card tr-side"><div class="ts-head"><span class="eyebrow">You send</span><b>' + teamAvHTML(ctx.myRoster.roster_id, 'sm') + escapeHTML(els.teamName.textContent || 'You') + '</b></div>' +
+        '<div class="ts-head them"><span class="eyebrow">They send</span><b>' + teamAvHTML(t.team, 'sm') + escapeHTML(rosterName(t.team)) + '</b></div>' + pairs +
         '<div class="ts-tot"><b>' + r.rosGive.toFixed(2) + '</b><span>ROS pts</span></div><div class="ts-tot them"><b>' + r.rosGet.toFixed(2) + '</b><span>ROS pts</span></div></div>';
     }
     const tone = function(v){ return Math.abs(v) < TR_MIN ? '' : v > 0 ? ' up' : ' down'; };
@@ -6016,9 +6053,9 @@
     const mktThem = r.fcGet && r.fcGive ? r.fcGive.v - r.fcGet.v : null;
     const board = !any ? '<p class="tr-intro">' + (r.give.length || r.get.length ? 'A trade needs players on both sides: tick at least one player you get and one you send.' : 'Tick players on each side to see the numbers.') + '</p>' :
       '<div class="card tb-board-card">' +
-        '<div class="tb-board"><div class="tb-side"><span class="eyebrow">Your lineup</span><b class="tb-num' + tone(r.me.d) + '">' + signed(r.me.d) + '</b><span class="tb-sub">' + signed(perWk('d')) + ' per week · playoffs ' + signed(r.playoffs) + '</span></div>' +
+        '<div class="tb-board"><div class="tb-side"><span class="eyebrow tb-tn">' + teamAvHTML(ctx.myRoster.roster_id, 'xs') + 'Your lineup</span><b class="tb-num' + tone(r.me.d) + '">' + signed(r.me.d) + '</b><span class="tb-sub">' + signed(perWk('d')) + ' per week · playoffs ' + signed(r.playoffs) + '</span></div>' +
           '<div class="tb-vs">vs</div>' +
-          '<div class="tb-side them"><span class="eyebrow">' + escapeHTML(rosterName(t.team)) + '</span><b class="tb-num' + tone(r.them.d) + '">' + signed(r.them.d) + '</b><span class="tb-sub">' + signed(perWk('td')) + ' per week</span></div></div>' +
+          '<div class="tb-side them"><span class="eyebrow tb-tn">' + teamAvHTML(t.team, 'xs') + escapeHTML(rosterName(t.team)) + '</span><b class="tb-num' + tone(r.them.d) + '">' + signed(r.them.d) + '</b><span class="tb-sub">' + signed(perWk('td')) + ' per week</span></div></div>' +
         '<div class="tb-verdict v-' + vk + '">' + escapeHTML(vt) + '<button type="button" class="tb-copy" data-trade-copy>Copy for league chat</button></div>' +
         lineupMovesHTML(r.moves) +
         (rosterNotes.length ? '<div class="tb-notes">' + rosterNotes.map(function(x){ return '<div>' + x + '</div>'; }).join('') + '</div>' : '') +
@@ -6043,8 +6080,8 @@
       }).join('') + '</details>';
     return '<div class="trade">' + tools + moving + board + weeksHTML +
       '<p class="tr-note"><b>Estimates, not a verdict.</b> Sleeper’s projections in your league’s scoring: this week’s real projections, then each player’s average projected week (zero on byes and weeks he isn’t projected to play). Each team’s lineup is its best possible one by projection; a trade that leaves a team over the roster limit drops its least useful player, and a freed spot is filled from waivers only if someone helps.' + (mktThem !== null ? '' : '') + '</p>' +
-      '<div class="tr-cols"><div><div class="section-title">Your roster</div><div class="tr-list">' + list(ctx.myRoster.players || [], 'give') + '</div></div>' +
-        '<div><div class="section-title">' + escapeHTML(rosterName(t.team)) + '</div><div class="tr-list">' + list(tradeRoster(t.team), 'get') + '</div></div></div>' +
+      '<div class="tr-cols"><div><div class="section-title tr-st">' + teamAvHTML(ctx.myRoster.roster_id, 'sm') + 'Your roster</div><div class="tr-list">' + list(ctx.myRoster.players || [], 'give') + '</div></div>' +
+        '<div><div class="section-title tr-st">' + teamAvHTML(t.team, 'sm') + escapeHTML(rosterName(t.team)) + '</div><div class="tr-list">' + list(tradeRoster(t.team), 'get') + '</div></div></div>' +
     '</div>';
   }
   function tradeRoster(rosterId){ const r = rosterById(rosterId); return r ? (r.players || []) : []; }
@@ -6322,14 +6359,14 @@
       const nm = function(pid){ return escapeHTML(playerName(ctx.players[pid])); };
       const side = function(ids){
         if(cards) return '<div class="tb-cards tf-cards">' + ids.map(tradeCardHTML).join('') + '</div>';
-        return ids.map(function(pid){ const v = rosValue(pid); return '<button type="button" class="ts-cell" data-open="' + escapeHTML(pid) + '" style="--pc:' + posColor(posGroup(pid)) + '"><span class="tr-pos" style="color:' + posColor(posGroup(pid)) + '">' + escapeHTML(posGroup(pid)) + '</span><span class="ts-nm">' + tradeName(ctx.players[pid]) + '</span><b>' + (v ? v.pts.toFixed(1) : '—') + '</b></button>'; }).join('');
+        return ids.map(function(pid){ const v = rosValue(pid); return '<button type="button" class="ts-cell" data-open="' + escapeHTML(pid) + '" style="--pc:' + posColor(posGroup(pid)) + '"><span class="tr-pos" style="color:' + posColor(posGroup(pid)) + '">' + escapeHTML(posGroup(pid)) + '</span>' + avatarTag(pid, 'ts-av') + '<span class="ts-nm">' + tradeName(ctx.players[pid]) + '</span><b>' + (v ? v.pts.toFixed(1) : '—') + '</b></button>'; }).join('');
       };
       const sizes = Object.keys(tf.bySize || {}).sort().map(function(k){ return tf.bySize[k] + ' ' + k; }).join(', ');
       body = '<div class="tf-sum">' + tf.found + ' trade' + (tf.found === 1 ? '' : 's') + ' worth proposing' + (sizes ? ' (' + sizes + ')' : '') + ' · showing the best ' + tf.results.length + ' · searched ' + tf.n.toLocaleString() + ' in ' + (tf.ms / 1000).toFixed(1) + ' s</div>' +
         tf.results.map(function(c, i){
           const sign = function(v){ return (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1); };
           return '<div class="card tf-res">' +
-            '<div class="tf-hd"><span class="tf-n">' + (i + 1) + '</span><b>' + escapeHTML(c.team.name) + '</b><span class="tf-v v-' + (c.cons ? 'cons' : c.v.k) + '">' + (c.cons ? 'Consolidation' : c.v.k === 'both' ? 'They’d likely accept' : 'Market favors them') + '</span></div>' +
+            '<div class="tf-hd"><span class="tf-n">' + (i + 1) + '</span>' + teamAvHTML(c.team.id, 'md') + '<b>' + escapeHTML(c.team.name) + '</b><span class="tf-v v-' + (c.cons ? 'cons' : c.v.k) + '">' + (c.cons ? 'Consolidation' : c.v.k === 'both' ? 'They’d likely accept' : 'Market favors them') + '</span></div>' +
             '<div class="tf-board"><div><span class="eyebrow">You</span><b class="tb-num up">' + sign(c.me) + '</b></div><div class="tb-vs">vs</div><div class="them"><span class="eyebrow">Them</span><b class="tb-num' + (c.them >= TR_MIN ? ' up' : c.them <= -TR_MIN ? ' down' : '') + '">' + sign(c.them) + '</b></div></div>' +
             '<div class="tr-side tf-side"><div class="ts-head"><span class="eyebrow">You send</span></div><div class="ts-head them"><span class="eyebrow">You get</span></div>' +
               '<div class="tf-col">' + side(c.give) + '</div><div class="tf-col">' + side(c.get) + '</div></div>' +
@@ -7175,7 +7212,7 @@
     }
     const name = p.full_name || ((p.first_name || '') + ' ' + (p.last_name || ''));
     return '<div class="' + cls + '">' +
-        '<div><div class="cmp-name">' + analyzeName(pid, name) + '</div><div class="cmp-meta">' + escapeHTML(p.position || '') + ' · ' + escapeHTML(p.team || 'FA') + matchupHTML(p.team) + '</div></div>' +
+        avatarTag(pid, 'cmp-av') + '<div class="cmp-txt"><div class="cmp-name">' + analyzeName(pid, name) + '</div><div class="cmp-meta">' + escapeHTML(p.position || '') + ' · ' + escapeHTML(p.team || 'FA') + matchupHTML(p.team) + '</div></div>' +
         '<div class="cmp-proj">' + fmtPts(ctx.projections[pid]) + '</div>' +
       '</div>';
   }
@@ -9408,7 +9445,7 @@
   }
   function lineupMovesHTML(mv){
     if(!mv || (!mv.out.length && !mv.in.length)) return '';
-    const one = function(x){ const p = ctx.players[x.pid]; return '<b>' + escapeHTML(p.position === 'DEF' ? (p.team || x.pid) + ' D/ST' : (p.first_name ? p.first_name.charAt(0) + '. ' : '') + (p.last_name || playerName(p))) + '</b> <span class="lm-p">' + escapeHTML(posGroup(x.pid)) + ' ' + x.pts.toFixed(1) + '</span>'; };
+    const one = function(x){ const p = ctx.players[x.pid]; return avatarTag(x.pid, 'lm-av') + '<b>' + escapeHTML(p.position === 'DEF' ? (p.team || x.pid) + ' D/ST' : (p.first_name ? p.first_name.charAt(0) + '. ' : '') + (p.last_name || playerName(p))) + '</b> <span class="lm-p">' + escapeHTML(posGroup(x.pid)) + ' ' + x.pts.toFixed(1) + '</span>'; };
     const tot = function(list){ return list.reduce(function(a, x){ return a + x.pts; }, 0); };
     return '<div class="lm"><span class="eyebrow">Your lineup, week ' + mv.week + '</span>' +
       '<div class="lm-r"><span class="lm-t out">Out</span>' + (mv.out.map(one).join(', ') || '—') + '</div>' +
@@ -9498,7 +9535,7 @@
     if(me){
       const needs = N.positions.filter(function(p){ return me.pos[p].need; }), spare = N.positions.filter(function(p){ return me.pos[p].spare.length; });
       const strong = N.positions.filter(function(p){ return me.pos[p].rank <= Math.max(1, Math.floor(N.n / 3)); });
-      mine = '<div class="card nd-me"><div class="eyebrow">Your team</div><div class="nd-me-t">' +
+      mine = '<div class="card nd-me"><div class="eyebrow nd-meh">' + teamAvHTML(me.id, 'sm') + 'Your team</div><div class="nd-me-t">' +
         (needs.length ? 'Thin at <b>' + needs.map(function(p){ return p + ' (' + ordinal(me.pos[p].rank) + ')'; }).join(', ') + '</b>' : 'No position in the bottom third') +
         (strong.length ? ' · strong at ' + strong.map(function(p){ return p + ' (' + ordinal(me.pos[p].rank) + ')'; }).join(', ') : '') + '.</div>' +
         (spare.length ? '<div class="nd-me-s">Spare starters to trade: ' + spare.map(function(p){ return '<b>' + p + '</b> ' + me.pos[p].spare.map(nm).join(', '); }).join(' · ') + '</div>' : '<div class="nd-me-s">No spare starters: everyone good enough to start for a typical team already starts for you.</div>') +
@@ -9514,7 +9551,7 @@
       });
       if(out.length) fits = '<div class="card nd-fit"><div class="eyebrow">Teams that need what you have spare</div>' + out.map(function(x){
         const theirs = N.positions.filter(function(q){ return x.t.pos[q].spare.length && me.pos[q].need; });
-        return '<button type="button" class="nd-fit-r" data-nd-trade="' + x.t.id + '"><span><b>' + escapeHTML(x.t.name) + '</b> is ' + ordinal(x.t.pos[x.p].rank) + ' at ' + x.p + '; you have ' + me.pos[x.p].spare.map(nm).join(', ') +
+        return '<button type="button" class="nd-fit-r" data-nd-trade="' + x.t.id + '">' + teamAvHTML(x.t.id, 'md') + '<span><b>' + escapeHTML(x.t.name) + '</b> is ' + ordinal(x.t.pos[x.p].rank) + ' at ' + x.p + '; you have ' + me.pos[x.p].spare.map(nm).join(', ') +
           (theirs.length ? '. They have spare ' + theirs.map(function(q){ return q + ' (' + x.t.pos[q].spare.map(nm).join(', ') + ')'; }).join(', ') + ', where you’re thin' : '') + '.</span><span class="mu-link">Trade ›</span></button>';
       }).join('') + '</div>';
     }
@@ -9526,7 +9563,7 @@
     const order = N.teams.slice().sort(function(a, b){ return (b.mine ? 1 : 0) - (a.mine ? 1 : 0) || a.name.localeCompare(b.name); });
     const grid = '<div class="card nd-grid" style="--n:' + N.positions.length + '"><div class="nd-r nd-h"><div class="nd-t"></div>' + N.positions.map(function(p){ return '<div class="nd-p" style="color:' + posColor(p) + '">' + p + '</div>'; }).join('') + '</div>' +
       order.map(function(t){
-        return '<div class="nd-r' + (t.mine ? ' mine' : '') + '"' + (t.mine ? '' : ' data-nd-trade="' + t.id + '" role="button" tabindex="0" title="Trade with ' + escapeHTML(t.name) + '"') + '><div class="nd-t">' + escapeHTML(t.name) + (t.mine ? ' <small>you</small>' : '') + '</div>' +
+        return '<div class="nd-r' + (t.mine ? ' mine' : '') + '"' + (t.mine ? '' : ' data-nd-trade="' + t.id + '" role="button" tabindex="0" title="Trade with ' + escapeHTML(t.name) + '"') + '><div class="nd-t">' + teamAvHTML(t.id, 'sm') + '<span>' + escapeHTML(t.name) + '</span>' + (t.mine ? ' <small>you</small>' : '') + '</div>' +
           N.positions.map(function(p){ return cell(t, p); }).join('') + '</div>';
       }).join('') +
       '<div class="nd-key"><span class="nd-c strong"><b>1</b></span> top third <span class="nd-c mid"><b>6</b></span> middle <span class="nd-c need"><b>11</b></span> bottom third (a need) <span class="nd-c mid"><b>4</b><i>+1</i></span> spare starters</div></div>';
