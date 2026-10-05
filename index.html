@@ -1595,6 +1595,26 @@
   .ad-bits b{ color: var(--text); font-variant-numeric: tabular-nums; }
   .ad-none{ font-size: 13px; color: var(--text-3); padding: 8px 0; }
   .ad-foot{ font-size: 11.5px; color: var(--text-3); margin-top: 8px; }
+  #fa-view.pl-value .pl-search, #fa-view.pl-value .pl-row, #fa-view.pl-value #pl-builder, #fa-view.pl-value #pl-active, #fa-view.pl-value #add-drop,
+  #fa-view.pl-value > .section-title, #fa-view.pl-value .pl-head, #fa-view.pl-value #fa-list, #fa-view.pl-value #fa-more{ display: none !important; }
+  .wv-base{ font-size: 13.5px; color: var(--text-2); padding: 2px 2px 10px; border-bottom: 1px solid var(--hair); margin-bottom: 4px; }
+  .wv-base b{ color: var(--text); font-variant-numeric: tabular-nums; }
+  .wv-swap{ display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--hair); }
+  .ad-h + .wv-swap{ border-top: none; }
+  .wv-sw-txt{ flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; font-size: 13.5px; }
+  .wv-tag{ font-size: 10px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; padding: 2px 6px; border-radius: 5px; }
+  .wv-tag.add{ color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); }
+  .wv-tag.drop{ color: var(--danger); background: color-mix(in srgb, var(--danger) 12%, transparent); margin-left: 4px; }
+  .wv-link{ padding: 0; background: none; color: var(--text); font-weight: 600; font-size: 13.5px; text-align: left; }
+  .wv-link:hover{ text-decoration: underline; }
+  .wv-open{ font-size: 12px; color: var(--text-3); }
+  .wv-net{ font-size: 15px; font-weight: 750; color: var(--accent); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .wv-cols{ margin-top: 10px; border-top: 1px solid var(--hair); padding-top: 4px; }
+  .wv-num{ text-align: right; flex-shrink: 0; line-height: 1.15; }
+  .wv-num b{ display: block; font-size: 14px; font-variant-numeric: tabular-nums; }
+  .wv-num span{ font-size: 10.5px; color: var(--text-3); }
+  .wv-num.add b{ color: var(--accent); } .wv-num.drop b{ color: var(--danger); } .wv-num.drop.zero b{ color: var(--text-2); }
+  @media (max-width: 600px){ #wv .section-title > span{ display: none; } }
   .tr-top{ display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
   .seg{ display: inline-flex; padding: 3px; border-radius: 999px; background: var(--surface-2); }
   .seg button{ border: none; background: none; font: inherit; font-size: 13px; font-weight: 600; color: var(--text-2); padding: 6px 12px; min-height: 32px; border-radius: 999px; cursor: pointer; }
@@ -2862,7 +2882,7 @@
         <section class="view" id="fa-view" style="display:none;">
           <div class="pl-tools">
             <div class="seg pl-views" role="tablist" aria-label="Which players">
-              <button type="button" data-pl-view="avail">Available</button><button type="button" data-pl-view="trend">Trending</button><button type="button" data-pl-view="all">All players</button>
+              <button type="button" data-pl-view="avail">Available</button><button type="button" data-pl-view="trend">Trending</button><button type="button" data-pl-view="all">All players</button><button type="button" data-pl-view="value" title="How many points each available player adds to your best lineup, and what each of yours costs to drop">Waiver value</button>
             </div>
             <label class="pl-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg><input id="pl-q" type="search" placeholder="Search players by name" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="search"><button type="button" class="pl-q-x" id="pl-q-x" aria-label="Clear search" hidden>×</button></label>
             <div class="pos-filter" id="fa-pos-filter" role="group" aria-label="Positions"></div>
@@ -2876,6 +2896,7 @@
             <div class="pl-active" id="pl-active"></div>
           </div>
           <div id="add-drop"></div>
+          <div id="wv"></div>
           <div class="section-title"><span id="pl-title">Available</span> <span style="opacity:0.7;" id="fa-sub"></span><div class="pl-density" role="group" aria-label="Row style"><button type="button" data-pl-rows="compact" aria-label="Compact rows" title="Compact"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg></button><button type="button" data-pl-rows="detailed" aria-label="Detailed rows" title="Detailed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="7" rx="2"/><rect x="4" y="13" width="16" height="7" rx="2"/></svg></button></div><button class="xbtn" data-expand="fa" aria-label="Expand waivers to full screen" title="Expand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M10 20H4v-6M20 4l-6.5 6.5M4 20l6.5-6.5"/></svg></button></div>
           <div class="list-head pl-head"><div class="h-slot"></div><button type="button" class="h-info h-sort" data-pl-sort="name">Player</button><div class="h-col h-opp">Opp</div><button type="button" class="h-col h-snap h-sort" data-pl-sort="snap" title="Season snap share">Snap</button><button type="button" class="h-col h-tgt h-sort" data-pl-sort="tgt" title="Season target share">Tgt</button><button type="button" class="h-stat h-sort" data-pl-sort="proj">Proj</button><button type="button" class="h-stat h-sort h-last" data-pl-sort="last" title="Last game">Last</button><div class="h-col h-vs">vs your weakest</div><div class="h-pick" aria-hidden="true"></div></div>
           <div id="fa-list"></div>
@@ -8314,6 +8335,138 @@
       '</div>';
   }
 
+  // ============ Waiver value: what a player is worth to MY best lineup ============
+  // bestLineup(players, rosterPositions, scoringSettings, week) is the highest-scoring legal lineup from those players:
+  // slots are filled most restrictive first, so a FLEX / SUPER_FLEX / IDP_FLEX can't take a player a dedicated slot
+  // needs. The single-position slots are solved together exactly (assignDedicated, so a dual-eligible LB/DL or WR/RB
+  // lands where the lineup scores most), then each flex slot, narrowest first, takes the best player left. Pure
+  // projection: no WR/RB/TE preference (that's Optimal Lineup's taste, not points) and no locks.
+  // Points = Sleeper's weekly projection scored with scoringSettings (first downs corrected, see projPoints); zero on a
+  // bye, for anyone ruled out this week, or without a projection.
+  // Rest of season later: lineupProjRaw(week) has to return that week's raw projections (fetch + cache per week), and
+  // waiverWeeks() has to list the remaining weeks; lineupValue already sums bestLineup across them.
+  function lineupProjRaw(week){ return week === ctx.week ? (ctx.projRaw || {}) : null; }
+  const lineupPtsMemo = { raw: null, sc: null, w: {} };
+  function lineupPts(pid, week, sc){
+    const raw = lineupProjRaw(week);
+    if(lineupPtsMemo.raw !== raw || lineupPtsMemo.sc !== sc){ lineupPtsMemo.raw = raw; lineupPtsMemo.sc = sc; lineupPtsMemo.w = {}; }
+    const m = lineupPtsMemo.w[week] || (lineupPtsMemo.w[week] = {});
+    if(pid in m) return m[pid];
+    const p = ctx.players[pid], r = raw && raw[pid];
+    let v = 0;
+    if(p && r){
+      const g = matchup(p.team, week);
+      if(!(g && g.bye) && !(week === ctx.week && cantPlay(effectiveStatus(pid)))){ const x = projPoints(r, pid, sc); v = typeof x === 'number' && x > 0 ? x : 0; }
+    }
+    return (m[pid] = v);
+  }
+  function bestLineup(players, rosterPositions, scoringSettings, week){
+    const pts = function(pid){ return lineupPts(pid, week, scoringSettings); };
+    const pool = players.filter(function(pid, i, arr){ return arr.indexOf(pid) === i && pts(pid) > 0; });
+    const slots = rosterPositions.filter(function(sl){ return sl !== 'BN' && sl !== 'IR' && sl !== 'TAXI'; });
+    const width = function(sl){ return (FLEX_GROUPS[sl] || [sl]).length; };   // how many positions the slot takes
+    const out = slots.map(function(){ return null; }), used = new Set();
+    const ded = [];
+    slots.forEach(function(sl, i){ if(width(sl) === 1) ded.push(i); });
+    const asg = assignDedicated(ded, slots, pool, pts, null);
+    Object.keys(asg).forEach(function(i){ out[i] = asg[i]; used.add(asg[i]); });
+    slots.map(function(sl, i){ return i; }).filter(function(i){ return width(slots[i]) > 1; })
+      .sort(function(a, b){ return width(slots[a]) - width(slots[b]) || a - b; })
+      .forEach(function(i){
+        let best = null;
+        pool.forEach(function(pid){ if(!used.has(pid) && canFill(pid, slots[i]) && (!best || pts(pid) > pts(best))) best = pid; });
+        if(best){ out[i] = best; used.add(best); }
+      });
+    const lineup = slots.map(function(sl, i){ return { slot: sl, pid: out[i], pts: out[i] ? pts(out[i]) : 0 }; });
+    return { week: week, total: lineup.reduce(function(a, x){ return a + x.pts; }, 0), slots: lineup };
+  }
+  function waiverWeeks(){ return [ctx.week]; }   // rest of season: the remaining weeks, once lineupProjRaw has them
+  function lineupValue(pids, weeks){
+    const sc = (ctx.league && ctx.league.scoring_settings) || {};
+    return weeks.reduce(function(a, w){ return a + bestLineup(pids, ctx.rosterPositions, sc, w).total; }, 0);
+  }
+  // Marginal value of each available player = best lineup with him − best lineup now; drop cost of each of mine =
+  // best lineup now − best lineup without him. My IR / taxi players can't start, so they're not in the lineup pool and
+  // aren't offered as drops. Swaps: for the top adds, the drop that loses the least (exact, not gain − cost, since
+  // the two can interact); with an open roster spot nobody has to go. Memoized per data load (plReset clears it).
+  const WV_SWAPS = 8;
+  function waiverValue(){
+    if(plMemo.wv) return plMemo.wv;
+    const weeks = waiverWeeks(), L = function(pids){ return lineupValue(pids, weeks); };
+    const sc = (ctx.league && ctx.league.scoring_settings) || {};
+    const ptsOf = function(pid){ return weeks.reduce(function(a, w){ return a + lineupPts(pid, w, sc); }, 0); };
+    const parked = new Set([].concat(ctx.myRoster.reserve || [], ctx.myRoster.taxi || []));
+    const active = (ctx.myRoster.players || []).filter(function(pid){ return ctx.players[pid] && !parked.has(pid); });
+    const without = function(list, pid){ return list.filter(function(x){ return x !== pid; }); };
+    const now = bestLineup(active, ctx.rosterPositions, sc, ctx.week), base = L(active);
+    const starting = new Set(now.slots.map(function(x){ return x.pid; }).filter(Boolean));
+    const drops = active.map(function(pid){ return { pid: pid, cost: base - L(without(active, pid)), pts: ptsOf(pid), starts: starting.has(pid) }; })
+      .sort(function(a, b){ return a.cost - b.cost || a.pts - b.pts; });
+    // A player can only raise the total if he out-projects someone in the lineup (or a slot is empty): skip the rest.
+    const floor = now.slots.some(function(x){ return !x.pid; }) ? 0 : Math.min.apply(null, now.slots.map(function(x){ return x.pts; }));
+    const locked = function(pid){ return weeks.length === 1 && weeks[0] === ctx.week && isLocked(pid); };   // kicked off: can't start him now
+    const fas = [].concat.apply([], leaguePositions().map(function(pos){ return ctx.freeAgents[pos] || []; })).filter(function(pid, i, arr){ return arr.indexOf(pid) === i; });
+    const adds = fas.filter(function(pid){ return !locked(pid) && (weeks.length > 1 || ptsOf(pid) > floor); })
+      .map(function(pid){ return { pid: pid, gain: L(active.concat([pid])) - base, pts: ptsOf(pid) }; })
+      .filter(function(a){ return a.gain > 0.005; })
+      .sort(function(a, b){ return b.gain - a.gain || b.pts - a.pts; });
+    const size = ((ctx.league && ctx.league.roster_positions) || []).filter(function(sl){ return sl !== 'IR' && sl !== 'TAXI'; }).length;
+    const open = Math.max(0, size - active.length);
+    return (plMemo.wv = { weeks: weeks, base: base, lineup: now, adds: adds, drops: drops, open: open, swapFor: function(list){
+      return list.slice(0, WV_SWAPS).map(function(a){
+        if(open) return { add: a.pid, drop: null, net: a.gain };
+        let best = null;
+        drops.forEach(function(d){
+          const net = L(without(active, d.pid).concat([a.pid])) - base;
+          if(!best || net > best.net + 1e-9) best = { add: a.pid, drop: d.pid, net: net };
+        });
+        return best;
+      }).filter(function(x){ return x && x.net > 0.005; }).sort(function(a, b){ return b.net - a.net; });
+    } });
+  }
+  function wvRowHTML(pid, val, kind, extra){
+    const p = ctx.players[pid];
+    const valTxt = kind === 'add' ? '+' + val.toFixed(2) : val < 0.005 ? '0.00' : '−' + val.toFixed(2);
+    return '<div class="ad-item wv-item" data-wv-open="' + escapeHTML(pid) + '" role="button" tabindex="0">' +
+      avatarTag(pid, 'ad-av') + '<div class="ad-info"><div class="ad-name">' + escapeHTML(playerName(p)) + ' ' + injuryChip(p.injury_status) + '</div>' +
+      '<div class="ad-meta">' + escapeHTML(eligLabel(pid)) + ' · ' + escapeHTML(p.team || 'FA') + (extra ? ' · ' + extra : '') + '</div></div>' +
+      '<div class="wv-num ' + kind + (kind === 'drop' && val < 0.005 ? ' zero' : '') + '"><b>' + valTxt + '</b><span>' + (kind === 'add' ? 'adds' : 'costs') + '</span></div></div>';
+  }
+  function renderWaiverValue(){
+    const el = document.getElementById('wv');
+    if(!el) return;
+    if(!ctx.myRoster || !ctx.rosterPositions || !ctx.projRaw){ el.innerHTML = '<div class="empty-state">Load a league first.</div>'; return; }
+    if(ctx.projFailed){ el.innerHTML = '<div class="empty-state">Projections didn’t load, so there’s nothing to value. Try refreshing.</div>'; return; }
+    const V = waiverValue(), pos = ctx.pl.pos, name = function(pid){ return escapeHTML(playerName(ctx.players[pid])); };
+    const adds = pos.length ? V.adds.filter(function(a){ return fantasyPositions(a.pid).some(function(x){ return pos.indexOf(x) !== -1; }); }) : V.adds;
+    const swaps = V.swapFor(adds), wk = 'week ' + ctx.week, posTxt = pos.length ? ' · ' + pos.join('/') : '';
+    const dropRows = V.drops.slice(0, 8).map(function(d){ return wvRowHTML(d.pid, d.cost, 'drop', d.starts ? 'starting' : d.pts > 0 ? fmtPts(d.pts) + ' proj, bench' : 'no points this week'); }).join('');
+    const addRows = adds.slice(0, 8).map(function(a){ return wvRowHTML(a.pid, a.gain, 'add', fmtPts(a.pts) + ' proj'); }).join('');
+    const swapRows = swaps.slice(0, 5).map(function(x){
+      return '<div class="wv-swap"><div class="wv-sw-txt"><span class="wv-tag add">Add</span><button type="button" class="wv-link" data-wv-open="' + escapeHTML(x.add) + '">' + name(x.add) + '</button>' +
+        (x.drop ? '<span class="wv-tag drop">Drop</span><button type="button" class="wv-link" data-wv-open="' + escapeHTML(x.drop) + '">' + name(x.drop) + '</button>' : '<span class="wv-open">open roster spot, no drop needed</span>') +
+        '</div><b class="wv-net">+' + x.net.toFixed(2) + '</b></div>';
+    }).join('');
+    el.innerHTML = '<div class="section-title">Waiver value · ' + wk + posTxt + ' <span style="opacity:0.7;">— points added to your best lineup</span></div>' +
+      '<div class="card ad-card wv-card">' +
+        '<div class="wv-base">Your best lineup projects <b>' + fmtPts(V.base) + '</b> this week' + (V.open ? ' · <b>' + V.open + '</b> open roster spot' + (V.open === 1 ? '' : 's') : '') + '.</div>' +
+        '<div class="eyebrow ad-h">Best swaps</div>' + (swapRows || '<div class="ad-none">No add improves your best lineup this week' + (pos.length ? ' at ' + escapeHTML(pos.join('/')) : '') + '.</div>') +
+        '<div class="ad-cols wv-cols"><div><div class="eyebrow ad-h">Top adds · marginal value</div>' + (addRows || '<div class="ad-none">Nobody available beats your current starters.</div>') + '</div>' +
+          '<div><div class="eyebrow ad-h">Cheapest drops · drop cost</div>' + (dropRows || '<div class="ad-none">No droppable players.</div>') + '</div></div>' +
+        '<div class="ad-foot">Marginal value = your best lineup with the player minus without; drop cost = your best lineup minus your best lineup without him; a swap’s net is the exact change with both moves. ' +
+          'Best lineup = most restrictive slots filled first, from Sleeper’s ' + wk + ' projections in your league’s scoring (byes, ruled-out players and anyone whose game has started count as zero). ' +
+          'IR / taxi players aren’t counted or offered as drops. This week only; waivers may not clear in time to start an add.</div>' +
+      '</div>';
+  }
+  document.getElementById('wv').addEventListener('click', function(e){
+    const b = e.target.closest('[data-wv-open]');
+    if(b){ e.stopPropagation(); openPlayerFromList(b.getAttribute('data-wv-open'), b); }
+  });
+  document.getElementById('wv').addEventListener('keydown', function(e){
+    const b = e.target.closest('.wv-item');
+    if(b && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); openPlayerFromList(b.getAttribute('data-wv-open'), b); }
+  });
+
   // ---- trending on Sleeper (official /players/nfl/trending/{add|drop}, last 24 hours), cached 30 min ----
   async function loadTrending(){
     if(ctx.trending && Date.now() - ctx.trending.ts < 30 * 60 * 1000) return ctx.trending;
@@ -8605,6 +8758,9 @@
       const q = document.getElementById('pl-q');
       if(q.value !== st.q) q.value = st.q;
     }
+    document.getElementById('fa-view').classList.toggle('pl-value', st.view === 'value');
+    if(st.view === 'value'){ renderWaiverValue(); return; }
+    document.getElementById('wv').innerHTML = '';
     document.getElementById('pl-q-x').hidden = !st.q;
     const dirBtn = document.getElementById('pl-dir');
     dirBtn.textContent = st.dir === 'asc' ? '↑' : '↓';
