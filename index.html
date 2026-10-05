@@ -1526,7 +1526,9 @@
   .tf-tag.spare{ color: var(--accent); background: color-mix(in srgb, var(--accent) 11%, transparent); }
   .tf-tag.theirneed{ color: var(--pos-QB); background: color-mix(in srgb, var(--pos-QB) 13%, transparent); }
   .tf-tag.myneed{ color: var(--warn); background: color-mix(in srgb, var(--warn) 12%, transparent); }
-  .tf-acts{ display: flex; justify-content: flex-end; margin-top: 8px; }
+  .tf-acts{ display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .tb-verdict{ display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .tb-copy{ margin-left: auto; min-height: 30px; padding: 0 12px; border-radius: 999px; background: var(--surface); color: var(--text-2); font-size: 12px; font-weight: 600; box-shadow: inset 0 0 0 1px var(--hair); }
   .nd{ max-width: 900px; }
   .nd-me, .nd-fit{ padding: 14px 16px; margin-bottom: 12px; border-radius: var(--radius-lg); }
   .nd-me-t{ font-size: 16px; line-height: 1.45; margin-top: 4px; } .nd-me-t b{ color: var(--danger); font-weight: 700; }
@@ -5824,7 +5826,7 @@
         '<div class="tb-board"><div class="tb-side"><span class="eyebrow">Your lineup</span><b class="tb-num' + tone(r.me.d) + '">' + signed(r.me.d) + '</b><span class="tb-sub">' + signed(perWk('d')) + ' per week · playoffs ' + signed(r.playoffs) + '</span></div>' +
           '<div class="tb-vs">vs</div>' +
           '<div class="tb-side them"><span class="eyebrow">' + escapeHTML(rosterName(t.team)) + '</span><b class="tb-num' + tone(r.them.d) + '">' + signed(r.them.d) + '</b><span class="tb-sub">' + signed(perWk('td')) + ' per week</span></div></div>' +
-        '<div class="tb-verdict v-' + r.verdict.k + '">' + escapeHTML(r.verdict.t) + '</div>' +
+        '<div class="tb-verdict v-' + r.verdict.k + '">' + escapeHTML(r.verdict.t) + '<button type="button" class="tb-copy" data-trade-copy>Copy for league chat</button></div>' +
         (rosterNotes.length ? '<div class="tb-notes">' + rosterNotes.map(function(x){ return '<div>' + x + '</div>'; }).join('') + '</div>' : '') +
         '<div class="tb-cap">Change in each team’s best starting lineup, ' + span + ', with roster spots counted. ' + (weekUnderway() ? 'This week’s games have started, so it counts from week ' + wk0 + '.' : '') + '</div>' +
       '</div>' +
@@ -5877,7 +5879,8 @@
   // current roster (the best waiver add for a freed spot, its cheapest drop for an extra player), and the top results
   // are then re-checked exactly (lineupDelta) before they're shown. Runs in slices so the page stays responsive.
   const TF_SHOW = 12, TF_RECHECK = 16;   // uneven trades re-checked exactly (even ones already are)
-  ctx.tf = { team: 0, sizes: { s11: true, s21: true, s12: true }, keep: false, running: false, results: null, key: '', progress: 0, ms: 0, n: 0 };
+  // 2-for-2 is opt-in: it adds a few seconds and rarely survives the fairness rule
+  ctx.tf = { team: 0, sizes: { s11: true, s21: true, s12: true, s22: false }, keep: false, running: false, results: null, key: '', progress: 0, ms: 0, n: 0 };
   try{ ctx.tradeMode = localStorage.getItem('rv-trade-mode') === 'finder' ? 'finder' : 'builder'; }catch(e){ ctx.tradeMode = 'builder'; }
   function tfKey(){
     const t = ctx.tf;
@@ -5953,24 +5956,56 @@
         // players of theirs who could help me: what each adds to my lineup on his own is an upper bound on any deal for him
         const get = t.act.filter(function(pid){ return ros(pid) > 0 && weeks.some(function(w, i){ return lineupPts(pid, w, sc) > P0.floors[i]; }) && P0.add(pid) + P0.fill >= TR_MIN; }).sort(function(a, b){ return P0.add(b) - P0.add(a); }).slice(0, 7);
         const deals = [];
-        if(tf.sizes.s11) myGive.forEach(function(g){ get.forEach(function(x){ deals.push([[g], [x]]); }); });
+        // 1-for-1s are also the building blocks of 2-for-2s, so they're scored (not shown) when only 2-for-2 is on
+        if(tf.sizes.s11 || tf.sizes.s22) myGive.forEach(function(g){ get.forEach(function(x){ deals.push([[g], [x], !tf.sizes.s11]); }); });
         if(tf.sizes.s21){ const gv = myGive.slice(0, 8); get.slice(0, 5).forEach(function(x){ for(let i = 0; i < gv.length; i++) for(let j = i + 1; j < gv.length; j++){ const s = ros(gv[i]) + ros(gv[j]); if(s >= 0.6 * ros(x) && ros(gv[i]) < ros(x) * 1.2) deals.push([[gv[i], gv[j]], [x]]); } }); }
         if(tf.sizes.s12){ const gx = get.slice(0, 6); myGive.slice(0, 8).forEach(function(g){ for(let i = 0; i < gx.length; i++) for(let j = i + 1; j < gx.length; j++){ const s = ros(gx[i]) + ros(gx[j]); if(ros(g) >= 0.6 * s && ros(gx[i]) < ros(g) * 1.2) deals.push([[g], [gx[i], gx[j]]]); } }); }
         total += deals.length;
-        return { t: t, deals: deals };
+        return { t: t, deals: deals, get: get };
       });
       tf.n = total;
       let slice = Date.now();
       for(const plan of plans){
-        const t = plan.t, P = prep(t), baseT = P.base;
+        const t = plan.t, P = prep(t), baseT = P.base, ones = [];
         for(const d of plan.deals){
           const give = d[0], get = d[1];
           done++;
           const ub = get.reduce(function(a, x){ return a + P0.add(x); }, 0) + (give.length > get.length && me.act.length >= size ? P0.fill : 0);
           if(ub < TR_MIN) continue;   // can't help me enough, whatever I send
           const myD = adj(me, P0, give, get);
-          if(myD >= TR_MIN) mine.push({ team: t, P: P, baseT: baseT, give: give, get: get, me: myD });
+          if(give.length === 1 && get.length === 1) ones.push({ g: give[0], x: get[0], me: myD });
+          if(myD >= TR_MIN && !d[2]) mine.push({ team: t, P: P, baseT: baseT, give: give, get: get, me: myD });
           if(Date.now() - slice > 50){ tf.busy += Date.now() - slice; tf.progress = done / Math.max(1, total); rerenderTrade(); await yieldNow(); slice = Date.now(); if(tf.key !== tfKey()) return; }
+        }
+        // 2-for-2, built from pieces already scored instead of searching every pair of pairs: two 1-for-1s with this
+        // team that use four different players, and the best uneven deals evened out with one more player. Both rosters
+        // keep their size, so the numbers are exact without a re-check.
+        if(tf.sizes.s22){
+          const combos = {}, addCombo = function(give, get){ const k = give.slice().sort().join('+') + '>' + get.slice().sort().join('+'); if(!combos[k]) combos[k] = [give, get]; };
+          // halves both teams could live with: my best single swaps with them, each with their side scored too
+          const tol = TR_TOL * Math.max(1, baseT);
+          const top = ones.filter(function(o){ return o.me > 0; }).sort(function(a, b){ return b.me - a.me; }).slice(0, 12);
+          top.forEach(function(o){ o.them = adj(t, P, [o.x], [o.g]); });
+          const pairs = [];
+          for(let i = 0; i < top.length; i++) for(let j = i + 1; j < top.length; j++){
+            const a = top[i], b = top[j];
+            if(a.g !== b.g && a.x !== b.x && a.them + b.them >= -tol) pairs.push({ a: a, b: b, est: a.me + b.me });
+          }
+          pairs.sort(function(a, b){ return b.est - a.est; }).slice(0, 15).forEach(function(p){ addCombo([p.a.g, p.b.g], [p.a.x, p.b.x]); });
+          // the best uneven deals evened out: the extra player is the one who helps the side getting him most and costs
+          // the side sending him least
+          mine.filter(function(m){ return m.team === t && m.give.length !== m.get.length; }).sort(function(a, b){ return b.me - a.me; }).slice(0, 5).forEach(function(m){
+            if(m.give.length === 2) plan.get.filter(function(x){ return m.get.indexOf(x) === -1; }).sort(function(a, b){ return (P0.add(b) - (P.drop[b] || 0)) - (P0.add(a) - (P.drop[a] || 0)); }).slice(0, 3).forEach(function(x){ addCombo(m.give, m.get.concat([x])); });
+            else myGive.filter(function(g){ return m.give.indexOf(g) === -1; }).sort(function(a, b){ return (P.add(b) - (P0.drop[b] || 0)) - (P.add(a) - (P0.drop[a] || 0)); }).slice(0, 3).forEach(function(g){ addCombo(m.give.concat([g]), m.get); });
+          });
+          const list = Object.keys(combos).map(function(k){ return combos[k]; });
+          total += list.length; tf.n = total;
+          for(const c of list){
+            done++;
+            if(c[1].reduce(function(a, x){ return a + P0.add(x); }, 0) < TR_MIN) continue;
+            const myD = adj(me, P0, c[0], c[1]);
+            if(myD >= TR_MIN) mine.push({ team: t, P: P, baseT: baseT, give: c[0], get: c[1], me: myD });
+          }
         }
       }
       // their side, in order of my gain, until there are plenty of trades they'd plausibly accept
@@ -6023,8 +6058,28 @@
         perGet[gk] = (perGet[gk] || 0) + 1; perTeam[c.team.id] = (perTeam[c.team.id] || 0) + 1; shown.push(c);
       });
       tf.results = shown.slice(0, TF_SHOW); tf.found = out.length;
+      tf.bySize = {}; out.forEach(function(c){ const k = c.give.length + '-for-' + c.get.length; tf.bySize[k] = (tf.bySize[k] || 0) + 1; });
     }catch(e){ console.warn('Trade Finder failed', e); tf.results = []; tf.error = true; }
     finally{ tf.running = false; tf.ms = Date.now() - t0; tf.busy += 0; tf.progress = 1; rerenderTrade(); }
+  }
+  // ---- copy a trade for the league chat: written to the other manager, their side of the numbers only ----
+  function tradeCopyText(give, get, them, mkt){
+    const who = function(pid){ const p = ctx.players[pid]; return playerName(p) + ' (' + posGroup(pid) + (p.team ? ', ' + p.team : '') + ')'; };
+    const w = tvWeeks(), span = w.length ? 'weeks ' + w[0] + '–' + w[w.length - 1] : 'the rest of the season';
+    const lines = ['Trade idea:', 'You get: ' + give.map(who).join(', '), 'I get: ' + get.map(who).join(', ')];
+    if(them >= TR_MIN) lines.push('By my projections it adds ' + them.toFixed(1) + ' points to your best lineup over ' + span + '.');
+    else if(mkt > 0) lines.push('You come out ahead in trade value (FantasyCalc).');
+    return lines.join('\n');
+  }
+  function copyText(text, btn){
+    const done = function(){ if(!btn) return; const was = btn.textContent; btn.textContent = 'Copied ✓'; setTimeout(function(){ btn.textContent = was; }, 1600); };
+    const fallback = function(){
+      const ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try{ document.execCommand('copy'); done(); }catch(e){ console.warn('Copy failed', e); }
+      ta.remove();
+    };
+    if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback); else fallback();
   }
   function finderHTML(){
     const tf = ctx.tf, cards = ctx.tradeView === 'cards';
@@ -6034,7 +6089,7 @@
       '<label class="tr-pick"><span class="eyebrow">Teams</span><select data-tf-team><option value="0">All teams</option>' + others.map(function(r){ return '<option value="' + r.roster_id + '"' + (tf.team === r.roster_id ? ' selected' : '') + '>' + escapeHTML(rosterName(r.roster_id)) + '</option>'; }).join('') + '</select></label>' +
       '<div class="tb-segs"><div class="wk-seg" role="group" aria-label="Week weighting"><button type="button" data-trade-po="0" aria-pressed="' + !ctx.trade.po2x + '">Weeks equal</button><button type="button" data-trade-po="1" aria-pressed="' + !!ctx.trade.po2x + '">Playoffs 2×</button></div>' +
         '<div class="wk-seg" role="group" aria-label="Player view"><button type="button" data-trade-view="list" aria-pressed="' + !cards + '">List</button><button type="button" data-trade-view="cards" aria-pressed="' + cards + '">Cards</button></div></div></div>' +
-      '<div class="tf-opts">' + chip('s11', '1-for-1') + chip('s21', 'Send 2, get 1') + chip('s12', 'Send 1, get 2') +
+      '<div class="tf-opts">' + chip('s11', '1-for-1') + chip('s21', 'Send 2, get 1') + chip('s12', 'Send 1, get 2') + chip('s22', '2-for-2') +
         '<button type="button" class="tf-chip" data-tf-keep aria-pressed="' + tf.keep + '">Keep my starters</button></div>';
     const stale = tf.key !== tfKey();
     if(!tf.running && (stale || !tf.results)) setTimeout(runTradeFinder, 0);   // options changed or first visit: search again
@@ -6049,7 +6104,8 @@
         if(cards) return '<div class="tb-cards tf-cards">' + ids.map(tradeCardHTML).join('') + '</div>';
         return ids.map(function(pid){ const v = rosValue(pid); return '<button type="button" class="ts-cell" data-open="' + escapeHTML(pid) + '" style="--pc:' + posColor(posGroup(pid)) + '"><span class="tr-pos" style="color:' + posColor(posGroup(pid)) + '">' + escapeHTML(posGroup(pid)) + '</span><span class="ts-nm">' + tradeName(ctx.players[pid]) + '</span><b>' + (v ? v.pts.toFixed(1) : '—') + '</b></button>'; }).join('');
       };
-      body = '<div class="tf-sum">' + tf.found + ' trade' + (tf.found === 1 ? '' : 's') + ' worth proposing · showing the best ' + tf.results.length + ' · searched ' + tf.n.toLocaleString() + ' in ' + (tf.ms / 1000).toFixed(1) + ' s</div>' +
+      const sizes = Object.keys(tf.bySize || {}).sort().map(function(k){ return tf.bySize[k] + ' ' + k; }).join(', ');
+      body = '<div class="tf-sum">' + tf.found + ' trade' + (tf.found === 1 ? '' : 's') + ' worth proposing' + (sizes ? ' (' + sizes + ')' : '') + ' · showing the best ' + tf.results.length + ' · searched ' + tf.n.toLocaleString() + ' in ' + (tf.ms / 1000).toFixed(1) + ' s</div>' +
         tf.results.map(function(c, i){
           const sign = function(v){ return (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1); };
           return '<div class="card tf-res">' +
@@ -6059,7 +6115,7 @@
               '<div class="tf-col">' + side(c.give) + '</div><div class="tf-col">' + side(c.get) + '</div></div>' +
             (c.tags.length ? '<div class="tf-tags">' + c.tags.map(function(t){ return '<span class="tf-tag ' + t.k + '">' + escapeHTML(t.t) + '</span>'; }).join('') + '</div>' : '') +
             ((c.myAdds && c.myAdds.length) || (c.theirDrops && c.theirDrops.length) ? '<div class="tb-notes">' + (c.myAdds && c.myAdds.length ? '<div>You could add <b>' + c.myAdds.map(nm).join(', ') + '</b> from waivers</div>' : '') + (c.theirDrops && c.theirDrops.length ? '<div>They would have to drop <b>' + c.theirDrops.map(nm).join(', ') + '</b></div>' : '') + '</div>' : '') +
-            '<div class="tf-acts"><button type="button" class="quiet-btn" data-tf-open="' + i + '">Open in builder ›</button></div></div>';
+            '<div class="tf-acts"><button type="button" class="quiet-btn" data-tf-copy="' + i + '">Copy for league chat</button><button type="button" class="quiet-btn" data-tf-open="' + i + '">Open in builder ›</button></div></div>';
         }).join('');
     }
     return tools + body + '<p class="tr-note">Points = change in each team’s best lineups, weeks ' + (tvWeeks()[0] || ctx.week) + '–' + ((ctx.ros && ctx.ros.through_week) || 17) + (ctx.trade.po2x ? ' (playoffs 2×)' : '') + ', with roster spots counted. Shown only when it helps you by ' + TR_MIN + '+ and their lineup doesn’t drop, or drops a little (≤ ' + Math.round(TR_TOL * 100) + '%) while FantasyCalc market value favors them. Ranked by your gain, then by how much it helps them and whether it moves your spare starters to a team that needs that position.</p>';
@@ -6951,6 +7007,9 @@
     const tsz = e.target.closest('[data-tf-size]');
     if(tsz){ const k = tsz.getAttribute('data-tf-size'); ctx.tf.sizes[k] = !ctx.tf.sizes[k]; if(!Object.keys(ctx.tf.sizes).some(function(x){ return ctx.tf.sizes[x]; })) ctx.tf.sizes.s11 = true; rerenderTrade(); return; }
     if(e.target.closest('[data-tf-keep]')){ ctx.tf.keep = !ctx.tf.keep; rerenderTrade(); return; }
+    const tfc = e.target.closest('[data-tf-copy]');
+    if(tfc){ const c = ctx.tf.results && ctx.tf.results[Number(tfc.getAttribute('data-tf-copy'))]; if(c) copyText(tradeCopyText(c.give, c.get, c.them, c.mkt || 0), tfc); return; }
+    if(e.target.closest('[data-trade-copy]')){ const r = tradeResult(); copyText(tradeCopyText(r.give, r.get, r.them.d, r.fcGet && r.fcGive ? r.fcGive.v - r.fcGet.v : 0), e.target.closest('[data-trade-copy]')); return; }
     const tfo = e.target.closest('[data-tf-open]');
     if(tfo){ const c = ctx.tf.results && ctx.tf.results[Number(tfo.getAttribute('data-tf-open'))]; if(c){ ctx.trade = Object.assign({}, ctx.trade, { team: c.team.id, give: c.give.slice(), get: c.get.slice() }); ctx.tradeMode = 'builder'; rerenderTrade(); window.scrollTo(0, 0); } return; }
     const po = e.target.closest('[data-trade-po]');

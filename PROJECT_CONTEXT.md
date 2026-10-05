@@ -55,7 +55,11 @@ A single-file local web app for viewing a Sleeper fantasy football roster with c
      - **Timings** (hidden browser pane, so slower than a visible one): BATTLEBALL (IDP, 10 teams) 1,683 deals ≈ 7.6 s of compute; The League (PPR, 12 teams) 2,008 ≈ 4 s. Every shown result matched `lineupDelta` exactly.
   - **Fairness tightened:** `TR_TOL` is 1% of their rest-of-season lineup (about 2.5 pts a week; 3% let through −100-point trades).
   - **Engine speed-ups that benefit everything:** a rectangular Hungarian solver (`hungarianMax`, n slots × m players); `bestLineup` drops players who can't start before solving (exact: at position Q only the top (open slots taking Q) + (multi-position players) can matter); memoized `canFill`; points computed once per call. `tvValue` fills and drops skip the weeks a move can't affect. Exact against an independent brute-force solver on 560 lineups, including dual-eligible players.
-  6. 2-for-2 behind "Search deeper", plus copy-trade-summary text.
+  6. **Done (Oct 5 2026)**: 2-for-2 deals and copy-for-league-chat text.
+     - **2-for-2** is an opt-in "2-for-2" chip (`tf.sizes.s22`, off by default). It's built from pieces already scored, not a full pair-of-pairs search (~10k deals): two of my single swaps with that team (my top 12 by gain, their side scored too) whose combined effect on them stays within `TR_TOL`, plus the best uneven deals evened out with the player who helps the receiving side most and costs the sending side least. Both rosters keep their size, so the numbers are exact without a re-check.
+     - **Finding (BATTLEBALL, The League):** 2-for-2s that help me nearly always hurt them; two fair halves combined become a bad deal for them. So it's rarely in the results, which is why it's opt-in. With the chip on, 1-for-1s are scored as building blocks even when that chip is off (`d[2]` = half only).
+     - The summary line counts found trades by size.
+     - **Copy for league chat** (`tradeCopyText`, `copyText` with an execCommand fallback): written to the other manager. "You get … / I get …", then their lineup gain over the weeks (if ≥ `TR_MIN`), else "You come out ahead in trade value (FantasyCalc)". It never mentions my gain. The button is on each Finder result and on the builder's verdict.
 
   Owner's decisions:
   - Keeper leagues use redraft FantasyCalc values for now.
