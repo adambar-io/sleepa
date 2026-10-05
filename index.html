@@ -1513,6 +1513,10 @@
   .tf-n{ display: grid; place-items: center; flex: none; width: 22px; height: 22px; border-radius: 50%; background: var(--surface-2); font-size: 11.5px; font-weight: 800; color: var(--text-2); }
   .tf-v{ margin-left: auto; flex: none; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; }
   .tf-v.v-both{ color: var(--accent); background: color-mix(in srgb, var(--accent) 13%, transparent); }
+  .tf-v.v-cons{ color: var(--accent); background: color-mix(in srgb, var(--accent) 13%, transparent); }
+  .tf-val{ font-size: 12.5px; color: var(--text-2); margin-top: 2px; }
+  .tf-tag.cons{ color: var(--accent); background: color-mix(in srgb, var(--accent) 11%, transparent); font-weight: 700; }
+  .tb-verdict.v-over{ color: var(--danger); background: color-mix(in srgb, var(--danger) 10%, transparent); }
   .tf-v.v-mkt{ color: var(--warn); background: color-mix(in srgb, var(--warn) 13%, transparent); }
   .tf-board{ display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: end; gap: 8px; margin: 10px 0 8px; }
   .tf-board > div{ display: grid; gap: 2px; } .tf-board .them{ text-align: right; }
@@ -5766,7 +5770,9 @@
     const mine = rosterActive(ctx.myRoster), theirs = rosterActive(them);
     const give = t.give.filter(function(pid){ return (ctx.myRoster.players || []).indexOf(pid) !== -1; });
     const get = t.get.filter(function(pid){ return (them.players || []).indexOf(pid) !== -1; });
-    const opts = { po2x: !!t.po2x };
+    // An open roster spot isn't filled (noFill): you could add a waiver player today without trading, so that's not
+    // trade value. It's shown separately. A roster over the limit still has to drop someone.
+    const opts = { po2x: !!t.po2x, noFill: true };
     const myAfter = mine.filter(function(pid){ return give.indexOf(pid) === -1; }).concat(get);
     const theirAfter = theirs.filter(function(pid){ return get.indexOf(pid) === -1; }).concat(give);
     const me = lineupDelta(mine, myAfter, opts), th = lineupDelta(theirs, theirAfter, opts);
@@ -5774,7 +5780,10 @@
     const weeks = me.before.weeks.map(function(w, i){ return { w: w, before: me.before.byWeek[i], after: me.after.byWeek[i], d: me.after.byWeek[i] - me.before.byWeek[i], td: th.after.byWeek[i] - th.before.byWeek[i] }; });
     const ps = playoffStart(), po = function(list){ return list.filter(function(x){ return x.w >= ps; }).reduce(function(a, x){ return a + x.d; }, 0); };
     const fcGet = ctx.fc ? fcSum(get) : null, fcGive = ctx.fc ? fcSum(give) : null;
-    return { give: give, get: get, me: me, them: th, weeks: weeks, ps: ps, playoffs: po(weeks), rosGive: ros(give), rosGet: ros(get), fcGet: fcGet, fcGive: fcGive,
+    let open = null;
+    if(myAfter.length < rosterSize() && me.after.weeks.length){ const f = tvValue(myAfter, { po2x: !!t.po2x }); if(f.adds.length && f.total - me.after.total > 0.05) open = { adds: f.adds, d: f.total - me.after.total }; }
+    const cons = isConsolidation(give, get, startCounts(mine, me.before.weeks), me.before.weeks.length), vc = valueCheck(give, get, cons);
+    return { give: give, get: get, me: me, them: th, weeks: weeks, ps: ps, playoffs: po(weeks), rosGive: ros(give), rosGet: ros(get), fcGet: fcGet, fcGive: fcGive, open: open, cons: cons, vc: vc,
       verdict: tradeVerdict(me, th, fcGet && fcGive ? fcGive.v - fcGet.v : 0) };
   }
   // Full name, plus last name only for narrow phone columns (CSS picks which one shows; the position sits next to it).
@@ -5850,19 +5859,21 @@
     const moves = function(side, who){
       const out = [];
       if(side.after.drops.length) out.push(who + ' would have to drop <b>' + names(side.after.drops) + '</b>');
-      if(side.after.adds.length > side.before.adds.length) out.push(who + ' could add <b>' + names(side.after.adds.filter(function(x){ return side.before.adds.indexOf(x) === -1; })) + '</b> from waivers');
       return out;
     };
     const rosterNotes = moves(r.me, 'You').concat(moves(r.them, 'They'));
+    if(r.open) rosterNotes.push('It frees a roster spot: adding <b>' + names(r.open.adds) + '</b> from waivers would add ' + signed(r.open.d) + ' more (not counted above: you could make a waiver move without trading)');
+    const vtxt = valueText(r.vc), over = r.me.d >= TR_MIN && !r.vc.ok;
+    const vk = over ? 'over' : r.verdict.k, vt = over ? 'Your lineup gains, but you overpay: ' + vtxt : r.verdict.t + (vtxt ? ' · ' + vtxt : '') + (r.cons ? ' · consolidation upgrade' : '');
     const mktThem = r.fcGet && r.fcGive ? r.fcGive.v - r.fcGet.v : null;
     const board = !any ? '<p class="tr-intro">' + (r.give.length || r.get.length ? 'A trade needs players on both sides: tick at least one player you get and one you send.' : 'Tick players on each side to see the numbers.') + '</p>' :
       '<div class="card tb-board-card">' +
         '<div class="tb-board"><div class="tb-side"><span class="eyebrow">Your lineup</span><b class="tb-num' + tone(r.me.d) + '">' + signed(r.me.d) + '</b><span class="tb-sub">' + signed(perWk('d')) + ' per week · playoffs ' + signed(r.playoffs) + '</span></div>' +
           '<div class="tb-vs">vs</div>' +
           '<div class="tb-side them"><span class="eyebrow">' + escapeHTML(rosterName(t.team)) + '</span><b class="tb-num' + tone(r.them.d) + '">' + signed(r.them.d) + '</b><span class="tb-sub">' + signed(perWk('td')) + ' per week</span></div></div>' +
-        '<div class="tb-verdict v-' + r.verdict.k + '">' + escapeHTML(r.verdict.t) + '<button type="button" class="tb-copy" data-trade-copy>Copy for league chat</button></div>' +
+        '<div class="tb-verdict v-' + vk + '">' + escapeHTML(vt) + '<button type="button" class="tb-copy" data-trade-copy>Copy for league chat</button></div>' +
         (rosterNotes.length ? '<div class="tb-notes">' + rosterNotes.map(function(x){ return '<div>' + x + '</div>'; }).join('') + '</div>' : '') +
-        '<div class="tb-cap">Change in each team’s best starting lineup, ' + span + ', with roster spots counted. ' + (weekUnderway() ? 'This week’s games have started, so it counts from week ' + wk0 + '.' : '') + '</div>' +
+        '<div class="tb-cap">Change in each team’s best starting lineup, ' + span + '. A team left over the roster limit drops its least useful player; an open spot isn’t filled. ' + (weekUnderway() ? 'This week’s games have started, so it counts from week ' + wk0 + '.' : '') + '</div>' +
       '</div>' +
       '<div class="tr-results">' +
         '<div class="card tr-card"><div class="eyebrow">Rest-of-season points</div><div class="tr-big' + tone(r.rosGet - r.rosGive) + '">' + signed(r.rosGet - r.rosGive) + '</div>' +
@@ -5914,7 +5925,7 @@
   // are then re-checked exactly (lineupDelta) before they're shown. Runs in slices so the page stays responsive.
   const TF_SHOW = 12, TF_RECHECK = 16;   // uneven trades re-checked exactly (even ones already are)
   // 2-for-2 is opt-in: it adds a few seconds and rarely survives the fairness rule
-  ctx.tf = { team: 0, sizes: { s11: true, s21: true, s12: true, s22: false }, keep: false, running: false, results: null, key: '', progress: 0, ms: 0, n: 0 };
+  ctx.tf = { team: 0, sizes: { s11: true, s21: true, s12: true, s22: false, cons: true }, keep: false, running: false, results: null, key: '', progress: 0, ms: 0, n: 0 };
   try{ ctx.tradeMode = localStorage.getItem('rv-trade-mode') === 'finder' ? 'finder' : 'builder'; }catch(e){ ctx.tradeMode = 'builder'; }
   function tfKey(){
     const t = ctx.tf;
@@ -5928,7 +5939,7 @@
     const yieldNow = function(){ return new Promise(function(r){ const ch = new MessageChannel(); ch.port1.onmessage = function(){ r(); }; ch.port2.postMessage(0); }); };
     try{
       if(!ctx.fc){ try{ await loadFantasyCalc(); }catch(e){} }
-      const N = teamNeeds(), weeks = N.weeks, opts = { po2x: !!ctx.trade.po2x }, sc = (ctx.league && ctx.league.scoring_settings) || {}, size = rosterSize();
+      const N = teamNeeds(), weeks = N.weeks, opts = { po2x: !!ctx.trade.po2x, noFill: true }, sc = (ctx.league && ctx.league.scoring_settings) || {}, size = rosterSize();
       const W = function(list){ return tvSum(tvByWeek(list, weeks), weeks, opts); };
       const me = N.teams.find(function(t){ return t.mine; });
       const teams = N.teams.filter(function(t){ return !t.mine && (!tf.team || t.id === tf.team); });
@@ -5975,7 +5986,6 @@
       const adj = function(t, P, outs, ins){
         const list = without(t.act, outs).concat(ins);
         let v = P.delta(list, outs, ins);
-        if(list.length < size && t.act.length >= size) v += P.fill;
         if(list.length > size){
           const own = list.filter(function(x){ return ins.indexOf(x) === -1; }).map(function(x){ return P.drop[x] || 0; }).sort(function(a, b){ return a - b; });
           for(let k = 0; k < list.length - size; k++) v -= own[k] || 0;
@@ -5988,14 +5998,21 @@
       let done = 0, total = 0;
       const plans = teams.map(function(t){
         // players of theirs who could help me: what each adds to my lineup on his own is an upper bound on any deal for him
-        const get = t.act.filter(function(pid){ return ros(pid) > 0 && weeks.some(function(w, i){ return lineupPts(pid, w, sc) > P0.floors[i]; }) && P0.add(pid) + P0.fill >= TR_MIN; }).sort(function(a, b){ return P0.add(b) - P0.add(a); }).slice(0, 7);
+        const get = t.act.filter(function(pid){ return ros(pid) > 0 && weeks.some(function(w, i){ return lineupPts(pid, w, sc) > P0.floors[i]; }) && P0.add(pid) >= TR_MIN; }).sort(function(a, b){ return P0.add(b) - P0.add(a); }).slice(0, 7);
         const deals = [];
         // 1-for-1s are also the building blocks of 2-for-2s, so they're scored (not shown) when only 2-for-2 is on
         if(tf.sizes.s11 || tf.sizes.s22) myGive.forEach(function(g){ get.forEach(function(x){ deals.push([[g], [x], !tf.sizes.s11]); }); });
+        // consolidation: one of my starters + one of my bench players for a player who projects more per week than either
+        if(tf.sizes.cons && !tf.keep){
+          const nW = weeks.length, bench = me.act.filter(function(p){ return ros(p) > 0 && (me.starts[p] || 0) < nW / 2; }).sort(function(a, b){ return ros(b) - ros(a); }).slice(0, 6);
+          const st = myGive.filter(function(p){ return (me.starts[p] || 0) >= nW / 2; }).slice(0, 8);
+          get.forEach(function(x){ st.forEach(function(sp){ bench.forEach(function(b){ if(perWeekRos(x) > perWeekRos(sp) && perWeekRos(x) > perWeekRos(b)) deals.push([[sp, b], [x]]); }); }); });
+        }
         if(tf.sizes.s21){ const gv = myGive.slice(0, 8); get.slice(0, 5).forEach(function(x){ for(let i = 0; i < gv.length; i++) for(let j = i + 1; j < gv.length; j++){ const s = ros(gv[i]) + ros(gv[j]); if(s >= 0.6 * ros(x) && ros(gv[i]) < ros(x) * 1.2) deals.push([[gv[i], gv[j]], [x]]); } }); }
         if(tf.sizes.s12){ const gx = get.slice(0, 6); myGive.slice(0, 8).forEach(function(g){ for(let i = 0; i < gx.length; i++) for(let j = i + 1; j < gx.length; j++){ const s = ros(gx[i]) + ros(gx[j]); if(ros(g) >= 0.6 * s && ros(gx[i]) < ros(g) * 1.2) deals.push([[g], [gx[i], gx[j]]]); } }); }
-        total += deals.length;
-        return { t: t, deals: deals, get: get };
+        const seen = {}, uniq = deals.filter(function(d){ const k = d[0].slice().sort().join('+') + '>' + d[1].slice().sort().join('+'); if(seen[k]) return false; seen[k] = 1; return true; });
+        total += uniq.length;
+        return { t: t, deals: uniq, get: get };
       });
       tf.n = total;
       let slice = Date.now();
@@ -6004,7 +6021,7 @@
         for(const d of plan.deals){
           const give = d[0], get = d[1];
           done++;
-          const ub = get.reduce(function(a, x){ return a + P0.add(x); }, 0) + (give.length > get.length && me.act.length >= size ? P0.fill : 0);
+          const ub = get.reduce(function(a, x){ return a + P0.add(x); }, 0);
           if(ub < TR_MIN) continue;   // can't help me enough, whatever I send
           const myD = adj(me, P0, give, get);
           if(give.length === 1 && get.length === 1) ones.push({ g: give[0], x: get[0], me: myD });
@@ -6046,9 +6063,12 @@
       mine.sort(function(a, b){ return b.me - a.me; });
       for(const m of mine){
         if(cands.length >= 80) break;
+        // don't overpay (FantasyCalc), unless it's a consolidation within a looser limit
+        const cons = isConsolidation(m.give, m.get, me.starts, weeks.length), vc = valueCheck(m.give, m.get, cons);
+        if(!vc.ok) continue;
         const thD = adj(m.team, m.P, m.get, m.give), mkt = ctx.fc ? fcSum(m.give).v - fcSum(m.get).v : 0;
         const v = tradeVerdict({ d: m.me }, { d: thD, before: { total: m.baseT } }, mkt);
-        if(v.k === 'both' || v.k === 'mkt') cands.push({ team: m.team, give: m.give, get: m.get, me: m.me, them: thD, v: v });
+        if(v.k === 'both' || v.k === 'mkt') cands.push({ team: m.team, give: m.give, get: m.get, me: m.me, them: thD, v: v, cons: cons, vc: vc });
         if(Date.now() - slice > 50){ tf.busy += Date.now() - slice; await yieldNow(); slice = Date.now(); if(tf.key !== tfKey()) return; }
       }
       // reasons + ranking
@@ -6062,7 +6082,11 @@
         });
         c.get.forEach(function(x){ const p = posGroup(x); if(me.pos[p] && me.pos[p].need){ tags.push({ k: 'myneed', t: 'Fills your ' + p + ' need (' + ordinal(me.pos[p].rank) + ')' }); fit++; } });
         c.tags = tags.filter(function(t, i){ return tags.findIndex(function(u){ return u.t === t.t; }) === i; }); c.fit = fit;
-        c.score = c.me + 0.5 * Math.max(0, Math.min(c.them, c.me)) + 3 * fit;
+        if(c.cons) tags.unshift({ k: 'cons', t: 'Upgrade at ' + posGroup(c.get[0]) + ': bench + starter for a better starter' });
+        c.tags = tags.filter(function(t, i){ return tags.findIndex(function(u){ return u.t === t.t; }) === i; });
+        // ranked by what it does for me: my lineup gain, value in my favor (capped), a nudge for need/surplus fits
+        const vb = c.vc && c.vc.d !== null ? Math.max(-3, Math.min(3, c.vc.d / 500)) : 0;
+        c.score = c.me + vb + fit + (c.cons ? 2 : 0);
         return c;
       };
       cands.forEach(tagsOf);
@@ -6123,7 +6147,7 @@
       '<label class="tr-pick"><span class="eyebrow">Teams</span><select data-tf-team><option value="0">All teams</option>' + others.map(function(r){ return '<option value="' + r.roster_id + '"' + (tf.team === r.roster_id ? ' selected' : '') + '>' + escapeHTML(rosterName(r.roster_id)) + '</option>'; }).join('') + '</select></label>' +
       '<div class="tb-segs"><div class="wk-seg" role="group" aria-label="Week weighting"><button type="button" data-trade-po="0" aria-pressed="' + !ctx.trade.po2x + '">Weeks equal</button><button type="button" data-trade-po="1" aria-pressed="' + !!ctx.trade.po2x + '">Playoffs 2×</button></div>' +
         '<div class="wk-seg" role="group" aria-label="Player view"><button type="button" data-trade-view="list" aria-pressed="' + !cards + '">List</button><button type="button" data-trade-view="cards" aria-pressed="' + cards + '">Cards</button></div></div></div>' +
-      '<div class="tf-opts">' + chip('s11', '1-for-1') + chip('s21', 'Send 2, get 1') + chip('s12', 'Send 1, get 2') + chip('s22', '2-for-2') +
+      '<div class="tf-opts">' + chip('s11', '1-for-1') + chip('s21', 'Send 2, get 1') + chip('s12', 'Send 1, get 2') + chip('cons', 'Consolidate') + chip('s22', '2-for-2') +
         '<button type="button" class="tf-chip" data-tf-keep aria-pressed="' + tf.keep + '">Keep my starters</button></div>';
     const stale = tf.key !== tfKey();
     if(!tf.running && (stale || !tf.results)) setTimeout(runTradeFinder, 0);   // options changed or first visit: search again
@@ -6143,16 +6167,17 @@
         tf.results.map(function(c, i){
           const sign = function(v){ return (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1); };
           return '<div class="card tf-res">' +
-            '<div class="tf-hd"><span class="tf-n">' + (i + 1) + '</span><b>' + escapeHTML(c.team.name) + '</b><span class="tf-v v-' + c.v.k + '">' + (c.v.k === 'both' ? 'Good for both' : 'Market favors them') + '</span></div>' +
+            '<div class="tf-hd"><span class="tf-n">' + (i + 1) + '</span><b>' + escapeHTML(c.team.name) + '</b><span class="tf-v v-' + (c.cons ? 'cons' : c.v.k) + '">' + (c.cons ? 'Consolidation' : c.v.k === 'both' ? 'They’d likely accept' : 'Market favors them') + '</span></div>' +
             '<div class="tf-board"><div><span class="eyebrow">You</span><b class="tb-num up">' + sign(c.me) + '</b></div><div class="tb-vs">vs</div><div class="them"><span class="eyebrow">Them</span><b class="tb-num' + (c.them >= TR_MIN ? ' up' : c.them <= -TR_MIN ? ' down' : '') + '">' + sign(c.them) + '</b></div></div>' +
             '<div class="tr-side tf-side"><div class="ts-head"><span class="eyebrow">You send</span></div><div class="ts-head them"><span class="eyebrow">You get</span></div>' +
               '<div class="tf-col">' + side(c.give) + '</div><div class="tf-col">' + side(c.get) + '</div></div>' +
+            (valueText(c.vc) ? '<div class="tf-val">Market value: ' + escapeHTML(valueText(c.vc)) + '</div>' : '') +
             (c.tags.length ? '<div class="tf-tags">' + c.tags.map(function(t){ return '<span class="tf-tag ' + t.k + '">' + escapeHTML(t.t) + '</span>'; }).join('') + '</div>' : '') +
             ((c.myAdds && c.myAdds.length) || (c.theirDrops && c.theirDrops.length) ? '<div class="tb-notes">' + (c.myAdds && c.myAdds.length ? '<div>You could add <b>' + c.myAdds.map(nm).join(', ') + '</b> from waivers</div>' : '') + (c.theirDrops && c.theirDrops.length ? '<div>They would have to drop <b>' + c.theirDrops.map(nm).join(', ') + '</b></div>' : '') + '</div>' : '') +
             '<div class="tf-acts"><button type="button" class="quiet-btn" data-tf-copy="' + i + '">Copy for league chat</button><button type="button" class="quiet-btn" data-tf-open="' + i + '">Open in builder ›</button></div></div>';
         }).join('');
     }
-    return tools + body + '<p class="tr-note">Points = change in each team’s best lineups, weeks ' + (tvWeeks()[0] || ctx.week) + '–' + ((ctx.ros && ctx.ros.through_week) || 17) + (ctx.trade.po2x ? ' (playoffs 2×)' : '') + ', with roster spots counted. Shown only when it helps you by ' + TR_MIN + '+ and their lineup doesn’t drop, or drops a little (≤ ' + Math.round(TR_TOL * 100) + '%) while FantasyCalc market value favors them. Ranked by your gain, then by how much it helps them and whether it moves your spare starters to a team that needs that position.</p>';
+    return tools + body + '<p class="tr-note">Points = change in each team’s best lineups, weeks ' + (tvWeeks()[0] || ctx.week) + '–' + ((ctx.ros && ctx.ros.through_week) || 17) + (ctx.trade.po2x ? ' (playoffs 2×)' : '') + '; an open roster spot isn’t counted (you could add a waiver player without trading). Shown only when it helps your lineup by ' + TR_MIN + '+, you don’t overpay (FantasyCalc value you get at most ' + Math.round(TR_OVERPAY * 100) + '% below what you give, ' + Math.round(TR_CONS_OVERPAY * 100) + '% for a consolidation), and they’d plausibly accept (their lineup doesn’t drop, or dips ≤ ' + Math.round(TR_TOL * 100) + '% while market value favors them). Ranked by your gain and value.</p>';
   }
 
   document.addEventListener('click', function(e){
@@ -9173,6 +9198,26 @@
   function lineupDelta(before, after, opts){ const b = tvValue(before, opts), a = tvValue(after, opts); return { before: b, after: a, d: a.total - b.total }; }
   function fcSum(ids){ let v = 0, miss = 0; ids.forEach(function(pid){ const f = fcValue(pid); if(f) v += f.v; else miss++; }); return { v: v, miss: miss }; }
   // Would they plausibly say yes, and is it good for me? Lineups first; market value (FantasyCalc) can rescue a small loss.
+  // Don't overpay: the FantasyCalc value I get may be at most TR_OVERPAY below what I give (TR_CONS_OVERPAY for a
+  // consolidation, where giving a bit more is the point). No FantasyCalc values loaded = no check.
+  const TR_OVERPAY = 0.10, TR_CONS_OVERPAY = 0.30;
+  function perWeekRos(pid){ const v = rosValue(pid); return v && v.weeks ? v.pts / v.weeks : 0; }
+  // Consolidation: two of mine (one a bench player: starts in fewer than half the weeks) for one who projects more per
+  // week than either of them.
+  function isConsolidation(give, get, starts, nWeeks){
+    return give.length === 2 && get.length === 1 && give.some(function(g){ return (starts[g] || 0) < nWeeks / 2; }) && give.every(function(g){ return perWeekRos(get[0]) > perWeekRos(g); });
+  }
+  function startCounts(pids, weeks){ const out = {}; tvWeekInfo(pids, weeks).forEach(function(x){ x.starts.forEach(function(p){ out[p] = (out[p] || 0) + 1; }); }); return out; }
+  function valueCheck(give, get, cons){
+    if(!ctx.fc) return { ok: true, d: null, give: 0 };
+    const gv = fcSum(give).v, gt = fcSum(get).v, d = gt - gv;
+    return { ok: d >= -(cons ? TR_CONS_OVERPAY : TR_OVERPAY) * Math.max(1, gv), d: d, give: gv };
+  }
+  function valueText(vc){
+    if(!vc || vc.d === null) return '';
+    const pct = vc.give ? vc.d / vc.give : 0;
+    return Math.abs(pct) < 0.05 ? 'value about even' : vc.d > 0 ? 'you gain ' + Math.round(vc.d).toLocaleString() + ' in value' : 'you pay ' + Math.round(-vc.d).toLocaleString() + ' in value';
+  }
   function tradeVerdict(me, them, mktThem){
     const tol = TR_TOL * Math.max(1, them.before.total);
     if(me.d >= TR_MIN && them.d >= -TR_MIN) return { k: 'both', t: 'Good for both teams: worth proposing' };
