@@ -145,6 +145,13 @@ const SECTIONS = [
     ['d-zone-focus', 'Focus lift: a league lifted over the grid', 'd-zone-focus', D, 860],
     ['p-zone-list', 'List view, phone', 'p-zone-list', P, 812],
   ]],
+  ['Sleepa Intel', [
+    ['d-intel-list', 'Desktop List: game tiles by kickoff window (O/U badge, env score, my players, flags)', 'd-intel-list', D, 0],
+    ['d-intel-lift', 'Desktop focus lift over the dimmed grid', 'd-intel-lift', D, 860],
+    ['d-intel-cards', 'Desktop Cards: ring of game cards + the detail grid', 'd-intel-cards', D, 0],
+    ['p-intel-slate', 'Phone: Intel tab Slate (My / All)', 'p-intel-slate', P, 812],
+    ['p-intel-game', 'Phone: the game carousel and game page', 'p-intel-game', P, 812],
+  ]],
   ['Overlays', [
     ['p-toast-vs', 'Toast (VS / Start-Sit)', 'p-toast-vs', P, 180],
     ['p-toast-undo', 'Toast with Undo (Huddle)', 'p-toast-undo', P, 260],

@@ -203,6 +203,14 @@ win-probability bar `.mu-wp` (accent vs `--surface-3`, live shimmer); verdict li
 - Phone `.ssp`: stacked `.ssp-card`s (tap expands), sticky footer `.ssp-foot` (above the tab bar) and picker sheet
   `.ssp-sheet` over `.ssp-scrim`.
 
+### Sleepa Intel (see design/intel/INTEL.md)
+- **Tiles** `.it-tile` (Slate on phone, List on desktop, grouped by kickoff window `.it-win`): overlapped team marks `.it-pair` > `.it-tm` (Sleeper logo inside a 2.5px team-color ring, abbreviation fallback), title, O/U badge `.it-ou` + spread + temp, env number `.it-env` (tones: `t-fav` green, `t-neu` plain text, `t-tough` red), my-player dots and flags `.it-flag.warn / .neutral`.
+- **Game page** `.it-page` (phone carousel card) / `.it-detail` (desktop two-column grid): hero `.it-hero` (logos, records, projected QBs `.it-qb`, kickoff + countdown `.it-cd`, O/U badge), env ring card `.it-envc` (92px ring), implied score (`.it-imp` + 14px tug bar `.it-tug` + script meter `.it-meter`), My players `.it-pr` (slot tag, ringed photo, weather lean chip `.it-lean.up/.down`, 2-decimal projection), rooting guide, Players to watch `.it-wr` (Free agent / Yours tags), Injuries `.it-injr` (status chips), Weather `.it-wx` (temp, feels-like, avg wind + gusts, rain, 4 game hours, sunset, Open-Meteo credit; `.in` frosted when indoors), Venue, Home-field edge (`.it-bar` with the league-average tick + "within the normal range" note), Rest & travel `.it-rt`, Defense vs position `.it-dv.good/.bad`, Betting (`.it-bets`, line-movement sparkline `.it-move`), Form `.it-fr`, Head to head `.it-h2h`, Sidelines `.it-coach` (photo in team ring, initials fallback, photo credit). Every card is a `.card.it-card` (radius 14, `--shadow` + hairline).
+- **Carousel** `.it-ov` (z-index 105, above full views): header (44px back, title + scope label, n / N), 3 rendered pages that slide (.38s `--ease`), floating pill bar of game pills (`.zn-dot.it-pill`, active = surface-3); centered at 760px on wide screens.
+- **Desktop Cards**: `.it-rc` ring cards (600 × 340, the Zone ring recipe with --o / --ao), pills, then the detail grid. **Focus lift** `.it-lift` (scrim + 6px blur, 680px panel with a 2px accent ring, FLIP from the tile, .35s spring).
+- **Chips elsewhere** `.it-chip` ("ENV 49" + first warn flag; `.pf` larger with the matchup, `.zn` tiny in Zone rows) and Huddle window game lines `.cd-gl` (Dark Chrome, --u units). States: no lines ("—", "Lines not posted yet"), stale (warn chip "Lines · updated n h ago"), forecast unavailable, indoors, roof TBD, neutral site.
+- Motion: tug bar grows .9s from the left; env score and projections count up 650 ms once per game; all off under reduced motion.
+
 ### Toasts
 - `.h2h-tray`: fixed, bottom 24px, centered, max 480px, surface + `--shadow-lg`, "Added **Name**" + action
   ("Start / Sit (3) ›"), auto-hides after ~5s.

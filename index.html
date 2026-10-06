@@ -13995,7 +13995,7 @@
     const r = 38, c = 2 * Math.PI * r, f = m.env === null ? 0 : m.env / 100;
     const word = m.env === null ? 'No lines yet' : intelEnvWord(m.env) + ' environment';
     return '<div class="card it-card it-envc"><svg class="it-ring t-' + (m.tone || 'none') + '" viewBox="0 0 92 92" aria-hidden="true"><circle cx="46" cy="46" r="' + r + '"/><circle class="v" cx="46" cy="46" r="' + r +
-      '" stroke-dasharray="' + (c * f).toFixed(1) + ' ' + c.toFixed(1) + '"/></svg><span class="it-ring-n"><b data-count="' + (m.env === null ? '' : m.env) + '">' + (m.env === null ? '—' : m.env) + '</b><small>of 100</small></span>' +
+      '" stroke-dasharray="' + (c * f).toFixed(1) + ' ' + c.toFixed(1) + '"/></svg><span class="it-ring-n"><b data-it-count="' + (m.env === null ? '' : m.env) + '">' + (m.env === null ? '—' : m.env) + '</b><small>of 100</small></span>' +
       '<div><div class="eyebrow">Game environment</div><b class="it-envw">' + word + '</b><small>' +
       escapeHTML([m.g.lines && typeof m.g.lines.total === 'number' ? 'Total ' + intelNum(m.g.lines.total) : 'Total —', m.roof === 'indoor' ? 'indoors' : 'weather impact ' + m.impact].join(' · ')) + '</small></div></div>';
   }
@@ -14020,7 +14020,7 @@
         (zone ? ' · ' + x.leagues.map(function(l){ return escapeHTML(l.name); }).join(', ') : '') + '</small></span>' +
         (table ? '<span class="it-mu">' + (dvpChipHTML(x.pid, true) || '<span class="dim">—</span>') + '</span>' : '') +
         (function(){ const lean = intelWeatherFor(posGroup(x.pid), m.w, m.roof); return lean ? '<span class="it-lean ' + lean.dir + '" title="' + escapeHTML(lean.why) + '">Weather ' + (lean.dir === 'up' ? '▲' : '▼') + '</span>' : '<span></span>'; })() +
-        '<span class="it-pj">' + (typeof x.proj === 'number' ? x.proj.toFixed(2) : '—') + '</span></div>';
+        '<span class="it-pj"' + (typeof x.proj === 'number' ? ' data-it-count2="' + x.proj.toFixed(2) + '"' : '') + '>' + (typeof x.proj === 'number' ? x.proj.toFixed(2) : '—') + '</span></div>';
     }).join('');
     return '<div class="card it-card it-mine-c"><div class="it-ch"><span class="eyebrow">My players in this game</span><span class="it-lt">Total ' + m.myTotal.toFixed(2) + '</span></div>' + rows + '</div>';
   }
@@ -14229,6 +14229,7 @@
     }
     root.innerHTML = html;
     if(ctx.it.focus && desk && ctx.it.mode === 'list') itLift(ctx.it.focus, true);
+    itCountUp(root);
     itWantWeather(L.games);
   }
   function itRerender(){
@@ -14236,6 +14237,22 @@
     if(ctx.it.open) itOvRender(true);
   }
 
+  // count-up (650 ms to the exact value) the first time a game page is shown; later renders show the number straight
+  const IT_COUNTED = {};
+  function itCountUp(root){
+    if(!root || reduceMotion.matches || document.hidden) return;
+    root.querySelectorAll('[data-it-page], .it-detail').forEach(function(page){
+      const id = page.getAttribute('data-it-page') || ctx.it.ids[ctx.it.idx];
+      if(!id || IT_COUNTED[id]) return;
+      IT_COUNTED[id] = true;
+      page.querySelectorAll('[data-it-count]').forEach(function(el){
+        const to = Number(el.getAttribute('data-it-count')); if(!el.getAttribute('data-it-count') || isNaN(to)) return;
+        const t0 = performance.now(), step = function(t){ const k = Math.min(1, (t - t0) / 650), e = 1 - Math.pow(1 - k, 3); el.textContent = Math.round(to * e); if(k < 1) requestAnimationFrame(step); };
+        el.textContent = '0'; requestAnimationFrame(step); setTimeout(function(){ el.textContent = String(to); }, 900);
+      });
+      page.querySelectorAll('[data-it-count2]').forEach(function(el){ const to = Number(el.getAttribute('data-it-count2')); el.textContent = '0.00'; countTo(el, to, 650); });
+    });
+  }
   // ---- desktop list: focus lift (FLIP from the tile) ----
   function itLiftHTML(m){
     const g = m.g, im = m.implied;
@@ -14297,6 +14314,7 @@
         return models[i] ? '<div class="it-slot" style="--o:' + o + '">' + itPageHTML(models[i]) + '</div>' : '';
       }).join('') + '</div>' + itPillsHTML(models.filter(Boolean), idx) ;
     if(keepScroll) ov.querySelectorAll('[data-it-page]').forEach(function(p){ const s = scrolls[p.getAttribute('data-it-page')]; if(s) p.scrollTop = s; });
+    itCountUp(ov.querySelector('.it-slot[style*="--o:0"]'));
     itWantWeather(near.map(function(i){ return models[i] && models[i].g; }).filter(Boolean));
   }
   function itGo(d){
@@ -14413,6 +14431,12 @@
       if(document.querySelector('.it-lift')){ e.preventDefault(); e.stopImmediatePropagation(); itUnlift(); return; }
       if(ctx.it.open && !maxOpen()){ e.preventDefault(); e.stopImmediatePropagation(); itClose(); return; }
     }
+    if(e.key === 'Enter' && document.querySelector('.it-lift') && !(e.target && e.target.closest && e.target.closest('button'))){ const b = document.querySelector('.it-lift [data-it-open]'); if(b){ e.preventDefault(); e.stopImmediatePropagation(); b.click(); } return; }
+    if((e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'PageUp' || e.key === 'PageDown') && ctx.it.open && !maxOpen()){
+      const p = itOv && itOv.querySelector('.it-slot[style*="--o:0"] .it-page');
+      if(p){ e.preventDefault(); e.stopImmediatePropagation(); const step = /Page/.test(e.key) ? p.clientHeight * .85 : 120; const to = Math.max(0, Math.min(p.scrollHeight - p.clientHeight, (p._itTo !== undefined ? p._itTo : p.scrollTop) + (/Up/.test(e.key) ? -step : step))); p._itTo = to; clearTimeout(p._itT); p._itT = setTimeout(function(){ p._itTo = undefined; }, 450); p.scrollTo({ top: to, behavior: reduceMotion.matches ? 'auto' : 'smooth' }); }   // quick repeats add up
+      return;
+    }
     if((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !maxOpen() && !document.querySelector('.it-lift') && (ctx.it.open || (ctx.view === 'intel' && itDesk() && ctx.it.mode === 'cards'))){
       e.preventDefault(); e.stopImmediatePropagation(); itGo(e.key === 'ArrowRight' ? 1 : -1);
     }
@@ -14459,10 +14483,11 @@
 
   // ---- the cheat sheet (?) ----
   const KB_HELP = [
-    ['Go to', [['L', 'Lineup'], ['P', 'Players'], ['E', 'League'], ['C', 'Compare'], ['Z', 'Sleepa Zone (again to close)'], ['H', 'Sleepa Huddle'], ['/', 'Search everything: players, pages, leagues, teams'], ['Ctrl K', 'Search too (⌘K on a Mac)'], ['R', 'Refresh scores'], ['1 – 4', 'Sections on Players and Compare']]],
+    ['Go to', [['L', 'Lineup'], ['P', 'Players'], ['E', 'League'], ['C', 'Compare'], ['Z', 'Sleepa Zone (again to close)'], ['H', 'Sleepa Huddle'], ['I', 'Sleepa Intel'], ['/', 'Search everything: players, pages, leagues, teams'], ['Ctrl K', 'Search too (⌘K on a Mac)'], ['R', 'Refresh scores'], ['1 – 4', 'Sections on Players and Compare']]],
     ['Move and open', [['↑ ↓', 'Move the highlight'], ['Enter', 'Go deeper: open the player panel, then the full player page'], ['Space', 'Close what’s open · again to reopen it'], ['Esc', 'Back out one step']]],
     ['Start / Sit', [['→', 'Into the comparison columns'], ['← →', 'Between players'], ['Enter', 'Details, then the full player page'], ['Esc', 'Back to the list']]],
     ['Huddle', [['↑ ↓', 'Through the slots, then the players below'], ['Enter', 'Pick a slot, then Enter on a player to put them in it'], ['← →', 'Previous / next position'], ['Esc', 'Cancel the pick · leave'], ['Space / Enter', 'Flip a card on Review']]],
+    ['Sleepa Intel', [['↑ ↓', 'Move through the games'], ['Enter', 'Lift the game (desktop) or open it; again to open the full game'], ['← →', 'Previous / next game in Cards or the carousel'], ['↑ ↓', 'Scroll a game page (carousel)'], ['Esc / Space', 'Back · close']]],
     ['Sleepa Zone', [['← →', 'Previous / next league'], ['↑ ↓', 'Move through the grid view'], ['Enter', 'Open the highlighted league'], ['Esc / Space', 'Back · close']]],
   ];
   let kbHelpEl = null;
@@ -14485,6 +14510,8 @@
   // the topmost open thing, how to close it and how to bring it back
   function kbTop(){
     if(kbHelpOpen()) return { close: function(){ kbHelp(false); }, reopen: function(){ kbHelp(true); } };
+    if(document.querySelector('.it-lift')){ const id = ctx.it.focus; return { close: function(){ itUnlift(); }, reopen: function(){ if(id) itLift(id); } }; }
+    if(ctx.it.open){ const id = ctx.it.ids[ctx.it.idx], sc = ctx.it.scope; return { close: function(){ itClose(); }, reopen: function(){ openIntel(id, { scope: sc, overlay: true }); } }; }
     if(brandMenu) return { close: function(){ closeBrandMenu(); } };
     if(ctx.zone.open){
       const bd = zoneView.querySelector('.zbd');
@@ -14529,6 +14556,7 @@
       if(v === 'roster') sel = '.mu-card[data-open-opp], .hd-card, #starters-list .slot-row, #bench-list .slot-row';
       else if(v === 'fa') sel = ctx.pl.view === 'value' ? '#wv .wv-item' : '#fa-list .slot-row';
       else if(v === 'league') sel = '.mu-card[data-open-opp], #standings .st-row[data-open-trade]';
+      else if(v === 'intel') sel = itDesk() && ctx.it.mode === 'cards' ? '' : '#it-root .it-tile';
       else if(v === 'compare'){
         if(ctx.cmpSec === 'ss') sel = ctx.ssSheet ? '#ss-list-sheet .ssr' : KB.lvl === 'cols' ? '.ssg .ssg-h' : '#ss-list .ssr, .ssp-card';
         else if(ctx.cmpSec === 'trades') sel = ctx.tradeMode === 'finder' ? '.tf-res' : '.tr-player';
@@ -14537,7 +14565,7 @@
     }
     return sel ? Array.prototype.slice.call(document.querySelectorAll(sel)).filter(function(el){ return el.offsetParent !== null; }) : [];
   }
-  const KB_KEYS = ['data-pr-slot', 'data-fm-slot', 'data-pr-pid', 'data-zid', 'data-player-id', 'data-fa-id', 'data-empty-slot', 'data-ss-toggle', 'data-open-trade', 'data-nd-trade', 'data-trade-give', 'data-trade-get', 'data-wv-open', 'data-open-opp', 'data-huddle'];
+  const KB_KEYS = ['data-it-game', 'data-pr-slot', 'data-fm-slot', 'data-pr-pid', 'data-zid', 'data-player-id', 'data-fa-id', 'data-empty-slot', 'data-ss-toggle', 'data-open-trade', 'data-nd-trade', 'data-trade-give', 'data-trade-get', 'data-wv-open', 'data-open-opp', 'data-huddle'];
   function kbKey(el, items){
     for(const a of KB_KEYS){ if(el.hasAttribute(a)) return a + '=' + el.getAttribute(a); }
     const pid = kbPid(el);
@@ -14641,6 +14669,8 @@
   // ---- letters: close what covers the page, leave the Huddle, then go ----
   function kbGo(fn){
     if(ckOpen()) ckShow(false);
+    if(ctx.it.open){ ctx.it.origin = null; itClose(); }
+    itUnlift(true);
     if(kbHelpOpen()) kbHelp(false);
     if(brandMenu) closeBrandMenu();
     if(ctx.zone.open) zoneClose();
@@ -14653,6 +14683,7 @@
   function kbView(v){ return function(){ if(ctx.view !== v) setView(v); window.scrollTo({ top: 0 }); }; }
   const KB_LETTERS = {
     l: kbView('roster'), p: kbView('fa'), e: kbView('league'), c: kbView('compare'),
+    i: function(){ ctx.it.scope = 'league'; ctx.it.origin = null; if(ctx.view === 'intel') renderIntel(); kbView('intel')(); },
     r: function(){ refreshData({ manual: true }); },
   };
 
