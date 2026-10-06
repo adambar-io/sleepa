@@ -1498,6 +1498,7 @@
   .tb-cards .cd:focus-visible{ outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 14px; }
   .tb-cards-none{ font-size: 12.5px; color: var(--text-3); padding: 24px 0; }
   .tb-cardside{ row-gap: 8px; }
+  .kb-hl{ outline: 2px solid var(--accent) !important; outline-offset: 2px; border-radius: 12px; position: relative; z-index: 1; }
   .t-av{ position: relative; display: inline-grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 50%; overflow: hidden; vertical-align: middle; background: color-mix(in srgb, var(--accent) 18%, var(--surface-2)); color: var(--text); }
   .t-av b{ font-size: 10px; font-weight: 800; letter-spacing: .02em; }
   .t-av img{ position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
@@ -8608,7 +8609,12 @@
     if(ctx.luMode !== 'pr' || ctx.prTab !== 'REVIEW' || ctx.prRvMode !== 'cards' || document.querySelector('.pr-dlg-back, .overlay.open')) return;
     if(e.target && /INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
     if(e.key === 'ArrowRight' || e.key === 'ArrowLeft'){ e.preventDefault(); cdGo(ctx.prCardIdx + (e.key === 'ArrowRight' ? 1 : -1)); }
-    else if((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('cd')){ e.preventDefault(); e.target.click(); }
+    else if(e.key === 'Enter' || e.key === ' '){
+      if(e.metaKey || e.ctrlKey || e.altKey) return;
+      if(e.target.classList && e.target.classList.contains('cd')){ e.preventDefault(); e.target.click(); return; }
+      if(e.target.closest && e.target.closest('button, a[href], summary')) return;   // a focused button keeps its own Space / Enter
+      e.preventDefault(); cdFlip();   // the front card, wherever focus is
+    }
   });
   // Review details: press and hold a spot (touch) or hover it (mouse)
   let cbHeldUntil = 0, cbTimer = 0, cbHover = 0;
@@ -13099,6 +13105,117 @@
   });
   document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && !zoneGuide.hidden){ e.preventDefault(); e.stopImmediatePropagation(); zoneGuideClose(); } }, true);
   document.querySelectorAll('[data-zone-name]').forEach(function(el){ el.textContent = ZONE_NAME; });
+  // ============ Keyboard: open / close / move, one rule for the whole dashboard ============
+  // Space is a toggle: it closes whatever is open on top (popover, sheet, full view, player panel, Compare details,
+  //   Sleepa Zone), and the next Space reopens that same thing (as long as nothing else was pressed or clicked in
+  //   between). With nothing open, Space opens the highlighted item.
+  // Enter: opens the highlighted item.  ↑ / ↓: move the highlight through the list on screen.  Esc: closes (existing
+  //   handlers), and clears the highlight when nothing is open.
+  // Never while typing in a box, with Cmd / Ctrl / Alt held, or when a real button / link has keyboard focus (those keep
+  // their native Space / Enter). The Huddle keeps its own keys (its card deck flips with Space / Enter).
+  const KB = { last: null, key: null };
+  function kbTyping(t){ return !!t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)); }
+  function kbNative(t){ return !!t && t !== document.body && !!t.closest && !!t.closest('button, a[href], summary, [role="button"]:not(.slot-row):not(.st-row):not(.nd-r):not(.ssp-card)'); }
+  function kbReopenFocus(f){ if(f.kind === 'fa') openFreeAgent(f.pid); else if(f.kind === 'empty') openEmptySlot(f.slot); else openFocus(f.pid, f.slot); }
+  // the topmost open thing, how to close it and how to bring it back
+  function kbTop(){
+    if(brandMenu) return { close: function(){ closeBrandMenu(); } };
+    if(ctx.zone.open){
+      const bd = zoneView.querySelector('.zbd');
+      if(bd && !bd.hidden) return { close: closeBreakdown };
+      if(ctx.zone.focus){ const id = ctx.zone.focus; return { close: function(){ zoneFocus(null); }, reopen: function(){ if(ctx.zone.open) zoneFocus(id); } }; }
+      return { close: zoneClose, reopen: function(){ zoneOpen(); } };
+    }
+    if(maxOpen()){
+      const entry = Object.assign({}, maxStack[maxStack.length - 1]); delete entry.from;
+      return { close: function(){ backMax(); }, reopen: function(){ openMax(entry); } };
+    }
+    if(ctx.view === 'compare' && ctx.cmpSec === 'ss'){
+      if(ctx.ssSheet) return { close: function(){ ctx.ssSheet = false; renderCompare(); }, reopen: function(){ ctx.ssSheet = true; renderCompare(); } };
+      if(ctx.ssOpen){ const id = ctx.ssOpen; return { close: function(){ ctx.ssOpen = null; renderCompare(); }, reopen: function(){ ctx.ssOpen = id; renderCompare(); } }; }
+    }
+    const f = ctx.focus;
+    if(f && ctx.luMode !== 'pr' && (ctx.view === 'roster' || ctx.view === 'fa')){
+      const open = paneMode() ? !ctx.paneClosed && focusVisible() : els.overlay.classList.contains('open');
+      const fc = Object.assign({}, f);
+      if(open) return { close: function(){ if(paneMode()) closePane(); else closeFocus(); }, reopen: function(){ kbReopenFocus(fc); } };
+    }
+    return null;
+  }
+  // the list ↑ / ↓ moves through on the current screen
+  function kbItems(){
+    if(ctx.zone.open || maxOpen() || ctx.luMode === 'pr') return [];
+    const v = ctx.view;
+    let sel = '';
+    if(v === 'roster') sel = '#starters-list .slot-row, #bench-list .slot-row';
+    else if(v === 'fa') sel = ctx.pl.view === 'value' ? '#wv .wv-item' : '#fa-list .slot-row';
+    else if(v === 'league') sel = '#standings .st-row[data-open-trade]';
+    else if(v === 'compare'){
+      if(ctx.cmpSec === 'ss') sel = ctx.ssSheet ? '#ss-list-sheet .ssr' : '#ss-list .ssr, .ssp-card';
+      else if(ctx.cmpSec === 'trades') sel = ctx.tradeMode === 'finder' ? '.tf-res' : '.tr-player';
+      else if(ctx.cmpSec === 'needs') sel = '.nd-r[data-nd-trade]';
+    }
+    return sel ? Array.prototype.slice.call(document.querySelectorAll(sel)).filter(function(el){ return el.offsetParent !== null; }) : [];
+  }
+  const KB_KEYS = ['data-player-id', 'data-fa-id', 'data-empty-slot', 'data-ss-toggle', 'data-ss-open', 'data-open-trade', 'data-nd-trade', 'data-trade-give', 'data-trade-get', 'data-wv-open'];
+  function kbKey(el, items){
+    for(const a of KB_KEYS){ if(el.hasAttribute(a)) return a + '=' + el.getAttribute(a); }
+    const tf = el.querySelector && el.querySelector('[data-tf-open]');
+    return tf ? 'tf=' + tf.getAttribute('data-tf-open') : 'i=' + items.indexOf(el);
+  }
+  function kbCurrent(items){
+    if(!KB.key) return -1;
+    return items.findIndex(function(el){ return kbKey(el, items) === KB.key; });
+  }
+  function kbPaint(items){
+    document.querySelectorAll('.kb-hl').forEach(function(el){ el.classList.remove('kb-hl'); });
+    const i = kbCurrent(items);
+    if(i !== -1) items[i].classList.add('kb-hl');
+    return i;
+  }
+  function kbOpen(el){
+    const tf = el.querySelector && el.querySelector('[data-tf-open]');
+    (tf || el).click();
+  }
+  // the highlight survives re-renders (it's kept by a stable key, then repainted)
+  new MutationObserver(function(){ if(KB.key){ const items = kbItems(); if(items.length) kbPaint(items); } })
+    .observe(document.body, { childList: true, subtree: true });
+  document.addEventListener('mousedown', function(){ KB.last = null; if(KB.key){ KB.key = null; kbPaint([]); } });
+  document.addEventListener('keydown', function(e){
+    if(e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey || kbTyping(e.target)) return;
+    if(document.querySelector('.pr-dlg-back') || (typeof zoneGuide !== 'undefined' && !zoneGuide.hidden)) return;
+    const k = e.key;
+    if(k !== ' ' && !/^(Shift|Control|Alt|Meta)$/.test(k)) KB.last = null;   // only an immediate second Space reopens
+    if(k === 'ArrowDown' || k === 'ArrowUp'){
+      const items = kbItems();
+      // nothing to move through, or something covers the list (phone player sheet, logo menu): the page scrolls as usual.
+      // The desktop side panel sits beside the list, so it doesn't stop the highlight.
+      if(!items.length || els.overlay.classList.contains('open') || brandMenu) return;
+      e.preventDefault();
+      let i = kbCurrent(items);
+      i = i === -1 ? (k === 'ArrowDown' ? 0 : items.length - 1) : Math.max(0, Math.min(items.length - 1, i + (k === 'ArrowDown' ? 1 : -1)));
+      KB.key = kbKey(items[i], items);
+      kbPaint(items);
+      items[i].scrollIntoView({ block: 'nearest', behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+      return;
+    }
+    if(k === 'Escape'){
+      if(ctx.view === 'compare' && ctx.cmpSec === 'ss' && (ctx.ssSheet || ctx.ssOpen)){ e.preventDefault(); if(ctx.ssSheet) ctx.ssSheet = false; else ctx.ssOpen = null; renderCompare(); return; }
+      if(KB.key && !kbTop()){ KB.key = null; kbPaint([]); }
+      return;
+    }
+    if(k !== ' ' && k !== 'Enter') return;
+    if(ctx.luMode === 'pr' && ctx.view === 'roster') return;   // the Huddle has its own Space / Enter
+    if(kbNative(e.target)) return;                              // a focused button / link keeps its native Space / Enter
+    const items = kbItems(), hi = kbCurrent(items), hl = hi === -1 ? null : items[hi];
+    if(k === 'Enter'){ if(hl){ e.preventDefault(); kbOpen(hl); } return; }
+    // Space: reopen what the previous Space closed, else close what's open, else open the highlighted item
+    if(KB.last){ e.preventDefault(); const r = KB.last; KB.last = null; r(); return; }
+    const top = kbTop();
+    if(top){ e.preventDefault(); top.close(); KB.last = top.reopen || null; return; }
+    if(hl){ e.preventDefault(); kbOpen(hl); }
+  });
+
 })();
 </script>
 

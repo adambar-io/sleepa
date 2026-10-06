@@ -88,6 +88,18 @@ A single-file local web app for viewing a Sleeper fantasy football roster with c
   - Cards: `tradeCardHTML` reuses the Huddle card front (`cdFrontHTML(…, opts)`: `noLock`, `nums` = ROS points + FantasyCalc value). Tier comes from the ROS positional rank (`rosRank`: top 3 holo, 12 gold, 24 silver).
   - Compare sections: `ctx.cmpSec` (`rv-cmp-sec`): Trades, and Lineup changes (the old plan-vs-Sleeper diff, `renderLineupDiff`; the Lineup page's Compare button and the Huddle's "See them" open it).
   - Verified in BATTLEBALL: a 1-for-1 matched an independent sum of `bestLineup` differences (79.95). In a 2-for-1, my freed spot was filled with Malik Willis and their extra player meant dropping Ventrell Miller. Giving away an IR player frees no spot.
+- **Keyboard: open / close / move (Oct 5 2026; owner's spec)** (`// ============ Keyboard` at the end of the main script: `kbTop`, `kbItems`, `KB`).
+  - **↑ / ↓** move a green highlight ring (`.kb-hl`) through the list on screen:
+    - Lineup: starters + bench. Players: the list, or Waiver value rows.
+    - League: standings rows. Compare: the Start / Sit picker (rail, sheet or phone cards), the trade builder rows or Finder results, Team needs rows.
+    - The desktop side panel doesn't block it; the phone player sheet and the logo menu do. The highlight is kept by a stable key across re-renders (MutationObserver) and cleared by a click or Esc.
+  - **Enter** opens the highlighted item; that's its normal click, and for Finder results it's "Open in builder".
+  - **Space is a toggle.** It closes whatever is open on top, and the very next Space reopens that same thing (`KB.last`, cleared by any other key or a click). With nothing open, Space opens the highlighted item.
+    - Order of what's "on top": logo menu → Zone point breakdown → Zone focus → Sleepa Zone → full-screen view (`maxStack`, reopened with `openMax`) → Start / Sit picker sheet → Start / Sit details → player panel (desktop pane `closePane`, phone sheet `closeFocus`; reopened from `ctx.focus`).
+  - **Esc:** the existing handlers still close layers one at a time. It also closes the Start / Sit sheet and details, and clears the highlight.
+  - **Ignored:** while typing in a box, with Cmd / Ctrl / Alt held, when a real button / link has keyboard focus (native Space / Enter), when a Huddle dialog or the Zone guide is open, and inside the Huddle (it has its own keys).
+  - **Huddle Review cards:** Space / Enter flip the front card wherever focus is (the deck handler now calls `cdFlip()` when focus isn't on a card or a button); ← / → still move between cards.
+  - **Next (agreed, not built):** single-letter page shortcuts (L Lineup, P Players, E League, C Compare, Z Zone, H Huddle exists, / search, R refresh) and a "?" cheat sheet built from the same handler.
 - **Start / Sit redesign (Oct 5 2026; owner's design "Turn 2", handoff in `design/start-sit/START-SIT.md` + `Sleepa Start-Sit Redesign.dc.html`, which needs the design tool's support.js, not copied)**. `ssHTML` renders a desktop layout `.ssd` and a phone layout `.ssp`; CSS shows one (phone below 1024px).
   - **Desktop:**
     - 290px checklist rail (`.ssd-rail`): Comparing · n of 4, Your team / Available / All, search `#ss-q2`, position chips, rows with a checkbox, 32px ringed photo, name, pos · team and projection.
