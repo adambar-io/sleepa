@@ -1532,6 +1532,174 @@
   .tb-cards-none{ font-size: 12.5px; color: var(--text-3); padding: 24px 0; }
   .tb-cardside{ row-gap: 8px; }
   .kb-hl{ outline: 2px solid var(--accent) !important; outline-offset: 2px; border-radius: 12px; position: relative; z-index: 1; }
+  /* ============ Sleepa Intel (design/intel/INTEL.md) ============ */
+  #it-root, .it-ov, .it-lift{ --mt-fav: var(--accent); --mt-neu: var(--warn); --mt-tough: var(--danger); }   /* matchup tone, as in Start / Sit */
+  #it-root{ container-type: inline-size; container-name: itv; display: flex; flex-direction: column; gap: 14px; }
+  .it-bar-top{ display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+  .it-scope{ font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); margin-right: auto; }
+  .it-ctl{ display: flex; gap: 8px; align-items: center; }
+  .it-seg button{ min-height: 34px; }
+  .it-link, .it-back{ background: none; color: var(--accent); padding: 6px 0; font-size: 13px; font-weight: 600; border-radius: 0; }
+  .it-back{ color: var(--text-2); margin-right: 4px; }
+  .it-card{ padding: 14px 16px; box-shadow: var(--shadow), inset 0 0 0 1px var(--hair); border-radius: var(--radius); }
+  .it-empty{ padding: 22px 18px; } .it-empty b{ font-size: 15px; }
+  .it-none{ margin: 6px 0 0; font-size: 13px; color: var(--text-3); }
+  .it-ch{ display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+  .it-lt{ font-size: 12px; font-weight: 600; color: var(--text-2); font-variant-numeric: tabular-nums; }
+  .it-foot{ margin: 10px 0 0; font-size: 11.5px; color: var(--text-3); }
+  .it-note{ margin: 8px 0 0; font-size: 12.5px; color: var(--warn); }
+  .it-attr{ margin: 8px 0 0; font-size: 10.5px; color: var(--text-3); } .it-attr a{ color: inherit; }
+  /* team mark: Sleeper logo inside a team-color ring; abbreviation shows if the logo fails */
+  .it-tm{ position: relative; display: inline-grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 50%; background: var(--surface-2); box-shadow: inset 0 0 0 2.5px var(--tc); overflow: hidden; }
+  .it-tm b{ font-size: 11px; font-weight: 800; letter-spacing: .02em; color: var(--text); }
+  .it-tm img{ position: absolute; inset: 5px; width: calc(100% - 10px); height: calc(100% - 10px); object-fit: contain; padding: 0 !important; }
+  .it-tm.sm{ width: 30px; height: 30px; } .it-tm.sm b{ font-size: 8.5px; } .it-tm.sm img{ inset: 4px; width: calc(100% - 8px); height: calc(100% - 8px); }
+  .it-tm.lg{ width: 60px; height: 60px; } .it-tm.lg b{ font-size: 15px; } .it-tm.lg img{ inset: 8px; width: calc(100% - 16px); height: calc(100% - 16px); }
+  .it-pair{ display: inline-flex; flex: none; } .it-pair .it-tm + .it-tm{ margin-left: -8px; }
+  /* flags: the status-chip recipe (warn = weather / roof, neutral = everything else) */
+  .it-flag{ display: inline-block; font-size: 10.5px; font-weight: 700; padding: 2px 6px; border-radius: 5px; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; }
+  .it-flag.warn{ background: var(--warn-soft); color: var(--warn); } .it-flag.neutral{ background: var(--surface-2); color: var(--text-2); }
+  .it-flags{ display: flex; flex-wrap: wrap; gap: 5px; }
+  /* env number (tone: --mt-fav / --mt-neu / --mt-tough) */
+  .it-env{ display: flex; flex-direction: column; align-items: flex-end; line-height: 1; font-variant-numeric: tabular-nums; }
+  .it-env b{ font-size: 24px; font-weight: 700; letter-spacing: -.02em; } .it-env small{ font-size: 9.5px; font-weight: 700; letter-spacing: .1em; color: var(--text-3); margin-top: 3px; text-transform: uppercase; }
+  .it-env.big b{ font-size: 34px; }
+  .t-fav b, .it-ring.t-fav .v{ color: var(--mt-fav); stroke: var(--mt-fav); } .t-neu b, .it-ring.t-neu .v{ color: var(--mt-neu); stroke: var(--mt-neu); } .t-tough b, .it-ring.t-tough .v{ color: var(--mt-tough); stroke: var(--mt-tough); }
+  .it-env.none b{ color: var(--text-3); }
+  /* Slate / List tiles, grouped by kickoff window */
+  .it-slate{ display: flex; flex-direction: column; gap: 16px; }
+  .it-win .eyebrow{ margin: 0 0 8px 2px; }
+  .it-tiles{ display: grid; gap: 10px; }
+  .it-tile{ display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "pair tt env" "tf tf tf"; align-items: center; gap: 8px 12px; width: 100%; text-align: left;
+    padding: 12px 14px; border-radius: var(--radius); background: var(--surface); color: var(--text); box-shadow: var(--shadow), inset 0 0 0 1px var(--hair); font: inherit; min-height: 64px;
+    animation: viewIn .4s var(--ease) both; animation-delay: calc(var(--i, 0) * 35ms); transition: background .15s var(--ease), transform .2s var(--spring); }
+  .it-tile .it-pair{ grid-area: pair; } .it-tile .it-tt{ grid-area: tt; } .it-tile .it-env{ grid-area: env; } .it-tile .it-tf{ grid-area: tf; }
+  @media (hover: hover){ .it-tile:hover{ background: var(--surface-2); } }
+  .it-tile:active{ transform: scale(.985); }
+  .it-tt{ display: flex; flex-direction: column; min-width: 0; } .it-tt b{ font-size: 15px; font-weight: 700; }
+  .it-tt small{ font-size: 12.5px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+  .it-tf{ display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .it-dots{ display: inline-flex; gap: 3px; } .it-dots i{ width: 8px; height: 8px; border-radius: 50%; }
+  .it-mine{ font-size: 12px; color: var(--text-2); margin-right: 4px; }
+  .it-lh{ display: flex; align-items: center; justify-content: space-between; gap: 10px; } .it-hint{ font-size: 12.5px; color: var(--text-3); }
+  @container itv (min-width: 760px){ .it-tiles{ grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); } }
+  /* game page parts */
+  .it-hero{ display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 6px; padding: 8px 0 4px; position: relative; }
+  .it-side{ display: flex; flex-direction: column; align-items: center; gap: 4px; } .it-side small{ font-size: 12px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+  .it-mid{ display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .it-mid small{ font-size: 10px; font-weight: 700; letter-spacing: .12em; color: var(--text-3); } .it-mid b{ font-size: 20px; font-weight: 700; letter-spacing: -.01em; white-space: nowrap; }
+  .it-cd{ font-size: 12.5px; font-weight: 700; color: var(--accent); } .it-cd.live{ color: var(--danger); }
+  .it-venue{ grid-column: 1 / -1; text-align: center; font-size: 13px; color: var(--text-2); margin-top: 6px; }
+  .it-envc{ display: grid; grid-template-columns: 76px minmax(0, 1fr); align-items: center; gap: 14px; position: relative; }
+  .it-ring{ width: 76px; height: 76px; transform: rotate(-90deg); } .it-ring circle{ fill: none; stroke: var(--surface-3); stroke-width: 7; }
+  .it-ring .v{ stroke-linecap: round; transition: stroke-dasharray .65s var(--ease); } .it-ring.t-none .v{ stroke: none; }
+  .it-ring-n{ position: absolute; left: 16px; top: 50%; width: 76px; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; line-height: 1; }
+  .it-ring-n b{ font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; } .it-ring-n small{ font-size: 9px; font-weight: 700; color: var(--text-3); letter-spacing: .08em; margin-top: 2px; text-transform: uppercase; }
+  .it-envw{ display: block; font-size: 16px; margin-top: 2px; } .it-envc small{ font-size: 12.5px; color: var(--text-2); }
+  .it-imp{ display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-variant-numeric: tabular-nums; }
+  .it-imp b{ font-size: 22px; font-weight: 700; letter-spacing: -.02em; } .it-imp b span{ color: var(--text-2); font-weight: 600; }
+  .it-imp.sm b{ font-size: 17px; }
+  .it-tug{ position: relative; height: 14px; border-radius: 999px; background: var(--surface-3); overflow: hidden; margin: 10px 0 4px; }
+  .it-tug i{ position: absolute; inset: 0 auto 0 0; width: calc(var(--s) * 100%); background: var(--text); border-radius: 999px 0 0 999px; transform-origin: left; animation: itBar .9s var(--ease) both; }
+  .it-tug::after{ content: ''; position: absolute; left: 50%; top: 2px; bottom: 2px; width: 2px; margin-left: -1px; background: var(--bg); opacity: .7; }
+  .it-tug.sm{ height: 8px; margin: 2px 0; }
+  @keyframes itBar{ from{ transform: scaleX(0); } }
+  .it-cap{ display: flex; justify-content: space-between; gap: 6px; font-size: 11px; color: var(--text-3); }
+  .it-scr{ border-top: 1px solid var(--hair); margin-top: 12px; padding-top: 10px; } .it-scr .it-ch b{ font-size: 13.5px; }
+  .it-meter{ position: relative; height: 8px; border-radius: 999px; background: linear-gradient(90deg, var(--surface-3), color-mix(in srgb, var(--text) 35%, var(--surface-3))); margin: 8px 0 6px; }
+  .it-meter::before{ content: ''; position: absolute; left: calc(var(--a) * 100%); top: -4px; bottom: -4px; width: 2px; background: var(--text-2); }
+  .it-meter i{ position: absolute; left: calc(var(--p) * 100%); top: 50%; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%; background: var(--text); box-shadow: 0 0 0 3px var(--surface); }
+  .it-mine-c{ padding: 8px 6px; } .it-mine-c .it-ch{ padding: 6px 10px 0; }
+  .it-pr{ display: grid; grid-template-columns: 44px 36px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; cursor: pointer; min-height: 52px; }
+  .it-pr + .it-pr{ border-top: 1px solid var(--hair); }
+  @media (hover: hover){ .it-pr:hover{ background: var(--surface-2); } }
+  .it-pr .slot-tag{ width: 44px; padding: 2px 0; border: 1px solid; border-radius: 6px; font-size: 11px; font-weight: 700; }
+  .it-av{ width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background: var(--surface-2); box-shadow: 0 0 0 1.5px var(--pc, var(--hair)); }
+  .it-av.sm{ width: 26px; height: 26px; margin-left: -6px; box-shadow: 0 0 0 2px var(--surface); } .it-av.sm:first-child{ margin-left: 0; }
+  .it-pn{ display: flex; flex-direction: column; min-width: 0; } .it-pn b{ font-size: 14.5px; font-weight: 600; } .it-pn small{ font-size: 12px; color: var(--text-2); }
+  .it-pj{ font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .it-mu{ white-space: nowrap; }
+  .it-root{ display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; } .it-root b{ display: block; font-size: 14.5px; margin-top: 3px; }
+  .it-wxr{ display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 16px; }
+  .it-tmp{ display: block; font-size: 40px; font-weight: 700; letter-spacing: -.03em; line-height: 1; } .it-wxr small{ display: block; font-size: 12px; color: var(--text-2); }
+  .it-wind{ display: flex; align-items: center; gap: 8px; } .it-wind b, .it-rain b{ font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; } .it-rain{ text-align: right; }
+  .it-wxr b.warn, .it-tmp.warn{ color: var(--warn); }
+  .it-arrow{ display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--surface-2); font-size: 15px; transform: rotate(calc(var(--d) + 180deg)); }
+  .it-hours{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; padding: 10px; border-radius: 12px; background: var(--surface-2); }
+  .it-hours div{ display: flex; flex-direction: column; align-items: center; gap: 4px; height: 76px; justify-content: flex-end; }
+  .it-hours small{ font-size: 11px; color: var(--text-3); order: -1; margin-bottom: auto; } .it-hours i{ width: 100%; max-height: 26px; border-radius: 4px; background: var(--text-3); opacity: .55; }
+  .it-hours i.wet{ background: var(--warn); opacity: .8; } .it-hours b{ font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  .it-wx.in{ background: linear-gradient(160deg, color-mix(in srgb, var(--surface-3) 70%, var(--surface)), var(--surface)); }
+  .it-wxi b{ display: block; font-size: 22px; } .it-wxi small{ font-size: 12.5px; color: var(--text-2); }
+  .it-vn{ display: block; font-size: 16px; } .it-vs{ display: block; font-size: 12.5px; color: var(--text-2); margin-top: 2px; }
+  .it-edge{ display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; } .it-edge b{ font-size: 32px; font-weight: 700; letter-spacing: -.02em; } .it-edge small{ font-size: 12.5px; color: var(--text-2); }
+  .it-bar{ position: relative; height: 8px; border-radius: 999px; background: var(--surface-3); margin: 10px 0 8px; }
+  .it-bar i{ position: absolute; inset: 0 auto 0 0; width: calc(var(--v) * 100%); border-radius: 999px; background: color-mix(in srgb, var(--text) 55%, var(--surface-3)); }
+  .it-bar::after{ content: ''; position: absolute; left: calc(var(--b) * 100%); top: -3px; bottom: -3px; width: 2px; background: var(--text); }
+  .it-kv{ display: flex; gap: 16px; font-size: 12.5px; color: var(--text-3); } .it-kv b{ color: var(--text); font-variant-numeric: tabular-nums; }
+  .it-rts{ display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .it-rt{ display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); }
+  .it-rt small{ font-size: 11px; font-weight: 700; color: var(--text-3); } .it-rt b{ font-size: 24px; font-weight: 700; } .it-rt b span{ font-size: 12px; font-weight: 500; color: var(--text-2); }
+  .it-rt em{ font-style: normal; font-size: 12.5px; font-weight: 600; } .it-rt.short em{ color: var(--warn); } .it-tz{ font-size: 11.5px; color: var(--text-3); }
+  .it-dvr + .it-dvr{ margin-top: 10px; } .it-dvr > b{ display: block; font-size: 13px; margin-bottom: 6px; }
+  .it-dvc{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .it-dv{ display: flex; flex-direction: column; align-items: center; padding: 6px 4px; border-radius: 8px; background: var(--surface-2); font-size: 13px; font-weight: 600; color: var(--text-2); font-variant-numeric: tabular-nums; }
+  .it-dv small{ font-size: 9.5px; font-weight: 700; letter-spacing: .08em; color: var(--text-3); }
+  .it-dv.good{ background: var(--accent-soft); color: var(--accent); } .it-dv.bad{ background: var(--danger-soft); color: var(--danger); }
+  .it-bets{ display: grid; grid-template-columns: auto auto 1fr; gap: 16px; } .it-bets small{ display: block; font-size: 10.5px; font-weight: 700; letter-spacing: .08em; color: var(--text-3); text-transform: uppercase; }
+  .it-bets b{ font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .it-move{ display: flex; align-items: center; gap: 12px; margin-top: 12px; } .it-move svg{ width: 120px; height: 28px; flex: none; }
+  .it-move path{ fill: none; stroke: var(--text-2); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; } .it-move small{ font-size: 12px; color: var(--text-2); }
+  .it-page{ display: flex; flex-direction: column; gap: 12px; }
+  /* desktop: ring of game cards (the Zone recipe) + detail grid */
+  .it-ringw{ position: relative; height: 210px; perspective: 2000px; perspective-origin: 50% 35%; overflow: hidden; margin: 0 -8px; }
+  .it-ring3d{ position: absolute; inset: 0; }
+  .it-rc{ position: absolute; top: 14px; left: 50%; width: min(460px, 70%); display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; text-align: left; font: inherit; color: var(--text);
+    border-radius: 16px; background: var(--surface); box-shadow: var(--shadow-lg), inset 0 0 0 1px var(--hair); cursor: pointer;
+    transform: translateX(calc(-50% + var(--o, 0) * 88%)) translateZ(calc(var(--ao, 0) * -200px)) rotateY(calc(var(--o, 0) * -32deg));
+    opacity: calc(1 - var(--ao, 0) * .62); transition: transform .65s var(--ease), opacity .65s var(--ease); }
+  .it-rc.on{ cursor: default; box-shadow: var(--shadow-lg), inset 0 0 0 1px color-mix(in srgb, var(--text) 16%, transparent); }
+  .it-rc.far{ opacity: 0; pointer-events: none; }
+  .it-rch{ display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; }
+  .it-rcl{ display: flex; justify-content: space-between; gap: 10px; font-size: 12.5px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+  .it-rcf{ display: flex; align-items: center; gap: 8px; } .it-rcf .it-flags{ margin-left: auto; } .it-avs{ display: inline-flex; }
+  .it-pills{ display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+  .it-pill.on{ background: var(--surface-3); color: var(--text); }
+  .it-detail{ display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .it-dl, .it-dr{ display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .it-two{ display: grid; grid-template-columns: 1fr; gap: 12px; }
+  @container itv (min-width: 860px){
+    .it-detail{ grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: start; }
+    .it-two{ grid-template-columns: 1fr 1fr; }
+    .it-pr{ grid-template-columns: 44px 36px minmax(0, 1fr) auto 70px; } .it-pj{ text-align: right; }
+  }
+  /* desktop list: focus lift */
+  .it-lift{ position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 24px; background: var(--scrim); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+  .it-lift-c{ width: min(680px, 100%); display: grid; grid-template-columns: minmax(0, 1fr) 240px; gap: 18px; padding: 20px 22px; border-radius: 20px; background: var(--surface);
+    box-shadow: var(--shadow-lg), 0 0 0 2px var(--accent); }
+  .it-lift-l{ display: flex; flex-direction: column; gap: 8px; min-width: 0; } .it-lh2{ display: flex; align-items: center; gap: 12px; }
+  .it-sub2{ font-size: 12.5px; color: var(--text-2); }
+  .it-lift-r{ display: flex; flex-direction: column; align-items: stretch; gap: 10px; } .it-lift-r .it-env{ align-items: flex-end; } .it-lift-r .it-env b{ font-size: 46px; }
+  .it-lmine{ display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); }
+  .it-lmine div{ display: grid; grid-template-columns: 8px minmax(0, 1fr) auto; align-items: center; gap: 8px; font-size: 13px; } .it-lmine i{ width: 8px; height: 8px; border-radius: 50%; }
+  .it-lmine span{ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .it-lmine b{ font-variant-numeric: tabular-nums; }
+  .it-open{ align-self: flex-end; margin-top: auto; }
+  /* phone: full-screen carousel */
+  html.it-open, html.it-open body{ overflow: hidden; }
+  .it-ov{ position: fixed; inset: 0; z-index: 49; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; background: var(--bg); animation: prOpen .3s var(--ease); }
+  .it-ov[hidden]{ display: none; }
+  .it-ovh{ display: flex; align-items: center; gap: 8px; padding: calc(env(safe-area-inset-top) + 6px) calc(16px + env(safe-area-inset-right)) 6px calc(8px + env(safe-area-inset-left)); }
+  .it-x{ width: 44px; height: 44px; padding: 0; display: grid; place-items: center; background: none; color: var(--text); border-radius: 50%; } .it-x svg{ width: 22px; height: 22px; }
+  .it-ovt{ display: flex; flex-direction: column; line-height: 1.2; margin-right: auto; min-width: 0; } .it-ovt b{ font-size: 17px; } .it-ovt small{ font-size: 12px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .it-n{ font-size: 12.5px; font-weight: 700; color: var(--text-2); font-variant-numeric: tabular-nums; }
+  .it-track{ position: relative; overflow: hidden; touch-action: pan-y; }
+  .it-slot{ position: absolute; inset: 0; transform: translateX(calc(var(--o) * 100%)); }
+  .it-slot .it-page{ height: 100%; overflow-y: auto; overscroll-behavior: contain; padding: 4px calc(16px + env(safe-area-inset-right)) 24px calc(16px + env(safe-area-inset-left)); }
+  .it-ov .it-pills{ flex-wrap: nowrap; justify-content: space-between; margin: 0 calc(12px + env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left));
+    padding: 6px; border-radius: 999px; background: color-mix(in srgb, var(--surface) 78%, transparent); backdrop-filter: blur(20px) saturate(1.6); -webkit-backdrop-filter: blur(20px) saturate(1.6);
+    box-shadow: 0 8px 30px rgba(0,0,0,.18), inset 0 0 0 1px var(--hair); }
+  .it-ov .it-pill{ flex: 1; justify-content: center; max-width: none; min-height: 44px; }
+  @media (prefers-reduced-motion: reduce){ .it-tug i, .it-tile, .it-ov{ animation: none !important; } .it-rc, .it-ring .v{ transition: none !important; } }
   .kb-help{ position: fixed; inset: 0; z-index: 400; display: grid; place-items: center; padding: 16px; background: rgba(0,0,0,.45); backdrop-filter: blur(4px); }
   .kb-help[hidden]{ display: none; }
   .kb-help-card{ width: min(720px, 100%); max-height: calc(100vh - 32px); overflow: auto; background: var(--surface); color: var(--text); border: 1px solid var(--hair); border-radius: 18px; box-shadow: 0 20px 60px rgba(0,0,0,.35); }
@@ -3301,6 +3469,7 @@
       <button class="nav-btn" data-view="fa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg><span>Players</span></button>
       <button class="nav-btn" data-view="league"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0V4zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8.5 20h7M10 17h4"/></svg><span>League</span></button>
       <button class="nav-btn" data-view="compare"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v16M7 4l-3 3M7 4l3 3M17 20V4M17 20l-3-3M17 20l3-3"/></svg><span>Compare</span></button>
+      <button class="nav-btn" data-view="intel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"/></svg><span>Intel</span></button>
       <button class="nav-btn" data-view="resources"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h10a4 4 0 0 1 4 4v12H9a4 4 0 0 1-4-4V4z"/><path d="M9 20a4 4 0 0 1 0-8h10M9 8h6"/></svg><span>Resources</span></button>
       <button class="nav-btn" data-view="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><span>Settings</span></button>
     </nav>
@@ -3412,6 +3581,8 @@
           </div>
         </section>
 
+        <section class="view" id="intel-view" style="display:none;"><div id="it-root"></div></section>
+
         <section class="view" id="resources-view" style="display:none;">
           <div class="settings">
             <div class="card set-card"><h3>Latest fantasy news</h3><p class="set-sub">One live feed of player news (injuries, depth-chart moves, signings), updated all day.</p>
@@ -3437,6 +3608,7 @@
 
         <section class="view" id="settings-view" style="display:none;">
           <div class="settings">
+            <div class="card set-card set-res"><h3>Resources</h3><p class="set-sub">News, rankings, injury reports and tools from around the web.</p><button type="button" class="quiet-btn" data-goto-view="resources">Open Resources ›</button></div>
             <div class="card set-card"><h3>Appearance</h3><p class="set-sub">Auto follows your device's light or dark setting.</p><div class="theme-seg" role="group" aria-label="Theme"><button type="button" data-theme-opt="system">Auto</button><button type="button" data-theme-opt="light">Light</button><button type="button" data-theme-opt="dark">Dark</button></div></div>
             <div class="card set-card"><h3>Lineup cards</h3><p class="set-sub">Compact shows what you need to set a lineup: projection, last game, opponent colored by matchup (green easy, amber average, red tough), injury or bye flags, and an arrow when snap share jumped or dropped. Tap a player for season stats, snaps, depth chart and the full matchup ranking. Detailed puts all of it on the card.</p><div class="cards-seg" role="group" aria-label="Lineup cards"><button type="button" data-cards-opt="compact">Compact</button><button type="button" data-cards-opt="detailed">Detailed</button></div></div>
             <div class="card set-card"><h3>Your leagues</h3><p class="set-sub">Tap a league to switch to it.</p><div class="league-list" data-league-list></div></div>
@@ -3466,7 +3638,7 @@
     <button class="tab-btn" data-view="fa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg>Players</button>
     <button class="tab-btn" data-view="league"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0V4zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8.5 20h7M10 17h4"/></svg>League</button>
     <button class="tab-btn" data-view="compare"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v16M7 4l-3 3M7 4l3 3M17 20V4M17 20l-3-3M17 20l3-3"/></svg>Compare</button>
-    <button class="tab-btn" data-view="resources"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h10a4 4 0 0 1 4 4v12H9a4 4 0 0 1-4-4V4z"/><path d="M9 20a4 4 0 0 1 0-8h10M9 8h6"/></svg>Resources</button>
+    <button class="tab-btn" data-view="intel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"/></svg>Intel</button>
     <button class="tab-btn" data-view="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>Settings</button>
   </nav>
 </div>
@@ -3632,6 +3804,7 @@
     compareView: document.getElementById('compare-view'),
     settingsView: document.getElementById('settings-view'),
     resourcesView: document.getElementById('resources-view'),
+    intelView: document.getElementById('intel-view'),
     leagueView: document.getElementById('league-view'),
     cmpEmpty: document.getElementById('cmp-empty'),
     lineupTop: document.getElementById('lineup-top'),
@@ -9287,7 +9460,7 @@
   }
 
   // ---- available players (informational only — not part of the lineup builder) ----
-  const VIEW_TITLES = { roster: 'Lineup', fa: 'Players', league: 'League', compare: 'Compare', resources: 'Resources', settings: 'Settings' };
+  const VIEW_TITLES = { roster: 'Lineup', fa: 'Players', league: 'League', compare: 'Compare', resources: 'Resources', settings: 'Settings', intel: 'Intel' };
   // Fade a list's rows in one after another (on load and when you switch screens, not on every re-render).
   function staggerIn(list){
     if(!list || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -9308,12 +9481,14 @@
     els.compareView.style.display = view === 'compare' ? '' : 'none';
     els.settingsView.style.display = view === 'settings' ? '' : 'none';
     els.resourcesView.style.display = view === 'resources' ? '' : 'none';
+    els.intelView.style.display = view === 'intel' ? '' : 'none';
+    if(changed && view !== 'intel'){ ctx.it.origin = null; if(ctx.it.scope === 'zone') ctx.it.scope = 'league'; itUnlift(true); }
     els.leagueView.style.display = view === 'league' ? '' : 'none';
     els.lineupTop.style.display = view === 'roster' ? '' : 'none';
     els.rosterScreen.classList.toggle('on-lineup', view === 'roster');
     closeBrandMenu();
     document.querySelectorAll('[data-brand]').forEach(function(b){ b.setAttribute('aria-label', view === 'roster' ? 'sleepa: switch league' : 'sleepa: go to your lineup'); if(view === 'roster') b.setAttribute('aria-haspopup', 'menu'); else b.removeAttribute('aria-haspopup'); });
-    els.panes.classList.toggle('solo', view === 'compare' || view === 'settings' || view === 'resources' || view === 'league');
+    els.panes.classList.toggle('solo', view === 'compare' || view === 'settings' || view === 'resources' || view === 'league' || view === 'intel');
 
     els.pageEyebrow.innerHTML = 'Week ' + ctx.week + (ctx.weekOffset ? ' <span class="wk-preview">preview</span>' : '') + ' · ' + escapeHTML(ctx.league ? ctx.league.name : '') + (ctx.league ? ' <span class="fmt-badge' + (isIdpLeague() ? ' idp' : '') + '" title="League format">' + escapeHTML(leagueFormat()) + '</span>' : '');
     els.pageTitle.textContent = VIEW_TITLES[view];
@@ -9322,6 +9497,7 @@
       : view === 'fa' ? 'Available, trending and every player in your league. Filters stay put when you switch views.'
       : view === 'compare' ? CMP_SUB[ctx.cmpSec] || ''
       : view === 'league' ? 'This week’s matchup and where everyone stands.'
+      : view === 'intel' ? 'Every game’s environment: lines, weather, venue, rest, defense vs position. Informational only.'
       : '';
     document.querySelector('.top-actions').style.display = (view === 'roster' || view === 'compare') ? '' : 'none';
 
@@ -9329,8 +9505,9 @@
     if(view === 'compare') renderCompare();
     if(view === 'settings') renderStatus();
     if(view === 'league') renderLeague();
+    if(view === 'intel') renderIntel();
     if(changed){
-      [els.rosterView, els.faView, els.compareView, els.settingsView, els.resourcesView, els.leagueView].forEach(function(v){ v.style.animation = 'none'; void v.offsetWidth; v.style.animation = ''; });
+      [els.rosterView, els.faView, els.compareView, els.settingsView, els.resourcesView, els.leagueView, els.intelView].forEach(function(v){ v.style.animation = 'none'; void v.offsetWidth; v.style.animation = ''; });
       if(view === 'roster' && !ctx.deferEntrance){ staggerIn(els.startersList); staggerIn(els.benchList); }
       if(view === 'fa') staggerIn(els.faList);
       if(!paneMode()) window.scrollTo(0, 0);
@@ -9352,6 +9529,7 @@
   }
   window.addEventListener('resize', moveNavThumbs);
   els.navBtns.forEach(function(t){ if(t.hasAttribute('data-view')) t.addEventListener('click', function(){ setView(t.getAttribute('data-view')); }); });
+  document.addEventListener('click', function(e){ const b = e.target.closest && e.target.closest('[data-goto-view]'); if(b) setView(b.getAttribute('data-goto-view')); });
 
 
   // ---- rest-of-season projections (ros.json from the GitHub Action: raw stats summed this week..week 17) ----
@@ -13486,6 +13664,497 @@
   });
   document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && !zoneGuide.hidden){ e.preventDefault(); e.stopImmediatePropagation(); zoneGuideClose(); } }, true);
   document.querySelectorAll('[data-zone-name]').forEach(function(el){ el.textContent = ZONE_NAME; });
+  // ============ Sleepa Intel: the view (Slate, game carousel, game page, desktop ring + list) ============
+  // Phone: the Intel tab is the Slate (games by kickoff window, My / All); a game opens the full-screen looping carousel
+  // (.it-ov, one game page per card, swipe / ← → / game pills). Desktop: the Intel view itself, List (tile grid by
+  // kickoff window, click lifts a tile) or Cards (ring of game cards + the full detail below).
+  // openIntel(gameId, { scope: 'league' | 'zone', origin }) opens on a game from anywhere; Back returns to the origin.
+  // "Mine": starters in the current league's lineup (scope league) or in every league (scope zone, from Sleepa Zone).
+  // Informational only: nothing here touches lineups or recommendations.
+  ctx.it = { scope: 'league', set: 'my', mode: 'list', dense: 'detailed', idx: 0, ids: [], origin: null, open: false, focus: null, zone: null };
+  const IT_WX = {};   // game id -> { st: 'wait' | 'ok' | 'skip' | 'err', w, why }
+  const itDesk = function(){ return window.matchMedia('(min-width: 1024px)').matches; };
+  const IT_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"/></svg>';
+
+  // ---- my players (per scope) ----
+  // [{ pid, team, slot, proj, leagues: [{ id, name }] }]; scope 'zone' merges every league (one row per player).
+  function itMine(scope){
+    const out = {}, add = function(pid, slot, proj, L){
+      if(!pid || pid === '0') return;
+      const p = ctx.players[pid] || {}, team = p.team || (/^[A-Z]{2,3}$/.test(pid) ? pid : null);
+      if(!team) return;
+      const e = out[pid] || (out[pid] = { pid: pid, team: team, slot: slot, proj: proj, leagues: [] });
+      if(L && !e.leagues.some(function(x){ return x.id === L.id; })) e.leagues.push(L);
+    };
+    const cur = ctx.league ? { id: ctx.league.league_id, name: ctx.league.name } : null;
+    (ctx.draftStarters || []).forEach(function(pid, i){ add(pid, slotShort(ctx.rosterPositions[i]), ctx.projections[pid], cur); });
+    if(scope === 'zone'){
+      (ctx.pendingLeagues || []).forEach(function(l){
+        if(ctx.league && l.league_id === ctx.league.league_id) return;
+        const m = ctx.zone.meta[l.league_id];
+        if(!m || !m.roster) return;
+        const sc = (m.league && m.league.scoring_settings) || {};
+        (m.roster.starters || []).forEach(function(pid, i){
+          const raw = ctx.projRaw && ctx.projRaw[pid];
+          add(pid, slotShort(m.slots[i]), raw ? projPoints(raw, pid, sc) : null, { id: l.league_id, name: l.name });
+        });
+      });
+    }
+    return Object.keys(out).map(function(k){ return out[k]; });
+  }
+  // everything a card / page needs for one game
+  function itModel(g, mine){
+    const d = intelData() || {}, v = intelVenue(g), roof = intelRoofOf(g), wx = IT_WX[g.id] || { st: 'wait' };
+    const w = wx.st === 'ok' ? wx.w : null, pen = intelWeatherPenalty(w, roof), total = g.lines && g.lines.total;
+    const env = intelEnv(total, roof, pen);
+    const my = (mine || []).filter(function(x){ return x.team === g.away || x.team === g.home; })
+      .sort(function(a, b){ return (b.proj || 0) - (a.proj || 0); });
+    return { g: g, v: v, roof: roof, wx: wx, w: w, pen: pen, impact: intelImpact(pen), env: env, tone: intelTone(env),
+      flags: intelFlags(g, w, roof, v && v.city), implied: intelImplied(g.lines), script: intelScript(total),
+      line: intelLineText(g.lines, g.away, g.home), lines: intelLinesState(g, d.generated), my: my,
+      myTotal: my.reduce(function(s, x){ return s + (typeof x.proj === 'number' ? x.proj : 0); }, 0) };
+  }
+  function itList(){
+    const mine = itMine(ctx.it.scope), all = intelGames();
+    const games = ctx.it.set === 'all' ? all : all.filter(function(g){ return mine.some(function(x){ return x.team === g.away || x.team === g.home; }); });
+    return { mine: mine, games: games };
+  }
+  // weather for the games on screen; each answer re-renders (batched)
+  let itWxTimer = null;
+  function itWantWeather(games){
+    const first = !INTEL.loading;   // the venue file decides indoor / outdoor: render once it lands
+    intelLoad().then(function(){
+      games.forEach(function(g){
+        if(IT_WX[g.id] && IT_WX[g.id].st !== 'err' && IT_WX[g.id].ts && Date.now() - IT_WX[g.id].ts < INTEL_TUNE.WEATHER_TTL_MIN * 60e3) return;
+        if(IT_WX[g.id] && IT_WX[g.id].st === 'wait') return;
+        IT_WX[g.id] = { st: 'wait' };
+        intelWeather(g).then(function(r){
+          IT_WX[g.id] = r.w ? { st: 'ok', w: r.w, ts: r.ts || Date.now() } : r.skip ? { st: 'skip', why: r.skip, ts: Date.now() } : { st: 'err', why: r.err, ts: Date.now() };
+          clearTimeout(itWxTimer); itWxTimer = setTimeout(itRerender, 120);
+        });
+      });
+      if(first){ clearTimeout(itWxTimer); itWxTimer = setTimeout(itRerender, 120); }
+    });
+  }
+
+  // ---- small pieces ----
+  function itLogo(team, cls){
+    return '<span class="it-tm ' + (cls || '') + '" style="--tc:' + teamColor(team) + '"><b>' + escapeHTML(team) + '</b><img src="https://sleepercdn.com/images/team_logos/nfl/' +
+      encodeURIComponent(String(team).toLowerCase()) + '.png" alt="" loading="lazy" onerror="this.remove()"></span>';
+  }
+  function itTime(ms){ return new Date(ms).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(/\s?([AP])M$/i, function(m, a){ return a.toLowerCase(); }); }
+  function itDay(ms){ return new Date(ms).toLocaleDateString([], { weekday: 'short' }).toUpperCase(); }
+  function itKick(g){ const k = Date.parse(g.kick); return isNaN(k) ? '' : itDay(k) + ' ' + itTime(k); }
+  function itCountdown(g){
+    const k = Date.parse(g.kick), now = Date.now();
+    if(isNaN(k)) return '';
+    if(now >= k + GAME_LENGTH) return 'Final';
+    if(now >= k) return 'Live';
+    const m = Math.round((k - now) / 60000), d = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60);
+    return 'in ' + (d ? d + 'd ' + h + 'h' : h ? h + 'h ' + (m % 60) + 'm' : (m % 60) + 'm');
+  }
+  function itFlagsHTML(flags, max){
+    const list = max && flags.length > max ? flags.slice(0, max) : flags;
+    return list.map(function(f){ return '<span class="it-flag ' + f.tone + '">' + escapeHTML(f.label) + '</span>'; }).join('') +
+      (max && flags.length > max ? '<span class="it-flag neutral">+' + (flags.length - max) + '</span>' : '');
+  }
+  function itEnvNum(m, cls){
+    return m.env === null ? '<span class="it-env ' + (cls || '') + ' none"><b>—</b><small>ENV</small></span>'
+      : '<span class="it-env ' + (cls || '') + ' t-' + m.tone + '"><b>' + m.env + '</b><small>ENV</small></span>';
+  }
+  function itWxShort(m){
+    if(m.roof === 'indoor') return 'indoor';
+    if(m.w) return Math.round(m.w.temp) + '°';
+    return '';
+  }
+  function itSub(m){ return [m.line || 'Lines not posted', itWxShort(m)].filter(Boolean).join(' · '); }
+  function itDots(m){ return m.my.map(function(x){ return '<i style="background:' + posColor(posGroup(x.pid)) + '"></i>'; }).join(''); }
+  function itWindows(games){
+    const out = [];
+    games.forEach(function(g){
+      const k = Date.parse(g.kick), key = isNaN(k) ? 'TBD' : itDay(k) + ' ' + itTime(k);
+      let w = out.find(function(x){ return x.key === key; });
+      if(!w){ w = { key: key, games: [] }; out.push(w); }
+      w.games.push(g);
+    });
+    return out;
+  }
+  function itScopeLabel(){
+    return 'Week ' + ctx.week + ' · ' + (ctx.it.scope === 'zone' ? 'All my leagues' : ctx.it.set === 'all' ? 'All games' : 'My games' + (ctx.league ? ' · ' + ctx.league.name : ''));
+  }
+
+  // ---- tiles (phone Slate + desktop List) ----
+  function itTileHTML(m, i){
+    const g = m.g, dense = ctx.it.dense === 'condensed';
+    return '<button type="button" class="it-tile" data-it-game="' + escapeHTML(g.id) + '" style="--i:' + (i || 0) + '">' +
+      '<span class="it-pair">' + itLogo(g.away, 'sm') + itLogo(g.home, 'sm') + '</span>' +
+      '<span class="it-tt"><b>' + escapeHTML(g.away + ' @ ' + g.home) + '</b><small>' + escapeHTML(itSub(m)) + '</small></span>' + itEnvNum(m) +
+      (dense ? '' : '<span class="it-tf">' + (m.my.length ? '<span class="it-dots">' + itDots(m) + '</span><span class="it-mine">' + m.my.length + ' mine</span>' : '') + itFlagsHTML(m.flags, 3) + '</span>') +
+      '</button>';
+  }
+  function itWindowsHTML(models){
+    return itWindows(models.map(function(m){ return m.g; })).map(function(w){
+      return '<div class="it-win"><div class="eyebrow">' + escapeHTML(w.key) + '</div><div class="it-tiles">' +
+        w.games.map(function(g, i){ return itTileHTML(models.find(function(m){ return m.g === g; }), i); }).join('') + '</div></div>';
+    }).join('');
+  }
+
+  // ---- the game page (phone carousel card; desktop detail) ----
+  function itHeroHTML(m){
+    const g = m.g, cd = itCountdown(g);
+    return '<div class="it-hero" style="--ta:' + teamColor(g.away) + ';--th:' + teamColor(g.home) + '">' +
+      '<div class="it-side">' + itLogo(g.away, 'lg') + '<small>' + escapeHTML(g.rec ? g.rec.away : '') + '</small></div>' +
+      '<div class="it-mid"><small>' + (g.neutral ? 'VS' : 'AT') + '</small><b>' + escapeHTML(itKick(g)) + '</b>' + (cd ? '<span class="it-cd' + (cd === 'Live' ? ' live' : '') + '">' + cd + '</span>' : '') + '</div>' +
+      '<div class="it-side">' + itLogo(g.home, 'lg') + '<small>' + escapeHTML(g.rec ? g.rec.home : '') + '</small></div>' +
+      '<div class="it-venue">' + escapeHTML([g.vname, m.v && m.v.city].filter(Boolean).join(' · ')) + '</div></div>';
+  }
+  function itEnvCardHTML(m){
+    const r = 30, c = 2 * Math.PI * r, f = m.env === null ? 0 : m.env / 100;
+    const word = m.env === null ? 'No lines yet' : m.tone === 'fav' ? 'Favorable environment' : m.tone === 'neu' ? 'Average environment' : 'Tough environment';
+    return '<div class="card it-card it-envc"><svg class="it-ring t-' + (m.tone || 'none') + '" viewBox="0 0 76 76" aria-hidden="true"><circle cx="38" cy="38" r="' + r + '"/><circle class="v" cx="38" cy="38" r="' + r +
+      '" stroke-dasharray="' + (c * f).toFixed(1) + ' ' + c.toFixed(1) + '"/></svg><span class="it-ring-n"><b data-count="' + (m.env === null ? '' : m.env) + '">' + (m.env === null ? '—' : m.env) + '</b><small>of 100</small></span>' +
+      '<div><div class="eyebrow">Game environment</div><b class="it-envw">' + word + '</b><small>' +
+      escapeHTML([m.g.lines && typeof m.g.lines.total === 'number' ? 'Total ' + intelNum(m.g.lines.total) : 'Total —', m.roof === 'indoor' ? 'indoors' : 'weather impact ' + m.impact].join(' · ')) + '</small></div></div>';
+  }
+  function itImpliedHTML(m){
+    const g = m.g, im = m.implied, s = m.script;
+    const head = '<div class="it-ch"><span class="eyebrow">Implied score</span><span class="it-lt">' + escapeHTML(m.line || '—') + '</span></div>';
+    if(!im) return '<div class="card it-card">' + head + '<div class="it-imp"><b>' + escapeHTML(g.away) + ' <span>—</span></b><b><span>—</span> ' + escapeHTML(g.home) + '</b></div><p class="it-none">Lines not posted yet.</p></div>';
+    const share = im.away / (im.away + im.home);
+    return '<div class="card it-card">' + head +
+      '<div class="it-imp"><b>' + escapeHTML(g.away) + ' <span>' + im.away.toFixed(2) + '</span></b><b><span>' + im.home.toFixed(2) + '</span> ' + escapeHTML(g.home) + '</b></div>' +
+      '<div class="it-tug" style="--s:' + share.toFixed(4) + '"><i></i></div><div class="it-cap"><span>' + escapeHTML(g.away) + ' control</span><span>midpoint shifts with the spread</span><span>' + escapeHTML(g.home) + ' control</span></div>' +
+      (s ? '<div class="it-scr"><div class="it-ch"><span class="eyebrow">Game script</span><b>' + s.label + '</b></div><div class="it-meter" style="--p:' + s.pos.toFixed(4) + ';--a:' + s.avg.toFixed(4) + '"><i></i></div>' +
+        '<div class="it-cap"><span>Slog</span><span>avg ' + INTEL_TUNE.AVG_TOTAL + '</span><span>Shootout</span></div></div>' : '') + '</div>';
+  }
+  function itMineHTML(m, table){
+    const zone = ctx.it.scope === 'zone';
+    if(!m.my.length) return '<div class="card it-card"><div class="it-ch"><span class="eyebrow">My players in this game</span></div><p class="it-none">None of your starters' + (zone ? ' in any league' : '') + ' play in this game.</p></div>';
+    const rows = m.my.map(function(x){
+      const p = ctx.players[x.pid] || {}, opp = x.team === m.g.home ? 'vs ' + m.g.away : '@ ' + m.g.home, pc = posColor(posGroup(x.pid));
+      return '<div class="it-pr" data-open="' + escapeHTML(x.pid) + '" style="--pc:' + pc + '"><span class="slot-tag" style="color:' + pc + ';border-color:' + pc + '">' + escapeHTML(x.slot) + '</span>' +
+        avatarTag(x.pid, 'it-av') + '<span class="it-pn"><b>' + escapeHTML(p.position === 'DEF' ? x.team + ' D/ST' : playerName(p)) + '</b><small>' + escapeHTML(x.team + ' · ' + opp) +
+        (zone ? ' · ' + x.leagues.map(function(l){ return escapeHTML(l.name); }).join(', ') : '') + '</small></span>' +
+        (table ? '<span class="it-mu">' + (dvpChipHTML(x.pid, true) || '<span class="dim">—</span>') + '</span>' : '') +
+        '<span class="it-pj">' + (typeof x.proj === 'number' ? x.proj.toFixed(2) : '—') + '</span></div>';
+    }).join('');
+    return '<div class="card it-card it-mine-c"><div class="it-ch"><span class="eyebrow">My players in this game</span><span class="it-lt">Total ' + m.myTotal.toFixed(2) + '</span></div>' + rows + '</div>';
+  }
+  // what to root for, for my players only
+  function itRootText(m){
+    if(!m.my.length) return null;
+    const g = m.g, teams = {}, defs = {};
+    m.my.forEach(function(x){ if((ctx.players[x.pid] || {}).position === 'DEF') defs[x.team] = true; else teams[x.team] = true; });
+    const t = Object.keys(teams), im = m.implied;
+    if(t.length === 2) return 'Root for a shootout: you have players on both sides.';
+    if(t.length === 1){
+      const team = t[0], opp = team === g.home ? g.away : g.home, pts = im ? (team === g.home ? im.home : im.away) : null;
+      return 'Root for ' + team + ' points' + (pts !== null ? ' (implied ' + pts.toFixed(2) + ')' : '') + (defs[opp] ? ', and a quiet day for ' + team + '’s opponent defense' : '') + '.';
+    }
+    const d = Object.keys(defs)[0], opp = d === g.home ? g.away : g.home;
+    return 'Root for a low-scoring ' + opp + ' day: your ' + d + ' defense is in this game.';
+  }
+  function itRootHTML(m){
+    const t = itRootText(m);
+    const chips = (m.roof !== 'indoor' && m.w ? '<span class="it-flag ' + (m.impact === 'Low' ? 'neutral' : 'warn') + '">Weather impact · ' + m.impact + '</span>' : '') + itFlagsHTML(m.flags);
+    return '<div class="card it-card it-root"><div><div class="eyebrow">Rooting guide</div><b>' + escapeHTML(t || 'No players of yours here: enjoy the game.') + '</b></div>' +
+      (chips ? '<div class="it-flags">' + chips + '</div>' : '') + '</div>';
+  }
+  function itWeatherHTML(m){
+    const head = function(right){ return '<div class="it-ch"><span class="eyebrow">Weather</span><span class="it-lt">' + (right || '') + '</span></div>'; };
+    if(m.roof === 'indoor') return '<div class="card it-card it-wx in">' + head('') + '<div class="it-wxi"><b>Indoors</b><small>' + escapeHTML((m.v && m.v.roof === 'dome' ? 'Dome' : 'Roof closed') + ' · weather doesn’t play') + '</small></div></div>';
+    if(m.wx.st === 'wait') return '<div class="card it-card it-wx">' + head('') + '<p class="it-none">Loading forecast…</p></div>';
+    if(m.wx.st === 'skip') return '<div class="card it-card it-wx">' + head('') + '<p class="it-none">' + (m.wx.why === 'far' ? 'Forecast opens about two weeks before kickoff.' : m.wx.why === 'past' ? 'Game over: forecast closed.' : 'Venue details unavailable.') + '</p></div>';
+    if(!m.w) return '<div class="card it-card it-wx">' + head('') + '<p class="it-none">Forecast unavailable right now.</p></div>';
+    const w = m.w, mins = Math.max(0, Math.round((Date.now() - (m.wx.ts || Date.now())) / 60000)), warn = function(on){ return on ? ' class="warn"' : ''; };
+    const T = INTEL_TUNE, maxT = Math.max.apply(null, w.hourly.map(function(h){ return h.temp; })), minT = Math.min.apply(null, w.hourly.map(function(h){ return h.temp; }));
+    return '<div class="card it-card it-wx">' + head('forecast updated ' + (mins ? mins + ' min ago' : 'just now')) +
+      '<div class="it-wxr"><div><b class="it-tmp"' + warn(w.temp <= T.COLD) + '>' + Math.round(w.temp) + '°F</b><small>' + escapeHTML(intelSky(w.code)) + '</small></div>' +
+      '<div class="it-wind"><span class="it-arrow" style="--d:' + (w.dir || 0) + 'deg" aria-hidden="true">↑</span><span><b' + warn(w.wind >= T.WIND_HIGH) + '>' + Math.round(w.wind) + ' mph</b><small>max in game</small></span></div>' +
+      '<div class="it-rain"><b' + warn(w.precip >= T.RAIN_HIGH) + '>' + Math.round(w.precip) + '%</b><small>precip</small></div></div>' +
+      (m.roof === 'tbd' ? '<p class="it-note">Retractable roof, not announced: if it’s closed, none of this matters.</p>' : '') +
+      '<div class="it-hours">' + w.hourly.map(function(h){
+        const hgt = maxT === minT ? 60 : 30 + 70 * (h.temp - minT) / (maxT - minT);
+        return '<div><small>' + itTime(h.t).replace(':00', '') + '</small><i style="height:' + hgt.toFixed(0) + '%"' + (h.precip >= T.RAIN_HIGH ? ' class="wet"' : '') + '></i><b>' + Math.round(h.temp) + '°</b></div>';
+      }).join('') + '</div><p class="it-attr">Weather data by <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a></p></div>';
+  }
+  function itVenueHTML(m){
+    const v = m.v, g = m.g;
+    const roof = m.roof === 'indoor' ? (v && v.roof === 'retractable' ? 'Roof closed' : 'Dome') : m.roof === 'tbd' ? 'Retractable · TBD' : m.roof === 'open' ? 'Roof open' : 'Outdoor';
+    const surf = g.surface ? (/grass/i.test(g.surface) ? 'Grass' : 'Turf') : null;
+    return '<div class="card it-card"><div class="it-ch"><span class="eyebrow">Venue</span>' + (g.intl ? '<span class="it-flag neutral">International</span>' : '') + '</div><b class="it-vn">' + escapeHTML(g.vname || '—') + '</b>' +
+      '<small class="it-vs">' + escapeHTML([v && v.city, roof, surf, v && typeof v.alt === 'number' ? v.alt.toLocaleString() + ' ft' : null].filter(Boolean).join(' · ')) + '</small></div>';
+  }
+  function itEdgeHTML(m){
+    const g = m.g, d = intelData() || {}, e = intelEdgeText(g.edge, d.home_base);
+    const head = '<div class="it-ch"><span class="eyebrow">Home-field edge</span><span class="it-lt">' + (e ? 'n = ' + e.n : '') + '</span></div>';
+    if(!e) return '<div class="card it-card">' + head + '<p class="it-none">' + (g.neutral ? 'Neutral site' + (g.intl && m.v ? ' (' + escapeHTML(m.v.city.split(',')[0]) + ')' : '') + ': no home-field edge.' : 'Not enough home games here yet.') + '</p></div>';
+    const base = Math.round((d.home_base || 0) * 100), seasons = d.edge_seasons ? d.edge_seasons.join('–') : '';
+    return '<div class="card it-card">' + head + '<div class="it-edge"><b>' + e.pct + '%</b><small>' + escapeHTML(g.home) + ' home wins here · ' + base + '% league avg' + (seasons ? ' (' + seasons + ')' : '') + '</small></div>' +
+      '<div class="it-bar" style="--v:' + (e.pct / 100) + ';--b:' + (base / 100) + '"><i></i></div>' +
+      '<div class="it-kv"><span><b>' + escapeHTML(String(e.ats).replace(/-/g, '–')) + '</b> ATS</span><span><b>' + (e.margin > 0 ? '+' : e.margin < 0 ? '−' : '') + Math.abs(e.margin).toFixed(1) + '</b> avg margin</span></div></div>';
+  }
+  function itRestHTML(m){
+    const g = m.g;
+    const one = function(side){
+      const t = side === 'away' ? g.away : g.home, r = intelRest(g.rest && g.rest[side]), tz = g.tz ? intelTzCrossed(g.tz[side], g.kick) : null;
+      return '<div class="it-rt' + (r && r.short ? ' short' : '') + '"><small>' + escapeHTML(t) + '</small><b>' + (r ? r.days : '—') + '<span> days rest</span></b><em>' + (r ? r.label : '—') + '</em>' +
+        '<span class="it-tz">' + (tz === null ? '' : tz === 0 ? 'No time-zone change' : 'Crosses ' + tz + ' time zone' + (tz === 1 ? '' : 's')) + '</span></div>';
+    };
+    return '<div class="card it-card"><div class="it-ch"><span class="eyebrow">Rest &amp; travel</span>' + (g.div ? '<span class="it-lt">Divisional game</span>' : '') + '</div><div class="it-rts">' + one('away') + one('home') + '</div></div>';
+  }
+  function itDvpHTML(m){
+    const g = m.g, P = ['QB', 'RB', 'WR', 'TE'];
+    const row = function(def){
+      return '<div class="it-dvr"><b>' + escapeHTML(def) + ' defense</b><div class="it-dvc">' + P.map(function(pos){
+        const t = dvpTable(pos), e = t && t[def], tone = e ? intelDvpTone(e.rank) : null;
+        return '<span class="it-dv ' + (tone || 'mid') + '"><small>' + pos + '</small>' + (e ? (tone === 'good' ? '▲ ' : tone === 'bad' ? '▼ ' : '● ') + ordinal(e.rank) : '—') + '</span>';
+      }).join('') + '</div></div>';
+    };
+    return '<div class="card it-card"><div class="it-ch"><span class="eyebrow">Defense vs position</span><span class="it-lt">your scoring</span></div>' + row(g.away) + row(g.home) +
+      '<p class="it-foot">▲ top ' + INTEL_TUNE.DVP_GOOD + ' in points allowed (favors the offense) · ▼ bottom ' + INTEL_TUNE.DVP_GOOD + ' (tough)</p></div>';
+  }
+  function itBetHTML(m){
+    const g = m.g, L = g.lines, d = intelData() || {};
+    const head = '<div class="it-ch"><span class="eyebrow">Betting</span>' + (m.lines === 'stale' ? '<span class="it-flag warn">Lines · updated ' + Math.round((Date.now() - Date.parse(d.generated)) / 3600e3) + 'h ago</span>' : '<span class="it-lt">' + (g.div ? 'Divisional game' : 'Non-divisional') + '</span>') + '</div>';
+    if(m.lines === 'none') return '<div class="card it-card">' + head + '<div class="it-bets"><span><small>Spread</small><b>—</b></span><span><small>Total</small><b>—</b></span><span><small>Moneyline</small><b>—</b></span></div><p class="it-none">Lines not posted yet.</p></div>';
+    const f = intelFav(L, g.away, g.home);
+    const mv = intelLineMove(INTEL.history && INTEL.history.week === ctx.week && INTEL.history.games ? INTEL.history.games[g.id] : null);
+    let move = '<p class="it-foot">Line movement: — (tracking since the first build this week)</p>';
+    if(mv && typeof mv.open.spread === 'number' && typeof mv.now.spread === 'number'){
+      const pts = (INTEL.history.games[g.id] || []).map(function(s){ return s[1]; }).filter(function(x){ return typeof x === 'number'; });
+      const lo = Math.min.apply(null, pts), hi = Math.max.apply(null, pts), W = 120, H = 28;
+      const path = pts.map(function(x, i){ return (i ? 'L' : 'M') + (pts.length > 1 ? i * W / (pts.length - 1) : 0).toFixed(1) + ' ' + (hi === lo ? H / 2 : H - 2 - (x - lo) / (hi - lo) * (H - 4)).toFixed(1); }).join(' ');
+      const sp = function(s){ const ff = intelFav({ spread: s }, g.away, g.home); return ff.by === 0 ? 'PK' : ff.fav + ' −' + intelNum(ff.by); };
+      const toward = mv.spreadMove > 0 ? g.home : mv.spreadMove < 0 ? g.away : null;
+      move = '<div class="it-move"><svg viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true"><path d="' + path + '"/></svg><small>Opened ' + escapeHTML(sp(mv.open.spread)) + ', now ' + escapeHTML(sp(mv.now.spread)) +
+        (toward ? ' (' + intelNum(Math.abs(mv.spreadMove)) + ' toward ' + escapeHTML(toward) + ')' : '') + '.</small></div>';
+    }
+    return '<div class="card it-card">' + head + '<div class="it-bets"><span><small>Spread</small><b>' + escapeHTML(f ? (f.by === 0 ? 'PK' : f.fav + ' −' + intelNum(f.by)) : '—') + '</b></span>' +
+      '<span><small>Total</small><b>' + (typeof L.total === 'number' ? intelNum(L.total) : '—') + '</b></span>' +
+      '<span><small>Moneyline</small><b>' + (L.ml ? escapeHTML(g.away + ' ' + intelMoneyline(L.ml.away) + ' / ' + g.home + ' ' + intelMoneyline(L.ml.home)) : '—') + '</b></span></div>' + move + '</div>';
+  }
+  function itPageHTML(m){
+    return '<div class="it-page" data-it-page="' + escapeHTML(m.g.id) + '">' + itHeroHTML(m) + itEnvCardHTML(m) + itImpliedHTML(m) + itMineHTML(m) + itRootHTML(m) +
+      itWeatherHTML(m) + itVenueHTML(m) + itEdgeHTML(m) + itRestHTML(m) + itDvpHTML(m) + itBetHTML(m) + '</div>';
+  }
+  function itDetailHTML(m){
+    return '<div class="it-detail"><div class="it-dl">' + itMineHTML(m, true) + itRootHTML(m) + '<div class="it-two">' + itRestHTML(m) + itEdgeHTML(m) + '</div>' + itVenueHTML(m) + '</div>' +
+      '<div class="it-dr">' + itEnvCardHTML(m) + itImpliedHTML(m) + itWeatherHTML(m) + itDvpHTML(m) + itBetHTML(m) + '</div></div>';
+  }
+
+  // ---- desktop ring (Cards) ----
+  function itRingCardHTML(m, o){
+    const g = m.g, ao = Math.min(1.5, Math.abs(o));
+    return '<button type="button" class="it-rc' + (o === 0 ? ' on' : '') + (Math.abs(o) > 1.5 ? ' far' : '') + '" data-it-ring="' + escapeHTML(g.id) + '" style="--o:' + o + ';--ao:' + ao + ';z-index:' + (10 - Math.round(ao * 4)) + '">' +
+      '<span class="it-rch"><span class="it-pair">' + itLogo(g.away, 'sm') + itLogo(g.home, 'sm') + '</span><span class="it-tt"><b>' + escapeHTML(g.away + ' @ ' + g.home) + '</b><small>' + escapeHTML(itKick(g) + ' · ' + (g.vname || '')) + '</small></span>' +
+      '<span class="it-env big t-' + (m.tone || 'none') + '"><b>' + (m.env === null ? '—' : m.env) + '</b><small>Game env</small></span></span>' +
+      '<span class="it-rcl"><span>' + escapeHTML(m.line || 'Lines not posted') + '</span><span>' + escapeHTML(m.roof === 'indoor' ? 'Indoors' : m.w ? Math.round(m.w.temp) + '° · wind ' + Math.round(m.w.wind) + ' · precip ' + Math.round(m.w.precip) + '%' : '') + '</span></span>' +
+      (m.implied ? '<span class="it-tug sm" style="--s:' + (m.implied.away / (m.implied.away + m.implied.home)).toFixed(4) + '"><i></i></span>' : '') +
+      '<span class="it-rcf">' + (m.my.length ? '<span class="it-avs">' + m.my.slice(0, 4).map(function(x){ return avatarTag(x.pid, 'it-av sm'); }).join('') + '</span><span class="it-mine">' + m.my.length + ' mine</span>' : '<span class="it-mine">No players of yours</span>') +
+      '<span class="it-flags">' + itFlagsHTML(m.flags, 2) + '</span></span></button>';
+  }
+  function itRingHTML(models, idx){
+    const N = models.length;
+    return '<div class="it-ringw"><div class="it-ring3d">' + models.map(function(m, i){
+      let o = ((i - idx) % N + N) % N; if(o > N / 2) o -= N;
+      return itRingCardHTML(m, o);
+    }).join('') + '</div></div>';
+  }
+  function itPillsHTML(models, idx, all){
+    const N = models.length, show = all ? models.map(function(m, i){ return i; }) : [-1, 0, 1].map(function(d){ return ((idx + d) % N + N) % N; }).filter(function(v, i, a){ return a.indexOf(v) === i; });
+    return '<nav class="it-pills" aria-label="Games">' + show.map(function(i){ const g = models[i].g; return '<button type="button" class="zn-dot it-pill' + (i === idx ? ' on' : '') + '" data-it-go="' + i + '">' + escapeHTML(g.away + ' @ ' + g.home) + '</button>'; }).join('') + '</nav>';
+  }
+
+  // ---- render: the Intel view (desktop List / Cards, phone Slate) ----
+  function renderIntel(){
+    const root = document.getElementById('it-root');
+    if(!root) return;
+    const d = intelData();
+    if(!d){ root.innerHTML = '<div class="card it-card it-empty"><b>Intel isn’t ready for week ' + ctx.week + ' yet.</b><p class="it-none">Lines and venues refresh a few times a day; check back soon.</p></div>'; return; }
+    const L = itList(), models = L.games.map(function(g){ return itModel(g, L.mine); });
+    ctx.it.ids = models.map(function(m){ return m.g.id; });
+    if(ctx.it.idx >= models.length) ctx.it.idx = 0;
+    const desk = itDesk(), seg = function(attr, opts, cur){ return '<div class="wk-seg it-seg" role="group">' + opts.map(function(o){ return '<button type="button" ' + attr + '="' + o[0] + '" aria-pressed="' + (o[0] === cur) + '">' + o[1] + '</button>'; }).join('') + '</div>'; };
+    let html = '<div class="it-bar-top">' + (ctx.it.origin && desk ? '<button type="button" class="it-back" data-it-back>‹ Back to ' + escapeHTML(ctx.it.origin.label) + '</button>' : '') +
+      '<span class="it-scope">' + escapeHTML(itScopeLabel()) + '</span><span class="it-ctl">' + (desk ? seg('data-it-mode', [['cards', 'Cards'], ['list', 'List']], ctx.it.mode) : '<button type="button" class="it-link" data-it-cards>Open as cards ›</button>') +
+      (ctx.it.scope === 'zone' ? '' : seg('data-it-set', [['my', 'My games'], ['all', 'All']], ctx.it.set)) + '</span></div>';
+    if(!models.length){
+      html += '<div class="card it-card it-empty"><b>No games with your starters this week.</b><p class="it-none">Switch to All to see every game.</p></div>';
+    } else if(desk && ctx.it.mode === 'cards'){
+      const m = models[ctx.it.idx];
+      html += itRingHTML(models, ctx.it.idx) + itPillsHTML(models, ctx.it.idx, true) + itDetailHTML(m);
+    } else {
+      html += (desk ? '<div class="it-lh"><span class="it-hint">Click a game to lift it. Esc or a click outside returns it.</span>' + seg('data-it-dense', [['detailed', 'Detailed'], ['condensed', 'Condensed']], ctx.it.dense) + '</div>' : '') +
+        '<div class="it-slate">' + itWindowsHTML(models) + '</div>';
+    }
+    root.innerHTML = html;
+    if(ctx.it.focus && desk && ctx.it.mode === 'list') itLift(ctx.it.focus, true);
+    itWantWeather(L.games);
+  }
+  function itRerender(){
+    if(ctx.view === 'intel') renderIntel();
+    if(ctx.it.open) itOvRender(true);
+  }
+
+  // ---- desktop list: focus lift (FLIP from the tile) ----
+  function itLiftHTML(m){
+    const g = m.g, im = m.implied;
+    return '<div class="it-lift-c" role="dialog" aria-label="' + escapeHTML(g.away + ' at ' + g.home) + '"><div class="it-lift-l">' +
+      '<div class="it-lh2">' + itLogo(g.away) + '<span class="it-mid"><small>' + (g.neutral ? 'VS' : 'AT') + '</small><b>' + escapeHTML(itKick(g)) + '</b></span>' + itLogo(g.home) + '</div>' +
+      (im ? '<div class="it-imp sm"><b>' + escapeHTML(g.away) + ' <span>' + im.away.toFixed(2) + '</span></b><b><span>' + im.home.toFixed(2) + '</span> ' + escapeHTML(g.home) + '</b></div><div class="it-tug" style="--s:' + (im.away / (im.away + im.home)).toFixed(4) + '"><i></i></div>' : '<p class="it-none">Lines not posted yet.</p>') +
+      '<small class="it-sub2">' + escapeHTML(itSub(m) + (m.w ? ' · wind ' + Math.round(m.w.wind) + ' · precip ' + Math.round(m.w.precip) + '%' : '')) + '</small><div class="it-flags">' + itFlagsHTML(m.flags) + '</div></div>' +
+      '<div class="it-lift-r"><span class="it-env big t-' + (m.tone || 'none') + '"><b>' + (m.env === null ? '—' : m.env) + '</b><small>Game environment</small></span>' +
+      '<div class="it-lmine">' + (m.my.length ? m.my.map(function(x){ const p = ctx.players[x.pid] || {}; return '<div><i style="background:' + posColor(posGroup(x.pid)) + '"></i><span>' + escapeHTML(p.position === 'DEF' ? x.team + ' D/ST' : playerName(p)) + '</span><b>' + (typeof x.proj === 'number' ? x.proj.toFixed(2) : '—') + '</b></div>'; }).join('') : '<p class="it-none">No players of yours.</p>') + '</div>' +
+      '<button type="button" class="it-open" data-it-open="' + escapeHTML(g.id) + '">Open game ›</button></div></div>';
+  }
+  function itLift(id, instant){
+    itUnlift(true);
+    const tile = document.querySelector('#it-root .it-tile[data-it-game="' + id + '"]'), g = intelGames().find(function(x){ return x.id === id; });
+    if(!tile || !g) return;
+    ctx.it.focus = id;
+    const back = document.createElement('div'); back.className = 'it-lift'; back.innerHTML = itLiftHTML(itModel(g, itMine(ctx.it.scope)));
+    document.body.appendChild(back);
+    const c = back.querySelector('.it-lift-c');
+    if(instant || reduceMotion.matches) return;
+    const a = tile.getBoundingClientRect(), b = c.getBoundingClientRect();
+    c.animate([{ transform: 'translate(' + (a.left - b.left) + 'px,' + (a.top - b.top) + 'px) scale(' + (a.width / b.width) + ',' + (a.height / b.height) + ')', opacity: .6 }, { transform: 'none', opacity: 1 }],
+      { duration: 350, easing: 'cubic-bezier(.34,1.4,.5,1)' });
+    back.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 250 });
+  }
+  function itUnlift(silent){
+    const back = document.querySelector('.it-lift');
+    if(!back) return false;
+    const id = ctx.it.focus; ctx.it.focus = null;
+    const tile = id && document.querySelector('#it-root .it-tile[data-it-game="' + id + '"]'), c = back.querySelector('.it-lift-c');
+    if(silent || reduceMotion.matches || !tile || !c){ back.remove(); return true; }
+    const a = tile.getBoundingClientRect(), b = c.getBoundingClientRect();
+    c.animate([{ transform: 'none', opacity: 1 }, { transform: 'translate(' + (a.left - b.left) + 'px,' + (a.top - b.top) + 'px) scale(' + (a.width / b.width) + ',' + (a.height / b.height) + ')', opacity: .4 }], { duration: 260, easing: 'cubic-bezier(.2,.8,.2,1)' });
+    back.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 260 }).onfinish = function(){ back.remove(); };
+    setTimeout(function(){ back.remove(); }, 400);
+    return true;
+  }
+
+  // ---- phone: the full-screen game carousel ----
+  let itOv = null;
+  function itOvEl(){
+    if(itOv) return itOv;
+    itOv = document.createElement('div'); itOv.className = 'it-ov'; itOv.hidden = true;
+    itOv.setAttribute('role', 'dialog'); itOv.setAttribute('aria-modal', 'true'); itOv.setAttribute('aria-label', 'Sleepa Intel');
+    document.body.appendChild(itOv);
+    return itOv;
+  }
+  function itOvRender(keepScroll){
+    const ov = itOvEl(), ids = ctx.it.ids, N = ids.length;
+    if(!N){ itClose(); return; }
+    const L = itList(), byId = {}; intelGames().forEach(function(g){ byId[g.id] = g; });
+    const scrolls = {}; if(keepScroll) ov.querySelectorAll('[data-it-page]').forEach(function(p){ scrolls[p.getAttribute('data-it-page')] = p.scrollTop; });
+    const idx = ctx.it.idx, near = N === 1 ? [0] : N === 2 ? [idx, (idx + 1) % 2] : [(idx - 1 + N) % N, idx, (idx + 1) % N];
+    const models = ids.map(function(id){ return byId[id] ? itModel(byId[id], L.mine) : null; });
+    ov.innerHTML = '<div class="it-ovh"><button type="button" class="it-x" data-it-close aria-label="Back">' + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>' +
+      '<span class="it-ovt"><b>Intel</b><small>' + escapeHTML(itScopeLabel()) + '</small></span><span class="it-n">' + String(idx + 1).padStart(2, '0') + ' / ' + N + '</span></div>' +
+      '<div class="it-track">' + near.map(function(i){
+        let o = i - idx; if(o > 1) o -= N; if(o < -1) o += N;
+        return models[i] ? '<div class="it-slot" style="--o:' + o + '">' + itPageHTML(models[i]) + '</div>' : '';
+      }).join('') + '</div>' + itPillsHTML(models.filter(Boolean), idx) ;
+    if(keepScroll) ov.querySelectorAll('[data-it-page]').forEach(function(p){ const s = scrolls[p.getAttribute('data-it-page')]; if(s) p.scrollTop = s; });
+    itWantWeather(near.map(function(i){ return models[i] && models[i].g; }).filter(Boolean));
+  }
+  function itGo(d){
+    const N = ctx.it.ids.length;
+    if(N < 2) return;
+    if(itDesk() && !ctx.it.open){ ctx.it.idx = ((ctx.it.idx + d) % N + N) % N; renderIntel(); return; }
+    const tr = itOv && itOv.querySelector('.it-track');
+    const done = function(){ ctx.it.idx = ((ctx.it.idx + d) % N + N) % N; itOvRender(false); };
+    if(!tr || reduceMotion.matches){ done(); return; }
+    tr.style.transition = 'transform .38s cubic-bezier(.2,.8,.2,1)'; tr.style.transform = 'translateX(' + (-d * 100) + '%)';
+    setTimeout(done, 380);
+  }
+  // openIntel(gameId, { scope, origin: { label, back() } }): phone = carousel over the current screen; desktop = the
+  // Intel view in Cards on that game (with a Back link to the origin).
+  async function openIntel(gameId, opts){
+    opts = opts || {};
+    ctx.it.scope = opts.scope || 'league';
+    if(ctx.it.scope === 'zone') await Promise.allSettled((ctx.pendingLeagues || []).map(function(l){ return zoneMeta(l); }));
+    await intelLoad();
+    const L = itList();
+    let ids = L.games.map(function(g){ return g.id; });
+    if(gameId && ids.indexOf(gameId) === -1){ ctx.it.set = 'all'; ids = itList().games.map(function(g){ return g.id; }); }
+    ctx.it.ids = ids; ctx.it.idx = Math.max(0, ids.indexOf(gameId));
+    ctx.it.origin = opts.origin || null;
+    if(itDesk()){ ctx.it.mode = 'cards'; if(ctx.view !== 'intel') setView('intel'); else renderIntel(); window.scrollTo(0, 0); return; }
+    if(!ids.length) return;
+    ctx.it.open = true;
+    const ov = itOvEl(); ov.hidden = false; document.documentElement.classList.add('it-open');
+    itOvRender(false);
+  }
+  function itClose(){
+    if(!itOv || itOv.hidden) return false;
+    itOv.hidden = true; ctx.it.open = false; document.documentElement.classList.remove('it-open');
+    const o = ctx.it.origin; ctx.it.origin = null; ctx.it.scope = 'league';
+    if(o && o.back) o.back();
+    return true;
+  }
+  function itBackDesk(){ const o = ctx.it.origin; ctx.it.origin = null; ctx.it.scope = 'league'; if(o && o.back) o.back(); else renderIntel(); }
+
+  // ---- events ----
+  document.addEventListener('click', function(e){
+    const t = e.target.closest ? e.target : null;
+    if(!t) return;
+    const inIt = t.closest('#it-root, .it-ov, .it-lift');
+    if(!inIt) return;
+    const b = function(sel){ return t.closest(sel); };
+    let x;
+    if((x = b('[data-it-set]'))){ ctx.it.set = x.getAttribute('data-it-set'); ctx.it.idx = 0; renderIntel(); return; }
+    if((x = b('[data-it-mode]'))){ ctx.it.mode = x.getAttribute('data-it-mode'); itUnlift(true); renderIntel(); return; }
+    if((x = b('[data-it-dense]'))){ ctx.it.dense = x.getAttribute('data-it-dense'); renderIntel(); return; }
+    if(b('[data-it-back]')){ itBackDesk(); return; }
+    if(b('[data-it-close]')){ itClose(); return; }
+    if(b('[data-it-cards]')){ const id = ctx.it.ids[0]; if(id) openIntel(id, { scope: ctx.it.scope }); return; }
+    if((x = b('[data-it-open]'))){ const id = x.getAttribute('data-it-open'); itUnlift(true); ctx.it.mode = 'cards'; ctx.it.idx = Math.max(0, ctx.it.ids.indexOf(id)); renderIntel(); window.scrollTo(0, 0); return; }
+    if((x = b('[data-it-go]'))){ const i = Number(x.getAttribute('data-it-go')); if(ctx.it.open){ const N = ctx.it.ids.length; let d = i - ctx.it.idx; if(d > N / 2) d -= N; if(d < -N / 2) d += N; if(d) itGo(d); } else { ctx.it.idx = i; renderIntel(); } return; }
+    if((x = b('[data-it-ring]'))){ const i = ctx.it.ids.indexOf(x.getAttribute('data-it-ring')); if(i !== -1 && i !== ctx.it.idx){ ctx.it.idx = i; renderIntel(); } return; }
+    if((x = b('.it-tile[data-it-game]'))){
+      const id = x.getAttribute('data-it-game');
+      if(itDesk()) itLift(id); else openIntel(id, { scope: ctx.it.scope });
+      return;
+    }
+    if((x = b('.it-pr[data-open]'))){ openAnalysis(x.getAttribute('data-open'), x); return; }
+    if(t.classList.contains('it-lift')) itUnlift();
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey || (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName))) return;
+    if(e.key === 'Escape'){
+      if(document.querySelector('.it-lift')){ e.preventDefault(); e.stopImmediatePropagation(); itUnlift(); return; }
+      if(ctx.it.open && !maxOpen()){ e.preventDefault(); e.stopImmediatePropagation(); itClose(); return; }
+    }
+    if((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !maxOpen() && !document.querySelector('.it-lift') && (ctx.it.open || (ctx.view === 'intel' && itDesk() && ctx.it.mode === 'cards'))){
+      e.preventDefault(); e.stopImmediatePropagation(); itGo(e.key === 'ArrowRight' ? 1 : -1);
+    }
+  }, true);
+  // swipe between games (phone carousel): horizontal drags only; vertical scrolls the page
+  (function(){
+    let st = null;
+    document.addEventListener('touchstart', function(e){ if(!ctx.it.open || !e.target.closest('.it-track')) return; const t = e.touches[0]; st = { x: t.clientX, y: t.clientY, dx: 0, dir: null }; }, { passive: true });
+    document.addEventListener('touchmove', function(e){
+      if(!st) return;
+      const t = e.touches[0], dx = t.clientX - st.x, dy = t.clientY - st.y;
+      if(!st.dir && Math.abs(dx) + Math.abs(dy) > 10) st.dir = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+      if(st.dir !== 'x') return;
+      st.dx = dx; const tr = itOv.querySelector('.it-track'); tr.style.transition = 'none'; tr.style.transform = 'translateX(' + dx + 'px)';
+    }, { passive: true });
+    document.addEventListener('touchend', function(){
+      if(!st) return;
+      const s = st; st = null;
+      if(s.dir !== 'x') return;
+      const tr = itOv.querySelector('.it-track'), w = itOv.clientWidth;
+      if(Math.abs(s.dx) > w * .22){ tr.style.transition = 'transform .3s cubic-bezier(.2,.8,.2,1)'; tr.style.transform = 'translateX(' + (s.dx < 0 ? -w : w) + 'px)'; setTimeout(function(){ const N = ctx.it.ids.length; ctx.it.idx = ((ctx.it.idx + (s.dx < 0 ? 1 : -1)) % N + N) % N; itOvRender(false); }, 300); }
+      else{ tr.style.transition = 'transform .3s cubic-bezier(.34,1.4,.5,1)'; tr.style.transform = ''; }
+    });
+  })();
+  // a narrow window switches Cards / List off and the carousel on, so re-render when crossing the desktop breakpoint
+  window.matchMedia('(min-width: 1024px)').addEventListener('change', function(){ itUnlift(true); if(ctx.view === 'intel') renderIntel(); if(ctx.it.open && itDesk()) itClose(); });
+
   // ============ Keyboard: one set of keys for the whole dashboard ============
   // ↑ / ↓: move the highlight through what's on screen.  Enter: go one step deeper (highlight → open → full page).
   // Space: close whatever is open on top and remember it; the next Space (nothing pressed in between) reopens it. With
@@ -13557,7 +14226,7 @@
   // what ↑ / ↓ moves through on the current screen (in page order)
   function kbItems(){
     let sel = '';
-    if(kbHelpOpen() || maxOpen()) return [];
+    if(kbHelpOpen() || maxOpen() || ctx.it.open || document.querySelector('.it-lift')) return [];
     if(ctx.zone.open){
       const bd = zoneView.querySelector('.zbd');
       if(ctx.zone.focus || (bd && !bd.hidden) || ctx.zone.mode === 'car') return [];
@@ -13781,7 +14450,7 @@
 
     if(k === 'Escape'){
       // a layer on top (full page, Zone, phone sheet, logo menu) closes through its own Esc first
-      if(maxOpen() || ctx.zone.open || els.overlay.classList.contains('open') || brandMenu) return;
+      if(maxOpen() || ctx.zone.open || els.overlay.classList.contains('open') || brandMenu || ctx.it.open || document.querySelector('.it-lift')) return;
       if(kbSS() && (ctx.ssSheet || ctx.ssOpen)){ take(); if(ctx.ssSheet) ctx.ssSheet = false; else ctx.ssOpen = null; renderCompare(); return; }
       if(kbSS() && KB.lvl === 'cols'){ take(); KB.lvl = null; KB.key = null; kbPaint([]); kbMove(1); return; }
       // the Huddle: a picked slot goes back to the slots (its own Esc cancels the pick)
