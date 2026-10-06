@@ -1657,16 +1657,18 @@
   .it-move path{ fill: none; stroke: var(--text-2); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; } .it-move small{ font-size: 12px; color: var(--text-2); }
   .it-page{ display: flex; flex-direction: column; gap: 12px; }
   /* desktop: ring of game cards (the Zone recipe) + detail grid */
-  .it-ringw{ position: relative; height: 260px; perspective: 2000px; perspective-origin: 50% 35%; overflow: hidden; margin: 0 -8px; }
+  .it-ringw{ position: relative; height: 380px; perspective: 2000px; perspective-origin: 50% 35%; overflow: hidden; margin: 0 -8px; }
   .it-ring3d{ position: absolute; inset: 0; }
-  .it-rc{ position: absolute; top: 14px; left: 50%; width: min(560px, 72%); display: flex; flex-direction: column; gap: 12px; padding: 18px 20px; text-align: left; font: inherit; color: var(--text);
+  .it-rc{ position: absolute; top: 16px; left: 50%; width: min(600px, 74%); min-height: 340px; display: flex; flex-direction: column; justify-content: space-between; gap: 16px; padding: 24px 26px; text-align: left; font: inherit; color: var(--text);
     border-radius: 16px; background: var(--surface); box-shadow: var(--shadow-lg), inset 0 0 0 1px var(--hair); cursor: pointer;
     transform: translateX(calc(-50% + var(--o, 0) * 88%)) translateZ(calc(var(--ao, 0) * -200px)) rotateY(calc(var(--o, 0) * -32deg));
     opacity: calc(1 - var(--ao, 0) * .62); transition: transform .65s var(--ease), opacity .65s var(--ease); }
   .it-rc.on{ cursor: default; box-shadow: var(--shadow-lg), inset 0 0 0 1px color-mix(in srgb, var(--text) 16%, transparent); }
   .it-rc.far{ opacity: 0; pointer-events: none; }
   .it-rch{ display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; }
-  .it-rc .it-tt b{ font-size: 19px; } .it-rc .it-tm.sm{ width: 44px; height: 44px; } .it-rc .it-tm.sm b{ font-size: 11px; } .it-rc .it-env.big b{ font-size: 42px; }
+  .it-rc .it-tt b{ font-size: 22px; } .it-rc .it-tt small{ font-size: 14px; } .it-rc .it-tm.sm{ width: 56px; height: 56px; } .it-rc .it-tm.sm b{ font-size: 13px; }
+  .it-rc .it-tm.sm img{ inset: 7px; width: calc(100% - 14px); height: calc(100% - 14px); } .it-rc .it-pair .it-tm + .it-tm{ margin-left: -10px; } .it-rc .it-env.big b{ font-size: 52px; }
+  .it-rc .it-rci b{ font-size: 26px; } .it-rc .it-tug{ margin: 0; } .it-rc .it-av.sm{ width: 34px; height: 34px; } .it-rc .it-mine{ font-size: 14px; } .it-rc .it-flag{ font-size: 11.5px; padding: 3px 7px; }
   .it-rcl{ display: flex; justify-content: space-between; gap: 10px; font-size: 14px; color: var(--text-2); font-variant-numeric: tabular-nums; }
   .it-rcf{ display: flex; align-items: center; gap: 8px; } .it-rcf .it-flags{ margin-left: auto; } .it-avs{ display: inline-flex; }
   .it-pills{ display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
@@ -13995,7 +13997,8 @@
       '<span class="it-rch"><span class="it-pair">' + itLogo(g.away, 'sm') + itLogo(g.home, 'sm') + '</span><span class="it-tt"><b>' + escapeHTML(g.away + ' @ ' + g.home) + '</b><small>' + escapeHTML(itKick(g) + ' · ' + (g.vname || '')) + '</small></span>' +
       '<span class="it-env big t-' + (m.tone || 'none') + '"><b>' + (m.env === null ? '—' : m.env) + '</b><small>Game env</small></span></span>' +
       '<span class="it-rcl"><span>' + escapeHTML(m.line || 'Lines not posted') + '</span><span>' + escapeHTML(m.roof === 'indoor' ? 'Indoors' : m.w ? Math.round(m.w.temp) + '° · wind ' + Math.round(m.w.wind) + ' · precip ' + Math.round(m.w.precip) + '%' : '') + '</span></span>' +
-      (m.implied ? '<span class="it-tug sm" style="--s:' + (m.implied.away / (m.implied.away + m.implied.home)).toFixed(4) + '"><i></i></span>' : '') +
+      (m.implied ? '<span class="it-imp it-rci"><b>' + escapeHTML(g.away) + ' <span>' + m.implied.away.toFixed(2) + '</span></b><b><span>' + m.implied.home.toFixed(2) + '</span> ' + escapeHTML(g.home) + '</b></span>' +
+        '<span class="it-tug" style="--s:' + (m.implied.away / (m.implied.away + m.implied.home)).toFixed(4) + '"><i></i></span>' : '<span class="it-none">Lines not posted yet.</span>') +
       '<span class="it-rcf">' + (m.my.length ? '<span class="it-avs">' + m.my.slice(0, 4).map(function(x){ return avatarTag(x.pid, 'it-av sm'); }).join('') + '</span><span class="it-mine">' + m.my.length + ' mine</span>' : '<span class="it-mine">No players of yours</span>') +
       '<span class="it-flags">' + itFlagsHTML(m.flags, 2) + '</span></span></button>';
   }
