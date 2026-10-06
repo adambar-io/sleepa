@@ -1533,7 +1533,7 @@
   .tb-cardside{ row-gap: 8px; }
   .kb-hl{ outline: 2px solid var(--accent) !important; outline-offset: 2px; border-radius: 12px; position: relative; z-index: 1; }
   /* ============ Sleepa Intel (design/intel/INTEL.md) ============ */
-  #it-root, .it-ov, .it-lift{ --mt-fav: var(--accent); --mt-neu: var(--warn); --mt-tough: var(--danger); }   /* matchup tone, as in Start / Sit */
+  #it-root, .it-ov, .it-lift, .it-chip, .cd-gl, .ssg{ --mt-fav: var(--accent); --mt-neu: var(--warn); --mt-tough: var(--danger); }   /* matchup tone, as in Start / Sit */
   #it-root{ container-type: inline-size; container-name: itv; display: flex; flex-direction: column; gap: 14px; }
   .it-bar-top{ display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
   .it-scope{ font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); margin-right: auto; }
@@ -1664,6 +1664,33 @@
   .it-move{ display: flex; align-items: center; gap: 12px; margin-top: 12px; } .it-move svg{ width: 120px; height: 28px; flex: none; }
   .it-move path{ fill: none; stroke: var(--text-2); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; } .it-move small{ font-size: 12px; color: var(--text-2); }
   .it-page{ display: flex; flex-direction: column; gap: 12px; }
+  /* game chips in other screens (Lineup rows, Zone rows, player page) */
+  .it-chip{ display: inline-flex; align-items: center; gap: 4px; margin-left: 6px; padding: 1px 7px; min-height: 20px; border-radius: 6px; background: var(--surface-2); color: var(--text-2);
+    box-shadow: inset 0 0 0 1px var(--hair); font: 600 10.5px/1.3 Inter, system-ui, sans-serif; letter-spacing: .02em; vertical-align: 1px; white-space: nowrap; cursor: pointer; }
+  .it-chip b{ font-weight: 800; font-variant-numeric: tabular-nums; } .it-chip .t-neu{ color: var(--text); } .it-chip .t-fav{ color: var(--mt-fav); } .it-chip .t-tough{ color: var(--mt-tough); }
+  .it-chip i{ font-style: normal; font-weight: 700; color: var(--warn); } .it-chip-g{ font-weight: 700; color: var(--text); }
+  @media (hover: hover){ .it-chip:hover{ background: var(--surface-3); color: var(--text); } }
+  /* lineup rows: only where there is room (desktop table, detailed cards); the phone one-line meta keeps the opponent */
+  .player-meta .it-chip{ display: none; } html.cards-detailed .player-meta .it-chip{ display: inline-flex; }
+  @container list (min-width: 600px){ .player-meta .it-chip{ display: inline-flex; } }
+  .it-chip.pf{ margin-left: 10px; font-size: 12px; padding: 3px 9px; }
+  .it-chip.zn{ margin-left: 4px; font-size: 9.5px; padding: 0 5px; min-height: 16px; }
+  .mu-games{ display: inline-block; margin-top: 10px; font-size: 13px; font-weight: 600; color: var(--accent); }
+  .ssg-sec{ grid-column: 1 / -1; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--hair); font-size: 10.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3); }
+  .ssg-sec span, .ssg-l span[data-it-go-game]{ cursor: pointer; } .ssg-sec span{ color: var(--accent); }
+  @media (hover: hover){ .ssg-l span[data-it-go-game]:hover{ color: var(--accent); } }
+  /* Huddle summary card: game lines inside a kickoff window (Dark Chrome; --u units) */
+  .cd-gl{ display: flex; align-items: center; gap: calc(var(--u) * 6); width: 100%; padding: calc(var(--u) * 7) calc(var(--u) * 6); background: none; color: var(--text); border-radius: calc(var(--u) * 8);
+    font: 700 calc(var(--u) * 12)/1.2 Inter, system-ui, sans-serif; text-align: left; cursor: pointer; }
+  .cd-gl + .cd-gl{ border-top: 1px solid var(--hair); } @media (hover: hover){ .cd-gl:hover{ background: var(--surface-3); } }
+  .cd-gl > b{ white-space: nowrap; } .cd-gl .cd-w-dots{ margin: 0; }
+  .cd-gl-env{ margin-left: auto; font-size: calc(var(--u) * 10.5); letter-spacing: .04em; color: var(--text-2); } .cd-gl-env b{ font-size: calc(var(--u) * 12); color: var(--text); }
+  .cd-gl-env.t-fav b{ color: var(--mt-fav); } .cd-gl-env.t-tough b{ color: var(--mt-tough); }
+  .cd-gl-f{ font-style: normal; font-size: calc(var(--u) * 8.5); font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: calc(var(--u) * 1) calc(var(--u) * 4); border-radius: calc(var(--u) * 4); background: var(--surface-3); color: var(--text-2); white-space: nowrap; }
+  .cd-gl-f.warn{ background: var(--warn-soft); color: var(--warn); }
+  .cd-gl-go{ color: var(--text-3); }
+  /* the carousel opened over a layer (Zone, Huddle, player page) sits above it; centered on wide screens */
+  @media (min-width: 900px){ .it-ov .it-page{ max-width: 760px; margin: 0 auto; width: 100%; } .it-ov .it-pills{ max-width: 760px; margin-left: auto !important; margin-right: auto !important; width: calc(100% - 24px); } }
   .it-qb{ font-style: normal; font-size: 11.5px; font-weight: 600; color: var(--text-2); white-space: nowrap; max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
   .it-two2{ display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   .it-inj > b, .it-watch > b{ display: block; font-size: 12px; font-weight: 800; letter-spacing: .06em; color: var(--text-2); margin-bottom: 6px; }
@@ -1723,7 +1750,7 @@
   .it-open{ align-self: flex-end; margin-top: auto; }
   /* phone: full-screen carousel */
   html.it-open, html.it-open body{ overflow: hidden; }
-  .it-ov{ position: fixed; inset: 0; z-index: 49; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; background: var(--bg); animation: prOpen .3s var(--ease); }
+  .it-ov{ position: fixed; inset: 0; z-index: 105; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; background: var(--bg); animation: prOpen .3s var(--ease); }
   .it-ov[hidden]{ display: none; }
   .it-ovh{ display: flex; align-items: center; gap: 8px; padding: calc(env(safe-area-inset-top) + 6px) calc(16px + env(safe-area-inset-right)) 6px calc(8px + env(safe-area-inset-left)); }
   .it-x{ width: 44px; height: 44px; padding: 0; display: grid; place-items: center; background: none; color: var(--text); border-radius: 50%; } .it-x svg{ width: 22px; height: 22px; }
@@ -4925,7 +4952,7 @@
       const nx = nextGame(p.team, ctx.week + 1);
       return '<div class="pf-game bye"><b>BYE — Week ' + ctx.week + '</b>' + (nx ? '<span>Next: Wk ' + nx.w + ' ' + escapeHTML(nx.text) + ' · ' + escapeHTML(gameWhen(nx.t)) + '</span>' : '') + '</div>';
     }
-    return '<div class="pf-game"><b>Wk ' + ctx.week + ' ' + escapeHTML(m.text) + '</b><span>' + escapeHTML(gameWhen(kickoff(p.team, ctx.week))) + '</span></div>';
+    return '<div class="pf-game"><b>Wk ' + ctx.week + ' ' + escapeHTML(m.text) + '</b>' + itChipHTML(p.team, { label: true, cls: 'pf' }) + '<span>' + escapeHTML(gameWhen(kickoff(p.team, ctx.week))) + '</span></div>';
   }
   // ============ Sleepa Intel: the game environment (data + math) ============
   // Everything about a game except the players: lines, weather, venue, home-field edge, rest / travel. Built by
@@ -5151,6 +5178,7 @@
     INTEL.loading = Promise.allSettled([get('intel_venues.json'), get('line_history.json')]).then(function(r){
       INTEL.venues = r[0].status === 'fulfilled' && r[0].value ? r[0].value.venues : null;
       INTEL.history = r[1].status === 'fulfilled' && r[1].value ? r[1].value : null;
+      if(typeof itPatchChips === 'function') document.querySelectorAll('[data-it-chip]').forEach(function(el){ itPatchChips(el.getAttribute('data-it-chip')); });
     });
     return INTEL.loading;
   }
@@ -6357,6 +6385,7 @@
       '<div class="mu-foot' + tone + '">' + (dirty
         ? 'With your changes you’re ' + marginText(planTotal - oppTotal) + ' <span class="dim">(Sleeper lineup: ' + marginText(sleeperTotal - oppTotal) + ')</span>'
         : 'You’re projected ' + marginText(d)) + '</div>' + fdNoteHTML() +
+      (intelData() ? '<span class="mu-games" data-it-go-game="" role="link" tabindex="0">Games in this matchup ›</span>' : '') +
     '</button>';
   }
   function playsLeftText(t){
@@ -6394,6 +6423,7 @@
       '<div class="mu-note">Actual points from Sleeper in your league’s scoring. Proj. final = points so far + projection for the rest of each game' +
         (est ? ' (no game clock available, so time left is estimated from kickoff)' : '') + '.' +
         (dirty ? ' Live scores use your lineup in Sleeper, not your planned changes.' : '') + '</div>' + fdNoteHTML() +
+      (intelData() ? '<span class="mu-games" data-it-go-game="" role="link" tabindex="0">Games in this matchup ›</span>' : '') +
     '</button>';
   }
   function renderMatchupCard(){
@@ -7956,7 +7986,7 @@
         '<img class="avatar" src="' + avatarUrl + '" loading="lazy" onerror="this.style.visibility=\'hidden\'" style="--team:' + teamColor(p.team) + '"' + (ro ? '' : analyzeAttr(playerId)) + '>' +
         '<div class="player-info">' +
           '<div class="player-name">' + (ro ? '<span class="pn">' + escapeHTML(name) + '</span>' : analyzeName(playerId, name)) + byeChip + statusChip + newChip + ecrChipHTML(playerId) + '</div>' +
-          '<div class="player-meta"><span class="m-pos">' + escapeHTML(eligLabel(playerId)) + '</span><span class="m-rk">' + (ecrChipHTML(playerId) || escapeHTML(eligLabel(playerId))) + '</span>' + (eligLabel(playerId).indexOf('/') !== -1 ? '<span class="m-elig" title="Eligible at ' + escapeHTML(eligLabel(playerId)) + '">+' + escapeHTML(eligLabel(playerId).split('/').slice(1).join('/')) + '</span>' : '') + ' · ' + escapeHTML(team) + '<span class="m-opp">' + matchupHTML(p.team) + ' ' + dvpChipHTML(playerId) + '</span><span class="m-opp-c">' + oppCompactHTML(playerId) + '</span> ' + depthChipHTML(playerId) + '</div>' +
+          '<div class="player-meta"><span class="m-pos">' + escapeHTML(eligLabel(playerId)) + '</span><span class="m-rk">' + (ecrChipHTML(playerId) || escapeHTML(eligLabel(playerId))) + '</span>' + (eligLabel(playerId).indexOf('/') !== -1 ? '<span class="m-elig" title="Eligible at ' + escapeHTML(eligLabel(playerId)) + '">+' + escapeHTML(eligLabel(playerId).split('/').slice(1).join('/')) + '</span>' : '') + ' · ' + escapeHTML(team) + '<span class="m-opp">' + matchupHTML(p.team) + ' ' + dvpChipHTML(playerId) + '</span><span class="m-opp-c">' + oppCompactHTML(playerId) + '</span> ' + depthChipHTML(playerId) + itChipHTML(p.team) + '</div>' +
           (keyStats ? '<div class="key-stats">' + keyStats + '</div>' : '') +
           signalsHTML(playerId, false) +
         '</div>' +
@@ -8790,10 +8820,21 @@
         '<div class="cd-w-row"><b>' + day + '</b><span class="cd-w-t">' + escapeHTML(time) + (stt === 'live' ? '<em class="live">LIVE</em>' : stt === 'final' ? '<em>FINAL</em>' : '') + '</span>' +
           '<i class="cd-w-dots">' + g.list.map(function(x){ return '<i style="background:' + prTabColor(x.s.tab) + '"></i>'; }).join('') + '</i>' +
           '<span class="cd-w-n">' + g.list.length + '</span><span class="cd-w-c" aria-hidden="true">▾</span></div>' +
-        '<div class="cd-w-list">' + g.list.map(function(x){
+        '<div class="cd-w-list">' + (g.key !== 'bye' && intelData() && cdGameLinesHTML(g.list) ? cdGameLinesHTML(g.list) : g.list.map(function(x){
             return '<span style="--pc:' + prTabColor(x.s.tab) + '"><b>' + escapeHTML(prShortName(x.p, x.pid)) + '</b><small>' + escapeHTML(x.s.name) + '</small><em>' + escapeHTML(x.m ? (x.m.bye ? 'bye' : x.m.text) : '') + '</em></span>';
-          }).join('') + '</div></div>';
+          }).join('')) + '</div></div>';
     }).join('') + '</div>';
+  }
+  // game lines inside a kickoff window: "PIT @ CIN ••• ENV 49 [Wind 22]" → Intel on that game
+  function cdGameLinesHTML(list){
+    const games = [];
+    list.forEach(function(x){ const g = intelGameFor(x.p.team); if(!g) return; let e = games.find(function(y){ return y.g === g; }); if(!e){ e = { g: g, list: [] }; games.push(e); } e.list.push(x); });
+    return games.map(function(e){
+      const m = itModel(e.g, []);
+      return '<button type="button" class="cd-gl" data-it-go-game="' + escapeHTML(e.g.id) + '"><b>' + escapeHTML(e.g.away + ' @ ' + e.g.home) + '</b><i class="cd-w-dots">' +
+        e.list.map(function(x){ return '<i style="background:' + prTabColor(x.s.tab) + '"></i>'; }).join('') + '</i><span class="cd-gl-env t-' + (m.tone || 'none') + '">ENV <b>' + (m.env === null ? '—' : m.env) + '</b></span>' +
+        m.flags.filter(function(f){ return f.k !== 'dome'; }).slice(0, 2).map(function(f){ return '<em class="cd-gl-f ' + f.tone + '">' + escapeHTML(f.label) + '</em>'; }).join('') + '<span class="cd-gl-go" aria-hidden="true">›</span></button>';
+    }).join('');
   }
   function cdWinToggle(el){
     const key = el.getAttribute('data-cd-win'), open = !el.classList.contains('open');
@@ -9622,6 +9663,7 @@
   window.addEventListener('resize', moveNavThumbs);
   els.navBtns.forEach(function(t){ if(t.hasAttribute('data-view')) t.addEventListener('click', function(){ setView(t.getAttribute('data-view')); }); });
   document.addEventListener('click', function(e){ const b = e.target.closest && e.target.closest('[data-goto-view]'); if(b) setView(b.getAttribute('data-goto-view')); });
+  document.addEventListener('click', function(e){ const b = e.target.closest && e.target.closest('[data-view="intel"]'); if(b){ ctx.it.scope = 'league'; ctx.it.origin = null; if(ctx.view === 'intel') renderIntel(); } }, true);
 
 
   // ---- rest-of-season projections (ros.json from the GitHub Action: raw stats summed this week..week 17) ----
@@ -10740,6 +10782,7 @@
     syncVsButtons();
     els.heroName.innerHTML = analyzeName(playerId, playerName(player));
     els.heroMeta.textContent = eligLabel(playerId) + (eligLabel(playerId).indexOf('/') !== -1 ? ' (eligible at both)' : '') + ' · ' + (player.team || 'FA') + (player.injury_status && player.injury_status !== 'Healthy' ? ' · ' + player.injury_status : '');
+    els.heroMeta.insertAdjacentHTML('beforeend', itChipHTML(player.team, { label: true, cls: 'pf' }));   // → Intel on this game
     if(paneMode()){ paneHeroRender(playerId, loadingHistory); return; }
 
     const pending = loadingHistory ? '…' : null;
@@ -10777,6 +10820,7 @@
     const p = ctx.players[pid], m = matchup(p.team, ctx.week), k0 = kickoff(p.team, ctx.week);
     const game = m ? (m.bye ? 'BYE week ' + ctx.week : m.text + (k0 ? ' · ' + zKickShort(k0) : '')) : '';
     els.heroMeta.textContent = eligLabel(pid) + ' · ' + (p.team || 'FA') + (game ? ' · ' + game : '');
+    els.heroMeta.insertAdjacentHTML('beforeend', itChipHTML(p.team, { label: true, cls: 'pf' }));
     const pend = loading ? '…' : null, proj = ctx.projections[pid], wa = weekActual(pid), g = gameOf(p.team);
     // this week
     const rg = weekRange(pid);
@@ -11661,6 +11705,23 @@
     const s = seasonShare(pid, 's');
     return typeof s === 'number' ? Math.round(s * 100) + '% of snaps' : null;
   }
+  // Start / Sit "Game environment" rows (informational; the verdict above ignores them). Each label opens Intel on the
+  // compared players' games.
+  function ssEnvRows(data, grow){
+    if(!intelData()) return '';
+    const games = data.map(function(d){ const p = ctx.players[d.pid] || {}; return p.team ? intelGameFor(p.team) : null; });
+    if(!games.some(Boolean)) return '';
+    const ms = games.map(function(g){ return g ? itModel(g, []) : null; });
+    const team = function(i){ return (ctx.players[data[i].pid] || {}).team; };
+    const first = (games.find(Boolean) || {}).id || '';
+    const lbl = function(t){ return '<span data-it-go-game="' + escapeHTML(first) + '" data-it-scope="compare" role="link" tabindex="0">' + t + '</span>'; };
+    return '<div class="ssg-sec">' + lbl('Game environment ›') + '</div>' +
+      grow(lbl('Game total'), ms.map(function(m){ return m && m.g.lines && typeof m.g.lines.total === 'number' ? m.g.lines.total : null; }), function(v){ return intelNum(v); }) +
+      grow(lbl('Team implied'), ms.map(function(m, i){ return m && m.implied ? (team(i) === m.g.home ? m.implied.home : m.implied.away) : null; }), function(v){ return v.toFixed(2); }) +
+      grow(lbl('Weather impact'), ms.map(function(m){ return m ? (m.roof === 'indoor' ? 0 : m.pen) : null; }), function(v){ const m = ms.find(function(x){ return x && (x.roof === 'indoor' ? 0 : x.pen) === v; }); return m && m.roof === 'indoor' ? 'Indoors' : intelImpact(v); }, true) +
+      grow(lbl('Home / away'), ms.map(function(m, i){ return m ? (m.g.neutral ? 'Neutral' : team(i) === m.g.home ? 'Home' : 'Away') : null; }), null, false, true) +
+      grow(lbl('Days rest'), ms.map(function(m, i){ return m && m.g.rest ? m.g.rest[team(i) === m.g.home ? 'home' : 'away'] : null; }), function(v){ return String(v); });
+  }
   function ssData(pid, row){
     const p = ctx.players[pid], m = matchup(p.team, ctx.week), d = dvpInfo(pid), r = weekRange(pid), h = (hist(pid) || []).map(function(w){ return w.pts; });
     return { pid: pid, p: p, short: ssShort(pid), last: lastName(pid), pos: posGroup(pid), team: p.team || 'FA', opp: m ? (m.bye ? 'BYE' : m.text) : '—',
@@ -11794,6 +11855,7 @@
       grow('Opp. vs position', data.map(function(d){ return d.dvp ? d.dvp.rank : null; }), function(v){ const d = data.find(function(x){ return x.dvp && x.dvp.rank === v; }); return d ? '<span class="ss-mtx ' + d.tag.toLowerCase() + '">' + dvpLabel(d.dvp, true) + '</span>' : '—'; }, true) +
       grow('Usage', data.map(function(d){ return d.usage; }), null, false, true) +
       grow('Status', data.map(function(d){ return d.st ? '<span class="st-' + d.st.tone + '">' + escapeHTML(d.st.label) + '</span>' : 'Healthy'; }), null, false, true) +
+      ssEnvRows(data, grow) +
       '<div class="ssg-l">Last 5</div>' + data.map(function(d){ return '<div class="ssg-c l5">' + (d.last5.length ? d.last5.map(function(v){ return '<i style="height:' + Math.max(6, Math.round(100 * Math.max(0, v) / maxL5)) + '%;--pc:' + posColor(d.pos) + '" title="' + v.toFixed(1) + '"></i>'; }).join('') : '<span class="dim">No games yet</span>') + '</div>'; }).join('') +
     '</div>';
     // ---- phone: verdict card + one big card per player ----
@@ -13034,7 +13096,7 @@
       const st = r.state === 'pre' ? statusInfo(r.st) : null, line = zStatLine(r), started = r.state === 'in' || r.state === 'post';
       return '<div class="zg-r s-' + r.state + (st && st.out ? ' out' : '') + '" style="--pc:' + posColor(r.p.position) + '"><span class="zg-sl">' + escapeHTML(r.sname || slotShort(r.slot)) + '</span>' + zImg(r) +
         '<div class="zg-m"><div class="zg-n"><span>' + escapeHTML(r.p.position === 'DEF' ? (r.team || r.pid) + ' D/ST' : playerName(r.p)) + '</span>' + (r.rz ? '<span class="zn-rz">RZ</span>' : '') + (st ? injuryChip(r.st) : '') + '</div>' +
-          '<div class="zg-g"><span class="zg-pos">' + escapeHTML(r.p.position || '') + '</span> ' + (r.state === 'in' ? '<span class="live-dot"></span>' : '') + escapeHTML(zGameLine(r, week)) + '</div>' +
+          '<div class="zg-g"><span class="zg-pos">' + escapeHTML(r.p.position || '') + '</span> ' + (r.state === 'in' ? '<span class="live-dot"></span>' : '') + escapeHTML(zGameLine(r, week)) + (week === ctx.week ? itChipHTML(r.team, { scope: 'zone', cls: 'zn', noFlag: true }) : '') + '</div>' +
           (line ? '<div class="zg-st" title="' + escapeHTML(line) + '">' + escapeHTML(line) + '</div>' : '') + '</div>' +
         '<div class="zg-p">' + zValHTML(r, lid, 'zg-v') + '<small>' + (started ? (typeof r.proj === 'number' ? 'proj ' + fmtPts(r.proj) : '') : 'proj') + '</small></div></div>';
     }).join('');
@@ -13780,6 +13842,10 @@
     };
     const cur = ctx.league ? { id: ctx.league.league_id, name: ctx.league.name } : null;
     (ctx.draftStarters || []).forEach(function(pid, i){ add(pid, slotShort(ctx.rosterPositions[i]), ctx.projections[pid], cur); });
+    if(scope === 'compare'){   // Start / Sit: the players being compared, not the lineup
+      Object.keys(out).forEach(function(k){ delete out[k]; });
+      (ctx.h2h || []).forEach(function(pid){ add(pid, posGroup(pid), ctx.projections[pid], cur); });
+    }
     if(scope === 'zone'){
       (ctx.pendingLeagues || []).forEach(function(l){
         if(ctx.league && l.league_id === ctx.league.league_id) return;
@@ -13834,8 +13900,8 @@
   }
   // weather for the games on screen; each answer re-renders (batched)
   let itWxTimer = null;
-  function itWantWeather(games){
-    const first = !INTEL.loading;   // the venue file decides indoor / outdoor: render once it lands
+  function itWantWeather(games, chipsOnly){
+    const first = !INTEL.loading && !chipsOnly;   // the venue file decides indoor / outdoor: render once it lands
     intelLoad().then(function(){
       games.forEach(function(g){
         if(IT_WX[g.id] && IT_WX[g.id].st !== 'err' && IT_WX[g.id].ts && Date.now() - IT_WX[g.id].ts < INTEL_TUNE.WEATHER_TTL_MIN * 60e3) return;
@@ -13843,7 +13909,8 @@
         IT_WX[g.id] = { st: 'wait' };
         intelWeather(g).then(function(r){
           IT_WX[g.id] = r.w ? { st: 'ok', w: r.w, ts: r.ts || Date.now() } : r.skip ? { st: 'skip', why: r.skip, ts: Date.now() } : { st: 'err', why: r.err, ts: Date.now() };
-          clearTimeout(itWxTimer); itWxTimer = setTimeout(itRerender, 120);
+          itPatchChips(g.id);
+          if(!chipsOnly){ clearTimeout(itWxTimer); itWxTimer = setTimeout(itRerender, 120); }
         });
       });
       if(first){ clearTimeout(itWxTimer); itWxTimer = setTimeout(itRerender, 120); }
@@ -13896,7 +13963,7 @@
     return out;
   }
   function itScopeLabel(){
-    return 'Week ' + ctx.week + ' · ' + (ctx.it.scope === 'zone' ? 'All my leagues' : ctx.it.set === 'all' ? 'All games' : 'My games' + (ctx.league ? ' · ' + ctx.league.name : ''));
+    return 'Week ' + ctx.week + ' · ' + (ctx.it.scope === 'zone' ? 'All my leagues' : ctx.it.scope === 'compare' ? 'Comparing ' + (ctx.h2h || []).length + ' players' : ctx.it.set === 'all' ? 'All games' : 'My games' + (ctx.league ? ' · ' + ctx.league.name : ''));
   }
 
   // ---- tiles (phone Slate + desktop List) ----
@@ -14150,7 +14217,7 @@
     const desk = itDesk(), seg = function(attr, opts, cur){ return '<div class="wk-seg it-seg" role="group">' + opts.map(function(o){ return '<button type="button" ' + attr + '="' + o[0] + '" aria-pressed="' + (o[0] === cur) + '">' + o[1] + '</button>'; }).join('') + '</div>'; };
     let html = '<div class="it-bar-top">' + (ctx.it.origin && desk ? '<button type="button" class="it-back" data-it-back>‹ Back to ' + escapeHTML(ctx.it.origin.label) + '</button>' : '') +
       '<span class="it-scope">' + escapeHTML(itScopeLabel()) + '</span><span class="it-ctl">' + (desk ? seg('data-it-mode', [['cards', 'Cards'], ['list', 'List']], ctx.it.mode) : '<button type="button" class="it-link" data-it-cards>Open as cards ›</button>') +
-      (ctx.it.scope === 'zone' ? '' : seg('data-it-set', [['my', 'My games'], ['all', 'All']], ctx.it.set)) + '</span></div>';
+      (ctx.it.scope === 'zone' || ctx.it.scope === 'compare' ? '' : seg('data-it-set', [['my', 'My games'], ['all', 'All']], ctx.it.set)) + '</span></div>';
     if(!models.length){
       html += '<div class="card it-card it-empty"><b>No games with your starters this week.</b><p class="it-none">Switch to All to see every game.</p></div>';
     } else if(desk && ctx.it.mode === 'cards'){
@@ -14248,13 +14315,14 @@
     opts = opts || {};
     ctx.it.scope = opts.scope || 'league';
     if(ctx.it.scope === 'zone') await Promise.allSettled((ctx.pendingLeagues || []).map(function(l){ return zoneMeta(l); }));
+    if(ctx.it.scope !== 'all') ctx.it.set = 'my';
     await intelLoad();
     const L = itList();
     let ids = L.games.map(function(g){ return g.id; });
     if(gameId && ids.indexOf(gameId) === -1){ ctx.it.set = 'all'; ids = itList().games.map(function(g){ return g.id; }); }
     ctx.it.ids = ids; ctx.it.idx = Math.max(0, ids.indexOf(gameId));
     ctx.it.origin = opts.origin || null;
-    if(itDesk()){ ctx.it.mode = 'cards'; if(ctx.view !== 'intel') setView('intel'); else renderIntel(); window.scrollTo(0, 0); return; }
+    if(itDesk() && !opts.overlay){ ctx.it.mode = 'cards'; if(ctx.view !== 'intel') setView('intel'); else renderIntel(); window.scrollTo(0, 0); return; }
     if(!ids.length) return;
     ctx.it.open = true;
     const ov = itOvEl(); ov.hidden = false; document.documentElement.classList.add('it-open');
@@ -14268,6 +14336,51 @@
     return true;
   }
   function itBackDesk(){ const o = ctx.it.origin; ctx.it.origin = null; ctx.it.scope = 'league'; if(o && o.back) o.back(); else renderIntel(); }
+
+  // ---- Intel in other screens (phase 3): game chips and opening Intel from anywhere ----
+  // A chip = "ENV 49" (+ the first warn flag), optionally with the matchup ("PIT@CIN · ENV 49"); every chip carries
+  // data-it-go-game, so one capture-phase click handler opens Intel on that game (the row under it doesn't also open).
+  // Chips render from what's cached (no weather yet = the total-only score) and update in place as forecasts land.
+  let itChipWant = {}, itChipTimer = null;
+  function itChipHTML(team, opts){
+    try{ return itChipBody(team, opts); }catch(e){ return ''; }   // (a render before the Intel module has loaded: no chip)
+  }
+  function itChipBody(team, opts){
+    opts = opts || {};
+    const g = team ? intelGameFor(team) : null;
+    if(!g) return '';
+    if(!IT_WX[g.id]){ itChipWant[g.id] = g; clearTimeout(itChipTimer); itChipTimer = setTimeout(function(){ const gs = Object.keys(itChipWant).map(function(k){ return itChipWant[k]; }); itChipWant = {}; itWantWeather(gs, true); }, 300); }
+    const m = itModel(g, []), warn = m.flags.filter(function(f){ return f.tone === 'warn'; })[0];
+    return '<button type="button" class="it-chip' + (opts.cls ? ' ' + opts.cls : '') + '" data-it-go-game="' + escapeHTML(g.id) + '" data-it-chip="' + escapeHTML(g.id) + '" data-it-team="' + escapeHTML(team) + '"' +
+      (opts.label ? ' data-it-label="1"' : '') + (opts.scope ? ' data-it-scope="' + opts.scope + '"' : '') + (opts.cls ? ' data-it-cls="' + opts.cls + '"' : '') +
+      ' title="Game intel: ' + escapeHTML(g.away + ' @ ' + g.home) + '">' + (opts.label ? '<span class="it-chip-g">' + escapeHTML(g.away + '@' + g.home) + '</span>' : '') +
+      'ENV <b class="it-chip-n t-' + (m.tone || 'none') + '">' + (m.env === null ? '—' : m.env) + '</b>' + (warn && !opts.noFlag ? '<i>' + escapeHTML(warn.label) + '</i>' : '') + '</button>';
+  }
+  function itPatchChips(gid){
+    document.querySelectorAll('[data-it-chip="' + gid + '"]').forEach(function(el){
+      const html = itChipHTML(el.getAttribute('data-it-team'), { label: el.hasAttribute('data-it-label'), scope: el.getAttribute('data-it-scope'), cls: el.getAttribute('data-it-cls') });
+      if(html) el.outerHTML = html;
+    });
+  }
+  // where to come back to: layers (Sleepa Zone, the Huddle, a full player page) keep running under the full-screen
+  // carousel; normal views on desktop switch to the Intel view with a Back link.
+  function itOpenFrom(gid, scope){
+    const prevView = ctx.view, layer = ctx.zone.open || maxOpen() || ctx.luMode === 'pr' || els.overlay.classList.contains('open');
+    const sc = scope || (ctx.zone.open ? 'zone' : 'league');
+    const origin = layer ? null : { label: prevView === 'compare' ? (ctx.cmpSec === 'ss' ? 'Start / Sit' : 'Compare') : VIEW_TITLES[prevView] || 'Lineup',
+      back: function(){ ctx.it.scope = 'league'; setView(prevView); } };
+    if(layer && els.overlay.classList.contains('open') && !maxOpen()) closeFocus();
+    openIntel(gid || null, { scope: sc, origin: origin, overlay: layer });
+  }
+  document.addEventListener('click', function(e){
+    const b = e.target.closest && e.target.closest('[data-it-go-game]');
+    if(!b) return;
+    e.preventDefault(); e.stopPropagation();
+    itOpenFrom(b.getAttribute('data-it-go-game'), b.getAttribute('data-it-scope'));
+  }, true);
+  document.addEventListener('keydown', function(e){
+    if((e.key === 'Enter' || e.key === ' ') && e.target.closest && e.target.closest('[data-it-go-game]') && e.target.tagName !== 'BUTTON'){ e.preventDefault(); e.stopPropagation(); e.target.click(); }
+  }, true);
 
   // ---- events ----
   document.addEventListener('click', function(e){
