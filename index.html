@@ -1560,6 +1560,14 @@
   .it-flag{ display: inline-block; font-size: 10.5px; font-weight: 700; padding: 2px 6px; border-radius: 5px; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; }
   .it-flag.warn{ background: var(--warn-soft); color: var(--warn); } .it-flag.neutral{ background: var(--surface-2); color: var(--text-2); }
   .it-flags{ display: flex; flex-wrap: wrap; gap: 5px; }
+  /* over / under badge */
+  .it-ou{ display: inline-flex; align-items: baseline; gap: 4px; margin-right: 8px; padding: 2px 8px; border-radius: 6px; background: var(--surface-3); color: var(--text); vertical-align: 1px; white-space: nowrap; }
+  .it-ou small{ font-size: 9.5px; font-weight: 800; letter-spacing: .06em; color: var(--text-2); }
+  .it-ou b{ font-size: 14px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .it-ou.lg{ padding: 3px 10px; } .it-ou.lg b{ font-size: 17px; } .it-ou.lg small{ font-size: 10.5px; }
+  .it-mid .it-ou{ margin: 6px 0 0; }
+  .it-lt .it-ou{ margin: 0 0 0 6px; }
+  .it-rcl > span:first-child{ display: inline-flex; align-items: center; }
   /* env number (tone: --mt-fav / --mt-neu / --mt-tough) */
   .it-env{ display: flex; flex-direction: column; align-items: flex-end; line-height: 1; font-variant-numeric: tabular-nums; }
   .it-env b{ font-size: 30px; font-weight: 700; letter-spacing: -.02em; } .it-env small{ font-size: 9.5px; font-weight: 700; letter-spacing: .1em; color: var(--text-3); margin-top: 3px; text-transform: uppercase; }
@@ -13810,7 +13818,10 @@
     if(m.w) return Math.round(m.w.temp) + '°';
     return '';
   }
-  function itSub(m){ return [m.line || 'Lines not posted', itWxShort(m)].filter(Boolean).join(' · '); }
+  // the over / under gets its own badge everywhere; the spread rides along as text
+  function itOU(m, cls){ const t = m.g.lines && m.g.lines.total; return '<span class="it-ou' + (cls ? ' ' + cls : '') + '" title="Over / under: total points expected"><small>O/U</small><b>' + (typeof t === 'number' ? intelNum(t) : '—') + '</b></span>'; }
+  function itSpread(m){ const g = m.g, f = intelFav(g.lines, g.away, g.home); return f ? (f.by === 0 ? 'PK' : f.fav + ' −' + intelNum(f.by)) : (g.lines ? '' : 'Lines not posted'); }
+  function itSub(m){ return [itSpread(m), itWxShort(m)].filter(Boolean).join(' · '); }
   function itDots(m){ return m.my.map(function(x){ return '<i style="background:' + posColor(posGroup(x.pid)) + '"></i>'; }).join(''); }
   function itWindows(games){
     const out = [];
@@ -13831,7 +13842,7 @@
     const g = m.g, dense = ctx.it.dense === 'condensed';
     return '<button type="button" class="it-tile" data-it-game="' + escapeHTML(g.id) + '" style="--i:' + (i || 0) + '">' +
       '<span class="it-pair">' + itLogo(g.away, 'sm') + itLogo(g.home, 'sm') + '</span>' +
-      '<span class="it-tt"><b>' + escapeHTML(g.away + ' @ ' + g.home) + '</b><small>' + escapeHTML(itSub(m)) + '</small></span>' + itEnvNum(m) +
+      '<span class="it-tt"><b>' + escapeHTML(g.away + ' @ ' + g.home) + '</b><small>' + itOU(m) + escapeHTML(itSub(m)) + '</small></span>' + itEnvNum(m) +
       (dense ? '' : '<span class="it-tf">' + (m.my.length ? '<span class="it-dots">' + itDots(m) + '</span><span class="it-mine">' + m.my.length + ' mine</span>' : '') + itFlagsHTML(m.flags, 3) + '</span>') +
       '</button>';
   }
@@ -13847,7 +13858,7 @@
     const g = m.g, cd = itCountdown(g);
     return '<div class="it-hero" style="--ta:' + teamColor(g.away) + ';--th:' + teamColor(g.home) + '">' +
       '<div class="it-side">' + itLogo(g.away, 'lg') + '<small>' + escapeHTML(g.rec ? g.rec.away : '') + '</small></div>' +
-      '<div class="it-mid"><small>' + (g.neutral ? 'VS' : 'AT') + '</small><b>' + escapeHTML(itKick(g)) + '</b>' + (cd ? '<span class="it-cd' + (cd === 'Live' ? ' live' : '') + '">' + cd + '</span>' : '') + '</div>' +
+      '<div class="it-mid"><small>' + (g.neutral ? 'VS' : 'AT') + '</small><b>' + escapeHTML(itKick(g)) + '</b>' + (cd ? '<span class="it-cd' + (cd === 'Live' ? ' live' : '') + '">' + cd + '</span>' : '') + itOU(m, 'lg') + '</div>' +
       '<div class="it-side">' + itLogo(g.home, 'lg') + '<small>' + escapeHTML(g.rec ? g.rec.home : '') + '</small></div>' +
       '<div class="it-venue">' + escapeHTML([g.vname, m.v && m.v.city].filter(Boolean).join(' · ')) + '</div></div>';
   }
@@ -13861,7 +13872,7 @@
   }
   function itImpliedHTML(m){
     const g = m.g, im = m.implied, s = m.script;
-    const head = '<div class="it-ch"><span class="eyebrow">Implied score</span><span class="it-lt">' + escapeHTML(m.line || '—') + '</span></div>';
+    const head = '<div class="it-ch"><span class="eyebrow">Implied score</span><span class="it-lt">' + escapeHTML(itSpread(m) || '—') + ' ' + itOU(m) + '</span></div>';
     if(!im) return '<div class="card it-card">' + head + '<div class="it-imp"><b>' + escapeHTML(g.away) + ' <span>—</span></b><b><span>—</span> ' + escapeHTML(g.home) + '</b></div><p class="it-none">Lines not posted yet.</p></div>';
     const share = im.away / (im.away + im.home);
     return '<div class="card it-card">' + head +
@@ -13996,7 +14007,7 @@
     return '<button type="button" class="it-rc' + (o === 0 ? ' on' : '') + (Math.abs(o) > 1.5 ? ' far' : '') + '" data-it-ring="' + escapeHTML(g.id) + '" style="--o:' + o + ';--ao:' + ao + ';z-index:' + (10 - Math.round(ao * 4)) + '">' +
       '<span class="it-rch"><span class="it-pair">' + itLogo(g.away, 'sm') + itLogo(g.home, 'sm') + '</span><span class="it-tt"><b>' + escapeHTML(g.away + ' @ ' + g.home) + '</b><small>' + escapeHTML(itKick(g) + ' · ' + (g.vname || '')) + '</small></span>' +
       '<span class="it-env big t-' + (m.tone || 'none') + '"><b>' + (m.env === null ? '—' : m.env) + '</b><small>Game env</small></span></span>' +
-      '<span class="it-rcl"><span>' + escapeHTML(m.line || 'Lines not posted') + '</span><span>' + escapeHTML(m.roof === 'indoor' ? 'Indoors' : m.w ? Math.round(m.w.temp) + '° · wind ' + Math.round(m.w.wind) + ' · precip ' + Math.round(m.w.precip) + '%' : '') + '</span></span>' +
+      '<span class="it-rcl"><span>' + itOU(m, 'lg') + escapeHTML(itSpread(m)) + '</span><span>' + escapeHTML(m.roof === 'indoor' ? 'Indoors' : m.w ? Math.round(m.w.temp) + '° · wind ' + Math.round(m.w.wind) + ' · precip ' + Math.round(m.w.precip) + '%' : '') + '</span></span>' +
       (m.implied ? '<span class="it-imp it-rci"><b>' + escapeHTML(g.away) + ' <span>' + m.implied.away.toFixed(2) + '</span></b><b><span>' + m.implied.home.toFixed(2) + '</span> ' + escapeHTML(g.home) + '</b></span>' +
         '<span class="it-tug" style="--s:' + (m.implied.away / (m.implied.away + m.implied.home)).toFixed(4) + '"><i></i></span>' : '<span class="it-none">Lines not posted yet.</span>') +
       '<span class="it-rcf">' + (m.my.length ? '<span class="it-avs">' + m.my.slice(0, 4).map(function(x){ return avatarTag(x.pid, 'it-av sm'); }).join('') + '</span><span class="it-mine">' + m.my.length + ' mine</span>' : '<span class="it-mine">No players of yours</span>') +
@@ -14051,7 +14062,7 @@
     return '<div class="it-lift-c" role="dialog" aria-label="' + escapeHTML(g.away + ' at ' + g.home) + '"><div class="it-lift-l">' +
       '<div class="it-lh2">' + itLogo(g.away) + '<span class="it-mid"><small>' + (g.neutral ? 'VS' : 'AT') + '</small><b>' + escapeHTML(itKick(g)) + '</b></span>' + itLogo(g.home) + '</div>' +
       (im ? '<div class="it-imp sm"><b>' + escapeHTML(g.away) + ' <span>' + im.away.toFixed(2) + '</span></b><b><span>' + im.home.toFixed(2) + '</span> ' + escapeHTML(g.home) + '</b></div><div class="it-tug" style="--s:' + (im.away / (im.away + im.home)).toFixed(4) + '"><i></i></div>' : '<p class="it-none">Lines not posted yet.</p>') +
-      '<small class="it-sub2">' + escapeHTML(itSub(m) + (m.w ? ' · wind ' + Math.round(m.w.wind) + ' · precip ' + Math.round(m.w.precip) + '%' : '')) + '</small><div class="it-flags">' + itFlagsHTML(m.flags) + '</div></div>' +
+      '<small class="it-sub2">' + itOU(m) + escapeHTML(itSub(m) + (m.w ? ' · wind ' + Math.round(m.w.wind) + ' · precip ' + Math.round(m.w.precip) + '%' : '')) + '</small><div class="it-flags">' + itFlagsHTML(m.flags) + '</div></div>' +
       '<div class="it-lift-r"><span class="it-env big t-' + (m.tone || 'none') + '"><b>' + (m.env === null ? '—' : m.env) + '</b><small>Game environment</small></span>' +
       '<div class="it-lmine">' + (m.my.length ? m.my.map(function(x){ const p = ctx.players[x.pid] || {}; return '<div><i style="background:' + posColor(posGroup(x.pid)) + '"></i><span>' + escapeHTML(p.position === 'DEF' ? x.team + ' D/ST' : playerName(p)) + '</span><b>' + (typeof x.proj === 'number' ? x.proj.toFixed(2) : '—') + '</b></div>'; }).join('') : '<p class="it-none">No players of yours.</p>') + '</div>' +
       '<button type="button" class="it-open" data-it-open="' + escapeHTML(g.id) + '">Open game ›</button></div></div>';
