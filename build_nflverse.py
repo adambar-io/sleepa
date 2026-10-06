@@ -438,7 +438,7 @@ def build(season, previous=None):
 
     # --- schedule: opponent per team per regular-season week (a missing week = bye) ---
     sched, max_week, game_dates, kick = {}, 0, {}, {}
-    for r in csv_rows(SOURCES['schedule']):
+    for r in schedule_rows():
         if r['season'] != str(season) or r['game_type'] != 'REG':
             continue
         w, home, away = r['week'], team(r['home_team']), team(r['away_team'])
@@ -671,6 +671,138 @@ def build(season, previous=None):
     slim = {sid: {f: p[f] for f in PLAYER_FIELDS if p.get(f) is not None} for sid, p in sleeper.items()}
     return out, slim
 
+# ---------- Sleepa Intel: the game environment (lines, venue, rest, records, home-field edge) for this week's games ----------
+# Source: the same nflverse schedule file (games.csv). Facts about venues (location for weather, altitude, roof, time zone,
+# international) live in intel_venues.json, keyed by stadium_id (ids survive renames). Line movement: line_history.json
+# gets a snapshot whenever this week's spread / total change. Weather is fetched by the app (Open-Meteo), not here.
+# Gotchas in the data: spread_line is positive when the HOME team is favored; roof is blank for retractable roofs on
+# future games; a London game can be listed under the home team's stadium_id with location "Home" (2026 PHI @ JAX:
+# JAX00, "Tottenham Hotspur Stadium"), so venues are also matched by name; two teams share SoFi (LAX01) and MetLife
+# (NYC01), so the home-field edge is keyed by stadium AND home team; "Neutral" also marks relocated games at a team's
+# own stadium, so history uses location == "Home" at a non-international venue.
+INTEL_EDGE_SEASONS = 6          # home-field edge sample: the last 6 completed seasons (2020-25 for 2026)
+INTEL_HISTORY_MAX = 60          # line snapshots kept per game
+_SCHED_ROWS = None
+
+
+def schedule_rows():
+    global _SCHED_ROWS
+    if _SCHED_ROWS is None:
+        _SCHED_ROWS = list(csv_rows(SOURCES['schedule']))
+    return _SCHED_ROWS
+
+
+def load_venues():
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'intel_venues.json')
+    with open(path, encoding='utf-8') as f:
+        venues = json.load(f)['venues']
+    by_name = {}
+    for vid, v in venues.items():
+        for n in [v['name']] + v.get('names', []):
+            by_name[n.lower()] = vid
+    return venues, by_name
+
+
+def resolve_venue(r, venues, by_name):
+    """stadium_id for a game row; an international stadium named on the row wins over the listed id."""
+    named = by_name.get((r.get('stadium') or '').strip().lower())
+    if named and venues[named].get('intl'):
+        return named
+    return r.get('stadium_id') or named
+
+
+def record_str(w, l, t):
+    return f'{w}-{l}' + (f'-{t}' if t else '')
+
+
+def build_intel(season, week, venues, by_name, history):
+    rows = [r for r in schedule_rows() if r['game_type'] == 'REG']
+    cur = [r for r in rows if r['season'] == str(season) and r['week'] == str(week)]
+    if not cur:
+        return None, history
+
+    # each team's home stadium (this season's most common home venue): for time zones crossed
+    home_count = {}
+    for r in rows:
+        if r['season'] == str(season) and r['location'] == 'Home':
+            vid = resolve_venue(r, venues, by_name)
+            if vid in venues and not venues[vid].get('intl'):
+                c = home_count.setdefault(team(r['home_team']), {})
+                c[vid] = c.get(vid, 0) + 1
+    home_venue = {t: max(c, key=c.get) for t, c in home_count.items()}
+
+    # this season so far: straight-up and against-the-spread records
+    rec, ats = {}, {}
+    for r in rows:
+        if r['season'] != str(season) or r['result'] in ('', 'NA') or int(r['week']) >= week:
+            continue
+        res = float(r['result'])   # home score - away score
+        sp = num(r['spread_line'])
+        for side, sign in ((team(r['home_team']), 1), (team(r['away_team']), -1)):
+            m = res * sign
+            a = rec.setdefault(side, [0, 0, 0])
+            a[0 if m > 0 else 1 if m < 0 else 2] += 1
+            if sp is not None:
+                cover = (res - sp) * sign   # the home line is -sp: home covers when result > sp
+                b = ats.setdefault(side, [0, 0, 0])
+                b[0 if cover > 0 else 1 if cover < 0 else 2] += 1
+
+    # home-field edge by (stadium, home team), last INTEL_EDGE_SEASONS seasons, plus the league baseline
+    first = season - INTEL_EDGE_SEASONS
+    edge, base = {}, [0.0, 0]
+    for r in rows:
+        if not (first <= int(r['season']) < season) or r['location'] != 'Home' or r['result'] in ('', 'NA'):
+            continue
+        vid = resolve_venue(r, venues, by_name)
+        if vid in venues and venues[vid].get('intl'):
+            continue
+        res = float(r['result'])
+        sp = num(r['spread_line'])
+        win = 1.0 if res > 0 else 0.5 if res == 0 else 0.0
+        base[0] += win; base[1] += 1
+        e = edge.setdefault((vid, team(r['home_team'])), {'w': 0.0, 'n': 0, 'm': 0.0, 'ats': [0, 0, 0]})
+        e['w'] += win; e['n'] += 1; e['m'] += res
+        if sp is not None:
+            e['ats'][0 if res > sp else 1 if res < sp else 2] += 1
+
+    games, snap_at = {}, datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%MZ')
+    if history.get('season') != season or history.get('week') != week:
+        history = {'season': season, 'week': week, 'games': {}}
+    for r in cur:
+        away, home = team(r['away_team']), team(r['home_team'])
+        vid = resolve_venue(r, venues, by_name)
+        v = venues.get(vid) or {}
+        intl = bool(v.get('intl'))
+        g = {'id': r['game_id'], 'away': away, 'home': home, 'day': r['weekday'][:3].upper(),
+             'venue': vid, 'vname': v.get('name') or r.get('stadium'), 'surface': (r.get('surface') or '').strip() or None,
+             'roof': (r.get('roof') or '').strip() or None,   # nflverse's: dome / closed / open / outdoors, blank = not known yet
+             'div': r.get('div_game') == '1', 'intl': intl, 'neutral': intl or r['location'] == 'Neutral',
+             'rest': {'away': num(r['away_rest']), 'home': num(r['home_rest'])}}
+        if r.get('gameday') and r.get('gametime'):
+            hh, mm = (int(x) for x in r['gametime'].split(':')[:2])
+            g['kick'] = eastern_to_utc(datetime.datetime.combine(datetime.date.fromisoformat(r['gameday']), datetime.time(hh, mm)))
+        sp, tot = num(r['spread_line']), num(r['total_line'])
+        if sp is not None or tot is not None:
+            g['lines'] = {'spread': sp, 'total': tot, 'ml': {'away': num(r['away_moneyline']), 'home': num(r['home_moneyline'])}}
+            h = history['games'].setdefault(r['game_id'], [])
+            if not h or h[-1][1] != sp or h[-1][2] != tot:
+                h.append([snap_at, sp, tot])
+                del h[:-INTEL_HISTORY_MAX]
+        for side in ('away', 'home'):
+            t = away if side == 'away' else home
+            g.setdefault('rec', {})[side] = record_str(*rec.get(t, [0, 0, 0]))
+            g.setdefault('ats', {})[side] = record_str(*ats.get(t, [0, 0, 0]))
+            hv = venues.get(home_venue.get(t)) or {}
+            if hv.get('tz') and v.get('tz'):
+                g.setdefault('tz', {})[side] = [hv['tz'], v['tz']]
+        e = edge.get((vid, home))
+        if e and not g['neutral']:
+            g['edge'] = {'win': round(e['w'] / e['n'], 3), 'n': e['n'], 'margin': round(e['m'] / e['n'], 1), 'ats': record_str(*e['ats'])}
+        games[r['game_id']] = g
+    intel = {'week': week, 'generated': snap_at, 'edge_seasons': [first, season - 1],
+             'home_base': round(base[0] / base[1], 3) if base[1] else None, 'games': games}
+    return intel, history
+
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -694,6 +826,22 @@ def main():
         out['dvp_through'] = through
     except Exception as e:
         print('  (defense vs position unavailable:', e, ')', file=sys.stderr)
+    # Sleepa Intel: this week's game environment + line history (its own file, appended each run)
+    hist_path = os.path.join(os.path.dirname(os.path.abspath(args.out)), 'line_history.json')
+    try:
+        venues, by_name = load_venues()
+        intel, history = build_intel(args.season, cur_week, venues, by_name, load_previous(hist_path))
+        if intel:
+            out['intel'] = intel
+            with open(hist_path, 'w', encoding='utf-8') as f:
+                json.dump(history, f, separators=(',', ':'))
+            print(f"  intel: {len(intel['games'])} games in week {cur_week}", file=sys.stderr)
+        elif old.get('intel'):
+            out['intel'] = old['intel']
+    except Exception as e:
+        print('  (intel unavailable:', e, ')', file=sys.stderr)
+        if old.get('intel'):
+            out['intel'] = old['intel']
     # Sleeper's projections for the last 3 completed weeks, for players who played them: the app compares actual with
     # projected points (league scoring) to find players beating expectations ("Rising", incl. IDP, where Sleeper's
     # trending list has almost no defenders).

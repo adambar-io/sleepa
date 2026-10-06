@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>html{background:#0B0B0D}body{margin:0;background:#0B0B0D;font-family:Inter,system-ui,sans-serif;color:#F5F5F7;-webkit-font-smoothing:antialiased}a{color:#3DD68C}a:hover{color:#F5F5F7}</style>
+</helmet>
+<section data-screen-label="Intel v2" style="padding:56px 64px;display:flex;flex-direction:column;gap:64px;background:#0B0B0D;font-family:Inter,system-ui,sans-serif">
+<div style="max-width:820px;display:flex;flex-direction:column;gap:8px">
+<div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#6E6E78">Sleepa Intel · v2 · on the Sleepa design system</div>
+<div style="font-size:30px;font-weight:700;letter-spacing:-.025em">Intel: iPhone and desktop</div>
+<div style="font-size:15px;color:#A1A1AA;line-height:1.55;text-wrap:pretty">Rebuilt from TOKENS.css and DESIGN_SYSTEM.md. Inter, token surfaces, slot tags, position-ringed photos, status chips, dvp chips, Dark Chrome summary card with kickoff windows, Zone ring carousel, Zone tile list with focus lift. Earlier version: <a href="Sleepa Intel.dc.html">Sleepa Intel</a>. Player photos are from assets/; lines, weather and projections are mock.</div></div>
+
+<div style="display:flex;flex-direction:column;gap:20px">
+<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="background:#F5F5F7;color:#0B0B0D;font-weight:800;font-size:13px;padding:3px 10px;border-radius:999px">1a</span><span style="font-size:18px;font-weight:700">iPhone · entry flow</span><span style="font-size:13px;color:#A1A1AA">Huddle deck summary, tap a game line, Intel opens on that game.</span></div>
+<div style="display:flex;gap:48px;align-items:center;flex-wrap:wrap">
+<dc-import name="Intel Phone" theme="dark" view="entry" game="0" hint-size="375px,812px"></dc-import>
+<div style="font-size:36px;color:#6E6E78">→</div>
+<dc-import name="Intel Phone" theme="dark" view="game" game="0" hint-size="375px,812px"></dc-import>
+<dc-import name="Intel Phone" theme="light" view="entry" game="0" hint-size="375px,812px"></dc-import>
+<div style="font-size:36px;color:#6E6E78">→</div>
+<dc-import name="Intel Phone" theme="light" view="game" game="0" hint-size="375px,812px"></dc-import>
+</div></div>
+
+<div style="display:flex;flex-direction:column;gap:20px">
+<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="background:#F5F5F7;color:#0B0B0D;font-weight:800;font-size:13px;padding:3px 10px;border-radius:999px">1b</span><span style="font-size:18px;font-weight:700">iPhone · PIT @ CIN scrolled</span><span style="font-size:13px;color:#A1A1AA">Hero with tug-of-war and script meter, decision strip, depth cards. Last: hero with Game Environment ring.</span></div>
+<div style="display:flex;gap:40px;flex-wrap:wrap">
+<dc-import name="Intel Phone" theme="dark" view="game" game="0" scroll="380" hint-size="375px,812px"></dc-import>
+<dc-import name="Intel Phone" theme="dark" view="game" game="0" scroll="900" hint-size="375px,812px"></dc-import>
+<dc-import name="Intel Phone" theme="dark" view="game" game="0" scroll="1400" hint-size="375px,812px"></dc-import>
+<dc-import name="Intel Phone" theme="dark" view="game" game="0" hero="B" hint-size="375px,812px"></dc-import>
+<dc-import name="Intel Phone" theme="light" view="game" game="0" scroll="380" hint-size="375px,812px"></dc-import>
+</div></div>
+
+<div style="display:flex;flex-direction:column;gap:20px">
+<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="background:#F5F5F7;color:#0B0B0D;font-weight:800;font-size:13px;padding:3px 10px;border-radius:999px">1c</span><span style="font-size:18px;font-weight:700">iPhone · variants and Slate</span><span style="font-size:13px;color:#A1A1AA">Rain and wind, dome, retractable roof TBD, stale lines, no lines, Slate list.</span></div>
+<div style="display:flex;gap:40px;flex-wrap:wrap">
+<dc-import name="Intel Phone" theme="dark" view="game" game="2" hero="B" hint-size="375px,812px"></dc-import>
+<dc-import name="Intel Phone" theme="dark" view="game" game="1" hero="B" hint-size="375px,812px"></dc-import>
+<dc-import name="Intel Phone" theme="dark" view="game" game="3" hint-size="375px,812px"></dc-import>
+<dc-import name="Intel Phone" theme="dark" view="game" game="4" lines="stale" hint-size="375px,812px"></dc-import>
+<dc-import name="Intel Phone" theme="dark" view="game" game="3" lines="none" hint-size="375px,812px"></dc-import>
+<dc-import name="Intel Phone" theme="dark" view="slate" hint-size="375px,812px"></dc-import>
+<dc-import name="Intel Phone" theme="light" view="slate" hint-size="375px,812px"></dc-import>
+</div></div>
+
+<div style="display:flex;flex-direction:column;gap:20px">
+<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="background:#F5F5F7;color:#0B0B0D;font-weight:800;font-size:13px;padding:3px 10px;border-radius:999px">1d</span><span style="font-size:18px;font-weight:700">iPhone · entry points and its own tab</span><span style="font-size:13px;color:#A1A1AA">Lineup row game chip, Zone row game chip, and the Intel tab (Slate) in the bottom bar. Each opens the game carousel on that game.</span></div>
+<div style="display:flex;gap:40px;flex-wrap:wrap">
+<dc-import name="Intel Phone" theme="dark" view="lineup" hint-size="375px,812px"></dc-import>
+<dc-import name="Intel Phone" theme="dark" view="zone" hint-size="375px,812px"></dc-import>
+<dc-import name="Intel Phone" theme="dark" view="slate" hint-size="375px,812px"></dc-import>
+<dc-import name="Intel Phone" theme="light" view="lineup" hint-size="375px,812px"></dc-import>
+<dc-import name="Intel Phone" theme="light" view="zone" hint-size="375px,812px"></dc-import>
+</div></div>
+
+<div style="display:flex;flex-direction:column;gap:20px">
+<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="background:#F5F5F7;color:#0B0B0D;font-weight:800;font-size:13px;padding:3px 10px;border-radius:999px">2a</span><span style="font-size:18px;font-weight:700">Desktop · ring carousel + game detail</span><span style="font-size:13px;color:#A1A1AA">Sidebar shell, 3D ring (Zone recipe), detail panels using the full width.</span></div>
+<dc-import name="Intel Desktop" theme="dark" view="ring" game="0" hint-size="1280px,1140px"></dc-import>
+<dc-import name="Intel Desktop" theme="light" view="ring" game="2" hint-size="1280px,1140px"></dc-import>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:20px">
+<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="background:#F5F5F7;color:#0B0B0D;font-weight:800;font-size:13px;padding:3px 10px;border-radius:999px">2b</span><span style="font-size:18px;font-weight:700">Desktop · list and focus lift</span><span style="font-size:13px;color:#A1A1AA">Tile grid by kickoff window; a clicked tile lifts over the dimmed grid.</span></div>
+<dc-import name="Intel Desktop" theme="dark" view="list" hint-size="1280px,760px"></dc-import>
+<dc-import name="Intel Desktop" theme="dark" view="list" focus="2" hint-size="1280px,900px"></dc-import>
+</div>
+
+<div style="max-width:820px;display:flex;flex-direction:column;gap:10px;border-top:1px solid rgba(255,255,255,.07);padding-top:28px">
+<div style="font-size:18px;font-weight:700">Added to the system (for INTEL.md)</div>
+<div style="font-size:14px;color:#A1A1AA;line-height:1.6">Game Environment score (0–100, tone from --mt-fav / neu / tough). Flag chips reuse the status-chip recipe (warn-soft for weather, surface-2 for neutral). Team monogram with 2.5px team-color ring, since the kit has no team mark for this. Implied-score tug bar and game-script meter. Game pills at the bottom of the phone reuse the zn-dot pill style. Intel nav item in the desktop sidebar. Window game lines inside the Huddle kickoff list carry ENV and flag chips.</div></div>
+</section>
+</x-dc>
+</body>
+</html>

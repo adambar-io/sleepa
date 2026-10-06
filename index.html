@@ -4717,6 +4717,201 @@
     }
     return '<div class="pf-game"><b>Wk ' + ctx.week + ' ' + escapeHTML(m.text) + '</b><span>' + escapeHTML(gameWhen(kickoff(p.team, ctx.week))) + '</span></div>';
   }
+  // ============ Sleepa Intel: the game environment (data + math) ============
+  // Everything about a game except the players: lines, weather, venue, home-field edge, rest / travel. Built by
+  // build_nflverse.py into nflverse.json `intel` (this week's games: lines, venue id, roof, rest, records, edge), plus
+  // intel_venues.json (static: location, altitude, roof type, time zone) and line_history.json (spread / total snapshots),
+  // both loaded only when Intel needs them, and the Open-Meteo forecast fetched here (cached INTEL_TUNE.WEATHER_TTL_MIN).
+  // Informational only: nothing here feeds the optimizer or any recommendation.
+  // Every threshold lives in INTEL_TUNE (tune here; tests/check.html checks the math).
+  const INTEL_TUNE = {
+    AVG_TOTAL: 45, TOTAL_WEIGHT: 2.2, DOME_BONUS: 6,          // env = 50 + (total - 45) * 2.2 + dome bonus - weather penalty
+    WIND_HIGH: 15, WIND_HIGH_PEN: 6, WIND_MED: 10, WIND_MED_PEN: 4,   // mph; 6 here (10 in the mockup), tuned on real games
+    RAIN_HIGH: 50, RAIN_HIGH_PEN: 10, RAIN_MED: 30, RAIN_MED_PEN: 3,  // precipitation probability, %
+    COLD: 32, COLD_PEN: 6,                                    // °F at kickoff
+    IMPACT_HIGH: 10, IMPACT_MED: 4,                           // weather impact label from the penalty
+    SHOOTOUT: 50, SLOG: 42, SCRIPT_MIN: 34, SCRIPT_RANGE: 26, // game script label + meter (34 .. 60)
+    ENV_FAV: 60, ENV_NEU: 40,                                 // env tone: >= 60 favorable, >= 40 neutral, else tough
+    SHORT_WEEK: 5,                                            // days of rest at or under this = short week
+    DVP_GOOD: 8, DVP_BAD: 25,                                 // defense-vs-position rank chips (top / bottom 8)
+    STALE_HOURS: 12,                                          // lines older than this show "updated n h ago"
+    WEATHER_TTL_MIN: 30, WEATHER_DAYS: 16,                    // Open-Meteo: cache, forecast horizon
+  };
+  const intelClamp = function(x, lo, hi){ return Math.max(lo, Math.min(hi, x)); };
+  // a sportsbook number: 3 → "3", 3.5 → "3.5", 0 → "PK"
+  function intelNum(x){ return Math.abs(x) % 1 ? Math.abs(x).toFixed(1) : String(Math.abs(x)); }
+  // nflverse lines: spread is positive when the HOME team is favored. → { fav, dog, by } (by 0 = pick'em)
+  function intelFav(lines, away, home){
+    if(!lines || typeof lines.spread !== 'number') return null;
+    const s = lines.spread;
+    return { fav: s >= 0 ? home : away, dog: s >= 0 ? away : home, by: Math.abs(s) };
+  }
+  // "CIN −3 · O/U 46.5", "PK · O/U 41", "O/U 43.5" (no spread), null (no lines)
+  function intelLineText(lines, away, home){
+    if(!lines) return null;
+    const f = intelFav(lines, away, home), t = typeof lines.total === 'number' ? 'O/U ' + intelNum(lines.total) : '';
+    const sp = f ? (f.by === 0 ? 'PK' : f.fav + ' −' + intelNum(f.by)) : '';
+    return [sp, t].filter(Boolean).join(' · ') || null;
+  }
+  function intelMoneyline(n){ return typeof n === 'number' ? (n > 0 ? '+' : '−') + Math.abs(Math.round(n)) : '—'; }
+  // implied team totals: favorite (total + spread) / 2, underdog (total − spread) / 2
+  function intelImplied(lines){
+    if(!lines || typeof lines.total !== 'number') return null;
+    const s = typeof lines.spread === 'number' ? lines.spread : 0;
+    return { home: (lines.total + s) / 2, away: (lines.total - s) / 2 };
+  }
+  function intelScript(total){
+    if(typeof total !== 'number') return null;
+    const T = INTEL_TUNE;
+    return { label: total >= T.SHOOTOUT ? 'Shootout' : total <= T.SLOG ? 'Slog' : 'Balanced',
+      pos: intelClamp((total - T.SCRIPT_MIN) / T.SCRIPT_RANGE, 0, 1), avg: (T.AVG_TOTAL - T.SCRIPT_MIN) / T.SCRIPT_RANGE };
+  }
+  // Roof state for the game: 'indoor' (dome, or nflverse says closed), 'open' (retractable, open), 'tbd' (retractable,
+  // not announced), 'outdoor'. venueRoof from intel_venues.json; nflRoof = nflverse's per-game roof (blank until known).
+  function intelRoof(venueRoof, nflRoof){
+    if(venueRoof === 'dome' || nflRoof === 'dome' || nflRoof === 'closed') return 'indoor';
+    if(nflRoof === 'open') return 'open';
+    if(venueRoof === 'retractable') return 'tbd';
+    return 'outdoor';
+  }
+  // Weather penalty (0 indoors or without a forecast). w = { temp, wind, precip }.
+  function intelWeatherPenalty(w, roof){
+    if(!w || roof === 'indoor') return 0;
+    const T = INTEL_TUNE;
+    let p = 0;
+    if(typeof w.wind === 'number') p += w.wind >= T.WIND_HIGH ? T.WIND_HIGH_PEN : w.wind >= T.WIND_MED ? T.WIND_MED_PEN : 0;
+    if(typeof w.precip === 'number') p += w.precip >= T.RAIN_HIGH ? T.RAIN_HIGH_PEN : w.precip >= T.RAIN_MED ? T.RAIN_MED_PEN : 0;
+    if(typeof w.temp === 'number' && w.temp <= T.COLD) p += T.COLD_PEN;
+    return p;
+  }
+  function intelImpact(pen){ return pen >= INTEL_TUNE.IMPACT_HIGH ? 'High' : pen >= INTEL_TUNE.IMPACT_MED ? 'Med' : 'Low'; }
+  // Game Environment score 0-100 (null without a total): how friendly the game is for fantasy points overall.
+  function intelEnv(total, roof, pen){
+    if(typeof total !== 'number') return null;
+    const T = INTEL_TUNE;
+    return Math.round(intelClamp(50 + (total - T.AVG_TOTAL) * T.TOTAL_WEIGHT + (roof === 'indoor' ? T.DOME_BONUS : 0) - (pen || 0), 0, 100));
+  }
+  function intelTone(score){ return score === null || score === undefined ? null : score >= INTEL_TUNE.ENV_FAV ? 'fav' : score >= INTEL_TUNE.ENV_NEU ? 'neu' : 'tough'; }
+  // Small flags, only when notable. warn: weather + roof TBD; neutral: dome, short week, international, shootout.
+  // g = an intel game, w = weather or null, roof from intelRoof, city = the venue's city (for international games).
+  function intelFlags(g, w, roof, city){
+    const T = INTEL_TUNE, out = [];
+    if(w && roof !== 'indoor'){
+      if(typeof w.wind === 'number' && w.wind >= T.WIND_HIGH) out.push({ k: 'wind', tone: 'warn', label: 'Wind ' + Math.round(w.wind) });
+      if(typeof w.precip === 'number' && w.precip >= T.RAIN_HIGH) out.push({ k: 'rain', tone: 'warn', label: 'Rain ' + Math.round(w.precip) + '%' });
+      if(typeof w.temp === 'number' && w.temp <= T.COLD) out.push({ k: 'cold', tone: 'warn', label: 'Cold ' + Math.round(w.temp) + '°' });
+    }
+    if(roof === 'tbd') out.push({ k: 'roof', tone: 'warn', label: 'Roof TBD' });
+    if(roof === 'indoor') out.push({ k: 'dome', tone: 'neutral', label: 'Dome' });
+    const r = g && g.rest || {};
+    if([r.away, r.home].some(function(d){ return typeof d === 'number' && d <= T.SHORT_WEEK; })) out.push({ k: 'short', tone: 'neutral', label: 'Short week' });
+    if(g && g.intl) out.push({ k: 'intl', tone: 'neutral', label: city ? String(city).split(',')[0] : 'International' });
+    const t = g && g.lines && g.lines.total;
+    if(typeof t === 'number' && t >= T.SHOOTOUT) out.push({ k: 'shootout', tone: 'neutral', label: 'Shootout ' + intelNum(t) });
+    return out;
+  }
+  function intelRest(days){
+    if(typeof days !== 'number') return null;
+    return { days: days, short: days <= INTEL_TUNE.SHORT_WEEK, label: days <= INTEL_TUNE.SHORT_WEEK ? 'Short week' : days >= 10 ? 'Extra rest' : 'Normal rest' };
+  }
+  // Time zones crossed to get to the game (hours, at kickoff; DST-aware). pair = [home tz, venue tz].
+  function intelTzOffset(tz, date){
+    try{
+      const p = new Intl.DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'shortOffset' }).formatToParts(date).find(function(x){ return x.type === 'timeZoneName'; });
+      const m = /GMT([+-]\d+)(?::(\d+))?/.exec(p ? p.value : '');
+      return m ? Number(m[1]) + (m[2] ? Math.sign(Number(m[1]) || 1) * Number(m[2]) / 60 : 0) : 0;
+    }catch(e){ return null; }
+  }
+  function intelTzCrossed(pair, kickIso){
+    if(!pair || !pair[0] || !pair[1]) return null;
+    const d = kickIso ? new Date(kickIso) : new Date();
+    const a = intelTzOffset(pair[0], d), b = intelTzOffset(pair[1], d);
+    return a === null || b === null ? null : Math.abs(b - a);
+  }
+  // Home-field edge vs the league: { win, n, margin, ats } from the build; null for neutral / international sites.
+  function intelEdgeText(edge, base){
+    if(!edge) return null;
+    const d = typeof base === 'number' ? edge.win - base : null;
+    return { pct: Math.round(edge.win * 100), vs: d === null ? null : Math.round(d * 100), n: edge.n, margin: edge.margin, ats: edge.ats };
+  }
+  // Line movement from the snapshots: { open, now, spreadMove, totalMove } (spread in the HOME team's terms), or null.
+  function intelLineMove(snaps){
+    if(!snaps || snaps.length < 2) return null;
+    const a = snaps[0], b = snaps[snaps.length - 1];
+    const d = function(x, y){ return typeof x === 'number' && typeof y === 'number' ? y - x : null; };
+    return { open: { spread: a[1], total: a[2], at: a[0] }, now: { spread: b[1], total: b[2], at: b[0] }, spreadMove: d(a[1], b[1]), totalMove: d(a[2], b[2]), n: snaps.length };
+  }
+  // Lines state for a game: 'none' (not posted), 'stale' (the build is older than STALE_HOURS), 'live'.
+  function intelLinesState(g, generatedIso, now){
+    if(!g || !g.lines || (typeof g.lines.spread !== 'number' && typeof g.lines.total !== 'number')) return 'none';
+    const age = (now || Date.now()) - Date.parse(generatedIso || 0);
+    return age > INTEL_TUNE.STALE_HOURS * 3600e3 ? 'stale' : 'live';
+  }
+  // Defense vs position chip tone for a rank (1 = allows the most): ▲ good matchup, ▼ tough, ● neutral.
+  function intelDvpTone(rank){
+    if(typeof rank !== 'number') return null;
+    return rank <= INTEL_TUNE.DVP_GOOD ? 'good' : rank >= INTEL_TUNE.DVP_BAD ? 'bad' : 'mid';
+  }
+  // WMO weather codes (Open-Meteo) → a short description
+  function intelSky(code){
+    if(typeof code !== 'number') return '';
+    if(code === 0) return 'Clear'; if(code <= 2) return 'Partly cloudy'; if(code === 3) return 'Overcast';
+    if(code <= 48) return 'Fog'; if(code <= 57) return 'Drizzle'; if(code <= 67) return code >= 65 ? 'Heavy rain' : 'Rain';
+    if(code <= 77) return 'Snow'; if(code <= 82) return code === 82 ? 'Heavy showers' : 'Showers'; if(code <= 86) return 'Snow showers';
+    return 'Thunderstorms';
+  }
+  // Open-Meteo hourly forecast → the kickoff window: { temp (at kickoff), wind / precip (max over the game), dir, code,
+  // hourly [{ t, temp, wind, precip }] }. rows = the API's `hourly` block; kickMs = kickoff; hours = window length.
+  function intelWeatherFrom(hourly, kickMs, hours){
+    if(!hourly || !hourly.time) return null;
+    const start = Math.floor(kickMs / 3600e3) * 3600e3, end = start + (hours || 4) * 3600e3, out = [];
+    hourly.time.forEach(function(t, i){
+      const ms = Date.parse(t.length === 16 ? t + ':00Z' : t);
+      if(ms >= start && ms < end) out.push({ t: ms, temp: hourly.temperature_2m[i], wind: hourly.wind_speed_10m[i], dir: hourly.wind_direction_10m[i], precip: hourly.precipitation_probability[i], code: hourly.weather_code[i] });
+    });
+    if(!out.length) return null;
+    const max = function(k){ return Math.max.apply(null, out.map(function(h){ return typeof h[k] === 'number' ? h[k] : -Infinity; })); };
+    return { temp: out[0].temp, wind: max('wind'), dir: out[0].dir, precip: max('precip'), code: out[0].code, hourly: out };
+  }
+
+  // ---- loading (only when Intel is used) ----
+  const INTEL = { venues: null, history: null, wx: {}, loading: null };
+  function intelData(){ return ctx.nfl && ctx.nfl.intel && ctx.nfl.intel.week === ctx.week ? ctx.nfl.intel : null; }
+  function intelGames(){ const d = intelData(); return d ? Object.keys(d.games).map(function(k){ return d.games[k]; }).sort(function(a, b){ return (a.kick || '').localeCompare(b.kick || '') || a.id.localeCompare(b.id); }) : []; }
+  function intelGameFor(team){ return intelGames().find(function(g){ return g.away === team || g.home === team; }) || null; }
+  // venues + line history: one try per session each (a failure leaves null: venue facts / movement show "—")
+  function intelLoad(){
+    if(INTEL.loading) return INTEL.loading;
+    const get = function(url){ return fetchJSON(url + '?v=' + (ctx.nflTs || '')); };
+    INTEL.loading = Promise.allSettled([get('intel_venues.json'), get('line_history.json')]).then(function(r){
+      INTEL.venues = r[0].status === 'fulfilled' && r[0].value ? r[0].value.venues : null;
+      INTEL.history = r[1].status === 'fulfilled' && r[1].value ? r[1].value : null;
+    });
+    return INTEL.loading;
+  }
+  function intelVenue(g){ return g && INTEL.venues ? INTEL.venues[g.venue] || null : null; }
+  function intelRoofOf(g){ const v = intelVenue(g); return intelRoof(v ? v.roof : null, g ? g.roof : null); }
+  // Weather for a game: skipped indoors, beyond the forecast horizon, or once it's over; cached per game.
+  // Resolves { w } | { skip: 'indoor' | 'far' | 'past' | 'novenue' } | { err }.
+  function intelWeather(g){
+    const v = intelVenue(g), roof = intelRoofOf(g), kick = g && g.kick ? Date.parse(g.kick) : NaN;
+    if(!v) return Promise.resolve({ skip: 'novenue' });
+    if(roof === 'indoor') return Promise.resolve({ skip: 'indoor' });
+    if(isNaN(kick) || kick - Date.now() > INTEL_TUNE.WEATHER_DAYS * 864e5) return Promise.resolve({ skip: 'far' });
+    if(Date.now() - kick > 4 * 3600e3) return Promise.resolve({ skip: 'past' });
+    const c = INTEL.wx[g.id];
+    if(c && Date.now() - c.ts < INTEL_TUNE.WEATHER_TTL_MIN * 60e3) return c.p;
+    const hh = function(ms){ return new Date(ms).toISOString().slice(0, 13) + ':00'; };
+    const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + v.lat + '&longitude=' + v.lon +
+      '&hourly=temperature_2m,precipitation_probability,wind_speed_10m,wind_direction_10m,weather_code' +
+      '&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=GMT&start_hour=' + hh(kick - 3600e3) + '&end_hour=' + hh(kick + 4 * 3600e3);
+    const p = fetchJSON(url).then(function(d){
+      const w = intelWeatherFrom(d && d.hourly, kick, 4);
+      return w ? { w: w, ts: Date.now() } : { err: 'no forecast' };
+    }, function(e){ delete INTEL.wx[g.id]; return { err: String(e && e.message || e) }; });
+    INTEL.wx[g.id] = { ts: Date.now(), p: p };
+    return p;
+  }
   // ---- outbound links on the player page (plain links, new tab) ----
   // NFL.com: https://www.nfl.com/players/<slug>/stats/ . Slugs aren't predictable from the name, so build_nflverse.py
   // verifies each one against NFL.com (name + team/birth date/position) and ships it as nflverse.json players[sid].nfl.
