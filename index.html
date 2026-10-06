@@ -1499,6 +1499,17 @@
   .tb-cards-none{ font-size: 12.5px; color: var(--text-3); padding: 24px 0; }
   .tb-cardside{ row-gap: 8px; }
   .kb-hl{ outline: 2px solid var(--accent) !important; outline-offset: 2px; border-radius: 12px; position: relative; z-index: 1; }
+  .kb-help{ position: fixed; inset: 0; z-index: 400; display: grid; place-items: center; padding: 16px; background: rgba(0,0,0,.45); backdrop-filter: blur(4px); }
+  .kb-help[hidden]{ display: none; }
+  .kb-help-card{ width: min(720px, 100%); max-height: calc(100vh - 32px); overflow: auto; background: var(--surface); color: var(--text); border: 1px solid var(--hair); border-radius: 18px; box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+  .kb-help-h{ display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 8px; font-size: 17px; }
+  .kb-help-x{ border: 0; background: none; color: var(--text-3); font-size: 24px; line-height: 1; cursor: pointer; padding: 4px 8px; }
+  .kb-help-b{ display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 4px 28px; padding: 4px 20px 20px; }
+  .kb-help h4{ margin: 12px 0 6px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+  .kb-help-r{ display: flex; gap: 12px; align-items: baseline; padding: 4px 0; font-size: 13px; }
+  .kb-help-r > span{ flex: none; min-width: 96px; }
+  .kb-help-r em{ font-style: normal; color: var(--text-2); }
+  .kb-help kbd{ display: inline-block; min-width: 22px; padding: 2px 6px; border-radius: 6px; border: 1px solid var(--hair); border-bottom-width: 2px; background: var(--surface-2); font: 600 12px/1.3 inherit; text-align: center; }
   .t-av{ position: relative; display: inline-grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 50%; overflow: hidden; vertical-align: middle; background: color-mix(in srgb, var(--accent) 18%, var(--surface-2)); color: var(--text); }
   .t-av b{ font-size: 10px; font-weight: 800; letter-spacing: .02em; }
   .t-av img{ position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
@@ -13105,20 +13116,51 @@
   });
   document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && !zoneGuide.hidden){ e.preventDefault(); e.stopImmediatePropagation(); zoneGuideClose(); } }, true);
   document.querySelectorAll('[data-zone-name]').forEach(function(el){ el.textContent = ZONE_NAME; });
-  // ============ Keyboard: open / close / move, one rule for the whole dashboard ============
-  // Space is a toggle: it closes whatever is open on top (popover, sheet, full view, player panel, Compare details,
-  //   Sleepa Zone), and the next Space reopens that same thing (as long as nothing else was pressed or clicked in
-  //   between). With nothing open, Space opens the highlighted item.
-  // Enter: opens the highlighted item.  ↑ / ↓: move the highlight through the list on screen.  Esc: closes (existing
-  //   handlers), and clears the highlight when nothing is open.
+  // ============ Keyboard: one set of keys for the whole dashboard ============
+  // ↑ / ↓: move the highlight through what's on screen.  Enter: go one step deeper (highlight → open → full page).
+  // Space: close whatever is open on top and remember it; the next Space (nothing pressed in between) reopens it. With
+  //   nothing open, Space opens the highlighted item.  Esc: back out one step.
+  // Letters: L Lineup · P Players · E League · C Compare · Z Sleepa Zone · H Huddle · / search players · R refresh ·
+  //   ? the cheat sheet. 1–4 switch sections on Players and Compare.
   // Never while typing in a box, with Cmd / Ctrl / Alt held, or when a real button / link has keyboard focus (those keep
-  // their native Space / Enter). The Huddle keeps its own keys (its card deck flips with Space / Enter).
-  const KB = { last: null, key: null };
+  // their native Space / Enter).
+  // Levels: Start / Sit has the player list and (→) the comparison columns; the Huddle has slots + players, and once a
+  // slot is picked, only the players (Enter on one puts them in that slot).
+  const KB = { last: null, key: null, lvl: null };
   function kbTyping(t){ return !!t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)); }
-  function kbNative(t){ return !!t && t !== document.body && !!t.closest && !!t.closest('button, a[href], summary, [role="button"]:not(.slot-row):not(.st-row):not(.nd-r):not(.ssp-card)'); }
+  function kbNative(t){ return !!t && t !== document.body && !!t.closest && !!t.closest('button, a[href], summary, [role="button"]:not(.slot-row):not(.st-row):not(.nd-r):not(.ssp-card):not(.pr-slot):not(.pr-card):not(.zn-tile):not(.wv-item)'); }
   function kbReopenFocus(f){ if(f.kind === 'fa') openFreeAgent(f.pid); else if(f.kind === 'empty') openEmptySlot(f.slot); else openFocus(f.pid, f.slot); }
+  const kbHuddle = function(){ return ctx.luMode === 'pr' && ctx.view === 'roster'; };
+  const kbSS = function(){ return ctx.view === 'compare' && ctx.cmpSec === 'ss'; };
+
+  // ---- the cheat sheet (?) ----
+  const KB_HELP = [
+    ['Go to', [['L', 'Lineup'], ['P', 'Players'], ['E', 'League'], ['C', 'Compare'], ['Z', 'Sleepa Zone (again to close)'], ['H', 'Sleepa Huddle'], ['/', 'Search players'], ['R', 'Refresh scores'], ['1 – 4', 'Sections on Players and Compare']]],
+    ['Move and open', [['↑ ↓', 'Move the highlight'], ['Enter', 'Go deeper: open the player panel, then the full player page'], ['Space', 'Close what’s open · again to reopen it'], ['Esc', 'Back out one step']]],
+    ['Start / Sit', [['→', 'Into the comparison columns'], ['← →', 'Between players'], ['Enter', 'Details, then the full player page'], ['Esc', 'Back to the list']]],
+    ['Huddle', [['↑ ↓', 'Through the slots, then the players below'], ['Enter', 'Pick a slot, then Enter on a player to put them in it'], ['← →', 'Previous / next position'], ['Esc', 'Cancel the pick · leave'], ['Space / Enter', 'Flip a card on Review']]],
+    ['Sleepa Zone', [['← →', 'Previous / next league'], ['↑ ↓', 'Move through the grid view'], ['Enter', 'Open the highlighted league'], ['Esc / Space', 'Back · close']]],
+  ];
+  let kbHelpEl = null;
+  function kbHelpOpen(){ return !!kbHelpEl && !kbHelpEl.hidden; }
+  function kbHelp(on){
+    if(!kbHelpEl){
+      kbHelpEl = document.createElement('div');
+      kbHelpEl.className = 'kb-help'; kbHelpEl.hidden = true;
+      kbHelpEl.setAttribute('role', 'dialog'); kbHelpEl.setAttribute('aria-modal', 'true'); kbHelpEl.setAttribute('aria-label', 'Keyboard shortcuts');
+      kbHelpEl.innerHTML = '<div class="kb-help-card"><div class="kb-help-h"><b>Keyboard shortcuts</b><button type="button" class="kb-help-x" aria-label="Close">×</button></div><div class="kb-help-b">' +
+        KB_HELP.map(function(g){
+          return '<section><h4>' + g[0] + '</h4>' + g[1].map(function(r){ return '<div class="kb-help-r"><span>' + r[0].split(' ').map(function(x){ return x === '–' ? '–' : '<kbd>' + escapeHTML(x) + '</kbd>'; }).join(' ') + '</span><em>' + escapeHTML(r[1]) + '</em></div>'; }).join('') + '</section>';
+        }).join('') + '</div></div>';
+      document.body.appendChild(kbHelpEl);
+      kbHelpEl.addEventListener('click', function(e){ if(e.target === kbHelpEl || e.target.closest('.kb-help-x')) kbHelp(false); });
+    }
+    kbHelpEl.hidden = !on;
+  }
+
   // the topmost open thing, how to close it and how to bring it back
   function kbTop(){
+    if(kbHelpOpen()) return { close: function(){ kbHelp(false); }, reopen: function(){ kbHelp(true); } };
     if(brandMenu) return { close: function(){ closeBrandMenu(); } };
     if(ctx.zone.open){
       const bd = zoneView.querySelector('.zbd');
@@ -13130,7 +13172,7 @@
       const entry = Object.assign({}, maxStack[maxStack.length - 1]); delete entry.from;
       return { close: function(){ backMax(); }, reopen: function(){ openMax(entry); } };
     }
-    if(ctx.view === 'compare' && ctx.cmpSec === 'ss'){
+    if(kbSS()){
       if(ctx.ssSheet) return { close: function(){ ctx.ssSheet = false; renderCompare(); }, reopen: function(){ ctx.ssSheet = true; renderCompare(); } };
       if(ctx.ssOpen){ const id = ctx.ssOpen; return { close: function(){ ctx.ssOpen = null; renderCompare(); }, reopen: function(){ ctx.ssOpen = id; renderCompare(); } }; }
     }
@@ -13142,26 +13184,50 @@
     }
     return null;
   }
-  // the list ↑ / ↓ moves through on the current screen
+  // what ↑ / ↓ moves through on the current screen (in page order)
   function kbItems(){
-    if(ctx.zone.open || maxOpen() || ctx.luMode === 'pr') return [];
-    const v = ctx.view;
     let sel = '';
-    if(v === 'roster') sel = '#starters-list .slot-row, #bench-list .slot-row';
-    else if(v === 'fa') sel = ctx.pl.view === 'value' ? '#wv .wv-item' : '#fa-list .slot-row';
-    else if(v === 'league') sel = '#standings .st-row[data-open-trade]';
-    else if(v === 'compare'){
-      if(ctx.cmpSec === 'ss') sel = ctx.ssSheet ? '#ss-list-sheet .ssr' : '#ss-list .ssr, .ssp-card';
-      else if(ctx.cmpSec === 'trades') sel = ctx.tradeMode === 'finder' ? '.tf-res' : '.tr-player';
-      else if(ctx.cmpSec === 'needs') sel = '.nd-r[data-nd-trade]';
+    if(kbHelpOpen() || maxOpen()) return [];
+    if(ctx.zone.open){
+      const bd = zoneView.querySelector('.zbd');
+      if(ctx.zone.focus || (bd && !bd.hidden) || ctx.zone.mode === 'car') return [];
+      sel = '#zone-view .zn-tile';
+    } else if(kbHuddle()){
+      if(ctx.prTab === 'REVIEW') sel = ctx.prRvMode === 'cards' ? '' : '#pr-view .cb-spot';
+      else{
+        const s = ctx.prSel;
+        sel = s && s.pid ? '#pr-view [data-pr-slot]'                                   // holding a player: pick the slot
+          : s && s.slot != null ? '#pr-view .pr-pool [data-pr-pid]'                    // slot picked: pick the player
+          : '#pr-view [data-pr-slot], #pr-view .pr-pool [data-pr-pid]';
+      }
+    } else{
+      const v = ctx.view;
+      if(v === 'roster') sel = '.mu-card[data-open-opp], .hd-card, #starters-list .slot-row, #bench-list .slot-row';
+      else if(v === 'fa') sel = ctx.pl.view === 'value' ? '#wv .wv-item' : '#fa-list .slot-row';
+      else if(v === 'league') sel = '.mu-card[data-open-opp], #standings .st-row[data-open-trade]';
+      else if(v === 'compare'){
+        if(ctx.cmpSec === 'ss') sel = ctx.ssSheet ? '#ss-list-sheet .ssr' : KB.lvl === 'cols' ? '.ssg .ssg-h' : '#ss-list .ssr, .ssp-card';
+        else if(ctx.cmpSec === 'trades') sel = ctx.tradeMode === 'finder' ? '.tf-res' : '.tr-player';
+        else if(ctx.cmpSec === 'needs') sel = '.nd-r[data-nd-trade]';
+      }
     }
     return sel ? Array.prototype.slice.call(document.querySelectorAll(sel)).filter(function(el){ return el.offsetParent !== null; }) : [];
   }
-  const KB_KEYS = ['data-player-id', 'data-fa-id', 'data-empty-slot', 'data-ss-toggle', 'data-ss-open', 'data-open-trade', 'data-nd-trade', 'data-trade-give', 'data-trade-get', 'data-wv-open'];
+  const KB_KEYS = ['data-pr-slot', 'data-fm-slot', 'data-pr-pid', 'data-zid', 'data-player-id', 'data-fa-id', 'data-empty-slot', 'data-ss-toggle', 'data-open-trade', 'data-nd-trade', 'data-trade-give', 'data-trade-get', 'data-wv-open', 'data-open-opp', 'data-huddle'];
   function kbKey(el, items){
     for(const a of KB_KEYS){ if(el.hasAttribute(a)) return a + '=' + el.getAttribute(a); }
+    const pid = kbPid(el);
+    if(pid) return 'pid=' + pid;
     const tf = el.querySelector && el.querySelector('[data-tf-open]');
     return tf ? 'tf=' + tf.getAttribute('data-tf-open') : 'i=' + items.indexOf(el);
+  }
+  // the player behind an item, if it is one
+  function kbPid(el){
+    if(!el) return null;
+    const a = el.getAttribute('data-player-id') || el.getAttribute('data-fa-id') || el.getAttribute('data-wv-open') || el.getAttribute('data-pr-pid');
+    if(a) return a;
+    const o = el.querySelector && el.querySelector('[data-open]');
+    return o ? o.getAttribute('data-open') : null;
   }
   function kbCurrent(items){
     if(!KB.key) return -1;
@@ -13173,49 +13239,197 @@
     if(i !== -1) items[i].classList.add('kb-hl');
     return i;
   }
-  function kbOpen(el){
+  function kbSet(el, items){
+    // a button clicked earlier keeps focus (and would take Enter): the highlight wins
+    const a = document.activeElement;
+    if(a && a !== document.body && !el.contains(a) && a.blur) a.blur();
+    KB.key = kbKey(el, items);
+    kbPaint(items);
+    el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+  }
+  function kbMove(d){
+    const items = kbItems();
+    if(!items.length) return false;
+    let i = kbCurrent(items);
+    i = i === -1 ? (d > 0 ? 0 : items.length - 1) : Math.max(0, Math.min(items.length - 1, i + d));
+    kbSet(items[i], items);
+    return true;
+  }
+  // after a re-render: highlight the first item matching sel (the next level's first stop)
+  function kbFirst(){
+    const items = kbItems();
+    let el = arguments.length && arguments[0] ? null : items[0];
+    for(let a = 0; a < arguments.length && !el; a++){ const sel = arguments[a]; el = sel ? items.find(function(x){ return x.matches(sel); }) : items[0]; }
+    if(el) kbSet(el, items); else { KB.key = null; kbPaint([]); }
+  }
+  function kbClear(){ KB.key = null; KB.lvl = null; kbPaint([]); }
+  // the player panel is showing this player (desktop side panel or phone sheet)
+  function kbPanelOn(pid){
+    const f = ctx.focus;
+    if(!pid || !f || f.pid !== pid || ctx.luMode === 'pr') return false;
+    return paneMode() ? !ctx.paneClosed && focusVisible() : els.overlay.classList.contains('open');
+  }
+  // Enter: one step deeper on the highlighted item
+  function kbEnter(el){
+    const pid = kbPid(el);
+    // the Huddle: slot → its players → into the slot
+    if(kbHuddle() && ctx.prTab !== 'REVIEW'){
+      if(el.hasAttribute('data-pr-slot')){
+        const i = Number(el.getAttribute('data-pr-slot')), held = ctx.prSel && ctx.prSel.pid;
+        prTapSlot(i, el);
+        if(held) kbFirst('[data-pr-slot="' + i + '"]');                         // placed: stay on that slot
+        else if(ctx.prSel && ctx.prSel.slot === i) kbFirst('.pr-pool [data-pr-pid]');   // picked: on to the players
+        else kbFirst('[data-pr-slot="' + i + '"]');
+        return;
+      }
+      if(el.hasAttribute('data-pr-pid')){
+        const sl = ctx.prSel && ctx.prSel.slot;
+        ctx.prLastTap = null; ctx.prTapGuard = 0;                               // keys are never a double-tap
+        prTapCard(el.getAttribute('data-pr-pid'), el);
+        ctx.prLastTap = null; ctx.prTapGuard = 0;
+        if(sl != null) kbFirst('[data-pr-slot="' + sl + '"]');                   // swapped in: back on the slot
+        else if(ctx.prSel && ctx.prSel.pid) kbFirst('[data-pr-slot]');           // held: now pick its slot
+        else { const at = ctx.prWork.indexOf(el.getAttribute('data-pr-pid')); kbFirst(at === -1 ? null : '[data-pr-slot="' + at + '"]'); }
+        return;
+      }
+    }
+    // Sleepa Zone grid: focus that league (phone: open its card)
+    if(el.classList.contains('zn-tile')){
+      const id = el.getAttribute('data-zid');
+      if(zoneWide()) zoneFocus(id);
+      else { ctx.zone.idx = ctx.zone.leagues.findIndex(function(L){ return L.id === id; }); zoneSetMode('car'); }
+      return;
+    }
+    // Start / Sit columns: details, then the full player page
+    if(el.classList.contains('ssg-h')){
+      if(pid && ctx.ssOpen === pid) openAnalysis(pid, el);
+      else { ctx.ssOpen = pid; renderCompare(); }
+      return;
+    }
+    // Start / Sit phone card: open, then the full player page
+    if(el.classList.contains('ssp-card') && pid && ctx.ssOpen === pid){ openAnalysis(pid, el); return; }
+    // a player whose panel is already open: the full player page
+    if(pid && kbPanelOn(pid)){ openAnalysis(pid, el); return; }
     const tf = el.querySelector && el.querySelector('[data-tf-open]');
     (tf || el).click();
   }
+
+  // ---- letters: close what covers the page, leave the Huddle, then go ----
+  function kbGo(fn){
+    if(kbHelpOpen()) kbHelp(false);
+    if(brandMenu) closeBrandMenu();
+    if(ctx.zone.open) zoneClose();
+    if(maxOpen()) closeMax();
+    if(els.overlay.classList.contains('open')) closeFocus();
+    kbClear();
+    if(ctx.luMode === 'pr') prLeave(function(){ setLuMode('list'); fn(); });
+    else fn();
+  }
+  function kbView(v){ return function(){ if(ctx.view !== v) setView(v); window.scrollTo({ top: 0 }); }; }
+  const KB_LETTERS = {
+    l: kbView('roster'), p: kbView('fa'), e: kbView('league'), c: kbView('compare'),
+    '/': function(){ kbView('fa')(); const q = document.getElementById('pl-q'); if(q){ q.focus(); q.select(); } },
+    r: function(){ refreshData({ manual: true }); },
+  };
+
   // the highlight survives re-renders (it's kept by a stable key, then repainted)
   new MutationObserver(function(){ if(KB.key){ const items = kbItems(); if(items.length) kbPaint(items); } })
     .observe(document.body, { childList: true, subtree: true });
-  document.addEventListener('mousedown', function(){ KB.last = null; if(KB.key){ KB.key = null; kbPaint([]); } });
+  document.addEventListener('mousedown', function(e){ if(kbHelpEl && kbHelpEl.contains(e.target)) return; KB.last = null; if(KB.key){ kbClear(); } });
+
+  // capture: runs before the screens' own key handlers, and takes only the keys it uses
   document.addEventListener('keydown', function(e){
-    if(e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey || kbTyping(e.target)) return;
+    if(e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
+    if(kbTyping(e.target)){
+      // a search box: Esc leaves it, ↓ goes on into the results
+      if(e.target.type === 'search' && (e.key === 'Escape' || e.key === 'ArrowDown')){
+        e.target.blur();
+        if(e.key === 'ArrowDown'){ e.preventDefault(); KB.key = null; kbMove(1); }
+      }
+      return;
+    }
     if(document.querySelector('.pr-dlg-back') || (typeof zoneGuide !== 'undefined' && !zoneGuide.hidden)) return;
-    const k = e.key;
+    const k = e.key, lk = k.length === 1 ? k.toLowerCase() : k;
+    const take = function(){ e.preventDefault(); e.stopImmediatePropagation(); };
     if(k !== ' ' && !/^(Shift|Control|Alt|Meta)$/.test(k)) KB.last = null;   // only an immediate second Space reopens
-    if(k === 'ArrowDown' || k === 'ArrowUp'){
-      const items = kbItems();
-      // nothing to move through, or something covers the list (phone player sheet, logo menu): the page scrolls as usual.
-      // The desktop side panel sits beside the list, so it doesn't stop the highlight.
-      if(!items.length || els.overlay.classList.contains('open') || brandMenu) return;
-      e.preventDefault();
-      let i = kbCurrent(items);
-      i = i === -1 ? (k === 'ArrowDown' ? 0 : items.length - 1) : Math.max(0, Math.min(items.length - 1, i + (k === 'ArrowDown' ? 1 : -1)));
-      KB.key = kbKey(items[i], items);
-      kbPaint(items);
-      items[i].scrollIntoView({ block: 'nearest', behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+
+    // the cheat sheet
+    if(k === '?'){ take(); kbHelp(!kbHelpOpen()); return; }
+    if(kbHelpOpen()){
+      if(k === 'Escape' || k === ' ' || k === 'Enter'){ take(); kbHelp(false); KB.last = k === ' ' ? function(){ kbHelp(true); } : null; }
       return;
     }
+    // letters
+    if(lk === 'h'){ if(ctx.luMode !== 'pr' && ctx.myRoster){ take(); kbGo(openHuddle); } return; }
+    if(KB_LETTERS[lk]){ take(); kbGo(KB_LETTERS[lk]); return; }
+    if(lk === 'z'){ take(); if(ctx.zone.open) zoneClose(); else kbGo(function(){ zoneOpen(); }); return; }
+    // 1–4: sections
+    if(/^[1-4]$/.test(k) && !ctx.zone.open && !maxOpen() && !kbHuddle()){
+      const sel = ctx.view === 'compare' ? '[data-cmp-sec]' : ctx.view === 'fa' ? '[data-pl-view]' : '';
+      const b = sel ? document.querySelectorAll(sel)[Number(k) - 1] : null;
+      if(b){ take(); KB.key = null; KB.lvl = null; b.click(); }
+      return;
+    }
+
+    // ↑ / ↓ (and ← / → where the screen has no use for them)
+    const horiz = k === 'ArrowLeft' || k === 'ArrowRight';
+    if(k === 'ArrowDown' || k === 'ArrowUp' || horiz){
+      // something covers the list (phone player sheet, logo menu): leave the keys alone
+      if(els.overlay.classList.contains('open') || brandMenu) return;
+      const d = k === 'ArrowDown' || k === 'ArrowRight' ? 1 : -1;
+      if(horiz){
+        if(kbSS() && !ctx.ssSheet){
+          if(KB.lvl !== 'cols'){
+            if(k !== 'ArrowRight' || !document.querySelector('.ssg .ssg-h')) return;
+            take(); KB.lvl = 'cols'; KB.key = null; kbMove(1); return;
+          }
+          const items = kbItems();
+          if(k === 'ArrowLeft' && kbCurrent(items) <= 0){ take(); KB.lvl = null; KB.key = null; kbPaint([]); kbMove(1); return; }
+          take(); kbMove(d); return;
+        }
+        if(ctx.zone.open && ctx.zone.mode !== 'car' && !ctx.zone.focus){ if(kbMove(d)) take(); }
+        return;   // everywhere else ← / → keep their own jobs (Huddle steps, Zone carousel, Review deck)
+      }
+      if(kbMove(d)) take();
+      return;
+    }
+
     if(k === 'Escape'){
-      if(ctx.view === 'compare' && ctx.cmpSec === 'ss' && (ctx.ssSheet || ctx.ssOpen)){ e.preventDefault(); if(ctx.ssSheet) ctx.ssSheet = false; else ctx.ssOpen = null; renderCompare(); return; }
-      if(KB.key && !kbTop()){ KB.key = null; kbPaint([]); }
+      // a layer on top (full page, Zone, phone sheet, logo menu) closes through its own Esc first
+      if(maxOpen() || ctx.zone.open || els.overlay.classList.contains('open') || brandMenu) return;
+      if(kbSS() && (ctx.ssSheet || ctx.ssOpen)){ take(); if(ctx.ssSheet) ctx.ssSheet = false; else ctx.ssOpen = null; renderCompare(); return; }
+      if(kbSS() && KB.lvl === 'cols'){ take(); KB.lvl = null; KB.key = null; kbPaint([]); kbMove(1); return; }
+      // the Huddle: a picked slot goes back to the slots (its own Esc cancels the pick)
+      if(kbHuddle() && ctx.prSel && ctx.prSel.slot != null){ const i = ctx.prSel.slot; take(); ctx.prSel = null; renderPowerRank(); kbFirst('[data-pr-slot="' + i + '"]'); return; }
+      if(kbHuddle() && ctx.prSel){ take(); ctx.prSel = null; renderPowerRank(); return; }
+      if(KB.key && !kbTop() && !kbHuddle()){ take(); kbClear(); }
       return;
     }
+
     if(k !== ' ' && k !== 'Enter') return;
-    if(ctx.luMode === 'pr' && ctx.view === 'roster') return;   // the Huddle has its own Space / Enter
     if(kbNative(e.target)) return;                              // a focused button / link keeps its native Space / Enter
     const items = kbItems(), hi = kbCurrent(items), hl = hi === -1 ? null : items[hi];
-    if(k === 'Enter'){ if(hl){ e.preventDefault(); kbOpen(hl); } return; }
+    if(kbHuddle()){
+      if(ctx.prTab === 'REVIEW' && ctx.prRvMode === 'cards') return;   // the deck flips with Space / Enter
+      if(maxOpen() || els.overlay.classList.contains('open')){
+        if(k === ' '){ const top = kbTop(); if(top){ take(); top.close(); KB.last = top.reopen || null; } }
+        return;
+      }
+      if(hl){ take(); kbEnter(hl); return; }
+      if(items.length){ take(); if(ctx.prSel && ctx.prSel.pid) kbFirst('[data-pr-slot]'); else kbFirst('[data-pr-slot].empty', '[data-pr-slot]', null); }
+      return;
+    }
+    if(k === 'Enter'){
+      if(hl){ take(); kbEnter(hl); return; }
+      if(items.length && !kbTop()){ take(); kbSet(items[0], items); }      // nothing highlighted yet: start at the top
+      return;
+    }
     // Space: reopen what the previous Space closed, else close what's open, else open the highlighted item
-    if(KB.last){ e.preventDefault(); const r = KB.last; KB.last = null; r(); return; }
+    if(KB.last){ take(); const r = KB.last; KB.last = null; r(); return; }
     const top = kbTop();
-    if(top){ e.preventDefault(); top.close(); KB.last = top.reopen || null; return; }
-    if(hl){ e.preventDefault(); kbOpen(hl); }
-  });
-
+    if(top){ take(); top.close(); KB.last = top.reopen || null; return; }
+    if(hl){ take(); kbEnter(hl); }
+  }, true);
 })();
 </script>
 
