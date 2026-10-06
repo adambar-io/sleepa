@@ -1509,6 +1509,42 @@
   .kb-help-r{ display: flex; gap: 12px; align-items: baseline; padding: 4px 0; font-size: 13px; }
   .kb-help-r > span{ flex: none; min-width: 96px; }
   .kb-help-r em{ font-style: normal; color: var(--text-2); }
+  .side-search{ display: flex; align-items: center; gap: 10px; width: 100%; margin: 0 0 8px; padding: 9px 12px; border: 1px solid var(--hair); border-radius: var(--radius); background: var(--surface-2); color: var(--text-3); font: inherit; font-size: 14px; cursor: pointer; transition: background .15s var(--ease), color .15s var(--ease); }
+  .side-search:hover{ background: var(--surface); color: var(--text); }
+  .side-search svg{ width: 17px; height: 17px; flex: none; }
+  .side-search kbd, .ck kbd{ margin-left: auto; min-width: 20px; padding: 1px 6px; border-radius: 6px; border: 1px solid var(--hair); background: var(--surface); font: 600 11px/1.5 inherit; color: var(--text-3); text-align: center; }
+  .ph-search{ display: none; }
+  @media (max-width: 1023px){
+    .ph-search{ position: absolute; z-index: 5; top: calc(12px + env(safe-area-inset-top)); right: calc(16px + env(safe-area-inset-right)); display: grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 50%; background: var(--surface-2); color: var(--text); cursor: pointer; }
+    .ph-search svg{ width: 19px; height: 19px; }
+  }
+  body.ck-lock{ overflow: hidden; }
+  .ck{ position: fixed; inset: 0; z-index: 410; display: flex; justify-content: center; align-items: flex-start; padding: 12vh 16px 16px; background: rgba(0,0,0,.42); backdrop-filter: blur(4px); }
+  .ck[hidden]{ display: none; }
+  .ck-card{ width: min(620px, 100%); max-height: 72vh; display: flex; flex-direction: column; background: var(--surface); color: var(--text); border: 1px solid var(--hair); border-radius: 18px; box-shadow: 0 24px 70px rgba(0,0,0,.4); overflow: hidden; animation: ck-in .16s var(--ease); }
+  @keyframes ck-in{ from{ opacity: 0; transform: translateY(-6px) scale(.985); } }
+  .ck-in{ display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--hair); }
+  .ck-in svg{ width: 19px; height: 19px; color: var(--text-3); flex: none; }
+  .ck-in input{ flex: 1; min-width: 0; border: 0; outline: 0; background: none; color: var(--text); font: inherit; font-size: 17px; }
+  .ck-in input, .ck-in input:focus, .ck-in input:focus-visible{ height: auto; padding: 0; border: 0 !important; border-radius: 0; box-shadow: none !important; outline: 0 !important; background: none !important; }
+  .ck-list{ overflow-y: auto; padding: 6px; overscroll-behavior: contain; }
+  .ck-g{ padding: 10px 10px 4px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+  .ck-r{ display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 12px; cursor: pointer; }
+  .ck-r.on{ background: color-mix(in srgb, var(--accent) 16%, var(--surface-2)); }
+  .ck-r.cur .ck-t small{ color: var(--accent); }
+  .ck-t{ flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .ck-t b{ font-size: 14.5px; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ck-t small{ font-size: 12px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ck-ico{ flex: none; width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; background: var(--surface-2); color: var(--accent); overflow: hidden; position: relative; }
+  .ck-ico svg{ width: 16px; height: 16px; }
+  .ck-ico.lg img{ position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .ck-av{ flex: none; width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: var(--surface-2); box-shadow: 0 0 0 1.5px var(--pc, var(--hair)); }
+  .ck-r .t-av.ck-tav{ width: 32px; height: 32px; }
+  @media (hover: none){ .ck kbd{ display: none; } }
+  .ck-none{ padding: 26px 12px; text-align: center; color: var(--text-3); font-size: 14px; }
+  .ck-foot{ display: flex; gap: 16px; padding: 9px 16px; border-top: 1px solid var(--hair); font-size: 12px; color: var(--text-3); }
+  .ck-foot kbd{ margin: 0 3px 0 0; }
+  @media (max-width: 600px){ .ck{ padding-top: 10px; } .ck-card{ max-height: 80vh; } .ck-foot{ display: none; } .ck-in input{ font-size: 16px; } }
   .kb-help kbd{ display: inline-block; min-width: 22px; padding: 2px 6px; border-radius: 6px; border: 1px solid var(--hair); border-bottom-width: 2px; background: var(--surface-2); font: 600 12px/1.3 inherit; text-align: center; }
   .t-av{ position: relative; display: inline-grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 50%; overflow: hidden; vertical-align: middle; background: color-mix(in srgb, var(--accent) 18%, var(--surface-2)); color: var(--text); }
   .t-av b{ font-size: 10px; font-weight: 800; letter-spacing: .02em; }
@@ -3216,6 +3252,7 @@
 <div class="shell" id="roster-screen" style="display:none;">
   <aside class="side">
     <div class="brand" data-home role="button" tabindex="0" aria-label="sleepa: go to your lineup"><svg class="brand-mark" viewBox="0 0 200 200" aria-hidden="true"><use href="#sleepa-mark"/></svg><span class="wordmark">sleepa</span></div>
+    <button type="button" class="side-search" data-cmdk aria-label="Search players, pages, leagues and teams"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg><span>Search</span><kbd>/</kbd></button>
     <button type="button" class="zn-entry side-zone" data-zone-open title="Every league at once"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg><span data-zone-name>Sleepa Zone</span><small>all leagues</small></button>
     <div class="league-switch">
       <button type="button" class="league-card" id="league-card" aria-haspopup="true" aria-expanded="false" title="Switch league">
@@ -3242,6 +3279,7 @@
 
   <main class="main">
     <div class="m-brand" data-home role="button" data-brand aria-haspopup="menu" aria-expanded="false" tabindex="0" aria-label="sleepa: go to your lineup"><svg class="brand-mark" viewBox="0 0 200 200" aria-hidden="true"><use href="#sleepa-mark"/></svg><span class="wordmark">sleepa</span><svg class="brand-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 10l4 4 4-4"/></svg></div>
+    <button type="button" class="ph-search" data-cmdk aria-label="Search players, pages, leagues and teams"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg></button>
     <header class="page-head">
       <div>
         <div class="eyebrow" id="page-eyebrow"></div>
@@ -13032,7 +13070,7 @@
     }
   });
   document.addEventListener('keydown', function(e){
-    if(!ctx.zone.open) return;
+    if(!ctx.zone.open || ckOpen()) return;
     if(e.key === 'Escape'){
       if(!zoneGuide.hidden) return;   // the guide closes itself first
       e.preventDefault(); e.stopImmediatePropagation();
@@ -13135,7 +13173,7 @@
 
   // ---- the cheat sheet (?) ----
   const KB_HELP = [
-    ['Go to', [['L', 'Lineup'], ['P', 'Players'], ['E', 'League'], ['C', 'Compare'], ['Z', 'Sleepa Zone (again to close)'], ['H', 'Sleepa Huddle'], ['/', 'Search players'], ['R', 'Refresh scores'], ['1 – 4', 'Sections on Players and Compare']]],
+    ['Go to', [['L', 'Lineup'], ['P', 'Players'], ['E', 'League'], ['C', 'Compare'], ['Z', 'Sleepa Zone (again to close)'], ['H', 'Sleepa Huddle'], ['/', 'Search everything: players, pages, leagues, teams'], ['Ctrl K', 'Search too (⌘K on a Mac)'], ['R', 'Refresh scores'], ['1 – 4', 'Sections on Players and Compare']]],
     ['Move and open', [['↑ ↓', 'Move the highlight'], ['Enter', 'Go deeper: open the player panel, then the full player page'], ['Space', 'Close what’s open · again to reopen it'], ['Esc', 'Back out one step']]],
     ['Start / Sit', [['→', 'Into the comparison columns'], ['← →', 'Between players'], ['Enter', 'Details, then the full player page'], ['Esc', 'Back to the list']]],
     ['Huddle', [['↑ ↓', 'Through the slots, then the players below'], ['Enter', 'Pick a slot, then Enter on a player to put them in it'], ['← →', 'Previous / next position'], ['Esc', 'Cancel the pick · leave'], ['Space / Enter', 'Flip a card on Review']]],
@@ -13316,6 +13354,7 @@
 
   // ---- letters: close what covers the page, leave the Huddle, then go ----
   function kbGo(fn){
+    if(ckOpen()) ckShow(false);
     if(kbHelpOpen()) kbHelp(false);
     if(brandMenu) closeBrandMenu();
     if(ctx.zone.open) zoneClose();
@@ -13328,7 +13367,6 @@
   function kbView(v){ return function(){ if(ctx.view !== v) setView(v); window.scrollTo({ top: 0 }); }; }
   const KB_LETTERS = {
     l: kbView('roster'), p: kbView('fa'), e: kbView('league'), c: kbView('compare'),
-    '/': function(){ kbView('fa')(); const q = document.getElementById('pl-q'); if(q){ q.focus(); q.select(); } },
     r: function(){ refreshData({ manual: true }); },
   };
 
@@ -13339,6 +13377,19 @@
 
   // capture: runs before the screens' own key handlers, and takes only the keys it uses
   document.addEventListener('keydown', function(e){
+    // universal search: Ctrl / Cmd + K anywhere (even while typing); while it's open it owns ↑ ↓ Enter Tab Esc
+    if((e.metaKey || e.ctrlKey) && !e.altKey && (e.key === 'k' || e.key === 'K')){
+      if(ctx.myRoster && !document.querySelector('.pr-dlg-back')){ e.preventDefault(); e.stopImmediatePropagation(); ckShow(!ckOpen()); }
+      return;
+    }
+    if(ckOpen()){
+      const nav = { ArrowDown: 1, ArrowUp: -1, Tab: e.shiftKey ? -1 : 1 };
+      if(e.key in nav){ e.preventDefault(); e.stopImmediatePropagation(); ckMove(nav[e.key]); }
+      else if(e.key === 'Enter'){ e.preventDefault(); e.stopImmediatePropagation(); ckRun(CK.i); }
+      else if(e.key === 'Escape'){ e.preventDefault(); e.stopImmediatePropagation(); ckShow(false); }
+      else if(e.target !== CK.input && e.key.length === 1 && !e.metaKey && !e.ctrlKey){ CK.input.focus(); }   // typing always goes to the box
+      return;
+    }
     if(e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
     if(kbTyping(e.target)){
       // a search box: Esc leaves it, ↓ goes on into the results
@@ -13359,6 +13410,8 @@
       if(k === 'Escape' || k === ' ' || k === 'Enter'){ take(); kbHelp(false); KB.last = k === ' ' ? function(){ kbHelp(true); } : null; }
       return;
     }
+    // universal search
+    if(k === '/'){ if(ctx.myRoster){ take(); ckShow(true); } return; }
     // letters
     if(lk === 'h'){ if(ctx.luMode !== 'pr' && ctx.myRoster){ take(); kbGo(openHuddle); } return; }
     if(KB_LETTERS[lk]){ take(); kbGo(KB_LETTERS[lk]); return; }
@@ -13430,6 +13483,152 @@
     if(top){ take(); top.close(); KB.last = top.reopen || null; return; }
     if(hl){ take(); kbEnter(hl); }
   }, true);
+  // ============ Universal search (/ or Ctrl/Cmd + K; the search button in the sidebar / phone header) ============
+  // One box for everything: pages and actions ("Go to"), players (anyone in this league's positions: yours, free agents,
+  // other teams'), your leagues (switch), and the other teams in this league (open a trade with them).
+  // Every word typed must start a word in the result (or appear inside it, ranked lower). ↑ / ↓ + Enter, or click.
+  // Results run through kbGo, so the palette closes, overlays close and the Huddle asks to save first.
+  const CK_ICON = {
+    go: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+    search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg>',
+  };
+  const ckSec = function(view, sel){ return function(){ if(ctx.view !== view) setView(view); const b = document.querySelector(sel); if(b) b.click(); window.scrollTo({ top: 0 }); }; };
+  // [title, extra words to match, shortcut, run]
+  const CK_ACTIONS = [
+    ['Lineup', 'roster my team starters bench home', 'L', function(){ kbView('roster')(); }],
+    ['Sleepa Huddle', 'set lineup power rank cards build', 'H', function(){ openHuddle(); }],
+    ['Players', 'free agents waivers available', 'P', function(){ kbView('fa')(); }],
+    ['Waiver value', 'pickups adds drops best available', '', ckSec('fa', '[data-pl-view="value"]')],
+    ['Trending players', 'adds drops hot', '', ckSec('fa', '[data-pl-view="trend"]')],
+    ['League', 'standings playoff picture table', 'E', function(){ kbView('league')(); }],
+    ['This week’s matchup', 'opponent compare lineups vs versus score', '', function(){ kbView('roster')(); if(myMatchup()) openMax({ kind: 'opp' }); }],
+    ['Compare', 'vs versus', 'C', function(){ kbView('compare')(); }],
+    ['Start / Sit', 'who should i start compare sit', '', ckSec('compare', '[data-cmp-sec="ss"]')],
+    ['Trade builder', 'trades calculator offer', '', function(){ openTrade(ctx.trade && ctx.trade.team); }],
+    ['Trade Finder', 'trades suggestions find deals', '', function(){ openTrade(ctx.trade && ctx.trade.team); ctx.tradeMode = 'finder'; renderCompare(); }],
+    ['Team needs', 'scarcity positions weak strong', '', ckSec('compare', '[data-cmp-sec="needs"]')],
+    ['Lineup changes', 'diff sleeper vs plan', '', ckSec('compare', '[data-cmp-sec="lineup"]')],
+    ['Sleepa Zone', 'all leagues live scores scoreboard', 'Z', function(){ zoneOpen(); }],
+    ['Refresh scores', 'reload update live', 'R', function(){ refreshData({ manual: true }); }],
+    ['Resources', 'links tools', '', function(){ kbView('resources')(); }],
+    ['Settings', 'theme options preferences', '', function(){ kbView('settings')(); }],
+    ['Keyboard shortcuts', 'help keys cheat sheet', '?', function(){ kbHelp(true); }],
+  ];
+  const CK = { el: null, input: null, list: null, items: [], i: 0 };
+  function ckOpen(){ return !!CK.el && !CK.el.hidden; }
+  // how well q matches text: 0 = no; every word must be there; a word start counts more than the middle of a word
+  function ckScore(text, words){
+    let s = 0;
+    for(const w of words){
+      if(text.indexOf(' ' + w) !== -1) s += 3;
+      else if(text.indexOf(w) !== -1) s += 1;
+      else return 0;
+    }
+    return s;
+  }
+  function ckResults(q){
+    const words = normName(q).split(' ').filter(Boolean), out = [];
+    const add = function(group, list, max){ list.slice(0, max).forEach(function(x){ x.group = group; out.push(x); }); };
+    // Go to
+    const acts = CK_ACTIONS.map(function(a){
+      const s = words.length ? ckScore(' ' + normName(a[0] + ' ' + a[1]), words) + (ckScore(' ' + normName(a[0]), words) ? 2 : 0) : 1;
+      return s ? { s: s, title: a[0], sub: '', key: a[2], ico: '<span class="ck-ico go">' + CK_ICON.go + '</span>', run: a[3] } : null;
+    }).filter(Boolean).sort(function(a, b){ return b.s - a.s; });
+    // players (only when searching)
+    let pls = [];
+    if(words.length && ctx.players){
+      const lp = leaguePositions(), proj = function(pid){ const v = ctx.projections && ctx.projections[pid]; return typeof v === 'number' ? v : -1; };
+      Object.keys(ctx.players).forEach(function(pid){
+        const p = ctx.players[pid];
+        if(lp.indexOf(posGroup(pid)) === -1 || (!p.team && ownerOf(pid) === undefined)) return;
+        const s = ckScore(searchKey(pid), words);
+        if(s) pls.push({ pid: pid, s: s + (isMine(pid) ? 1 : 0) + (ownerOf(pid) !== undefined || isAvailable(pid) ? 0.5 : 0) });
+      });
+      pls.sort(function(a, b){ return b.s - a.s || proj(b.pid) - proj(a.pid); });
+      pls = pls.slice(0, 8).map(function(x){
+        const pid = x.pid, p = ctx.players[pid], o = ownerOf(pid);
+        const who = isMine(pid) ? 'On your team' : isAvailable(pid) ? 'Free agent' : o !== undefined ? rosterName(o) : 'Not on a roster';
+        return { title: p.position === 'DEF' ? (p.team || pid) + ' D/ST' : playerName(p), sub: [posGroup(pid), p.team || 'FA', who].join(' · '),
+          ico: avatarTag(pid, 'ck-av'), pc: posColor(posGroup(pid)),
+          run: function(){
+            if(isMine(pid)){ kbView('roster')(); const i = ctx.draftStarters.indexOf(pid); openFocus(pid, i === -1 ? null : i); }
+            else if(isAvailable(pid)){ kbView('fa')(); openFreeAgent(pid); }
+            else openAnalysis(pid);
+          } };
+      });
+    }
+    // leagues
+    const lgs = (ctx.pendingLeagues || []).map(function(l){
+      const s = words.length ? ckScore(' ' + normName(l.name + ' league switch'), words) : 1;
+      if(!s) return null;
+      const cur = ctx.league && l.league_id === ctx.league.league_id, url = leagueAvatarUrl(l);
+      return { s: s, title: l.name, sub: (cur ? 'Current league · ' : 'Switch league · ') + leagueMeta(l), cur: cur,
+        ico: '<span class="ck-ico lg">' + (url ? '<img src="' + escapeHTML(url) + '" alt="" loading="lazy" onerror="this.remove()">' : '') + '</span>',
+        run: function(){ if(cur) return; els.leagueSelect.value = l.league_id; loadEverything(l.league_id); } };
+    }).filter(Boolean).sort(function(a, b){ return b.s - a.s; });
+    // the other teams in this league
+    const mine = ctx.myRoster && ctx.myRoster.roster_id;
+    const tms = words.length ? (ctx.lastRosters || []).filter(function(r){ return r.roster_id !== mine; }).map(function(r){
+      const s = ckScore(' ' + normName(rosterName(r.roster_id) + ' team trade'), words);
+      return s ? { s: s, title: rosterName(r.roster_id), sub: 'Team · open a trade', ico: teamAvHTML(r.roster_id, 'ck-tav'), run: function(){ openTrade(r.roster_id); } } : null;
+    }).filter(Boolean).sort(function(a, b){ return b.s - a.s; }) : [];
+    // the best kind of match goes first: a strong page match, else players
+    const actsFirst = !pls.length || (acts[0] && acts[0].s >= (words.length * 3 + 2));
+    if(actsFirst) add('Go to', acts, words.length ? 5 : 9);
+    add('Players', pls, 8);
+    if(!actsFirst) add('Go to', acts, 4);
+    add('Leagues', lgs, words.length ? 4 : 8);
+    add('Teams in ' + (ctx.league ? ctx.league.name : 'this league'), tms, 4);
+    return out;
+  }
+  function ckRender(){
+    const items = CK.items = ckResults(CK.input.value);
+    CK.i = Math.min(CK.i, Math.max(0, items.length - 1));
+    let g = null, html = '';
+    items.forEach(function(x, i){
+      if(x.group !== g){ g = x.group; html += '<div class="ck-g">' + escapeHTML(g) + '</div>'; }
+      html += '<div class="ck-r' + (i === CK.i ? ' on' : '') + (x.cur ? ' cur' : '') + '" role="option" id="ck-o' + i + '" data-ck="' + i + '" aria-selected="' + (i === CK.i) + '"' + (x.pc ? ' style="--pc:' + x.pc + '"' : '') + '>' +
+        x.ico + '<span class="ck-t"><b>' + escapeHTML(x.title) + '</b>' + (x.sub ? '<small>' + escapeHTML(x.sub) + '</small>' : '') + '</span>' +
+        (x.key ? '<kbd>' + escapeHTML(x.key) + '</kbd>' : '') + '</div>';
+    });
+    CK.list.innerHTML = html || '<div class="ck-none">Nothing matches “' + escapeHTML(CK.input.value) + '”</div>';
+    CK.input.setAttribute('aria-activedescendant', items.length ? 'ck-o' + CK.i : '');
+  }
+  function ckMove(d){
+    if(!CK.items.length) return;
+    CK.i = (CK.i + d + CK.items.length) % CK.items.length;
+    CK.list.querySelectorAll('.ck-r').forEach(function(r){ const on = Number(r.getAttribute('data-ck')) === CK.i; r.classList.toggle('on', on); r.setAttribute('aria-selected', on); });
+    CK.input.setAttribute('aria-activedescendant', 'ck-o' + CK.i);
+    const r = CK.list.querySelector('.ck-r.on'); if(r) r.scrollIntoView({ block: 'nearest' });
+  }
+  function ckRun(i){
+    const x = CK.items[i];
+    if(!x) return;
+    ckShow(false);
+    kbGo(x.run);
+  }
+  function ckShow(on){
+    if(!CK.el){
+      CK.el = document.createElement('div');
+      CK.el.className = 'ck'; CK.el.hidden = true;
+      CK.el.innerHTML = '<div class="ck-card" role="dialog" aria-modal="true" aria-label="Search sleepa"><label class="ck-in">' + CK_ICON.search +
+        '<input type="text" role="combobox" aria-expanded="true" aria-controls="ck-list" aria-autocomplete="list" placeholder="Search players, pages, leagues, teams…" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="go">' +
+        '<kbd class="ck-esc">esc</kbd></label><div class="ck-list" id="ck-list" role="listbox"></div>' +
+        '<div class="ck-foot"><span><kbd>↑</kbd><kbd>↓</kbd> move</span><span><kbd>Enter</kbd> open</span><span><kbd>esc</kbd> close</span></div></div>';
+      document.body.appendChild(CK.el);
+      CK.input = CK.el.querySelector('input'); CK.list = CK.el.querySelector('.ck-list');
+      CK.input.addEventListener('input', function(){ CK.i = 0; ckRender(); });
+      CK.list.addEventListener('mousemove', function(e){ const r = e.target.closest('[data-ck]'); if(r && Number(r.getAttribute('data-ck')) !== CK.i){ CK.i = Number(r.getAttribute('data-ck')); ckMove(0); } });
+      CK.list.addEventListener('click', function(e){ const r = e.target.closest('[data-ck]'); if(r) ckRun(Number(r.getAttribute('data-ck'))); });
+      CK.el.addEventListener('mousedown', function(e){ if(e.target === CK.el){ e.preventDefault(); ckShow(false); } });
+    }
+    if(on === !CK.el.hidden) return;
+    CK.el.hidden = !on;
+    document.body.classList.toggle('ck-lock', on);
+    if(on){ CK.input.value = ''; CK.i = 0; ckRender(); CK.input.focus(); }
+    else if(document.activeElement === CK.input) CK.input.blur();
+  }
+  document.addEventListener('click', function(e){ if(e.target.closest && e.target.closest('[data-cmdk]')){ e.preventDefault(); if(ctx.myRoster) ckShow(true); } });
 })();
 </script>
 
