@@ -432,6 +432,9 @@
   /* ---- player analysis (game log) ---- */
   [data-analyze]{ cursor: pointer; }
   .player-name .an-link{ overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  /* names come first: the name keeps its full width, and rank / injury / bye chips wrap under it instead of squeezing it */
+  .player-name{ flex-wrap: wrap; white-space: normal; row-gap: 3px; }
+  .player-name .an-link{ flex: 0 1 auto; max-width: 100%; white-space: normal; text-wrap: balance; line-height: 1.2; }   /* a name too long for the column wraps to a 2nd line, never cut */
   .an-link{ text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px; transition: text-decoration-color .2s; }
   .gl-wrap{ position: relative; overflow-x: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; border-radius: var(--radius); background: var(--surface-2); }
   .gl-table{ border-collapse: separate; border-spacing: 0; font-size: 13.5px; min-width: 100%; }
@@ -809,6 +812,9 @@
     .col-tgt, .h-tgt{ width: 58px; text-align: right; color: var(--text-2); }
     .col-vs, .h-vs{ width: 176px; text-align: left; padding-left: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .h-info{ padding-left: 54px; }
+    /* the name column never drops below 150px: "vs your weakest" gives way first (its number comes first, so it stays) */
+    .slot-row .player-info, .list-head .h-info{ min-width: 150px; }
+    .slot-row .col.col-vs, .list-head .h-col.h-vs{ flex-shrink: 1; min-width: 64px; }
     .slot-row .key-stats, .slot-row .sig, .slot-row .m-opp, .slot-row .fa-vs{ display: none; }
     html:not(.cards-detailed) :is(#starters-list, #bench-list) .slot-row .m-opp-c{ display: none; } /* table: the Opp column shows it */
     .slot-row .stat-col .cap{ display: none; }
