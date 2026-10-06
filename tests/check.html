@@ -220,9 +220,9 @@
   {
     const I = new Function(['const INTEL_TUNE', 'const intelClamp', 'function intelNum(', 'function intelFav(', 'function intelLineText(', 'function intelMoneyline(',
       'function intelImplied(', 'function intelScript(', 'function intelRoof(', 'function intelWeatherPenalty(', 'function intelImpact(', 'function intelEnv(',
-      'function intelTone(', 'function intelFlags(', 'function intelRest(', 'function intelTzOffset(', 'function intelTzCrossed(', 'function intelEdgeText(',
+      'function intelTone(', 'function intelEnvWord(', 'function intelWeatherFor(', 'function intelFlags(', 'function intelRest(', 'function intelTzOffset(', 'function intelTzCrossed(', 'function intelEdgeText(',
       'function intelLineMove(', 'function intelLinesState(', 'function intelDvpTone(', 'function intelSky(', 'function intelWeatherFrom('].map(extract).join('\n') +
-      '; return { INTEL_TUNE, intelNum, intelLineText, intelMoneyline, intelImplied, intelScript, intelRoof, intelWeatherPenalty, intelImpact, intelEnv, intelTone, intelFlags, intelRest, intelTzCrossed, intelEdgeText, intelLineMove, intelLinesState, intelDvpTone, intelSky, intelWeatherFrom };')();
+      '; return { INTEL_TUNE, intelNum, intelLineText, intelMoneyline, intelImplied, intelScript, intelRoof, intelWeatherPenalty, intelImpact, intelEnv, intelTone, intelEnvWord, intelWeatherFor, intelFlags, intelRest, intelTzCrossed, intelEdgeText, intelLineMove, intelLinesState, intelDvpTone, intelSky, intelWeatherFrom };')();
     const eq = function(name, got, want){ const g = JSON.stringify(got), w = JSON.stringify(want); check(name, g === w, 'got ' + g + (g === w ? '' : ', want ' + w)); };
     // lines, sportsbook style (nflverse spread is positive when the HOME team is favored)
     eq('home favored by 3: "CIN −3 · O/U 46.5"', I.intelLineText({ spread: 3, total: 46.5 }, 'PIT', 'CIN'), 'CIN −3 · O/U 46.5');
@@ -244,37 +244,48 @@
       [I.intelRoof('dome', null), I.intelRoof('retractable', 'closed'), I.intelRoof('retractable', 'open'), I.intelRoof('retractable', null), I.intelRoof('outdoor', 'outdoors')],
       ['indoor', 'indoor', 'open', 'tbd', 'outdoor']);
     eq('nflverse "dome" wins even if the venue file says outdoor', I.intelRoof('outdoor', 'dome'), 'indoor');
-    // weather penalty (wind >= 15 is 6, the tuned value)
-    eq('wind 22 → 6 (tuned from 10)', I.intelWeatherPenalty({ wind: 22 }, 'outdoor'), 6);
-    eq('wind 12 → 4, wind 9 → 0', [I.intelWeatherPenalty({ wind: 12 }, 'outdoor'), I.intelWeatherPenalty({ wind: 9 }, 'outdoor')], [4, 0]);
-    eq('rain 70% → 10, 35% → 3, 20% → 0', [70, 35, 20].map(function(p){ return I.intelWeatherPenalty({ precip: p }, 'outdoor'); }), [10, 3, 0]);
-    eq('cold 30°F → 6, 33°F → 0', [I.intelWeatherPenalty({ temp: 30 }, 'outdoor'), I.intelWeatherPenalty({ temp: 33 }, 'outdoor')], [6, 0]);
-    eq('wind 22 + rain 70% + 38°F → 16', I.intelWeatherPenalty({ wind: 22, precip: 70, temp: 38 }, 'outdoor'), 16);
-    eq('indoors: no penalty whatever the forecast', I.intelWeatherPenalty({ wind: 30, precip: 90, temp: 10 }, 'indoor'), 0);
+    // weather penalty (research-backed tuning; notes in design/intel/INTEL.md "Research")
+    eq('wind (game average): 22 → 10, 17 → 6, 12 → 0 (under 15 mph: no measurable effect)', [22, 17, 12].map(function(x){ return I.intelWeatherPenalty({ wind: x }, 'outdoor'); }), [10, 6, 0]);
+    eq('rain by expected amount: 3 mm/h → 5, 1 mm/h → 2, 0.2 mm/h → 0', [3, 1, 0.2].map(function(x){ return I.intelWeatherPenalty({ mm: x }, 'outdoor'); }), [5, 2, 0]);
+    eq('a high CHANCE of rain alone costs nothing (70%, 0.1 mm/h)', I.intelWeatherPenalty({ precip: 70, mm: 0.1 }, 'outdoor'), 0);
+    eq('snow → 6 (replaces the rain penalty)', I.intelWeatherPenalty({ snow: true, mm: 3 }, 'outdoor'), 6);
+    eq('cold: 28°F → 0, bitter 15°F → 3', [I.intelWeatherPenalty({ temp: 28 }, 'outdoor'), I.intelWeatherPenalty({ temp: 15 }, 'outdoor')], [0, 3]);
+    eq('wind 22 + heavy rain → 15', I.intelWeatherPenalty({ wind: 22, mm: 3, temp: 38 }, 'outdoor'), 15);
+    eq('indoors: no penalty whatever the forecast', I.intelWeatherPenalty({ wind: 30, mm: 9, temp: 10 }, 'indoor'), 0);
     eq('roof TBD still counts the weather', I.intelWeatherPenalty({ wind: 16 }, 'tbd'), 6);
-    eq('impact: 16 High, 10 High, 6 Med, 3 Low', [16, 10, 6, 3].map(I.intelImpact), ['High', 'High', 'Med', 'Low']);
-    // environment score: 50 + (total − 45) × 2.2 + dome 6 − penalty, 0..100
-    eq('PIT @ CIN 46.5, wind 14 (penalty 4) → 49', I.intelEnv(46.5, 'outdoor', 4), 49);
-    eq('MIN @ NO 41.5 in a dome → 48', I.intelEnv(41.5, 'indoor', 0), 48);
+    eq('impact: 15 High, 8 High, 6 Med, 2 Low', [15, 8, 6, 2].map(I.intelImpact), ['High', 'High', 'Med', 'Low']);
+    // environment score: 50 + (total − 45) × 2.2 − penalty, 0..100 (no dome bonus: the total already prices the venue)
+    eq('average game (45, calm) → 50', I.intelEnv(45, 'outdoor', 0), 50);
+    eq('PIT @ CIN 46.5, calm → 53', I.intelEnv(46.5, 'outdoor', 0), 53);
+    eq('MIN @ NO 41.5 in a dome → 42 (no dome bonus)', I.intelEnv(41.5, 'indoor', 0), 42);
     eq('DET @ ARI 54.5, roof TBD → 71', I.intelEnv(54.5, 'tbd', 0), 71);
-    eq('KC @ BUF 49.5, wind 22 + rain 70% (16) → 44', I.intelEnv(49.5, 'outdoor', 16), 44);
+    eq('KC @ BUF 49.5, wind 22 + heavy rain (15) → 45', I.intelEnv(49.5, 'outdoor', 15), 45);
     eq('clamped to 0..100; no total → null', [I.intelEnv(80, 'indoor', 0), I.intelEnv(20, 'outdoor', 20), I.intelEnv(null, 'outdoor', 0)], [100, 0, null]);
     eq('tone: 60 fav, 59 neu, 40 neu, 39 tough, null', [60, 59, 40, 39, null].map(I.intelTone), ['fav', 'neu', 'neu', 'tough', null]);
+    eq('words: 70 Great, 60 Good, 50 Average, 39 Tough', [70, 60, 50, 39].map(I.intelEnvWord), ['Great', 'Good', 'Average', 'Tough']);
+    // how the weather leans per position (informational)
+    const lean = function(pos, w, roof){ const l = I.intelWeatherFor(pos, w, roof || 'outdoor'); return l ? l.dir : null; };
+    eq('wind 18: QB / WR / TE / K down, RB / DEF up', ['QB', 'WR', 'TE', 'K', 'RB', 'DEF'].map(function(p){ return lean(p, { wind: 18 }); }), ['down', 'down', 'down', 'down', 'up', 'up']);
+    eq('heavy rain: passing down, RB even, K even, DEF up', ['QB', 'RB', 'K', 'DEF'].map(function(p){ return lean(p, { mm: 3 }); }), ['down', null, null, 'up']);
+    eq('snow: RB up', lean('RB', { snow: true, mm: 2 }), 'up');
+    eq('light rain or cold alone: no lean', [lean('QB', { mm: 1 }), lean('K', { temp: 25 }), lean('WR', { wind: 30 }, 'indoor')], [null, null, null]);
     // flags (informational only)
     const lab = function(f){ return f.map(function(x){ return x.label + ':' + x.tone; }); };
-    eq('rain and wind outdoors', lab(I.intelFlags({ rest: { away: 7, home: 7 }, lines: { total: 49.5 } }, { wind: 22, precip: 70, temp: 38 }, 'outdoor')), ['Wind 22:warn', 'Rain 70%:warn']);
-    eq('dome: weather ignored, Dome flag', lab(I.intelFlags({ rest: { away: 7, home: 7 }, lines: { total: 41.5 } }, { wind: 30, precip: 80 }, 'indoor')), ['Dome:neutral']);
+    eq('rain and wind outdoors', lab(I.intelFlags({ rest: { away: 7, home: 7 }, lines: { total: 49.5 } }, { wind: 22, precip: 70, mm: 2, temp: 38 }, 'outdoor')), ['Wind 22:warn', 'Rain 70%:warn']);
+    eq('a 55% chance with almost no rain expected: no Rain flag', lab(I.intelFlags({ rest: { away: 7, home: 7 }, lines: { total: 44 } }, { wind: 5, precip: 55, mm: 0.1, temp: 67 }, 'outdoor')), []);
+    eq('snow', lab(I.intelFlags({ rest: {}, lines: null }, { wind: 5, precip: 80, mm: 1.5, snow: true, temp: 30 }, 'outdoor')), ['Snow:warn', 'Cold 30°:warn']);
+    eq('dome: weather ignored, Dome flag', lab(I.intelFlags({ rest: { away: 7, home: 7 }, lines: { total: 41.5 } }, { wind: 30, precip: 80, mm: 4 }, 'indoor')), ['Dome:neutral']);
     eq('retractable unknown + shootout total', lab(I.intelFlags({ rest: { away: 7, home: 7 }, lines: { total: 54.5 } }, null, 'tbd')), ['Roof TBD:warn', 'Shootout 54.5:neutral']);
     eq('Thursday short week (4 days)', lab(I.intelFlags({ rest: { away: 4, home: 4 }, lines: { total: 47.5 } }, null, 'tbd')), ['Roof TBD:warn', 'Short week:neutral']);
     eq('international: city flag', lab(I.intelFlags({ intl: true, rest: { away: 7, home: 7 }, lines: { total: 42.5 } }, { wind: 8, precip: 10, temp: 55 }, 'outdoor', 'London, UK')), ['London:neutral']);
-    eq('cold game', lab(I.intelFlags({ rest: {}, lines: null }, { wind: 5, precip: 0, temp: 28 }, 'outdoor')), ['Cold 28°:warn']);
-    eq('clear outdoor game: no flags', lab(I.intelFlags({ rest: { away: 7, home: 7 }, lines: { total: 44.5 } }, { wind: 6, precip: 10, temp: 61 }, 'outdoor')), []);
+    eq('clear outdoor game: no flags', lab(I.intelFlags({ rest: { away: 7, home: 7 }, lines: { total: 44.5 } }, { wind: 6, precip: 10, mm: 0, temp: 61 }, 'outdoor')), []);
     // rest / travel / edge / movement / staleness / dvp
     eq('rest: 4 short, 7 normal, 10 extra', [4, 7, 10].map(function(d){ return I.intelRest(d).label; }), ['Short week', 'Normal rest', 'Extra rest']);
     eq('time zones crossed at kickoff: NY→London 5, NY→LA 3, Phoenix vs LA in October 0',
       [I.intelTzCrossed(['America/New_York', 'Europe/London'], '2026-10-11T13:30:00Z'), I.intelTzCrossed(['America/New_York', 'America/Los_Angeles'], '2026-10-11T20:00:00Z'),
        I.intelTzCrossed(['America/Phoenix', 'America/Los_Angeles'], '2026-10-11T20:00:00Z')], [5, 3, 0]);
-    eq('home-field edge vs a 53.4% league', I.intelEdgeText({ win: 0.61, n: 48, margin: 3.9, ats: '8-7-1' }, 0.534), { pct: 61, vs: 8, n: 48, margin: 3.9, ats: '8-7-1' });
+    eq('home-field edge 61% over 48 games vs 53.4%: within chance', I.intelEdgeText({ win: 0.61, n: 48, margin: 3.9, ats: '8-7-1' }, 0.534), { pct: 61, vs: 8, n: 48, margin: 3.9, ats: '8-7-1', real: false });
+    eq('74% over 49 games: a real edge; 32% over 50: a real weakness', [I.intelEdgeText({ win: 0.735, n: 49, margin: 7.2, ats: '30-19' }, 0.534).real, I.intelEdgeText({ win: 0.32, n: 50, margin: -4.9, ats: '21-29' }, 0.534).real], [true, true]);
     eq('neutral site: no edge', I.intelEdgeText(null, 0.534), null);
     const mv = I.intelLineMove([['2026-10-05T14:00Z', 2.5, 47], ['2026-10-06T14:00Z', 3, 46.5]]);
     eq('line movement: spread +0.5 toward home, total −0.5', [mv.spreadMove, mv.totalMove, mv.n], [0.5, -0.5, 2]);
@@ -286,9 +297,10 @@
     eq('sky: 0 clear, 2 partly cloudy, 63 rain, 65 heavy rain, 95 storms', [0, 2, 63, 65, 95].map(I.intelSky), ['Clear', 'Partly cloudy', 'Rain', 'Heavy rain', 'Thunderstorms']);
     const hourly = { time: ['2026-10-11T16:00', '2026-10-11T17:00', '2026-10-11T18:00', '2026-10-11T19:00', '2026-10-11T20:00', '2026-10-11T21:00'],
       temperature_2m: [50, 51, 52, 50, 48, 47], wind_speed_10m: [9, 14, 16, 12, 10, 30], wind_direction_10m: [330, 340, 340, 350, 0, 0],
-      precipitation_probability: [10, 20, 40, 25, 15, 90], weather_code: [2, 2, 3, 3, 61, 63] };
+      precipitation_probability: [10, 20, 40, 25, 15, 90], precipitation: [0, 0, 0.4, 0.8, 0.4, 5], weather_code: [2, 2, 3, 3, 61, 73] };
     const w = I.intelWeatherFrom(hourly, Date.parse('2026-10-11T17:00:00Z'), 4);
-    eq('forecast window: kickoff temp, max wind / rain over the 4 game hours (not before or after)', [w.temp, w.wind, w.precip, w.hourly.length, w.code], [51, 16, 40, 4, 2]);
+    eq('forecast window (4 game hours only): kickoff temp, AVERAGE wind, peak gust, max chance, average mm/h, no snow',
+      [w.temp, w.wind, w.gust, w.precip, w.mm, w.snow, w.hourly.length], [51, 13, 16, 40, 0.4, false, 4]);
     // the live build (after the Action has run): every game this week resolves to a venue and readable lines
     try{
       const nv = await (await fetch('../nflverse.json', { cache: 'no-cache' })).json();
