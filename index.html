@@ -292,6 +292,33 @@
   .rk-v b{ font-weight: 700; } .rk-v small{ color: var(--text-3); font-size: 11.5px; }
   .rk-src{ margin-top: 2px; font-size: 10.5px; color: var(--text-3); line-height: 1.4; }
   .pf-rk{ margin-bottom: 18px; }
+  /* Rankings + League ownership: side by side when the page is wide (ownership in the same 380px column as the options
+     card below), stacked otherwise */
+  .pf-duo-w{ container-type: inline-size; container-name: pfduo; margin-bottom: 18px; }
+  .pf-duo{ display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; align-items: start; }
+  .pf-duo .pf-rk{ margin-bottom: 0; }
+  @container pfduo (min-width: 820px){ .pf-duo{ grid-template-columns: minmax(0, 1fr) 380px; } }
+  .pf-own{ container-type: inline-size; container-name: own; }
+  .own-list{ display: grid; gap: 4px; }
+  .own-r{ display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 40px; padding: 7px 10px; border-radius: 10px; font-size: 14px; color: var(--text-2); }
+  .own-r + .own-r{ border-top: 1px solid var(--hair); }
+  .own-lg{ min-width: 0; font-weight: 600; color: var(--text); }
+  .own-lg small{ margin-left: 8px; font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
+  .own-st{ display: flex; align-items: center; gap: 8px; flex: none; max-width: 60%; text-align: right; }
+  .own-who{ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .own-r.k-mine .own-who{ color: var(--text); font-weight: 700; }
+  .own-r.k-na, .own-r.k-orphan{ opacity: .6; }
+  .own-r.k-fa{ background: color-mix(in srgb, var(--accent) 14%, transparent); box-shadow: inset 3px 0 0 var(--accent); }
+  .own-badge{ padding: 3px 9px; border-radius: 999px; background: var(--accent); color: var(--on-accent, #fff); font-size: 11.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+  .own-na{ font-size: 12.5px; font-weight: 700; color: var(--text-3); }
+  .own-err{ font-size: 12.5px; color: var(--danger); }
+  .own-retry{ border: 1px solid var(--hair); background: var(--surface-2); color: var(--text); border-radius: 999px; padding: 4px 10px; font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+  .own-skel{ display: inline-block; width: 90px; height: 12px; }
+  .own-sum{ color: var(--accent); }
+  @container own (max-width: 300px){
+    .own-r{ flex-direction: column; align-items: flex-start; gap: 4px; }
+    .own-st{ max-width: 100%; text-align: left; }
+  }
   .tr-results .tr-fc{ grid-column: 1 / -1; }
   .key-stats .kw{ color: var(--danger); font-weight: 700; font-size: 10.5px; letter-spacing: .04em; }
   /* live scoring */
@@ -5154,6 +5181,7 @@
     opts = opts || {};
     if(!ctx.myRoster || !ctx.league || ctx.refreshing) return;
     if(!opts.manual && !opts.topUp && Date.now() - (ctx.lastRefresh || 0) < FOREGROUND_MIN_GAP) return;
+    if(opts.manual) ownStale();   // other leagues' rosters (League ownership, Sleepa Zone) re-pull too
     const loadId = ctx.loadId, leagueId = ctx.league.league_id;
     ctx.refreshing = true; renderFreshness();
     let changed = false, failed = false;
@@ -6983,7 +7011,7 @@
     DNR:          { label: 'Did not report', short: 'DNR', tone: 'out', out: true },
   };
   function statusInfo(status){
-    if(!status || status === 'Healthy') return null;
+    if(!status || status === 'Healthy' || status === 'Active') return null;   // both mean no injury
     return INJURY_STATUS[status] || { label: status, short: status.slice(0, 3).toUpperCase(), tone: 'warn', out: false };
   }
   function cantPlay(status){ const i = statusInfo(status); return !!(i && i.out); }
@@ -10823,6 +10851,7 @@
     if(!maxEl.hidden) maxToAnchor(e);
     maxBackLabel.textContent = maxStack.length > 1 ? maxTitleFor(maxStack[maxStack.length - 2]) : 'Back to ' + VIEW_TITLES[ctx.view];
     if(dir && !reduceMotion.matches) maxBody.animate([{ opacity: 0, transform: 'translateX(' + (dir > 0 ? 28 : -28) + 'px)' }, { opacity: 1, transform: 'none' }], { duration: 360, easing: 'cubic-bezier(.2,.8,.2,1)' });
+    if(e.kind === 'player') ownFill(e);   // other leagues' rosters for League ownership
     // A player page needs their season history; fetch it once, then re-render if they're still on top.
     if(e.kind === 'player' && !hist(e.pid)){
       ensureHistory(e.pid).then(function(){ if(maxOpen() && maxStack[maxStack.length - 1] === e) renderMax(0); });
@@ -11620,7 +11649,7 @@
     left = left ? '<div class="card pf-card pf-charts">' + left + '</div>' : '<div></div>';
     const dvp = dvpInfo(pid);
     const context = rangeDetailHTML(pid) + idpRangeNote(pid) + (dvp ? '<div class="dvp-line"><span class="dvp-chip ' + (dvp.early ? 'early' : dvp.tone) + '">Matchup</span> ' + escapeHTML(dvpSentence(dvp)) + '</div>' : '');
-    return byeCallouts([pid]) + hero + injurySourcesHTML(pid) + (loading ? '' : context) + '<div class="card pf-card pf-rk"><div class="pf-sec"><h3>Rankings &amp; value</h3><span class="eyebrow">consensus · market</span></div>' + rankingsHTML(pid) + '</div>' + weekCard + logCard + '<div class="pf-grid">' + left + '<div class="card pf-card">' + maxSideHTML(pid) + '</div></div>';
+    return byeCallouts([pid]) + hero + injurySourcesHTML(pid) + (loading ? '' : context) + '<div class="pf-duo-w"><div class="pf-duo"><div class="card pf-card pf-rk"><div class="pf-sec"><h3>Rankings &amp; value</h3><span class="eyebrow">consensus · market</span></div>' + rankingsHTML(pid) + '</div>' + ownCardHTML(pid) + '</div></div>' + weekCard + logCard + '<div class="pf-grid">' + left + '<div class="card pf-card">' + maxSideHTML(pid) + '</div></div>';
   }
 
   // The last two header cards depend on the position, so there's never a card that can't apply (no "snap %" for a kicker).
@@ -11668,6 +11697,108 @@
         return card(id, id === occ ? '<div class="current-tag">Starting</div>' : '<button class="swap-btn" data-mx-swap="' + escapeHTML(id) + '" data-slot="' + slot + '">Swap in</button>', id === occ);
       }).join('') + (bench.length ? '' : '<div class="empty-state">No bench players fit this slot.</div>');
   }
+
+  // ============ League ownership (player page): who has this player in each of my leagues ============
+  // One row per league: owned (the owner's Sleeper display_name, "You" for my team or one I co-own), free agent (on no
+  // roster), N/A (on no roster AND no starting slot in that league takes any of his positions: IDP in a non-IDP league,
+  // K / DEF where the league doesn't use them), or an unmanaged team (rostered on a team with no owner).
+  // Owned = on a roster's players, reserve (IR) or taxi. Sleeper already lists IR / taxi players inside players; the
+  // other two are checked too so the rule doesn't depend on that.
+  // Data: Sleepa Zone's per-league cache (zoneMeta: league + rosters + users, refreshed after ZONE_META_TTL); the league
+  // you're in uses its live data. Leagues load with allSettled, so one failure is one "Couldn't load · Retry" row.
+  // A manual refresh (R / the Updated button) marks the cache stale, which re-pulls the other leagues' rosters.
+  // Pure (for tests/check.html): leagues = [{ id, name, current, slots, rosters, users, error }] (rosters null = loading).
+  function leagueOwnership(pid, fps, leagues, userId){
+    const has = function(r){ return [r.players, r.reserve, r.taxi].some(function(a){ return (a || []).indexOf(pid) !== -1; }); };
+    return leagues.map(function(L){
+      const row = { id: L.id, name: L.name, current: !!L.current };
+      if(L.error){ row.kind = 'err'; return row; }
+      if(!L.rosters){ row.kind = 'loading'; return row; }
+      const r = L.rosters.find(has);
+      if(!r){
+        const slots = (L.slots || []).filter(function(s){ return s !== 'BN' && s !== 'IR' && s !== 'TAXI'; });
+        const fits = slots.some(function(s){ const g = FLEX_GROUPS[s] || [s]; return fps.some(function(x){ return g.indexOf(x) !== -1; }); });
+        row.kind = fits ? 'fa' : 'na';
+        return row;
+      }
+      if(r.owner_id === userId || (r.co_owners || []).indexOf(userId) !== -1){ row.kind = 'mine'; row.owner = 'You'; return row; }
+      const u = r.owner_id ? (L.users || []).find(function(x){ return x.user_id === r.owner_id; }) : null;
+      if(!r.owner_id){ row.kind = 'orphan'; row.owner = 'Unmanaged team'; return row; }
+      row.kind = 'owned';
+      row.owner = (u && u.display_name) || 'Unknown manager';
+      row.team = (u && u.metadata && u.metadata.team_name) || '';
+      return row;
+    });
+  }
+  const OWN = { inflight: {}, err: {} };
+  function ownLeagueList(){
+    const list = ctx.pendingLeagues && ctx.pendingLeagues.length ? ctx.pendingLeagues : ctx.league ? [ctx.league] : [];
+    return list.map(function(l){
+      const id = l.league_id, cur = !!ctx.league && id === ctx.league.league_id;
+      if(cur) return { id: id, name: l.name, current: true, slots: ctx.league.roster_positions, rosters: ctx.lastRosters || [], users: ctx.users || [] };
+      const m = ctx.zone.meta[id];
+      return { id: id, name: l.name, current: false, slots: m && m.league && m.league.roster_positions, rosters: m ? m.rosters : null, users: m ? m.users : [],
+        error: !m && !OWN.inflight[id] && !!OWN.err[id] };
+    });
+  }
+  // leagues whose rosters are missing or stale (errored ones wait for Retry, so a re-render can't loop on a failing league)
+  function ownNeed(){
+    return (ctx.pendingLeagues || []).filter(function(l){
+      const id = l.league_id, m = ctx.zone.meta[id];
+      return !(ctx.league && id === ctx.league.league_id) && !OWN.inflight[id] && !OWN.err[id] && (!m || Date.now() - m.ts >= ZONE_META_TTL);
+    });
+  }
+  function ownFetch(l){
+    const id = l.league_id;
+    return OWN.inflight[id] || (OWN.inflight[id] = zoneMeta(l)
+      .then(function(){ delete OWN.err[id]; }, function(){ OWN.err[id] = true; })
+      .then(function(){ delete OWN.inflight[id]; }));
+  }
+  // load what's missing, then redraw just this card (if the same player page is still on top)
+  function ownFill(e){
+    const need = ownNeed();
+    if(!need.length) return;
+    Promise.allSettled(need.map(ownFetch)).then(function(){ ownRedraw(e); });
+    ownRedraw(e);   // the rows that are now loading
+  }
+  function ownRedraw(e){
+    if(!maxOpen() || maxStack[maxStack.length - 1] !== e) return;
+    const el = maxBody.querySelector('.pf-own');
+    if(el) el.outerHTML = ownCardHTML(e.pid);
+  }
+  function ownStale(){
+    Object.keys(ctx.zone.meta).forEach(function(k){ ctx.zone.meta[k].ts = 0; });
+    OWN.err = {};
+    const t = maxOpen() && maxStack[maxStack.length - 1];
+    if(t && t.kind === 'player') ownFill(t);
+  }
+  const OWN_LABEL = { fa: 'Free agent', na: 'N/A', loading: 'Loading…' };
+  function ownCardHTML(pid){
+    const rows = leagueOwnership(pid, fantasyPositions(pid), ownLeagueList(), ctx.userId);
+    const nFa = rows.filter(function(r){ return r.kind === 'fa'; }).length, nKnown = rows.filter(function(r){ return r.kind !== 'loading' && r.kind !== 'err'; }).length;
+    const sum = rows.some(function(r){ return r.kind === 'loading'; }) ? 'Checking your leagues…' : nFa ? 'Free agent in ' + nFa + ' of ' + nKnown : rows.some(function(r){ return r.kind === 'na'; }) ? 'Rostered where playable' : 'Rostered everywhere';
+    const pos = fantasyPositions(pid).join(' / ');
+    return '<div class="card pf-card pf-own"><div class="pf-sec"><h3>League ownership</h3><span class="eyebrow' + (nFa ? ' own-sum' : '') + '">' + escapeHTML(sum) + '</span></div>' +
+      '<div class="own-list" role="list">' + rows.map(function(r){
+        const st = r.kind === 'err' ? '<span class="own-err">Couldn’t load</span><button type="button" class="own-retry" data-own-retry="' + escapeHTML(r.id) + '">Retry</button>'
+          : r.kind === 'fa' ? '<span class="own-badge">Free agent</span>'
+          : r.kind === 'na' ? '<span class="own-na" title="No starting slot in this league takes ' + escapeHTML(pos) + '">N/A</span>'
+          : r.kind === 'loading' ? '<span class="skel own-skel"></span>'
+          : '<span class="own-who"' + (r.team ? ' title="' + escapeHTML(r.team) + '"' : '') + '>' + escapeHTML(r.owner) + '</span>';
+        return '<div class="own-r k-' + r.kind + (r.current ? ' cur' : '') + '" role="listitem">' +
+          '<span class="own-lg">' + escapeHTML(r.name) + (r.current ? '<small>this league</small>' : '') + '</span><span class="own-st">' + st + '</span></div>';
+      }).join('') + '</div></div>';
+  }
+  document.addEventListener('click', function(e){
+    const b = e.target.closest && e.target.closest('[data-own-retry]');
+    if(!b) return;
+    const id = b.getAttribute('data-own-retry'), l = (ctx.pendingLeagues || []).find(function(x){ return x.league_id === id; });
+    const t = maxOpen() && maxStack[maxStack.length - 1];
+    if(!l || !t) return;
+    delete OWN.err[id];
+    ownFetch(l).then(function(){ ownRedraw(t); });
+    ownRedraw(t);
+  });
 
   autoOpen(); // remembered login: straight to the team
 

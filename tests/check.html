@@ -169,6 +169,52 @@
   const e = a.remainingFrac({ state: 'in', src: 'estimate', kick: Date.now() - 95 * 60 * 1000 });
   check('no clock: estimated from kickoff and flagged', e.est === true && e.f > 0.45 && e.f < 0.55, 'got ' + e.f.toFixed(2));
 
+  // ---- 3c. League ownership (player page) ----
+  section('League ownership: owned / yours / free agent / N/A in each league');
+  {
+    const o = new Function(['const FLEX_GROUPS', 'function leagueOwnership('].map(extract).join('\n') + '; return leagueOwnership;')();
+    const ME = 'u-me';
+    const users = [{ user_id: 'u-a', display_name: 'alice', metadata: { team_name: 'Alice Ballers' } }, { user_id: ME, display_name: 'me' }];
+    const L = function(id, slots, rosters, extra){ return Object.assign({ id: id, name: id, slots: slots, rosters: rosters, users: users }, extra || {}); };
+    const OFF = ['QB', 'RB', 'WR', 'TE', 'FLEX', 'K', 'DEF', 'BN', 'BN'], IDP = OFF.concat(['DL', 'LB', 'DB', 'IDP_FLEX']), NOKD = ['QB', 'RB', 'WR', 'TE', 'SUPER_FLEX', 'BN'];
+    const one = function(pid, fps, league, extra){ return o(pid, fps, [L('L1', league.slots, league.rosters, extra)], ME)[0]; };
+    const R = function(owner, lists, co){ return Object.assign({ roster_id: 1, owner_id: owner, players: [], reserve: null, taxi: null, co_owners: co || null }, lists); };
+    let row;
+    row = one('p1', ['WR'], { slots: OFF, rosters: [R('u-a', { players: ['p1'] })] });
+    check('on another team → owned by their display_name (team name kept for the tooltip)', row.kind === 'owned' && row.owner === 'alice' && row.team === 'Alice Ballers', JSON.stringify(row));
+    row = one('p1', ['WR'], { slots: OFF, rosters: [R(ME, { players: ['p1'] })] });
+    check('on my team → "You"', row.kind === 'mine' && row.owner === 'You', JSON.stringify(row));
+    row = one('p1', ['WR'], { slots: OFF, rosters: [R('u-a', { players: ['p1'] }, [ME])] });
+    check('on a team I co-own → "You"', row.kind === 'mine', JSON.stringify(row));
+    row = one('p1', ['WR'], { slots: OFF, rosters: [R('u-a', { players: [], reserve: ['p1'] })] });
+    check('on IR (reserve) only → owned', row.kind === 'owned', JSON.stringify(row));
+    row = one('p1', ['WR'], { slots: OFF, rosters: [R('u-a', { players: [], taxi: ['p1'] })] });
+    check('on the taxi squad only → owned', row.kind === 'owned', JSON.stringify(row));
+    row = one('p1', ['WR'], { slots: OFF, rosters: [R('u-a', { players: ['p2'] }), R(ME, { players: ['p3'] })] });
+    check('on no roster → free agent', row.kind === 'fa', JSON.stringify(row));
+    row = one('p1', ['WR'], { slots: OFF, rosters: [R(null, { players: ['p1'] })] });
+    check('on a team with no manager → unmanaged, not a free agent', row.kind === 'orphan', JSON.stringify(row));
+    row = one('d1', ['LB'], { slots: OFF, rosters: [] });
+    check('IDP player in a non-IDP league → N/A', row.kind === 'na', JSON.stringify(row));
+    row = one('d1', ['LB'], { slots: IDP, rosters: [] });
+    check('IDP player in an IDP league → free agent', row.kind === 'fa', JSON.stringify(row));
+    row = one('d2', ['DB'], { slots: ['QB', 'RB', 'IDP_FLEX', 'BN'], rosters: [] });
+    check('IDP player in a league with only IDP_FLEX → free agent (flex counts)', row.kind === 'fa', JSON.stringify(row));
+    row = one('k1', ['K'], { slots: NOKD, rosters: [] });
+    check('kicker in a league without K → N/A', row.kind === 'na', JSON.stringify(row));
+    row = one('def', ['DEF'], { slots: NOKD, rosters: [] });
+    check('defense in a league without DEF → N/A', row.kind === 'na', JSON.stringify(row));
+    row = one('q1', ['QB'], { slots: ['RB', 'WR', 'SUPER_FLEX', 'BN'], rosters: [] });
+    check('QB in a league whose only QB slot is SUPER_FLEX → free agent', row.kind === 'fa', JSON.stringify(row));
+    row = one('k1', ['K'], { slots: NOKD, rosters: [R('u-a', { players: ['k1'] })] });
+    check('rostered even where the position has no slot → owned (the roster wins over N/A)', row.kind === 'owned', JSON.stringify(row));
+    row = one('p1', ['WR'], { slots: ['BN', 'IR', 'TAXI'], rosters: [] });
+    check('bench / IR / taxi slots alone don\'t make a position playable → N/A', row.kind === 'na', JSON.stringify(row));
+    const multi = o('p1', ['WR'], [L('A', OFF, [R('u-a', { players: ['p1'] })], { current: true }), L('B', OFF, null), L('C', OFF, null, { error: true }), L('D', OFF, [])], ME);
+    check('several leagues: one row each, in order, with loading and failed leagues kept separate',
+      multi.map(function(x){ return x.id + ':' + x.kind; }).join(' ') === 'A:owned B:loading C:err D:fa' && multi[0].current === true, multi.map(function(x){ return x.id + ':' + x.kind; }).join(' '));
+  }
+
   // ---- 4. injury statuses vs live Sleeper values ----
   section('Injury statuses: every live Sleeper value is known');
   try{
@@ -179,8 +225,8 @@
     Object.keys(players).forEach(function(k){ const st = players[k].injury_status; if(st) seen[st] = (seen[st] || 0) + 1; });
     Object.keys(seen).forEach(function(st){
       const info = f.statusInfo(st);
-      const known = !!info && info.label && !(info.tone === 'warn' && st !== 'Questionable');
-      check(st + ' (' + seen[st] + ' players): ' + (info ? info.label : '?') + (f.cantPlay(st) ? ', not startable' : ', startable'), known,
+      const known = (!info && /^(Healthy|Active)$/.test(st)) || (!!info && info.label && !(info.tone === 'warn' && st !== 'Questionable'));
+      check(st + ' (' + seen[st] + ' players): ' + (info ? info.label : 'healthy, no chip') + (f.cantPlay(st) ? ', not startable' : ', startable'), known,
         known ? '' : 'unknown status: add it to INJURY_STATUS in index.html');
     });
     check('Questionable stays startable', !f.cantPlay('Questionable'));
