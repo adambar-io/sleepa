@@ -373,6 +373,11 @@ A single-file local web app for viewing a Sleeper fantasy football roster with c
 - **Wordmark**: real text in **Poppins 700**, letter-spacing −0.035em (loaded with Inter from Google Fonts). The designer's wordmark SVGs `@import` Poppins inside the SVG, which browsers block when an SVG is used as an image, so they fall back to a generic font. Don't use them as `<img>`.
 - **Icons**: `brand/sleepa-mark.svg` is the favicon and switches colors with the browser's light/dark setting via an internal media query; `brand/favicon-64.png` is the PNG fallback; `brand/apple-touch-icon.png` (180×180, white bunny on near-black with a teal glow) is the iPhone home-screen icon. The PNGs were rendered from the SVG in a browser canvas. The tab title is "sleepa · your Sleeper lineup, sharper"; `apple-mobile-web-app-title` is "sleepa".
 
+## Design kit
+
+- **`design/kit/`** is the hand-off for designing new views (e.g. in Claude Design): `TOKENS.css` (every token, both themes, exact values), `DESIGN_SYSTEM.md` (rules: type, color usage, spacing / radius / elevation, icons, motion, layout, number formatting, plus each component's anatomy and states), `kit.html` (real components in dark and light side by side, at 375px and 1280px; static, no data or storage; open in a browser). It points to `design/cards/handoff/CARDS.md` and `design/start-sit/START-SIT.md`.
+- **Keep it in sync when styles change:** run `node design/kit/build-kit.js`. It regenerates `TOKENS.css` from the `:root` blocks and rebuilds `kit.html` with the current stylesheet copied from `index.html`. Component markup comes from `design/kit/captures/` (real renderer output captured from the running app, photos replaced by a placeholder, managers' names by fictional ones); re-capture a component only when its markup changes, and update `DESIGN_SYSTEM.md` when a rule or component changes.
+
 ## Architecture
 
 One HTML file (vanilla JS, no build step, no framework), inline CSS, Google Fonts (Inter) loaded via `<link>`. No backend — Sleeper's API is called directly from the browser. The one companion is **`nflverse.json`**, a static data file built by **`build_nflverse.py`** and served next to the HTML (see "nflverse" below for why it can't be fetched from the browser directly).

@@ -1,0 +1,146 @@
+/* Sleepa design tokens: generated from index.html by design/kit/build-kit.js. Do not edit by hand.
+   Light ("stone and paper") is the base. Dark applies when the OS is dark (unless the user picked Light) or when
+   html[data-theme="dark"]. Trading cards (.cd) are always Dark Chrome. */
+
+:root{   /* light: warm stone and paper; no pure white; accents a shade deeper for contrast */
+  /* Surfaces */
+  --bg: #E8E5DE;
+  --surface: #F4F2EC;
+  --surface-2: #ECE9E1;
+  --surface-3: #E0DCD2;
+  --hair: rgba(60,50,30,0.10);
+  --scrim: rgba(40,34,24,0.35);
+  /* Text */
+  --text: #23221F;
+  --text-2: #5C5950;
+  --text-3: #8B877D;
+  /* Accent / warn / danger */
+  --accent: #18814E;
+  --accent-soft: rgba(24,129,78,0.12);
+  --on-accent: #F6F4EE;
+  --danger: #C4321F;
+  --danger-soft: rgba(196,50,31,0.10);
+  --warn: #A2670F;
+  --warn-soft: rgba(200,140,30,0.17);
+  /* Elevation (shadows) */
+  --shadow: 0 1px 2px rgba(60,50,30,0.06), 0 8px 24px rgba(60,50,30,0.06);
+  --shadow-lg: 0 24px 60px rgba(40,32,18,0.20);
+  /* Position colors (slot tags, rings, chart bars) */
+  --pos-QB: #2F6BD6;
+  --pos-RB: #18814E;
+  --pos-WR: #C2700A;
+  --pos-TE: #8A44C8;
+  --pos-K: #75726A;
+  --pos-DEF: #0A86AB;
+  --pos-DL: #B8456B;
+  --pos-LB: #9A6B1E;
+  --pos-DB: #3E7F86;
+  --pos-IDP_FLEX: #8B5A74;
+  /* Logo mark */
+  --mark-body: #27272a;
+  --mark-ear: #3f3f46;
+  --mark-visor: #09090b;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"]{   /* dark: near-black surfaces, bright accents */
+  /* Surfaces */
+  --bg: #0B0B0D;
+  --surface: #151518;
+  --surface-2: #1E1E22;
+  --surface-3: #29292F;
+  --hair: rgba(255,255,255,0.07);
+  --scrim: rgba(0,0,0,0.55);
+  /* Text */
+  --text: #F5F5F7;
+  --text-2: #A1A1AA;
+  --text-3: #6E6E78;
+  /* Accent / warn / danger */
+  --accent: #3DD68C;
+  --accent-soft: rgba(61,214,140,0.13);
+  --on-accent: #06240F;
+  --danger: #FF5A4F;
+  --danger-soft: rgba(255,90,79,0.12);
+  --warn: #FFB340;
+  --warn-soft: rgba(255,179,64,0.15);
+  /* Elevation (shadows) */
+  --shadow: none;
+  --shadow-lg: 0 24px 60px rgba(0,0,0,0.5);
+  /* Position colors (slot tags, rings, chart bars) */
+  --pos-QB: #6EA1FF;
+  --pos-RB: #3DD68C;
+  --pos-WR: #FFB340;
+  --pos-TE: #C58BFF;
+  --pos-K: #A1A1AA;
+  --pos-DEF: #5AD2F4;
+  --pos-DL: #FF7EA8;
+  --pos-LB: #E8B45A;
+  --pos-DB: #6FD3DB;
+  --pos-IDP_FLEX: #D59ABB;
+  /* Logo mark */
+  --mark-body: #f4f4f5;
+  --mark-ear: #d4d4d8;
+  --mark-visor: #0e0e10;
+  color-scheme: dark;
+}
+
+:root{
+  /* Matchup tone (difficulty strips, chips, Start / Sit "mt" colors): always resolved from the theme */
+  --mt-fav: var(--accent);      /* favorable / easy */
+  --mt-neu: var(--warn);        /* neutral / mid */
+  --mt-tough: var(--danger);    /* tough / hard */
+
+  /* Impact colors (Sleepa Zone live feed: a play's effect on your matchup) */
+  --impact-pos: var(--accent);
+  --impact-neg: var(--danger);
+  --impact-mixed: var(--warn);
+  --impact-neutral: var(--text-3);
+
+  /* Foil stops for the Huddle trading cards: conic-gradient(from var(--fa, 220deg), var(--foil-*)) */
+  --foil-base: #4a4a52 0%, #2a2a2f 30%, #5a5a62 55%, #232327 80%, #4a4a52 100%;
+  --foil-silver: #3a3a42 0%, #e9e9ec 12%, #6e6e78 24%, #b8b8c0 36%, #d9d9de 50%, #45454d 62%, #f4f4f5 76%, #8b8b95 88%, #3a3a42 100%;
+  --foil-gold: #5a3f10 0%, #f3d9a0 12%, #9A6B1E 26%, #fff3d6 42%, #A2670F 56%, #E8B45A 72%, #fff3d6 86%, #5a3f10 100%;
+  --foil-holo: #FF7EA8 0%, #FFB340 17%, #3DD68C 33%, #5AD2F4 50%, #6EA1FF 67%, #C58BFF 83%, #FF7EA8 100%;
+  --foil-moon: #2a2d52 0%, #c9ccf0 15%, #4a4f86 30%, #e9e9ec 48%, #2a2d52 62%, #aeb3e6 80%, #2a2d52 100%;
+
+  /* Card shadow / glow */
+  --card-shadow: 0 24px 60px rgba(0,0,0,.5);
+  --card-glow-gold: 0 0 28px rgba(232,180,90,.18);
+  --card-glow-holo: 0 0 36px rgba(197,139,255,.28);
+
+  /* Radii */
+  --radius-lg: 20px;
+  --radius: 14px;
+  --radius-sm: 10px;
+  /* also used directly: 999px pills, 16px Huddle cards / rails, 12px rows & inputs, 6px chips, 5px status chips */
+
+  /* Motion */
+  --ease: cubic-bezier(.2,.8,.2,1);
+  --spring: cubic-bezier(.34,1.4,.5,1);
+
+  /* Aliases */
+  --muted: var(--text-2);
+  --pos-FLEX: var(--accent);
+
+  /* Spacing: no tokens in the app. Scale in use: 2 4 6 8 10 12 14 16 18 20 24 28 36 px.
+     Page gutter 16px (phone) / 20px (narrow) / 36px (desktop main); cards pad 16-20px; list rows 10-12px. */
+}
+
+/* z-index layers (fixed / overlay stacking, low to high) */
+:root{
+  --z-popover: 30;     /* league menu, Zone breakdown, card legend, chalkboard popover */
+  --z-tabbar: 40;      /* phone bottom bar, Start / Sit sticky footer */
+  --z-safe-shield: 45; /* status-bar shield (safe-area top) */
+  --z-brand-menu: 46;
+  --z-huddle: 47;      /* Sleepa Huddle full screen */
+  --z-zone: 48;        /* Sleepa Zone full screen */
+  --z-sheet: 50;       /* phone player sheet (.overlay) */
+  --z-toast: 60;       /* VS / Start-Sit toast */
+  --z-ss-sheet: 71;    /* Start / Sit picker sheet (scrim 70) */
+  --z-drag: 90;        /* Huddle drag ghost */
+  --z-fullview: 100;   /* full-screen player / roster view (.max) */
+  --z-zone-back: 120;
+  --z-shortcuts: 400;  /* keyboard cheat sheet */
+  --z-search: 410;     /* universal search */
+  /* The app uses these as literal numbers; the variables here are documentation. */
+}
