@@ -221,8 +221,8 @@
     const I = new Function(['const INTEL_TUNE', 'const intelClamp', 'function intelNum(', 'function intelFav(', 'function intelLineText(', 'function intelMoneyline(',
       'function intelImplied(', 'function intelScript(', 'function intelRoof(', 'function intelWeatherPenalty(', 'function intelImpact(', 'function intelEnv(',
       'function intelTone(', 'function intelEnvWord(', 'function intelWeatherFor(', 'function intelFlags(', 'function intelRest(', 'function intelTzOffset(', 'function intelTzCrossed(', 'function intelEdgeText(',
-      'function intelLineMove(', 'function intelLinesState(', 'function intelDvpTone(', 'function intelSky(', 'function intelWeatherFrom('].map(extract).join('\n') +
-      '; return { INTEL_TUNE, intelNum, intelLineText, intelMoneyline, intelImplied, intelScript, intelRoof, intelWeatherPenalty, intelImpact, intelEnv, intelTone, intelEnvWord, intelWeatherFor, intelFlags, intelRest, intelTzCrossed, intelEdgeText, intelLineMove, intelLinesState, intelDvpTone, intelSky, intelWeatherFrom };')();
+      'const INTEL_INJ_ORDER', 'const INTEL_INJ_DEPTH', 'function intelKeyInjuries(', 'function intelQbOut(', 'function intelLineMove(', 'function intelLinesState(', 'function intelDvpTone(', 'function intelSky(', 'function intelWeatherFrom('].map(extract).join('\n') +
+      '; return { INTEL_TUNE, intelNum, intelLineText, intelMoneyline, intelImplied, intelScript, intelRoof, intelWeatherPenalty, intelImpact, intelEnv, intelTone, intelEnvWord, intelWeatherFor, intelFlags, intelRest, intelTzCrossed, intelEdgeText, intelKeyInjuries, intelQbOut, intelLineMove, intelLinesState, intelDvpTone, intelSky, intelWeatherFrom };')();
     const eq = function(name, got, want){ const g = JSON.stringify(got), w = JSON.stringify(want); check(name, g === w, 'got ' + g + (g === w ? '' : ', want ' + w)); };
     // lines, sportsbook style (nflverse spread is positive when the HOME team is favored)
     eq('home favored by 3: "CIN −3 · O/U 46.5"', I.intelLineText({ spread: 3, total: 46.5 }, 'PIT', 'CIN'), 'CIN −3 · O/U 46.5');
@@ -301,6 +301,17 @@
     const w = I.intelWeatherFrom(hourly, Date.parse('2026-10-11T17:00:00Z'), 4);
     eq('forecast window (4 game hours only): kickoff temp, AVERAGE wind, peak gust, max chance, average mm/h, no snow',
       [w.temp, w.wind, w.gust, w.precip, w.mm, w.snow, w.hourly.length], [51, 13, 16, 40, 0.4, false, 4]);
+    const h2 = Object.assign({}, hourly, { wind_gusts_10m: [20, 22, 31, 25, 18, 40], apparent_temperature: [44, 45, 46, 44, 41, 40] });
+    const w2 = I.intelWeatherFrom(h2, Date.parse('2026-10-11T17:00:00Z'), 4, ['2026-10-10T22:50', '2026-10-11T22:48', '2026-10-12T22:46']);
+    eq('gusts come from the gust column; feels-like at kickoff; sunset on game day', [w2.gust, w2.feels, new Date(w2.sunset).toISOString()], [31, 45, '2026-10-11T22:48:00.000Z']);
+    eq('1 pm game ends before sunset; 4:25 pm game ends after it', [w2.night, I.intelWeatherFrom(h2, Date.parse('2026-10-11T20:00:00Z'), 4, ['2026-10-11T22:48']).night], [false, true]);
+    // key injuries
+    const inj = [{ pid: 1, name: 'Starter QB', pos: 'QB', status: 'Out', depth: 'QB1', proj: 18 }, { pid: 2, name: 'Backup QB', pos: 'QB', status: 'Questionable', depth: 'QB2', proj: 2 },
+      { pid: 3, name: 'WR3', pos: 'WR', status: 'Questionable', depth: 'WR3', proj: 7 }, { pid: 4, name: 'WR5', pos: 'WR', status: 'Out', depth: 'WR5', proj: 1 },
+      { pid: 5, name: 'RB1', pos: 'RB', status: 'Doubtful', depth: 'RB1', proj: 12 }, { pid: 6, name: 'Healthy TE', pos: 'TE', status: null, depth: 'TE1', proj: 9 },
+      { pid: 7, name: 'Big proj, no depth', pos: 'WR', status: 'Questionable', depth: null, proj: 11 }];
+    eq('key injuries: serious first, QB first, deep backups and healthy players left out', I.intelKeyInjuries(inj).map(function(x){ return x.name; }), ['Starter QB', 'RB1', 'WR3', 'Big proj, no depth']);
+    eq('QB out: only when the depth-chart QB1 is out or doubtful', [I.intelQbOut(I.intelKeyInjuries(inj)), I.intelQbOut(I.intelKeyInjuries(inj.slice(1)))], [true, false]);
     // the live build (after the Action has run): every game this week resolves to a venue and readable lines
     try{
       const nv = await (await fetch('../nflverse.json', { cache: 'no-cache' })).json();

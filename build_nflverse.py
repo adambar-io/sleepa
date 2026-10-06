@@ -68,6 +68,8 @@ def default_season():
 
 def get(url):
     headers = {'User-Agent': 'sleepa build_nflverse.py'}
+    if 'wikipedia.org' in url:   # Wikimedia asks for a contactable agent
+        headers['User-Agent'] = 'sleepa/1.0 (+https://github.com/adambar-io/sleepa) build_nflverse.py'
     if 'espn.com' in url:   # ESPN answers 403 to the custom agent string above (checked Sept 2026)
         headers['User-Agent'] = 'Mozilla/5.0 (compatible; sleepa/1.0; +https://github.com/adambar-io/sleepa)'
     if url.startswith('https://api.github.com/') and os.environ.get('GITHUB_TOKEN'):
@@ -711,12 +713,64 @@ def resolve_venue(r, venues, by_name):
     return r.get('stadium_id') or named
 
 
+ESPN_CORE = 'https://sports.core.api.espn.com/v2/sports/football/leagues/nfl'
+
+
+def wiki_photo(name):
+    """A free-licensed (Wikimedia Commons) thumbnail for a coach, only when the Wikipedia article title is exactly the name
+    (optionally with a disambiguation) and describes an American football person; otherwise None."""
+    q = urllib.parse.urlencode({'action': 'query', 'format': 'json', 'generator': 'search', 'gsrsearch': 'intitle:"' + name + '" American football coach',
+                                'gsrlimit': 5, 'prop': 'pageimages|description', 'piprop': 'thumbnail', 'pithumbsize': 200, 'pilicense': 'free'})
+    try:
+        pages = (json.loads(get('https://en.wikipedia.org/w/api.php?' + q)).get('query') or {}).get('pages') or {}
+    except Exception:
+        return None
+    for p in sorted(pages.values(), key=lambda x: x.get('index', 99)):
+        if p.get('title', '').split(' (')[0] == name and 'football' in (p.get('description') or '').lower() and p.get('thumbnail'):
+            return p['thumbnail']['source'].split('?')[0]
+    return None
+
+
+def espn_coaches(season, previous):
+    """Head coach per team from ESPN's public API: { team: { name, img, exp } }. Reused for a week (coaches rarely change)."""
+    old = previous or {}
+    if old.get('season') == season and old.get('coaches') and old.get('coaches_at'):
+        try:
+            age = datetime.datetime.now(datetime.timezone.utc) - datetime.datetime.strptime(old['coaches_at'], '%Y-%m-%dT%H:%MZ').replace(tzinfo=datetime.timezone.utc)
+            if age < datetime.timedelta(days=7):
+                return old['coaches'], old['coaches_at']
+        except ValueError:
+            pass
+    teams = json.loads(get('https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams'))['sports'][0]['leagues'][0]['teams']
+
+    def one(t):
+        tid, abbr = t['team']['id'], t['team']['abbreviation']
+        try:
+            refs = json.loads(get(f'{ESPN_CORE}/seasons/{season}/teams/{tid}/coaches')).get('items') or []
+            if not refs:
+                return None
+            c = json.loads(get(refs[0]['$ref'].replace('http://', 'https://')))
+            name = (c.get('firstName', '') + ' ' + c.get('lastName', '')).strip()
+            img, src = (c.get('headshot') or {}).get('href'), 'espn'
+            if not img:
+                img, src = wiki_photo(name), 'wikimedia'
+            return ESPN_TEAM_FIX.get(abbr, abbr), {'name': name, 'img': img, 'src': src if img else None, 'exp': c.get('experience')}
+        except Exception as e:
+            print('  (coach unavailable for', abbr, e, ')', file=sys.stderr)
+            return None
+
+    with ThreadPoolExecutor(max_workers=8) as ex:
+        got = [x for x in ex.map(one, teams) if x]
+    return {k: v for k, v in got}, datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%MZ')
+
+
 def record_str(w, l, t):
     return f'{w}-{l}' + (f'-{t}' if t else '')
 
 
-def build_intel(season, week, venues, by_name, history):
-    rows = [r for r in schedule_rows() if r['game_type'] == 'REG']
+def build_intel(season, week, venues, by_name, history, previous=None):
+    every = schedule_rows()
+    rows = [r for r in every if r['game_type'] == 'REG']
     cur = [r for r in rows if r['season'] == str(season) and r['week'] == str(week)]
     if not cur:
         return None, history
@@ -731,13 +785,21 @@ def build_intel(season, week, venues, by_name, history):
                 c[vid] = c.get(vid, 0) + 1
     home_venue = {t: max(c, key=c.get) for t, c in home_count.items()}
 
-    # this season so far: straight-up and against-the-spread records
-    rec, ats = {}, {}
+    # this season so far: straight-up and against-the-spread records, points for / against, games over the total
+    rec, ats, pts, ou = {}, {}, {}, {}
     for r in rows:
         if r['season'] != str(season) or r['result'] in ('', 'NA') or int(r['week']) >= week:
             continue
         res = float(r['result'])   # home score - away score
         sp = num(r['spread_line'])
+        hs, as_, tl = num(r['home_score']), num(r['away_score']), num(r['total_line'])
+        for side, mine, theirs in ((team(r['home_team']), hs, as_), (team(r['away_team']), as_, hs)):
+            if mine is not None and theirs is not None:
+                p = pts.setdefault(side, [0.0, 0.0, 0])
+                p[0] += mine; p[1] += theirs; p[2] += 1
+                if tl is not None:
+                    o = ou.setdefault(side, [0, 0, 0])
+                    o[0 if hs + as_ > tl else 1 if hs + as_ < tl else 2] += 1
         for side, sign in ((team(r['home_team']), 1), (team(r['away_team']), -1)):
             m = res * sign
             a = rec.setdefault(side, [0, 0, 0])
@@ -765,6 +827,19 @@ def build_intel(season, week, venues, by_name, history):
         if sp is not None:
             e['ats'][0 if res > sp else 1 if res < sp else 2] += 1
 
+    # last meetings between each pair (any season, playoffs included), newest first
+    meet = {}
+    for r in every:
+        if r['result'] in ('', 'NA') or (int(r['season']) == season and int(r['week']) >= week):
+            continue
+        key = tuple(sorted((team(r['home_team']), team(r['away_team']))))
+        meet.setdefault(key, []).append({'season': int(r['season']), 'week': r['week'], 'type': r['game_type'], 'away': team(r['away_team']), 'home': team(r['home_team']),
+                                          'as': num(r['away_score']), 'hs': num(r['home_score'])})
+    try:
+        coaches, coaches_at = espn_coaches(season, previous)
+    except Exception as e:
+        print('  (coaches unavailable:', e, ')', file=sys.stderr)
+        coaches, coaches_at = (previous or {}).get('coaches') or {}, (previous or {}).get('coaches_at')
     games, snap_at = {}, datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%MZ')
     if history.get('season') != season or history.get('week') != week:
         history = {'season': season, 'week': week, 'games': {}}
@@ -795,12 +870,20 @@ def build_intel(season, week, venues, by_name, history):
             hv = venues.get(home_venue.get(t)) or {}
             if hv.get('tz') and v.get('tz'):
                 g.setdefault('tz', {})[side] = [hv['tz'], v['tz']]
+            p, o = pts.get(t), ou.get(t)
+            g.setdefault('form', {})[side] = {'gp': p[2] if p else 0, 'pf': round(p[0] / p[2], 1) if p and p[2] else None, 'pa': round(p[1] / p[2], 1) if p and p[2] else None,
+                                              'ou': record_str(*o) if o else None}
+        g['qb'] = {'away': r.get('away_qb_name') or None, 'home': r.get('home_qb_name') or None}
+        g['coach'] = {'away': r.get('away_coach') or None, 'home': r.get('home_coach') or None}
+        h2h = sorted(meet.get(tuple(sorted((away, home))), []), key=lambda m: (m['season'], m['type'] != 'REG', int(m['week']) if str(m['week']).isdigit() else 0), reverse=True)[:5]
+        if h2h:
+            g['h2h'] = h2h
         e = edge.get((vid, home))
         if e and not g['neutral']:
             g['edge'] = {'win': round(e['w'] / e['n'], 3), 'n': e['n'], 'margin': round(e['m'] / e['n'], 1), 'ats': record_str(*e['ats'])}
         games[r['game_id']] = g
-    intel = {'week': week, 'generated': snap_at, 'edge_seasons': [first, season - 1],
-             'home_base': round(base[0] / base[1], 3) if base[1] else None, 'games': games}
+    intel = {'week': week, 'generated': snap_at, 'edge_seasons': [first, season - 1], 'season': season,
+             'home_base': round(base[0] / base[1], 3) if base[1] else None, 'games': games, 'coaches': coaches, 'coaches_at': coaches_at}
     return intel, history
 
 
@@ -830,7 +913,7 @@ def main():
     hist_path = os.path.join(os.path.dirname(os.path.abspath(args.out)), 'line_history.json')
     try:
         venues, by_name = load_venues()
-        intel, history = build_intel(args.season, cur_week, venues, by_name, load_previous(hist_path))
+        intel, history = build_intel(args.season, cur_week, venues, by_name, load_previous(hist_path), old.get('intel'))
         if intel:
             out['intel'] = intel
             with open(hist_path, 'w', encoding='utf-8') as f:

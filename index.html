@@ -1664,6 +1664,27 @@
   .it-move{ display: flex; align-items: center; gap: 12px; margin-top: 12px; } .it-move svg{ width: 120px; height: 28px; flex: none; }
   .it-move path{ fill: none; stroke: var(--text-2); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; } .it-move small{ font-size: 12px; color: var(--text-2); }
   .it-page{ display: flex; flex-direction: column; gap: 12px; }
+  .it-qb{ font-style: normal; font-size: 11.5px; font-weight: 600; color: var(--text-2); white-space: nowrap; max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
+  .it-two2{ display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .it-inj > b, .it-watch > b{ display: block; font-size: 12px; font-weight: 800; letter-spacing: .06em; color: var(--text-2); margin-bottom: 6px; }
+  .it-injr{ display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "n c" "s c"; align-items: center; column-gap: 8px; padding: 6px 0; cursor: pointer; }
+  .it-injr + .it-injr{ border-top: 1px solid var(--hair); }
+  .it-injn{ grid-area: n; font-size: 13.5px; font-weight: 600; min-width: 0; } .it-injr small{ grid-area: s; font-size: 11.5px; color: var(--text-3); } .it-injr .status-chip{ grid-area: c; }
+  .it-wr{ display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 6px 0; cursor: pointer; }
+  .it-wr + .it-wr{ border-top: 1px solid var(--hair); } .it-wr .it-pj{ font-size: 14px; }
+  .it-fa{ font-style: normal; font-weight: 700; color: var(--accent); } .it-yours{ font-style: normal; font-weight: 700; color: var(--text); }
+  .it-fr{ display: grid; grid-template-columns: 52px repeat(4, minmax(0, 1fr)); align-items: end; gap: 8px; padding: 8px 0; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .it-fr + .it-fr{ border-top: 1px solid var(--hair); } .it-fr > b{ font-size: 13px; color: var(--text-2); align-self: center; }
+  .it-fr small{ display: block; font-size: 10px; font-weight: 700; letter-spacing: .06em; color: var(--text-3); text-transform: uppercase; }
+  .it-h2h{ display: grid; grid-template-columns: 1fr auto auto auto; align-items: baseline; gap: 10px; padding: 6px 0; font-size: 14px; font-variant-numeric: tabular-nums; color: var(--text-2); }
+  .it-h2h + .it-h2h{ border-top: 1px solid var(--hair); } .it-h2h small{ font-size: 12px; color: var(--text-3); } .it-h2h .w{ color: var(--text); font-weight: 700; } .it-at{ font-size: 11px; color: var(--text-3); }
+  .it-coach{ display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .it-cph{ position: relative; flex: none; width: 56px; height: 56px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: var(--surface-2); box-shadow: inset 0 0 0 2.5px var(--tc); }
+  .it-cph b{ font-size: 15px; font-weight: 800; color: var(--text-2); } .it-cph img{ position: absolute; inset: 3px; width: calc(100% - 6px); height: calc(100% - 6px); border-radius: 50%; object-fit: cover; object-position: 50% 20%; }
+  .it-coach .it-pn small{ display: block; }
+  @container itv (max-width: 560px){ .it-two2.stack{ grid-template-columns: 1fr; } }
+  .it-ov .it-two2.stack{ grid-template-columns: 1fr; }
+  @media (max-width: 420px){ .it-two2{ gap: 10px; } .it-fr{ grid-template-columns: 44px repeat(4, minmax(0, 1fr)); font-size: 14px; } }
   /* desktop: ring of game cards (the Zone recipe) + detail grid */
   .it-ringw{ position: relative; height: 380px; perspective: 2000px; perspective-origin: 50% 35%; overflow: hidden; margin: 0 -8px; }
   .it-ring3d{ position: absolute; inset: 0; }
@@ -5054,6 +5075,22 @@
     return { pct: Math.round(edge.win * 100), vs: d === null ? null : Math.round(d * 100), n: edge.n, margin: edge.margin, ats: edge.ats,
       real: se !== null && Math.abs(d) > INTEL_TUNE.EDGE_Z * se };
   }
+  // Key injuries for one team: players with a not-healthy status who matter (depth QB1, RB1-2, WR1-3, TE1, or a
+  // projection of 8+), most serious first, then by depth. list = [{ pid, name, pos, status, depth: 'WR2' | null, proj }].
+  const INTEL_INJ_ORDER = { Out: 0, IR: 0, PUP: 0, Sus: 0, NA: 0, Doubtful: 1, Questionable: 2 };
+  const INTEL_INJ_DEPTH = { QB: 1, RB: 2, WR: 3, TE: 1 };
+  function intelKeyInjuries(list){
+    return (list || []).filter(function(x){
+      if(!(x.status in INTEL_INJ_ORDER)) return false;
+      const m = /^([A-Z]+)(\d+)$/.exec(x.depth || ''), keyDepth = m && INTEL_INJ_DEPTH[m[1]] && Number(m[2]) <= INTEL_INJ_DEPTH[m[1]];
+      return keyDepth || (typeof x.proj === 'number' && x.proj >= 8);
+    }).sort(function(a, b){
+      const d = function(x){ const m = /(\d+)$/.exec(x.depth || ''); return m ? Number(m[1]) : 9; };
+      return INTEL_INJ_ORDER[a.status] - INTEL_INJ_ORDER[b.status] || (a.pos === 'QB' ? -1 : 0) - (b.pos === 'QB' ? -1 : 0) || d(a) - d(b) || (b.proj || 0) - (a.proj || 0);
+    });
+  }
+  // the starting QB is out (or doubtful): the biggest single swing in a game's environment
+  function intelQbOut(injuries){ return (injuries || []).some(function(x){ return x.pos === 'QB' && x.depth === 'QB1' && INTEL_INJ_ORDER[x.status] <= 1; }); }
   // Line movement from the snapshots: { open, now, spreadMove, totalMove } (spread in the HOME team's terms), or null.
   function intelLineMove(snaps){
     if(!snaps || snaps.length < 2) return null;
@@ -5082,20 +5119,24 @@
   }
   // Open-Meteo hourly forecast → the game window: { temp (at kickoff), wind (average mph over the game), gust (highest hourly
   // wind), precip (highest chance of rain, %), mm (expected rain, average mm/h), dir, code, hourly [{ t, temp, wind, precip, mm }] }.
-  function intelWeatherFrom(hourly, kickMs, hours){
+  function intelWeatherFrom(hourly, kickMs, hours, sunsets){
     if(!hourly || !hourly.time) return null;
     const start = Math.floor(kickMs / 3600e3) * 3600e3, end = start + (hours || 4) * 3600e3, out = [];
     const col = function(k, i){ return hourly[k] ? hourly[k][i] : null; };
     hourly.time.forEach(function(t, i){
       const ms = Date.parse(t.length === 16 ? t + ':00Z' : t);
-      if(ms >= start && ms < end) out.push({ t: ms, temp: col('temperature_2m', i), wind: col('wind_speed_10m', i), dir: col('wind_direction_10m', i), precip: col('precipitation_probability', i), mm: col('precipitation', i), code: col('weather_code', i) });
+      if(ms >= start && ms < end) out.push({ t: ms, temp: col('temperature_2m', i), feels: col('apparent_temperature', i), wind: col('wind_speed_10m', i), gust: col('wind_gusts_10m', i),
+        dir: col('wind_direction_10m', i), precip: col('precipitation_probability', i), mm: col('precipitation', i), code: col('weather_code', i) });
     });
     if(!out.length) return null;
     const nums = function(k){ return out.map(function(h){ return h[k]; }).filter(function(x){ return typeof x === 'number'; }); };
     const avg = function(k){ const v = nums(k); return v.length ? v.reduce(function(a, b){ return a + b; }, 0) / v.length : null; };
     const max = function(k){ const v = nums(k); return v.length ? Math.max.apply(null, v) : null; };
     const snow = out.some(function(h){ return (h.code >= 71 && h.code <= 77) || h.code === 85 || h.code === 86; });
-    return { temp: out[0].temp, wind: avg('wind'), gust: max('wind'), dir: out[0].dir, precip: max('precip'), mm: avg('mm'), snow: snow, code: out[0].code, hourly: out };
+    // sunset: the one on kickoff day (UTC timestamps); a game that ends after it finishes under the lights
+    const sun = (sunsets || []).map(function(t){ return Date.parse(t.length === 16 ? t + ':00Z' : t); }).filter(function(ms){ return ms > kickMs - 864e5 / 2; }).sort()[0] || null;
+    return { temp: out[0].temp, feels: out[0].feels, wind: avg('wind'), gust: nums('gust').length ? max('gust') : max('wind'), dir: out[0].dir, precip: max('precip'), mm: avg('mm'), snow: snow,
+      code: out[0].code, sunset: sun, night: sun !== null && kickMs + 3 * 3600e3 > sun, hourly: out };
   }
 
   // ---- loading (only when Intel is used) ----
@@ -5127,10 +5168,10 @@
     if(c && Date.now() - c.ts < INTEL_TUNE.WEATHER_TTL_MIN * 60e3) return c.p;
     const hh = function(ms){ return new Date(ms).toISOString().slice(0, 13) + ':00'; };
     const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + v.lat + '&longitude=' + v.lon +
-      '&hourly=temperature_2m,precipitation_probability,precipitation,wind_speed_10m,wind_direction_10m,weather_code' +
-      '&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=GMT&start_hour=' + hh(kick - 3600e3) + '&end_hour=' + hh(kick + 4 * 3600e3);
+      '&hourly=temperature_2m,apparent_temperature,precipitation_probability,precipitation,wind_speed_10m,wind_gusts_10m,wind_direction_10m,weather_code&daily=sunset' +
+      '&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=GMT&start_date=' + new Date(kick - 864e5 / 2).toISOString().slice(0, 10) + '&end_date=' + new Date(kick + 864e5 / 2).toISOString().slice(0, 10);
     const p = fetchJSON(url).then(function(d){
-      const w = intelWeatherFrom(d && d.hourly, kick, 4);
+      const w = intelWeatherFrom(d && d.hourly, kick, 4, d && d.daily && d.daily.sunset);
       return w ? { w: w, ts: Date.now() } : { err: 'no forecast' };
     }, function(e){ delete INTEL.wx[g.id]; return { err: String(e && e.message || e) }; });
     INTEL.wx[g.id] = { ts: Date.now(), p: p };
@@ -13753,6 +13794,26 @@
     }
     return Object.keys(out).map(function(k){ return out[k]; });
   }
+  // players by NFL team (rebuilt when the player database changes)
+  let itTeamIdx = { players: null, m: {} };
+  function itTeamPlayers(team){
+    if(itTeamIdx.players !== ctx.players){
+      const m = {};
+      Object.keys(ctx.players).forEach(function(pid){ const p = ctx.players[pid]; if(p.team && ['QB', 'RB', 'WR', 'TE', 'K'].indexOf(p.position) !== -1) (m[p.team] = m[p.team] || []).push(pid); });
+      itTeamIdx = { players: ctx.players, m: m };
+    }
+    return itTeamIdx.m[team] || [];
+  }
+  function itInjuries(team){
+    return intelKeyInjuries(itTeamPlayers(team).map(function(pid){
+      const p = ctx.players[pid], nv = ctx.nfl && ctx.nfl.players && ctx.nfl.players[pid];
+      return { pid: pid, name: playerName(p), pos: p.position, status: p.injury_status || null, depth: nv && nv.d || null, proj: ctx.projections[pid] };
+    }));
+  }
+  function itWatch(team, n){
+    return itTeamPlayers(team).filter(function(pid){ const p = ctx.players[pid]; return p.position !== 'K' && typeof ctx.projections[pid] === 'number' && !cantPlay(p.injury_status); })   // ruled out: not someone to watch
+      .sort(function(a, b){ return ctx.projections[b] - ctx.projections[a]; }).slice(0, n || 3);
+  }
   // everything a card / page needs for one game
   function itModel(g, mine){
     const d = intelData() || {}, v = intelVenue(g), roof = intelRoofOf(g), wx = IT_WX[g.id] || { st: 'wait' };
@@ -13761,7 +13822,8 @@
     const my = (mine || []).filter(function(x){ return x.team === g.away || x.team === g.home; })
       .sort(function(a, b){ return (b.proj || 0) - (a.proj || 0); });
     return { g: g, v: v, roof: roof, wx: wx, w: w, pen: pen, impact: intelImpact(pen), env: env, tone: intelTone(env),
-      flags: intelFlags(g, w, roof, v && v.city), implied: intelImplied(g.lines), script: intelScript(total),
+      flags: [g.away, g.home].filter(function(t){ return intelQbOut(itInjuries(t)); }).map(function(t){ return { k: 'qbout', tone: 'warn', label: t + ' QB out' }; }).concat(intelFlags(g, w, roof, v && v.city)),
+      implied: intelImplied(g.lines), script: intelScript(total),
       line: intelLineText(g.lines, g.away, g.home), lines: intelLinesState(g, d.generated), my: my,
       myTotal: my.reduce(function(s, x){ return s + (typeof x.proj === 'number' ? x.proj : 0); }, 0) };
   }
@@ -13857,9 +13919,9 @@
   function itHeroHTML(m){
     const g = m.g, cd = itCountdown(g);
     return '<div class="it-hero" style="--ta:' + teamColor(g.away) + ';--th:' + teamColor(g.home) + '">' +
-      '<div class="it-side">' + itLogo(g.away, 'lg') + '<small>' + escapeHTML(g.rec ? g.rec.away : '') + '</small></div>' +
+      '<div class="it-side">' + itLogo(g.away, 'lg') + '<small>' + escapeHTML(g.rec ? g.rec.away : '') + '</small>' + (g.qb && g.qb.away ? '<em class="it-qb">QB ' + escapeHTML(g.qb.away) + '</em>' : '') + '</div>' +
       '<div class="it-mid"><small>' + (g.neutral ? 'VS' : 'AT') + '</small><b>' + escapeHTML(itKick(g)) + '</b>' + (cd ? '<span class="it-cd' + (cd === 'Live' ? ' live' : '') + '">' + cd + '</span>' : '') + itOU(m, 'lg') + '</div>' +
-      '<div class="it-side">' + itLogo(g.home, 'lg') + '<small>' + escapeHTML(g.rec ? g.rec.home : '') + '</small></div>' +
+      '<div class="it-side">' + itLogo(g.home, 'lg') + '<small>' + escapeHTML(g.rec ? g.rec.home : '') + '</small>' + (g.qb && g.qb.home ? '<em class="it-qb">QB ' + escapeHTML(g.qb.home) + '</em>' : '') + '</div>' +
       '<div class="it-venue">' + escapeHTML([g.vname, m.v && m.v.city].filter(Boolean).join(' · ')) + '</div></div>';
   }
   function itEnvCardHTML(m){
@@ -13926,14 +13988,15 @@
     const w = m.w, mins = Math.max(0, Math.round((Date.now() - (m.wx.ts || Date.now())) / 60000)), warn = function(on){ return on ? ' class="warn"' : ''; };
     const T = INTEL_TUNE, maxT = Math.max.apply(null, w.hourly.map(function(h){ return h.temp; })), minT = Math.min.apply(null, w.hourly.map(function(h){ return h.temp; }));
     return '<div class="card it-card it-wx">' + head('forecast updated ' + (mins ? mins + ' min ago' : 'just now')) +
-      '<div class="it-wxr"><div><b class="it-tmp"' + warn(w.temp <= T.COLD) + '>' + Math.round(w.temp) + '°F</b><small>' + escapeHTML(intelSky(w.code)) + '</small></div>' +
+      '<div class="it-wxr"><div><b class="it-tmp"' + warn(w.temp <= T.COLD) + '>' + Math.round(w.temp) + '°F</b><small>' + escapeHTML(intelSky(w.code) + (typeof w.feels === 'number' && Math.abs(w.feels - w.temp) >= 3 ? ' · feels ' + Math.round(w.feels) + '°' : '')) + '</small></div>' +
       '<div class="it-wind"><span class="it-arrow" style="--d:' + (w.dir || 0) + 'deg" aria-hidden="true">↑</span><span><b' + warn(w.wind >= T.WIND_HIGH) + '>' + Math.round(w.wind) + ' mph</b><small>avg' + (typeof w.gust === 'number' && w.gust - w.wind >= 3 ? ', up to ' + Math.round(w.gust) : '') + '</small></span></div>' +
       '<div class="it-rain"><b' + warn(typeof w.mm === 'number' && w.mm >= T.RAIN_MM) + '>' + Math.round(w.precip) + '%</b><small>' + (typeof w.mm === 'number' && w.mm >= 0.1 ? w.mm.toFixed(1) + ' mm/h' : 'chance of rain') + '</small></div></div>' +
       (m.roof === 'tbd' ? '<p class="it-note">Retractable roof, not announced: if it’s closed, none of this matters.</p>' : '') +
       '<div class="it-hours">' + w.hourly.map(function(h){
         const hgt = maxT === minT ? 60 : 30 + 70 * (h.temp - minT) / (maxT - minT);
         return '<div><small>' + itTime(h.t).replace(':00', '') + '</small><i style="height:' + hgt.toFixed(0) + '%"' + (typeof h.mm === 'number' && h.mm >= T.RAIN_MM ? ' class="wet"' : '') + '></i><b>' + Math.round(h.temp) + '°</b></div>';
-      }).join('') + '</div><p class="it-attr">Weather data by <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a></p></div>';
+      }).join('') + '</div>' + (w.sunset ? '<p class="it-foot">' + (w.night ? 'Finishes after sunset (' + itTime(w.sunset) + '): under the lights.' : 'Daylight game: sunset ' + itTime(w.sunset) + '.') + '</p>' : '') +
+      '<p class="it-attr">Weather data by <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a></p></div>';
   }
   function itVenueHTML(m){
     const v = m.v, g = m.g;
@@ -13992,13 +14055,63 @@
       '<span><small>Total</small><b>' + (typeof L.total === 'number' ? intelNum(L.total) : '—') + '</b></span>' +
       '<span><small>Moneyline</small><b>' + (L.ml ? escapeHTML(g.away + ' ' + intelMoneyline(L.ml.away) + ' / ' + g.home + ' ' + intelMoneyline(L.ml.home)) : '—') + '</b></span></div>' + move + '</div>';
   }
+  function itInjHTML(m){
+    const g = m.g, ST = { Out: 'out', IR: 'out', PUP: 'out', Sus: 'out', NA: 'out', Doubtful: 'doubt', Questionable: 'warn' };
+    const side = function(t){
+      const list = itInjuries(t);
+      return '<div class="it-inj"><b>' + escapeHTML(t) + '</b>' + (list.length ? list.slice(0, 5).map(function(x){
+        return '<div class="it-injr" data-open="' + escapeHTML(x.pid) + '"><span class="it-injn">' + escapeHTML(x.name) + '</span><small>' + escapeHTML(x.pos + (x.depth ? ' · ' + x.depth : '')) + '</small>' + injuryChip(x.status) + '</div>';
+      }).join('') : '<p class="it-none">No key injuries.</p>') + '</div>';
+    };
+    return '<div class="card it-card"><div class="it-ch"><span class="eyebrow">Injuries</span><span class="it-lt">key players · Sleeper</span></div><div class="it-two2">' + side(g.away) + side(g.home) + '</div></div>';
+  }
+  function itWatchHTML(m){
+    const g = m.g, mine = {}; m.my.forEach(function(x){ mine[x.pid] = true; });
+    const side = function(t){
+      return '<div class="it-watch"><b>' + escapeHTML(t) + '</b>' + itWatch(t, 3).map(function(pid){
+        const p = ctx.players[pid], pc = posColor(posGroup(pid)), fa = isAvailable(pid), own = isMine(pid);
+        return '<div class="it-wr" data-open="' + escapeHTML(pid) + '" style="--pc:' + pc + '">' + avatarTag(pid, 'it-av') + '<span class="it-pn"><b>' + escapeHTML(playerName(p)) + '</b><small>' + escapeHTML(p.position) +
+          (fa ? ' · <em class="it-fa">Free agent</em>' : own ? ' · <em class="it-yours">Yours</em>' : '') + '</small></span><span class="it-pj">' + ctx.projections[pid].toFixed(2) + '</span></div>';
+      }).join('') + '</div>';
+    };
+    return '<div class="card it-card"><div class="it-ch"><span class="eyebrow">Players to watch</span><span class="it-lt">top projected · ' + escapeHTML(ctx.league ? ctx.league.name : '') + '</span></div><div class="it-two2 stack">' + side(g.away) + side(g.home) + '</div></div>';
+  }
+  function itFormHTML(m){
+    const g = m.g, f = g.form || {};
+    const row = function(side){
+      const t = side === 'away' ? g.away : g.home, x = f[side] || {}, ou = x.ou ? x.ou.split('-').map(Number) : null;
+      return '<div class="it-fr"><b>' + escapeHTML(t) + '</b><span><small>Scores</small>' + (typeof x.pf === 'number' ? x.pf.toFixed(1) : '—') + '</span><span><small>Allows</small>' + (typeof x.pa === 'number' ? x.pa.toFixed(1) : '—') + '</span>' +
+        '<span><small>Over</small>' + (ou ? ou[0] + ' of ' + (ou[0] + ou[1] + (ou[2] || 0)) : '—') + '</span><span><small>ATS</small>' + escapeHTML((g.ats && g.ats[side] || '—').replace(/-/g, '–')) + '</span></div>';
+    };
+    return '<div class="card it-card"><div class="it-ch"><span class="eyebrow">Form this season</span><span class="it-lt">per game</span></div>' + row('away') + row('home') + '</div>';
+  }
+  function itH2HHTML(m){
+    const g = m.g, list = g.h2h || [];
+    return '<div class="card it-card"><div class="it-ch"><span class="eyebrow">Head to head</span><span class="it-lt">last ' + (list.length || '') + ' meetings</span></div>' + (list.length ? list.map(function(x){
+      const aw = x.as > x.hs, hw = x.hs > x.as;
+      return '<div class="it-h2h"><small>' + x.season + (x.type === 'REG' ? ' · Wk ' + x.week : ' · Playoffs') + '</small><span class="' + (aw ? 'w' : '') + '">' + escapeHTML(x.away) + ' ' + (x.as === null ? '—' : x.as) + '</span><span class="it-at">@</span><span class="' + (hw ? 'w' : '') + '">' + escapeHTML(x.home) + ' ' + (x.hs === null ? '—' : x.hs) + '</span></div>';
+    }).join('') : '<p class="it-none">No meetings on record.</p>') + '</div>';
+  }
+  function itSidelinesHTML(m){
+    const g = m.g, d = intelData() || {}, C = d.coaches || {}, srcs = {};
+    const one = function(side){
+      const t = side === 'away' ? g.away : g.home, c = C[t] || { name: g.coach && g.coach[side] }, ini = String(c.name || '?').split(' ').map(function(w){ return w.charAt(0); }).join('').slice(0, 2);
+      if(c.img) srcs[c.src || 'espn'] = true;
+      return '<div class="it-coach" style="--tc:' + teamColor(t) + '"><span class="it-cph"><b>' + escapeHTML(ini) + '</b>' + (c.img ? '<img src="' + escapeHTML(c.img) + '" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">' : '') + '</span>' +
+        '<span class="it-pn"><small>' + escapeHTML(t) + ' · head coach</small><b>' + escapeHTML(c.name || '—') + '</b><small>' + (typeof c.exp === 'number' ? (c.exp ? c.exp + (c.exp === 1 ? ' season' : ' seasons') + ' as head coach' : 'First season as head coach') : '') + '</small>' +
+        (g.qb && g.qb[side] ? '<small>QB ' + escapeHTML(g.qb[side]) + '</small>' : '') + '</span></div>';
+    };
+    const html = one('away') + one('home');
+    const credit = Object.keys(srcs).map(function(k){ return k === 'wikimedia' ? 'Wikimedia Commons' : 'ESPN'; }).join(' · ');
+    return '<div class="card it-card"><div class="it-ch"><span class="eyebrow">Sidelines</span></div><div class="it-two2 stack">' + html + '</div>' + (credit ? '<p class="it-attr">Coach photos: ' + credit + '</p>' : '') + '</div>';
+  }
   function itPageHTML(m){
     return '<div class="it-page" data-it-page="' + escapeHTML(m.g.id) + '">' + itHeroHTML(m) + itEnvCardHTML(m) + itImpliedHTML(m) + itMineHTML(m) + itRootHTML(m) +
-      itWeatherHTML(m) + itVenueHTML(m) + itEdgeHTML(m) + itRestHTML(m) + itDvpHTML(m) + itBetHTML(m) + '</div>';
+      itWatchHTML(m) + itInjHTML(m) + itWeatherHTML(m) + itVenueHTML(m) + itEdgeHTML(m) + itRestHTML(m) + itDvpHTML(m) + itBetHTML(m) + itFormHTML(m) + itH2HHTML(m) + itSidelinesHTML(m) + '</div>';
   }
   function itDetailHTML(m){
-    return '<div class="it-detail"><div class="it-dl">' + itMineHTML(m, true) + itRootHTML(m) + '<div class="it-two">' + itRestHTML(m) + itEdgeHTML(m) + '</div>' + itVenueHTML(m) + '</div>' +
-      '<div class="it-dr">' + itEnvCardHTML(m) + itImpliedHTML(m) + itWeatherHTML(m) + itDvpHTML(m) + itBetHTML(m) + '</div></div>';
+    return '<div class="it-detail"><div class="it-dl">' + itMineHTML(m, true) + itRootHTML(m) + itWatchHTML(m) + itInjHTML(m) + '<div class="it-two">' + itRestHTML(m) + itEdgeHTML(m) + '</div>' + itVenueHTML(m) + itSidelinesHTML(m) + '</div>' +
+      '<div class="it-dr">' + itEnvCardHTML(m) + itImpliedHTML(m) + itWeatherHTML(m) + itDvpHTML(m) + itBetHTML(m) + itFormHTML(m) + itH2HHTML(m) + '</div></div>';
   }
 
   // ---- desktop ring (Cards) ----
@@ -14178,7 +14291,7 @@
       if(itDesk()) itLift(id); else openIntel(id, { scope: ctx.it.scope });
       return;
     }
-    if((x = b('.it-pr[data-open]'))){ openAnalysis(x.getAttribute('data-open'), x); return; }
+    if((x = b('.it-pr[data-open], .it-wr[data-open], .it-injr[data-open]'))){ openAnalysis(x.getAttribute('data-open'), x); return; }
     if(t.classList.contains('it-lift')) itUnlift();
   });
   document.addEventListener('keydown', function(e){
