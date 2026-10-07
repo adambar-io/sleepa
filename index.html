@@ -863,6 +863,17 @@
     .col-vs, .h-vs{ width: 136px; }
   }
 
+  /* Players list: fantasy points sit next to the name, then opportunity (snap, target share), then the matchup */
+  #fa-list .col-avg, #fa-view .pl-head .h-avg{ margin-right: 12px; }
+  #fa-list .col-snap, #fa-view .pl-head .h-snap{ width: 58px; }
+  #fa-list .col-opp, #fa-view .pl-head .h-opp{ padding-left: 10px; }
+  /* names first, then points: L3 / Avg always show in table mode; snap, target share and the matchup join as the list widens */
+  @container list (min-width: 600px){ #fa-list .col.col-l3, #fa-view .pl-head .h-col.h-l3, #fa-list .col.col-avg, #fa-view .pl-head .h-col.h-avg{ display: block; width: 50px; text-align: right; color: var(--text-2); } }
+  @container list (max-width: 759px){ #fa-list .col.col-snap, #fa-view .pl-head .h-col.h-snap{ display: none; } }
+  @container list (max-width: 879px){ #fa-list .col.col-tgt, #fa-view .pl-head .h-col.h-tgt{ display: none; } }
+  @container list (max-width: 979px){ #fa-list .col.col-opp, #fa-view .pl-head .h-col.h-opp{ display: none; } #fa-list .slot-row .m-opp{ display: inline; } }
+  .col-l3.hot, .pl-fs.hot{ color: var(--accent) !important; font-weight: 700; } .col-l3.cold, .pl-fs.cold{ color: var(--danger) !important; font-weight: 700; }
+  .pl-fs{ font-weight: 600; color: var(--text); }
   /* expand buttons */
   .xbtn{ width: 32px; height: 32px; padding: 0; border-radius: 10px; display: inline-grid; place-items: center; background: var(--surface-2); color: var(--text-2); flex-shrink: 0; }
   .xbtn svg{ width: 16px; height: 16px; }
@@ -3679,7 +3690,7 @@
           <div id="add-drop"></div>
           <div id="wv"></div>
           <div class="section-title"><span id="pl-title">Available</span> <span style="opacity:0.7;" id="fa-sub"></span><div class="pl-density" role="group" aria-label="Row style"><button type="button" data-pl-rows="compact" aria-label="Compact rows" title="Compact"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg></button><button type="button" data-pl-rows="detailed" aria-label="Detailed rows" title="Detailed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="7" rx="2"/><rect x="4" y="13" width="16" height="7" rx="2"/></svg></button></div><button class="xbtn" data-expand="fa" aria-label="Expand waivers to full screen" title="Expand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M10 20H4v-6M20 4l-6.5 6.5M4 20l6.5-6.5"/></svg></button></div>
-          <div class="list-head pl-head"><div class="h-slot"></div><button type="button" class="h-info h-sort" data-pl-sort="name">Player</button><div class="h-col h-opp">Opp</div><button type="button" class="h-col h-snap h-sort" data-pl-sort="snap" title="Season snap share">Snap</button><button type="button" class="h-col h-tgt h-sort" data-pl-sort="tgt" title="Season target share">Tgt</button><button type="button" class="h-stat h-sort" data-pl-sort="proj">Proj</button><button type="button" class="h-stat h-sort h-last" data-pl-sort="last" title="Last game">Last</button><div class="h-col h-vs">vs your weakest</div><div class="h-pick" aria-hidden="true"></div></div>
+          <div class="list-head pl-head"><div class="h-slot"></div><button type="button" class="h-info h-sort" data-pl-sort="name">Player</button><button type="button" class="h-stat h-sort" data-pl-sort="proj" title="Projected points this week">Proj</button><button type="button" class="h-stat h-sort h-last" data-pl-sort="last" title="Points last game">Last</button><button type="button" class="h-col h-l3 h-sort" data-pl-sort="l3" title="Points per game, last 3 games (green / red: running hot / cold vs his season average)">L3</button><button type="button" class="h-col h-avg h-sort" data-pl-sort="avg" title="Points per game, season">Avg</button><button type="button" class="h-col h-snap h-sort" data-pl-sort="snap" title="Season snap share">Snap</button><button type="button" class="h-col h-tgt h-sort" data-pl-sort="tgt" title="Season target share">Tgt</button><div class="h-col h-opp">Opp</div><div class="h-col h-vs">vs your weakest</div><div class="h-pick" aria-hidden="true"></div></div>
           <div id="fa-list"></div>
           <button class="fa-more" id="fa-more" style="display:none;">Show more</button>
         </section>
@@ -10647,6 +10658,26 @@
     document.getElementById('add-drop').hidden = st.view !== 'avail' || !st.pos.length;
     markSelected();
   }
+  // Recent form vs the season: L3 (points per game, last 3) is green when he is running hot, red when cold, against his
+  // own season average (20% and 2 points apart, after 4+ games, so one big week early on does not count).
+  const PL_FORM = { pct: 0.2, pts: 2, games: 4 };
+  function plForm(pid){
+    const l3 = last3Avg(pid), avg = seasonAvgPts(pid), h = hist(pid);
+    if(l3 == null || avg == null || !h || h.length < PL_FORM.games) return '';
+    const d = l3 - avg;
+    return Math.abs(d) >= PL_FORM.pts && Math.abs(d) >= PL_FORM.pct * Math.max(avg, 1) ? (d > 0 ? 'hot' : 'cold') : '';
+  }
+  function plFormCols(pid){
+    const f = plForm(pid);
+    return '<div class="col col-l3' + (f ? ' ' + f : '') + '"' + (f ? ' title="' + (f === 'hot' ? 'Running hot' : 'Running cold') + ': last 3 vs season average"' : '') + '>' + fmtPts(last3Avg(pid)) + '</div>' +
+      '<div class="col col-avg">' + fmtPts(seasonAvgPts(pid)) + '</div>';
+  }
+  // Phone: the same two numbers lead the stats line under the name.
+  function plFormStats(pid){
+    const l3 = last3Avg(pid), avg = seasonAvgPts(pid), f = plForm(pid);
+    if(l3 == null && avg == null) return '';
+    return '<span class="pl-fs' + (f ? ' ' + f : '') + '"><span class="kv">L3</span> ' + fmtPts(l3) + '</span><span class="pl-fs"><span class="kv">Avg</span> ' + fmtPts(avg) + '</span>';
+  }
   function plRowHTML(pid){
     const p = ctx.players[pid], color = posColor(posGroup(pid)), avail = isAvailable(pid), mine = isMine(pid), owner = ownerOf(pid);
     const who = avail ? faVsLine(pid, p.position)
@@ -10656,18 +10687,18 @@
         '<div class="slot-tag" style="color:' + color + '; border-color:' + color + ';">' + escapeHTML(posGroup(pid)) + '</div>' +
         '<img class="avatar" src="' + escapeHTML(playerImageUrl(pid)) + '" loading="lazy" onerror="this.style.visibility=\'hidden\'" style="--team:' + teamColor(p.team) + '"' + analyzeAttr(pid) + '>' +
         '<div class="player-info">' +
-          '<div class="player-name">' + analyzeName(pid, playerName(p)) + ecrChipHTML(pid) + injuryChip(p.injury_status) + '</div>' +
+          '<div class="player-name">' + analyzeName(pid, playerName(p)) + injuryChip(p.injury_status) + '</div>' +
           '<div class="player-meta">' + escapeHTML(eligLabel(pid)) + ' · ' + escapeHTML(p.team || 'FA') +
             (tc != null ? ' · <span class="tr-count ' + ctx.pl.trendKind + '">' + (ctx.pl.trendKind === 'add' ? '+' : '−') + fmtCount(tc) + '</span>' : '') +
             (ctx.pl.view === 'trend' && ctx.pl.trendKind === 'rise' ? risingHTML(pid) : '') +
             '<span class="m-opp">' + matchupHTML(p.team) + ' ' + dvpChipHTML(pid) + '</span> ' + depthChipHTML(pid) + '</div>' +
-          (function(){ const k = keyStatsLine(pid, p.position); return k ? '<div class="key-stats">' + k + '</div>' : ''; })() +
+          (function(){ const k = plFormStats(pid) + keyStatsLine(pid, p.position); return k ? '<div class="key-stats">' + k + '</div>' : ''; })() +
           who + signalsHTML(pid, true) +
         '</div>' +
-        '<div class="col col-opp">' + oppOnly(p.team) + (gameStatusHTML(p.team, true) ? '' : dvpChipHTML(pid, true)) + '</div>' +
+        pointsColsHTML(pid) + plFormCols(pid) +
         '<div class="col col-snap">' + snapCell(pid) + '</div>' +
         '<div class="col col-tgt">' + (isIdp(pid) ? '<span title="Tackle share">' + pct(seasonShare(pid, 'k')) + '</span>' : SKILL_POSITIONS.indexOf(p.position) !== -1 && p.position !== 'QB' ? pct(seasonShare(pid, 't')) : '—') + '</div>' +
-        pointsColsHTML(pid) +
+        '<div class="col col-opp">' + oppOnly(p.team) + (gameStatusHTML(p.team, true) ? '' : dvpChipHTML(pid, true)) + '</div>' +
         '<div class="col col-vs">' + who.replace('class="fa-vs"', 'class="fa-vs-inline"') + '</div>' +
         '<div class="row-vs">' + vsBtn(pid) + '</div>' +
       '</div>';
@@ -12230,28 +12261,31 @@
     const sm = plShareMode();
     const shareHeads = sm === 'tkl' ? th('Tkl share', 'tkl') + th('Big plays/gm', 'big')
       : sm === 'mixed' ? th('Tgt · Tkl share', 'use') + th('Air share · Big/gm', null) : th('Tgt share', 'tgt') + th('Air share', 'air');
-    const headAfter = shareHeads + th('Proj', 'proj') +
-      (weekStarted() ? th('Wk ' + ctx.week, 'wk') : '') + th('Last', 'last') + th('L3', 'l3') + th('Avg', 'avg') + th('Total', 'tot') + th('Key stats (season)', null, 'l') + '<th></th><th></th>';
+    // Column order: fantasy points first (projected, then actual), then what predicts them (snap share, target / air
+    // share), then the matchup, then rankings, then the season stat line.
+    const fpHeads = th('Proj', 'proj') + (weekStarted() ? th('Wk ' + ctx.week, 'wk') : '') + th('Last', 'last') + th('L3', 'l3') + th('Avg', 'avg') + th('Total', 'tot');
+    const useHeads = th('Snap by week', 'snap') + shareHeads + th('Opp', null, 'l');
+    const nCols = function(h){ return (h.match(/<th/g) || []).length; };
     return '<div class="mx-tools"><div class="pos-filter mx-pos" role="group" aria-label="Positions">' + posChipsHTML() + '</div>' +
         '<div class="mx-count">' + all.length + ' player' + (all.length === 1 ? '' : 's') + (chips ? '' : '') + '</div></div>' +
       (chips ? '<div class="pl-active mx-active">' + chips + '</div>' : '') +
-      '<div class="mx-scroll"><table class="mx-tbl"><thead>' + rankGroupHead(3, (headAfter.match(/<th/g) || []).length) + '<tr>' + th('Player', 'name', 'l') + th('Opp', null, 'l') + th('Snap by week', 'snap') +
-      rankHeadCells(th) + shareHeads + th('Proj', 'proj') +
-      (weekStarted() ? th('Wk ' + ctx.week, 'wk') : '') + th('Last', 'last') + th('L3', 'l3') + th('Avg', 'avg') + th('Total', 'tot') + th('Key stats (season)', null, 'l') +
+      '<div class="mx-scroll"><table class="mx-tbl"><thead>' + rankGroupHead(1 + nCols(fpHeads + useHeads), 3) + '<tr>' + th('Player', 'name', 'l') + fpHeads + useHeads +
+      rankHeadCells(th) + th('Key stats (season)', null, 'l') +
       '<th class="l" style="padding-left:20px">' + (st.view !== 'avail' ? 'Team / vs yours' : ctx.faPos === 'FLEX' ? 'vs your FLEX' : 'vs your weakest') + '</th><th><span class="sr-only">Compare</span></th></tr></thead><tbody class="stagger">' +
       list.map(function(pid, i){
         const proj = ctx.projections[pid], v = isAvailable(pid) ? faVsParts(pid) : null;
         const vs = v ? (v.txt ? '<b class="' + (v.cls === 'flat' ? 'dim' : 'trend ' + v.cls) + '">' + v.txt + '</b> ' : '') + '<span class="muted">' + escapeHTML(v.who) + '</span>'
           : '<span class="muted">' + (isMine(pid) ? 'On your team' : ownerOf(pid) !== undefined ? escapeHTML(rosterName(ownerOf(pid))) : '—') + '</span>';
         const c = catcher(pid);
-        return '<tr style="--i:' + i + '" data-open="' + escapeHTML(pid) + '"><td class="l">' + mxWho(pid) + '</td><td class="l">' + oppCell(pid) + '</td><td>' + snapByWeek(pid) + '</td>' +
-          rankCells(pid) +
+        return '<tr style="--i:' + i + '" data-open="' + escapeHTML(pid) + '"><td class="l">' + mxWho(pid) + '</td>' +
+          '<td><span class="proj">' + fmtPts(proj) + '</span></td>' +
+          (weekStarted() ? (function(){ const wa = weekActual(pid); return '<td class="' + (wa === null ? 'dim' : 'act-live') + '">' + (wa === null ? '—' : fmtPts(wa)) + '</td>'; })() : '') +
+          '<td>' + fmtPts(lastGamePts(pid)) + '</td><td' + (plForm(pid) ? ' class="col-l3 ' + plForm(pid) + '"' : '') + '>' + fmtPts(last3Avg(pid)) + '</td><td>' + fmtPts(seasonAvgPts(pid)) + '</td><td class="muted">' + fmtPts(seasonTotalPts(pid)) + '</td>' +
+          '<td>' + snapByWeek(pid) + '</td>' +
           (isIdp(pid)
             ? '<td class="muted" title="Tackle share">' + pct(seasonShare(pid, 'k')) + '</td><td class="muted" title="Big plays per game">' + (function(){ const b = idpPerGame(pid, 'b'); return b === null ? '<span class="dim">—</span>' : b.toFixed(2); })() + '</td>'
             : '<td class="muted">' + (c ? pct(seasonShare(pid, 't')) : '<span class="dim">—</span>') + '</td><td class="muted">' + (c ? airPct(seasonShare(pid, 'a')) : '<span class="dim">—</span>') + '</td>') +
-          '<td><span class="proj">' + fmtPts(proj) + '</span></td>' +
-          (weekStarted() ? (function(){ const wa = weekActual(pid); return '<td class="' + (wa === null ? 'dim' : 'act-live') + '">' + (wa === null ? '—' : fmtPts(wa)) + '</td>'; })() : '') +
-          '<td class="muted">' + fmtPts(lastGamePts(pid)) + '</td><td class="muted">' + fmtPts(last3Avg(pid)) + '</td><td class="muted">' + fmtPts(seasonAvgPts(pid)) + '</td><td class="muted">' + fmtPts(seasonTotalPts(pid)) + '</td>' +
+          '<td class="l">' + oppCell(pid) + '</td>' + rankCells(pid) +
           '<td class="l key-stats mx-ks">' + (function(){ const r = aggregatedRaw(pid, 'season'), d = POSITION_KEY_STATS[isIdp(pid) ? posGroup(pid) : ctx.players[pid].position]; return r && d ? d.map(function(x){ return r[x[0]] !== undefined ? '<span><span class="kv">' + x[1] + '</span> ' + Math.round(r[x[0]]) + '</span>' : ''; }).join('') : '<span class="dim">—</span>'; })() + '</td>' +
           '<td class="l" style="padding-left:20px">' + vs + '</td><td>' + vsBtn(pid) + '</td></tr>';
       }).join('') + '</tbody></table></div>' +
