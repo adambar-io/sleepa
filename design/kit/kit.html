@@ -1562,6 +1562,7 @@ Start / Sit: <code>../start-sit/START-SIT.md</code>. Static: no data fetching, n
   /* team mark: Sleeper logo inside a team-color ring; abbreviation shows if the logo fails */
   .it-tm{ position: relative; display: inline-grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 50%; background: var(--surface-2); box-shadow: inset 0 0 0 2.5px var(--tc); overflow: hidden; }
   .it-tm b{ font-size: 11px; font-weight: 800; letter-spacing: .02em; color: var(--text); }
+  .it-tm:has(img) b, .it-cph:has(img) b{ visibility: hidden; }   /* the abbreviation / initials are only the fallback: logos with transparent areas would show them through */
   .it-tm img{ position: absolute; inset: 5px; width: calc(100% - 10px); height: calc(100% - 10px); object-fit: contain; padding: 0 !important; }
   .it-tm.sm{ width: 30px; height: 30px; } .it-tm.sm b{ font-size: 8.5px; } .it-tm.sm img{ inset: 4px; width: calc(100% - 8px); height: calc(100% - 8px); }
   .it-tm.lg{ width: 60px; height: 60px; } .it-tm.lg b{ font-size: 15px; } .it-tm.lg img{ inset: 8px; width: calc(100% - 16px); height: calc(100% - 16px); }
