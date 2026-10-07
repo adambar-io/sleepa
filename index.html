@@ -2757,6 +2757,20 @@
   .home-btn .brand-mark{ width: 22px; height: 22px; }
   .focus-home{ float: right; margin: -6px 8px 0 0; }
   .xb-lbl{ display: none; }
+  /* tappable stat tiles + their drawer */
+  .tile-tap{ cursor: pointer; position: relative; transition: background .15s var(--ease), box-shadow .15s var(--ease); -webkit-tap-highlight-color: transparent; }
+  @media (hover: hover){ .tile-tap:hover{ box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent); } }
+  .tile-tap.on{ box-shadow: inset 0 0 0 1.5px var(--accent); }
+  .tile-tap:focus-visible{ outline: 2px solid var(--accent); outline-offset: 2px; }
+  .hs-block.tile-tap::after, .pf-stat.tile-tap::after, .pn-form .tile-tap::after{ content: '›'; position: absolute; top: 6px; right: 9px; font-size: 14px; line-height: 1; color: var(--text-3); }
+  .tile-drawer{ grid-column: 1 / -1; flex-basis: 100%; width: 100%; margin: 4px 0 12px; padding: 12px 14px; border-radius: 14px; background: var(--surface-2); animation: tdIn .2s var(--ease); }
+  @keyframes tdIn{ from{ opacity: 0; transform: translateY(-4px); } }
+  .td-h{ display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; } .td-h b{ font-size: 14px; }
+  .td-x{ width: 28px; height: 28px; min-height: 0; padding: 0; border-radius: 8px; background: none; color: var(--text-3); font-size: 18px; line-height: 1; }
+  .td-how{ margin: 0 0 8px; font-size: 12.5px; color: var(--text-2); line-height: 1.45; } .td-none{ margin: 4px 0; font-size: 13px; color: var(--text-3); }
+  .tile-drawer .pj-tbl b.neg{ color: var(--danger); }
+  .pc.flash{ animation: pcFlash 1.5s var(--ease); }
+  @keyframes pcFlash{ 0%, 40%{ box-shadow: 0 0 0 2px var(--accent); } 100%{ box-shadow: 0 0 0 2px transparent; } }
   #focus-deep:empty{ display: none; }
   #focus-deep{ margin-top: 26px; scroll-margin-top: 70px; }
   #focus-deep > *{ scroll-margin-top: 70px; }
@@ -9998,6 +10012,7 @@
       { k: 'proj', label: 'Projected', color: 'var(--text-3)', w: 1.5, dash: '5 4' },
       { k: 'xfp', label: 'xFP', color: 'var(--grp-avail)', w: 2 },
       { k: 'avg3', label: '3-game avg', color: 'var(--warn)', w: 1.5, off: true },
+      { k: 'savg', label: 'Season avg', color: 'var(--text-2)', w: 1.5, dash: '7 4', off: true },
       { k: 'trend', label: 'Trend', color: 'var(--text-2)', w: 1.5, dash: '1 5', off: true },
     ],
     use: [
@@ -10039,6 +10054,7 @@
       const b = sxx ? sxy / sxx : 0;
       trend = { a: my - b * mx, b: b, from: xs[0], to: xs[xs.length - 1] };
     }
+    const savg = h.length ? h.reduce(function(a, g){ return a + g.pts; }, 0) / h.length : null;
     const xrow = (ctx.xfp && ctx.xfp.players[pid]) || {}, paI = ctx.xfp ? ctx.xfp.keys.indexOf('pass_att') : -1;
     const weeks = [], v = {};
     for(let w = 1; w <= n; w++){
@@ -10049,6 +10065,7 @@
         proj: cur ? ctx.projections[pid] : w < ctx.week ? pastProjPts(pid, w) : null,
         xfp: g ? xfpWeekPts(pid, w) : null,
         avg3: g ? avg3[w] : null,
+        savg: h.length && w >= h[0].week && w <= h[h.length - 1].week ? savg : null,
         trend: trend && w >= trend.from && w <= trend.to ? Math.max(0, trend.a + trend.b * w) : null,
         s: u && typeof u.s === 'number' ? u.s : null, t: u && typeof u.t === 'number' ? u.t : null,
         a: u && typeof u.a === 'number' ? u.a : null, wo: u && typeof u.wo === 'number' ? u.wo : null,
@@ -10098,7 +10115,7 @@
           d += (pen ? 'L' : 'M') + X(w).toFixed(2) + ' ' + Y(x).toFixed(2) + ' '; pen = true;
         });
         if(d) svg += '<path d="' + d + '" fill="none" stroke="' + s.color + '" stroke-width="' + s.w + '"' + (s.dash ? ' stroke-dasharray="' + s.dash + '"' : '') + ' vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/>';
-        if(s.k === 'trend' || s.k === 'avg3') return;
+        if(s.k === 'trend' || s.k === 'avg3' || s.k === 'savg') return;
         D.weeks.forEach(function(w){
           const x = D.v[w][s.k];
           if(typeof x !== 'number') return;
@@ -10128,7 +10145,7 @@
     if(!r.bye){
       PC_SERIES[mode].forEach(function(s){
         const x = r[s.k];
-        if(typeof x !== 'number' || s.k === 'trend' || (mode === 'vol' && !x)) return;
+        if(typeof x !== 'number' || s.k === 'trend' || s.k === 'savg' || (mode === 'vol' && !x)) return;
         rows += '<div class="pc-tr"><i style="--c:' + s.color + '"></i><span>' + escapeHTML(s.label) + (s.k === 'proj' && r.cur ? ' (this week)' : '') + '</span><b>' + pcFmt(mode, s.k, x) + '</b></div>';
       });
       if(mode === 'pts' && typeof r.act === 'number' && typeof r.xfp === 'number'){
@@ -11363,17 +11380,18 @@
     if(paneMode()){ paneHeroRender(playerId, loadingHistory); return; }
 
     const pending = loadingHistory ? '…' : null;
+    els.heroStats.setAttribute('data-tile-pid', playerId);
     const wa = weekActual(playerId), wg = gameOf(player.team);
     const ctxBits = [dvpChipHTML(playerId), depthChipHTML(playerId)].filter(Boolean).join(' ');
     els.heroStats.innerHTML = injuryMiniHTML(playerId) +
       (ctxBits || SKILL_POSITIONS.indexOf(player.position) !== -1 ? '<div class="hs-ctx">' + ctxBits + signalsHTML(playerId, player.position !== 'QB') + '</div>' : '') + [
     ].concat(wa !== null ? [['Wk ' + ctx.week + (wg && wg.state === 'post' ? ' final' : ' live'), fmtPts(wa), ' act-main' + (wg && wg.state === 'post' ? '' : ' live'), 'proj ' + fmtPts(ctx.projections[playerId])]]
-      : [['Proj this wk', fmtPts(ctx.projections[playerId])]]).concat([
-      ['Last game', pending || fmtPts(lastGamePts(playerId))],
-      ['Last 3 avg', pending || fmtPts(last3Avg(playerId))],
-      ['Season avg', pending || fmtPts(seasonAvgPts(playerId))],
-      ['Season total', pending || fmtPts(seasonTotalPts(playerId))],
-    ]).map(function(pair){ return '<div class="hs-block' + (pair[2] || '') + '"><div class="hs-label">' + pair[0] + '</div><div class="hs-val">' + pair[1] + '</div>' + (pair[3] ? '<div class="hs-sub">' + pair[3] + '</div>' : '') + '</div>'; }).join('');
+      : [['Proj this wk', fmtPts(ctx.projections[playerId]), '', '', 'proj']]).concat([
+      ['Last game', pending || fmtPts(lastGamePts(playerId)), '', '', pending ? '' : 'last'],
+      ['Last 3 avg', pending || fmtPts(last3Avg(playerId)), '', '', pending ? '' : 'l3'],
+      ['Season avg', pending || fmtPts(seasonAvgPts(playerId)), '', '', pending ? '' : 'avg'],
+      ['Season total', pending || fmtPts(seasonTotalPts(playerId)), '', '', pending ? '' : 'tot'],
+    ]).map(function(pair){ return '<div class="hs-block' + (pair[2] || '') + (pair[4] ? ' tile-tap' : '') + '"' + (pair[4] ? tileAttr(pair[4]) : '') + '><div class="hs-label">' + pair[0] + '</div><div class="hs-val">' + pair[1] + '</div>' + (pair[3] ? '<div class="hs-sub">' + pair[3] + '</div>' : '') + '</div>'; }).join('');
 
     els.heroStats.innerHTML += rankingsHTML(playerId);
     // Season stats: the most important few here; everything else lives on the Analysis screen.
@@ -11410,14 +11428,14 @@
     const chips = [dvpChipHTML(pid), depthChipHTML(pid)].filter(Boolean).join(' ');
     const big = wa !== null
       ? '<div class="pn-big"><b class="live">' + fmtPts(wa) + '</b><span>' + (g && g.state === 'post' ? 'final' : 'live') + ' · proj ' + fmtPts(proj) + '</span></div>'
-      : '<div class="pn-big"><b>' + fmtPts(proj) + '</b><span>projected' + (m && m.bye ? ' · bye' : '') + '</span></div>';
+      : '<div class="pn-big tile-tap"' + tileAttr('proj') + '><b>' + fmtPts(proj) + '</b><span>projected' + (m && m.bye ? ' · bye' : '') + ' · how ›</span></div>';
     const week = '<section class="pn-card pn-week"><div class="pn-h"><span>This week · Wk ' + ctx.week + '</span><button type="button" class="pn-jump" data-pn-jump hidden></button></div>' +
       big + (chips ? '<div class="pn-chips">' + chips + '</div>' : '') + range + '<div class="pn-note" data-pn-note hidden></div></section>';
     // form
     const h = hist(pid) || [], mx = Math.max.apply(null, h.map(function(w){ return w.pts; }).concat([1]));
     const spark = h.length > 1 ? '<div class="pn-spark" title="Points by week">' + h.map(function(w){ return '<i style="height:' + Math.max(6, w.pts / mx * 100).toFixed(0) + '%" title="Wk ' + w.week + ': ' + fmtPts(w.pts) + '"></i>'; }).join('') + '</div>' : '';
-    const stat = function(v, k){ return '<div><b>' + v + '</b><small>' + k + '</small></div>'; };
-    const form = '<section class="pn-sec"><h4>Form</h4><div class="pn-form">' + stat(pend || fmtPts(lastGamePts(pid)), 'Last game') + stat(pend || fmtPts(last3Avg(pid)), 'Last 3 avg') + stat(pend || fmtPts(seasonAvgPts(pid)), 'Season avg') + spark + '</div></section>';
+    const stat = function(v, k, tile){ return '<div' + (tile && !pend ? ' class="tile-tap"' + tileAttr(tile) : '') + '><b>' + v + '</b><small>' + k + '</small></div>'; };
+    const form = '<section class="pn-sec"><h4>Form</h4><div class="pn-form">' + stat(pend || fmtPts(lastGamePts(pid)), 'Last game', 'last') + stat(pend || fmtPts(last3Avg(pid)), 'Last 3 avg', 'l3') + stat(pend || fmtPts(seasonAvgPts(pid)), 'Season avg', 'avg') + spark + '</div></section>';
     // role
     const role = [];
     const tr = snapTrend(pid);
@@ -11438,6 +11456,7 @@
     const stats = keys.length ? '<section class="pn-sec"><h4>Season stats <span>' + h.length + ' game' + (h.length === 1 ? '' : 's') + '</span></h4><div class="pn-stats">' +
       keys.map(function(k){ return '<div><b>' + fmtStat(raw[k]) + '</b><small>' + escapeHTML(statLabel(k)) + '</small></div>'; }).join('') + '</div>' +
       '<button type="button" class="all-stats"' + analyzeAttr(pid) + '>' + (all > keys.length ? 'All ' + all + ' stats &amp; game log' : 'Game log') + ' →</button></section>' : '';
+    els.heroStats.setAttribute('data-tile-pid', pid);
     els.heroStats.innerHTML = injuryMiniHTML(pid) + week + form + roleHTML + ranks + stats;
   }
   // After the options are drawn: the jump link ("4 options ↓") and, for an available player, the comparison line up top
@@ -11915,6 +11934,139 @@
     rows.forEach(function(d){ d.open = open; });
     b.textContent = open ? 'Collapse all' : 'Expand all';
   });
+  // ============ Tappable stat tiles (sheet, side panel, player page) ============
+  // Proj this week: how the projection adds up (Sleeper's projected stats × what this league pays for each). Last game:
+  // that game's stat line, each stat with what it was worth. Last 3 avg / Season avg / Season total: the Trends chart
+  // with the 3-game or season average line on (phones: the chart further down the sheet; side panel: the player page).
+  function tileAttr(kind){ return ' data-tile="' + kind + '" role="button" tabindex="0"'; }
+  function tileTable(rows, totalLabel, total, extra){
+    return '<div class="pj-tbl"><div class="pj-tr pj-th"><span>Stat</span><span>Amount</span><span>× Each</span><span>Points</span></div>' +
+      rows.map(function(x){ return '<div class="pj-tr"><span>' + escapeHTML(statLabel(x.k)) + '</span><span>' + (x.fmt ? x.fmt(x.v) : pjNum(x.v)) + '</span><span>' + pjEach(x.each) + '</span><b class="' + (x.pts < 0 ? 'neg' : '') + '">' + (x.pts < 0 ? '−' : '') + Math.abs(x.pts).toFixed(2) + '</b></div>'; }).join('') +
+      (extra || '') + '<div class="pj-tr pj-sum"><span>' + totalLabel + '</span><span></span><span></span><b>' + fmtPts(total) + '</b></div></div>';
+  }
+  function tileProjHTML(pid){
+    const proj = ctx.projections[pid], br = projStatRows(pid), p = ctx.players[pid] || {}, m = matchup(p.team, ctx.week);
+    if(!br || !br.rows.length) return '<p class="td-none">' + (m && m.bye ? 'On a bye this week.' : 'Sleeper has no stat projection for him this week' + (cantPlay(effectiveStatus(pid)) ? ' (' + escapeHTML(statusInfo(effectiveStatus(pid)).label) + ')' : '') + '.') + '</p>';
+    const sum = br.rows.reduce(function(a, x){ return a + x.pts; }, 0);
+    return '<p class="td-how">Sleeper projects his <b>stats</b> for week ' + ctx.week + (m && !m.bye ? ' (' + escapeHTML(m.text) + ')' : '') + '; each is worth what ' + escapeHTML(ctx.league.name) + ' pays for it.</p>' +
+      tileTable(br.rows, 'Projection', typeof proj === 'number' ? proj : sum) +
+      (br.volume.length ? '<p class="pj-vol">Also projected (not scored here): ' + escapeHTML(br.volume.join(' · ')) + '</p>' : '');
+  }
+  const TILE_VOLUME = [['rec_tgt', 'targets'], ['rush_att', 'carries'], ['pass_att', 'pass attempts'], ['off_snp', 'snaps']];
+  function tileLastHTML(pid){
+    const h = (hist(pid) || []).slice().sort(function(a, b){ return a.week - b.week; }), g = h[h.length - 1];
+    if(!g) return '<p class="td-none">No games yet this season.</p>';
+    const sc = ctx.league.scoring_settings || {}, raw = g.raw || {};
+    const rows = Object.keys(raw).filter(function(k){ return typeof raw[k] === 'number' && raw[k] !== 0 && sc[k]; })
+      .map(function(k){ return { k: k, v: raw[k], each: sc[k], pts: raw[k] * sc[k], fmt: fmtStat }; }).sort(function(a, b){ return Math.abs(b.pts) - Math.abs(a.pts); });
+    const sum = rows.reduce(function(a, x){ return a + x.pts; }, 0), other = g.pts - sum;
+    const extra = Math.abs(other) >= 0.05 ? '<div class="pj-tr"><span>Other scoring (points-allowed tiers, bonuses)</span><span></span><span></span><b>' + (other < 0 ? '−' : '') + Math.abs(other).toFixed(2) + '</b></div>' : '';
+    const vol = TILE_VOLUME.filter(function(x){ return typeof raw[x[0]] === 'number' && raw[x[0]] && !sc[x[0]]; }).map(function(x){ return Math.round(raw[x[0]]) + ' ' + x[1]; });
+    const opp = g.opp ? (g.away === true ? '@ ' : g.away === false ? 'vs ' : '') + g.opp : '';
+    return '<p class="td-how"><b>Week ' + g.week + (opp ? ' · ' + escapeHTML(opp) : '') + '</b>: every stat he had and what it was worth in your scoring.</p>' +
+      (rows.length ? tileTable(rows, 'Fantasy points', g.pts, extra) : '<p class="td-none">No scoring stats that game (' + fmtPts(g.pts) + ' pts).</p>') +
+      (vol.length ? '<p class="pj-vol">Also: ' + escapeHTML(vol.join(' · ')) + '</p>' : '');
+  }
+  // the Trends chart, Points view, with the right average line on
+  function tileTrends(pid, kind, from){
+    ctx.pcMode = 'pts';
+    try{ localStorage.setItem('rv-pc-mode', 'pts'); }catch(e){}
+    ctx.pcOff['pts|avg3'] = kind !== 'l3';   /* just the average that was tapped */
+    ctx.pcOff['pts|savg'] = kind === 'l3';
+    const scope = from.closest('#focus-deep, .focus-panel, .max-body');
+    const root = scope && scope.classList.contains('focus-panel') ? document.getElementById('focus-deep') : scope;
+    const pc = root && root.querySelector('.pc[data-pc-pid="' + pid + '"]');
+    if(!pc){ openMax({ kind: 'player', pid: pid, anchor: 'trends' }, from); return; }   // side panel: on the player page
+    pcRerender(pc);
+    const fresh = root.querySelector('.pc[data-pc-pid="' + pid + '"]');
+    fresh.scrollIntoView({ block: 'start', behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+    fresh.classList.add('flash'); setTimeout(function(){ fresh.classList.remove('flash'); }, 1600);
+  }
+  function tileToggle(t){
+    const kind = t.getAttribute('data-tile'), host = t.closest('[data-tile-pid]'), pid = host && host.getAttribute('data-tile-pid');
+    if(!pid || !ctx.players[pid]) return;
+    if(kind === 'l3' || kind === 'avg' || kind === 'tot'){ tileTrends(pid, kind, t); return; }
+    const old = host.querySelector('.tile-drawer'), was = old && old.getAttribute('data-kind');
+    if(old) old.remove();
+    host.querySelectorAll('[data-tile].on').forEach(function(x){ x.classList.remove('on'); x.setAttribute('aria-expanded', 'false'); });
+    if(was === kind) return;   // tapped again: closed
+    const box = t.closest('.pf-stats, section.pn-sec, section.pn-week');
+    const after = box || Array.prototype.slice.call(t.parentNode.querySelectorAll(':scope > [data-tile], :scope > .hs-block')).pop() || t;
+    const d = document.createElement('div');
+    d.className = 'tile-drawer'; d.setAttribute('data-kind', kind);
+    d.innerHTML = '<div class="td-h"><b>' + (kind === 'proj' ? 'How the projection adds up' : 'Last game, stat by stat') + '</b><button type="button" class="td-x" data-tile-close aria-label="Close">×</button></div>' +
+      (kind === 'proj' ? tileProjHTML(pid) : tileLastHTML(pid));
+    after.insertAdjacentElement('afterend', d);
+    t.classList.add('on'); t.setAttribute('aria-expanded', 'true');
+  }
+  document.addEventListener('click', function(e){
+    const x = e.target.closest && e.target.closest('[data-tile-close]');
+    if(x){ const host = x.closest('[data-tile-pid]'); x.closest('.tile-drawer').remove(); if(host) host.querySelectorAll('[data-tile].on').forEach(function(y){ y.classList.remove('on'); }); return; }
+    const t = e.target.closest && e.target.closest('[data-tile]');
+    if(!t || e.target.closest('a, [data-analyze]')) return;
+    e.stopPropagation();
+    tileToggle(t);
+  }, true);
+  document.addEventListener('keydown', function(e){
+    if(e.key !== 'Enter' && e.key !== ' ') return;
+    const t = e.target.closest && e.target.closest('[data-tile]');
+    if(!t) return;
+    e.preventDefault(); e.stopPropagation(); tileToggle(t);
+  }, true);
+
+  // ============ Phones: swipe the player card sideways to close it ============
+  // The card follows the finger and slides off the side it was swiped to, showing the page underneath. A short or slow
+  // swipe springs back. Ignored when it starts on something that scrolls sideways, or on a screen edge (Safari's own
+  // back swipe lives there).
+  (function(){
+    const SW = { min: 12, close: 0.28, edge: 22 };
+    let st = null;
+    const panel = function(){ return els.focusPanel; };
+    function scrollsX(el){
+      for(let n = el; n && n !== els.overlay; n = n.parentElement){
+        const ox = getComputedStyle(n).overflowX;
+        if((ox === 'auto' || ox === 'scroll') && n.scrollWidth > n.clientWidth + 2) return true;
+      }
+      return false;
+    }
+    els.overlay.addEventListener('touchstart', function(e){
+      if(paneMode() || !els.overlay.classList.contains('open') || e.touches.length !== 1) { st = null; return; }
+      const t = e.touches[0];
+      if(t.clientX < SW.edge || t.clientX > innerWidth - SW.edge || scrollsX(e.target) || e.target.closest('input, select, textarea, .pc-plot')){ st = null; return; }
+      st = { x: t.clientX, y: t.clientY, t: Date.now(), dx: 0, lock: null };
+    }, { passive: true });
+    els.overlay.addEventListener('touchmove', function(e){
+      if(!st) return;
+      const t = e.touches[0], dx = t.clientX - st.x, dy = t.clientY - st.y;
+      if(!st.lock){
+        if(Math.abs(dx) < SW.min && Math.abs(dy) < SW.min) return;
+        st.lock = Math.abs(dx) > Math.abs(dy) * 1.4 ? 'x' : 'y';
+        if(st.lock === 'x'){ panel().style.transition = 'none'; els.overlay.style.transition = 'none'; }
+      }
+      if(st.lock !== 'x') return;
+      e.preventDefault();
+      st.dx = dx;
+      panel().style.transform = 'translateX(' + dx + 'px)';
+      els.overlay.style.opacity = String(Math.max(0.35, 1 - Math.abs(dx) / innerWidth * 0.9));
+    }, { passive: false });
+    function reset(){ panel().style.transition = ''; panel().style.transform = ''; els.overlay.style.transition = ''; els.overlay.style.opacity = ''; }
+    els.overlay.addEventListener('touchend', function(){
+      if(!st || st.lock !== 'x'){ st = null; return; }
+      const dx = st.dx, v = Math.abs(dx) / Math.max(1, Date.now() - st.t);
+      st = null;
+      if(Math.abs(dx) > innerWidth * SW.close || (v > 0.6 && Math.abs(dx) > 40)){
+        panel().style.transition = 'transform .22s ease-out'; els.overlay.style.transition = 'opacity .22s ease-out';
+        panel().style.transform = 'translateX(' + (dx > 0 ? innerWidth : -innerWidth) + 'px)'; els.overlay.style.opacity = '0';
+        setTimeout(function(){ closeFocus(); setTimeout(reset, 450); try{ localStorage.setItem('rv-swipe-seen', '1'); }catch(err){} }, 200);
+      }else{
+        panel().style.transition = 'transform .25s cubic-bezier(.2,.8,.2,1)'; els.overlay.style.transition = 'opacity .25s';
+        panel().style.transform = ''; els.overlay.style.opacity = '';
+        setTimeout(reset, 280);
+      }
+    });
+    els.overlay.addEventListener('touchcancel', function(){ if(st && st.lock === 'x'){ st = null; reset(); } else st = null; });
+  })();
+
   function maxTitleFor(e){
     if(e.kind === 'h2h') return lastName(e.pids[0]) + ' vs ' + lastName(e.pids[1]);
     if(e.kind === 'opp'){ const mu = myMatchup(); return mu ? 'You vs ' + mu.name : 'Matchup'; }
@@ -11955,7 +12107,7 @@
   // A page opened for one section (the card back's "Game log"): start scrolled there, once its history is in.
   function maxToAnchor(e){
     if(!e.anchor || e.kind !== 'player' || !hist(e.pid)) return;
-    const t = maxBody.querySelector(e.anchor === 'injury' ? '.inj-sources' : '.pf-log');
+    const t = maxBody.querySelector(e.anchor === 'injury' ? '.inj-sources' : e.anchor === 'trends' ? '.pc' : '.pf-log');
     if(t) maxPanel.scrollTop = Math.max(0, t.getBoundingClientRect().top - maxPanel.getBoundingClientRect().top + maxPanel.scrollTop - maxEl.querySelector('.max-bar').offsetHeight - 8);
     e.anchor = null;
   }
@@ -12753,17 +12905,17 @@
     const wa = weekActual(pid), wg = gameOf(p.team);
     const stats = [].concat(wa !== null
       ? [[fmtPts(wa), 'Wk ' + ctx.week + (wg && wg.state === 'post' ? ' final' : ' live'), ' act-main' + (wg && wg.state === 'post' ? '' : ' live'), 'proj ' + fmtPts(ctx.projections[pid])]]
-      : [[fmtPts(ctx.projections[pid]), 'Proj wk ' + ctx.week]]).concat([
-      [loading ? '…' : fmtPts(lastGamePts(pid)), 'Last'],
-      [loading ? '…' : fmtPts(last3Avg(pid)), 'Last 3 avg'],
-      [loading ? '…' : fmtPts(seasonAvgPts(pid)), 'Avg'],
-      [loading ? '…' : fmtPts(seasonTotalPts(pid)), 'Total'],
+      : [[fmtPts(ctx.projections[pid]), 'Proj wk ' + ctx.week, '', '', 'proj']]).concat([
+      [loading ? '…' : fmtPts(lastGamePts(pid)), 'Last', '', '', loading ? '' : 'last'],
+      [loading ? '…' : fmtPts(last3Avg(pid)), 'Last 3 avg', '', '', loading ? '' : 'l3'],
+      [loading ? '…' : fmtPts(seasonAvgPts(pid)), 'Avg', '', '', loading ? '' : 'avg'],
+      [loading ? '…' : fmtPts(seasonTotalPts(pid)), 'Total', '', '', loading ? '' : 'tot'],
     ]).concat((function(){ const x = XFP_POS.indexOf(p.position) !== -1 && !loading ? xfpInfo(pid) : null; return x ? [[fmtPts(x.xfp), 'xFP / game', '', xfpDiffTxt(x.diff) + ' actual vs xFP']] : []; })()).concat(positionCards(pid, p.position, loading, tr));
-    const hero = '<div class="pf-hero" style="--team:' + teamColor(p.team) + '">' + avatarTag(pid, 'mx-av') +
+    const hero = '<div class="pf-hero" data-tile-pid="' + escapeHTML(pid) + '" style="--team:' + teamColor(p.team) + '">' + avatarTag(pid, 'mx-av') +
       '<div><div class="pf-name">' + escapeHTML(playerName(p)) + '</div>' +
       '<div class="pf-meta">' + escapeHTML(eligLabel(pid)) + (eligLabel(pid).indexOf('/') !== -1 ? ' <span class="dim">(eligible at both)</span>' : '') + ' · ' + escapeHTML(p.team || 'FA') +
         injuryChip(p.injury_status) + depthChip(pid) + '<span>· ' + (onRoster ? 'On your roster' : 'Available') + '</span></div>' + gameLineHTML(pid) + playerLinksHTML(pid) + '</div>' +
-      '<div class="pf-stats stagger">' + stats.map(function(s, i){ return '<div class="pf-stat' + (s[2] || '') + '" style="--i:' + i + '"><div class="v">' + s[0] + '</div><div class="k">' + escapeHTML(s[1]) + '</div>' + (s[3] ? '<div class="k sub">' + escapeHTML(s[3]) + '</div>' : '') + '</div>'; }).join('') + '</div></div>';
+      '<div class="pf-stats stagger">' + stats.map(function(s, i){ return '<div class="pf-stat' + (s[2] || '') + (s[4] ? ' tile-tap' : '') + '" style="--i:' + i + '"' + (s[4] ? tileAttr(s[4]) : '') + '><div class="v">' + s[0] + '</div><div class="k">' + escapeHTML(s[1]) + '</div>' + (s[3] ? '<div class="k sub">' + escapeHTML(s[3]) + '</div>' : '') + '</div>'; }).join('') + '</div></div>';
 
     // Layout: this week's stat line and the game log full width (the log gains a column each week), then the charts
     // next to the swap / roster options.
