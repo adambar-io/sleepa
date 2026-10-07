@@ -2111,6 +2111,13 @@
   .wv-open{ font-size: 12px; color: var(--text-3); }
   .wv-net{ font-size: 15px; font-weight: 750; color: var(--accent); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .wv-cols{ margin-top: 10px; border-top: 1px solid var(--hair); padding-top: 4px; }
+  .wv-grid{ display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 6px 18px; }
+  .wv-pos{ min-width: 0; padding-bottom: 6px; }
+  .wv-ph{ display: flex; align-items: baseline; gap: 8px; padding: 6px 0 2px; border-bottom: 1px solid var(--hair); }
+  .wv-ph b{ font-size: 13px; font-weight: 800; letter-spacing: .04em; } .wv-ph span{ font-size: 11.5px; color: var(--text-3); min-width: 0; }
+  .wv-drops{ display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0 18px; }
+  .wv-sw-pos{ min-width: 34px; font-size: 11px; font-weight: 800; letter-spacing: .04em; color: var(--text-3); }
+  .wv-num.depth b{ color: var(--text-2); }
   .wv-num{ text-align: right; flex-shrink: 0; line-height: 1.15; }
   .wv-num b{ display: block; font-size: 14px; font-variant-numeric: tabular-nums; }
   .wv-num span{ font-size: 10.5px; color: var(--text-3); }
@@ -9892,6 +9899,8 @@
   // drop. Those weeks are skipped. A free agent whose game has kicked off counts zero this week (can't be started now).
   // Memoized per data load and mode (plReset clears it).
   const WV_SWAPS = 8;
+  const WV_POS_N = 3;    // top available players shown per position
+  const WV_MIN = 0.5;    // lineup gains below this read as depth (same noise line as trades)
   function waiverValue(mode){
     const key = 'wv_' + (mode === 'ros' && ctx.ros ? 'ros' : 'week');
     if(plMemo[key]) return plMemo[key];
@@ -9915,11 +9924,13 @@
       return { pid: pid, cost: cost, pts: ptsOf(pid), starts: base[ctx.week] && base[ctx.week].starts.has(pid) };
     }).sort(function(a, b){ return a.cost - b.cost || a.pts - b.pts; });
     [].concat.apply([], leaguePositions().map(function(pos){ return ctx.freeAgents[pos] || []; })).forEach(function(pid){ fa.add(pid); });
-    const adds = [];
+    const adds = [], pool = [];
     fa.forEach(function(pid){
       let gain = 0;
       weeks.forEach(function(w){ if(P(pid, w) > base[w].floor) gain += BL(active.concat([pid]), w).total - base[w].tot; });
-      if(gain > 0.005) adds.push({ pid: pid, gain: gain, pts: ptsOf(pid) });
+      const x = { pid: pid, gain: gain > 0.005 ? gain : 0, pts: ptsOf(pid) };
+      if(x.gain) adds.push(x);
+      if(x.pts > 0.005) pool.push(x);
     });
     adds.sort(function(a, b){ return b.gain - a.gain || b.pts - a.pts; });
     const size = ((ctx.league && ctx.league.roster_positions) || []).filter(function(sl){ return sl !== 'IR' && sl !== 'TAXI'; }).length;
@@ -9927,7 +9938,10 @@
     const swapMemo = {};
     // samePos: only drop someone who shares a position with the add (keeps your depth: a backup QB isn't traded for an RB)
     const shares = function(a, b){ const fa2 = fantasyPositions(a); return fantasyPositions(b).some(function(x){ return fa2.indexOf(x) !== -1; }); };
-    return (plMemo[key] = { mode: key === 'wv_ros' ? 'ros' : 'week', weeks: weeks, base: baseTot, adds: adds, drops: drops, open: open, swapFor: function(list, samePos){
+    return (plMemo[key] = { mode: key === 'wv_ros' ? 'ros' : 'week', weeks: weeks, base: baseTot, adds: adds, pool: pool, drops: drops, open: open,
+      // my weakest active player at a position (least projected points over the weeks): what a depth add has to beat
+      weakest: function(pos){ let w = null; active.forEach(function(pid){ if(posGroup(pid) !== pos) return; const p = ptsOf(pid); if(!w || p < w.pts) w = { pid: pid, pts: p }; }); return w; },
+      swapFor: function(list, samePos){
       return list.slice(0, WV_SWAPS).map(function(a){
         if(open) return { add: a.pid, drop: null, net: a.gain };
         const mk = a.pid + (samePos ? '|same' : '');
@@ -9945,11 +9959,11 @@
   }
   function wvRowHTML(pid, val, kind, extra){
     const p = ctx.players[pid];
-    const valTxt = kind === 'add' ? '+' + val.toFixed(2) : val < 0.005 ? '0.00' : '−' + val.toFixed(2);
+    const valTxt = kind === 'add' ? '+' + val.toFixed(2) : kind === 'depth' ? fmtPts(val) : val < 0.005 ? '0.00' : '−' + val.toFixed(2);
     return '<div class="ad-item wv-item" data-wv-open="' + escapeHTML(pid) + '" role="button" tabindex="0">' +
       avatarTag(pid, 'ad-av') + '<div class="ad-info"><div class="ad-name">' + escapeHTML(playerName(p)) + ' ' + injuryChip(p.injury_status) + '</div>' +
       '<div class="ad-meta">' + escapeHTML(eligLabel(pid)) + ' · ' + escapeHTML(p.team || 'FA') + (extra ? ' · ' + extra : '') + '</div></div>' +
-      '<div class="wv-num ' + kind + (kind === 'drop' && val < 0.005 ? ' zero' : '') + '"><b>' + valTxt + '</b><span>' + (kind === 'add' ? 'adds' : 'costs') + '</span></div></div>';
+      '<div class="wv-num ' + kind + (kind === 'drop' && val < 0.005 ? ' zero' : '') + '"><b>' + valTxt + '</b><span>' + (kind === 'add' ? 'adds' : kind === 'depth' ? 'proj' : 'costs') + '</span></div></div>';
   }
   try{ ctx.wvMode = localStorage.getItem('rv-wv-mode') === 'ros' ? 'ros' : 'week'; }catch(e){ ctx.wvMode = 'week'; }
   try{ ctx.wvSame = localStorage.getItem('rv-wv-same') !== 'any'; }catch(e){ ctx.wvSame = true; }   /* swaps within the same position by default */
@@ -9969,14 +9983,32 @@
       return;
     }
     const V = waiverValue(ctx.wvMode), pos = ctx.pl.pos, name = function(pid){ return escapeHTML(playerName(ctx.players[pid])); };
-    const adds = pos.length ? V.adds.filter(function(a){ return fantasyPositions(a.pid).some(function(x){ return pos.indexOf(x) !== -1; }); }) : V.adds;
-    const swaps = V.swapFor(adds, ctx.wvSame), posTxt = pos.length ? ' · ' + pos.join('/') : '';
+    // By position: one list ranked by lineup gain is all D/STs (one starts every week and is the easiest slot to upgrade),
+    // so each position gets its own top adds, and Best swaps keeps the single best swap per position.
+    const posList = leaguePositions().filter(function(x){ return !pos.length || pos.indexOf(x) !== -1; });
+    const g0 = function(a){ return a.gain >= WV_MIN ? a.gain : 0; };   /* a sliver of gain is noise: rank those as depth, by points */
+    const byGain = function(a, b){ return g0(b) - g0(a) || b.pts - a.pts; };
+    const groups = posList.map(function(g){
+      const c = V.pool.filter(function(a){ return posGroup(a.pid) === g; }).sort(byGain).slice(0, WV_POS_N);
+      const sw = V.swapFor(c.filter(function(a){ return a.gain; }), ctx.wvSame)[0] || null;
+      return { pos: g, cands: c, weak: V.weakest(g), swap: sw };
+    });
+    const swaps = groups.map(function(g){ return g.swap ? Object.assign({ pos: g.pos }, g.swap) : null; }).filter(Boolean).sort(function(a, b){ return b.net - a.net; });
+    const posTxt = pos.length ? ' · ' + pos.join('/') : '';
     const span = V.mode === 'ros' ? 'weeks ' + V.weeks[0] + '–' + V.weeks[V.weeks.length - 1] : 'week ' + ctx.week;
     const when = V.mode === 'ros' ? 'over the rest of the season' : 'this week';
     const dropRows = V.drops.slice(0, 8).map(function(d){ return wvRowHTML(d.pid, d.cost, 'drop', V.mode === 'ros' ? fmtPts(d.pts) + ' proj' : d.starts ? 'starting' : d.pts > 0 ? fmtPts(d.pts) + ' proj, bench' : 'no points this week'); }).join('');
-    const addRows = adds.slice(0, 8).map(function(a){ return wvRowHTML(a.pid, a.gain, 'add', fmtPts(a.pts) + ' proj'); }).join('');
-    const swapRows = swaps.slice(0, 5).map(function(x){
-      return '<div class="wv-swap"><div class="wv-sw-txt"><span class="wv-tag add">Add</span><button type="button" class="wv-link" data-wv-open="' + escapeHTML(x.add) + '">' + name(x.add) + '</button>' +
+    const posBlocks = groups.map(function(g){
+      const rows = g.cands.map(function(a){
+        if(g0(a)) return wvRowHTML(a.pid, a.gain, 'add', fmtPts(a.pts) + ' proj');
+        const d = g.weak ? a.pts - g.weak.pts : null;
+        return wvRowHTML(a.pid, a.pts, 'depth', d === null ? 'depth' : d > 0.05 ? 'depth · ' + fmtPts(d) + ' more than ' + name(g.weak.pid) : 'depth · below your ' + escapeHTML(g.pos) + 's');
+      }).join('');
+      return '<div class="wv-pos"><div class="wv-ph"><b>' + escapeHTML(g.pos) + '</b><span>' + (g.weak ? 'Your weakest: ' + name(g.weak.pid) + ' · ' + fmtPts(g.weak.pts) : 'None on your roster') + '</span></div>' +
+        (rows || '<div class="ad-none">Nobody available projects points.</div>') + '</div>';
+    }).join('');
+    const swapRows = swaps.map(function(x){
+      return '<div class="wv-swap"><div class="wv-sw-txt"><span class="wv-sw-pos">' + escapeHTML(x.pos) + '</span><span class="wv-tag add">Add</span><button type="button" class="wv-link" data-wv-open="' + escapeHTML(x.add) + '">' + name(x.add) + '</button>' +
         (x.drop ? '<span class="wv-tag drop">Drop</span><button type="button" class="wv-link" data-wv-open="' + escapeHTML(x.drop) + '">' + name(x.drop) + '</button>' : '<span class="wv-open">open roster spot, no drop needed</span>') +
         '</div><b class="wv-net">+' + x.net.toFixed(2) + '</b></div>';
     }).join('');
@@ -9985,9 +10017,9 @@
         '<div class="wv-base">Your best lineup projects <b>' + fmtPts(V.base) + '</b> ' + when + (V.open ? ' · <b>' + V.open + '</b> open roster spot' + (V.open === 1 ? '' : 's') : '') + '.</div>' +
         '<div class="wv-swh"><div class="eyebrow ad-h">Best swaps</div><div class="seg wv-same" role="group" aria-label="Who to drop"><button type="button" data-wv-same="same" aria-pressed="' + ctx.wvSame + '" title="Drop someone at the same position (keeps your depth)">Same position</button><button type="button" data-wv-same="any" aria-pressed="' + !ctx.wvSame + '" title="Drop whoever costs your best lineup the least">Any position</button></div></div>' +
         (swapRows || '<div class="ad-none">No ' + (ctx.wvSame && !V.open ? 'same-position ' : '') + 'swap improves your best lineup ' + when + (pos.length ? ' at ' + escapeHTML(pos.join('/')) : '') + '.</div>') +
-        '<div class="ad-cols wv-cols"><div><div class="eyebrow ad-h">Top adds · marginal value</div>' + (addRows || '<div class="ad-none">Nobody available beats your current starters.</div>') + '</div>' +
-          '<div><div class="eyebrow ad-h">Cheapest drops · drop cost</div>' + (dropRows || '<div class="ad-none">No droppable players.</div>') + '</div></div>' +
-        '<div class="ad-foot">Marginal value = your best lineup with the player minus without; drop cost = your best lineup minus your best lineup without him; a swap’s net is the exact change with both moves' + (V.mode === 'ros' ? ', each summed over ' + span : '') + '. ' +
+        '<div class="wv-cols"><div class="eyebrow ad-h">Top adds by position · marginal value, or depth</div><div class="wv-grid">' + posBlocks + '</div></div>' +
+        '<div class="wv-cols"><div class="eyebrow ad-h">Cheapest drops · drop cost</div><div class="wv-drops">' + (dropRows || '<div class="ad-none">No droppable players.</div>') + '</div></div>' +
+        '<div class="ad-foot">Best swaps = the best one per position. Marginal value = your best lineup with the player minus without (a depth player would not start for you, so his projection shows instead); drop cost = your best lineup minus your best lineup without him; a swap’s net is the exact change with both moves' + (V.mode === 'ros' ? ', each summed over ' + span : '') + '. ' +
           'Best lineup = most restrictive slots filled first, from Sleeper’s projections in your league’s scoring' + (V.mode === 'ros' ? ' (this week’s real projections, then each player’s average projected week in the weeks he’s projected to play)' : '') + '; byes and ruled-out players count as zero, and so does a free agent whose game has already started this week. ' +
           'IR / taxi players aren’t counted or offered as drops. Waivers may not clear in time to start an add this week.</div>' +
       '</div>';
