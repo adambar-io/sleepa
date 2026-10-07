@@ -326,6 +326,23 @@
     }catch(e){ check('live nflverse.json + intel_venues.json readable', false, e.message); }
   }
 
+  // ---- 3e. Roster check: waiver upgrades + FantasyPros gaps ----
+  section('Roster check: best available upgrade per player, FantasyPros ranking gap');
+  {
+    const R = new Function(['const RC_TUNE', 'function rcWaiver(', 'function rcIsUpgrade(', 'function rcGaps('].map(extract).join('\n') + '; return { RC_TUNE, rcWaiver, rcIsUpgrade, rcGaps };')();
+    const eq = function(name, got, want){ const g = JSON.stringify(got), w = JSON.stringify(want); check(name, g === w, 'got ' + g + (g === w ? '' : ', want ' + w)); };
+    const mine = [{ pid: 'w1', pos: 'WR', pts: 80, rank: 40 }, { pid: 'w2', pos: 'WR', pts: 120, rank: 15 }, { pid: 'r1', pos: 'RB', pts: 90, rank: 30 }, { pid: 'k1', pos: 'K', pts: 100, rank: 10 }];
+    const avail = [{ pid: 'fa1', pos: 'WR', pts: 95, rank: 31 }, { pid: 'fa2', pos: 'WR', pts: 70, rank: 48 }, { pid: 'fa3', pos: 'RB', pts: 89.5, rank: 31 }];
+    const w = R.rcWaiver(mine, avail);
+    eq('best available = most ROS points at the same position', w.map(function(x){ return x.pid + ':' + x.fa; }), ['w1:fa1', 'w2:fa1', 'r1:fa3', 'k1:null']);
+    eq('differentials: rank spots (+ = free agent higher) and points', [w[0].dRank, w[0].dPts, w[1].dRank, w[1].dPts], [9, 15, -16, -25]);
+    eq('flagged only when he projects more AND ranks 3+ spots higher', w.map(R.rcIsUpgrade), [true, false, false, false]);
+    eq('nobody available at the position: no upgrade, no crash', [w[3].fa, R.rcIsUpgrade(w[3])], [null, false]);
+    const g = R.rcGaps([{ pid: 'a', pos: 'WR', lg: 40, fp: 25 }, { pid: 'b', pos: 'RB', lg: 20, fp: 13 }, { pid: 'c', pos: 'QB', lg: 10, fp: 12 }, { pid: 'd', pos: 'TE', lg: 5, fp: 14 }, { pid: 'e', pos: 'WR', lg: 30, fp: null }]);
+    eq('gap = league ROS rank − FantasyPros ROS rank', g.map(function(x){ return x.pid + ':' + x.gap; }), ['a:15', 'b:7', 'c:-2', 'd:-9']);
+    eq('levels: 12+ underrated (big), 6+ experts higher, −6 or less projection higher', g.map(function(x){ return x.level; }), ['big', 'yes', 'none', 'over']);
+  }
+
   // ---- 4. injury statuses vs live Sleeper values ----
   section('Injury statuses: every live Sleeper value is known');
   try{
