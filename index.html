@@ -921,11 +921,11 @@
   #fa-list .col-snap, #fa-view .pl-head .h-snap{ width: 58px; }
   #fa-list .col-opp, #fa-view .pl-head .h-opp{ padding-left: 10px; }
   /* names first, then points: L3 / Avg always show in table mode; snap, target share and the matchup join as the list widens */
-  @container list (min-width: 600px){ #fa-list .col.col-l3, #fa-view .pl-head .h-col.h-l3, #fa-list .col.col-avg, #fa-view .pl-head .h-col.h-avg{ display: block; width: 50px; text-align: right; color: var(--text-2); } }
-  @container list (min-width: 720px){ #fa-list .col.col-xfp, #fa-view .pl-head .h-col.h-xfp, #fa-list .col.col-xd, #fa-view .pl-head .h-col.h-xd{ display: block; width: 56px; text-align: right; color: var(--text-2); } #fa-list .col.col-xd, #fa-view .pl-head .h-col.h-xd{ width: 64px; } }
-  @container list (max-width: 859px){ #fa-list .col.col-snap, #fa-view .pl-head .h-col.h-snap{ display: none; } }
-  @container list (max-width: 939px){ #fa-list .col.col-tgt, #fa-view .pl-head .h-col.h-tgt{ display: none; } }
-  @container list (max-width: 1019px){ #fa-list .col.col-opp, #fa-view .pl-head .h-col.h-opp{ display: none; } #fa-list .slot-row .m-opp{ display: inline; } }
+  @container list (min-width: 680px){ #fa-list .col.col-l3, #fa-view .pl-head .h-col.h-l3, #fa-list .col.col-avg, #fa-view .pl-head .h-col.h-avg{ display: block; width: 50px; text-align: right; color: var(--text-2); } }
+  @container list (min-width: 830px){ #fa-list .col.col-xfp, #fa-view .pl-head .h-col.h-xfp, #fa-list .col.col-xd, #fa-view .pl-head .h-col.h-xd{ display: block; width: 56px; text-align: right; color: var(--text-2); } #fa-list .col.col-xd, #fa-view .pl-head .h-col.h-xd{ width: 64px; } }
+  @container list (max-width: 899px){ #fa-list .col.col-snap, #fa-view .pl-head .h-col.h-snap{ display: none; } }
+  @container list (max-width: 969px){ #fa-list .col.col-tgt, #fa-view .pl-head .h-col.h-tgt{ display: none; } }
+  @container list (max-width: 1059px){ #fa-list .col.col-opp, #fa-view .pl-head .h-col.h-opp{ display: none; } #fa-list .slot-row .m-opp{ display: inline; } }
   .col-l3.hot, .pl-fs.hot{ color: var(--accent) !important; font-weight: 700; } .col-l3.cold, .pl-fs.cold{ color: var(--danger) !important; font-weight: 700; }
   .pl-fs{ font-weight: 600; color: var(--text); }
   /* expand buttons */
@@ -2192,7 +2192,9 @@
   .ad-card, .tr-card{ padding: 12px 14px; margin-bottom: 22px; }
   .ad-verdict{ font-size: 13.5px; color: var(--text-2); padding: 2px 2px 10px; border-bottom: 1px solid var(--hair); margin-bottom: 8px; }
   .ad-verdict.up{ color: var(--text); } .ad-verdict b{ font-weight: 700; } .ad-verdict.up b:last-child{ color: var(--accent); }
-  .ad-cols{ display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .ad-cols{ display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }   /* minmax(0, …): a long name or chip wraps instead of pushing the column past the card */
+  .ad-cols > *{ min-width: 0; }
+  @container list (max-width: 699px){ .ad-cols{ grid-template-columns: minmax(0, 1fr); gap: 4px; } }   /* side panel open: stack the two lists */
   .ad-h{ margin: 6px 0 4px; }
   .ad-item{ display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--hair); cursor: pointer; }
   .ad-h + .ad-item{ border-top: none; }
