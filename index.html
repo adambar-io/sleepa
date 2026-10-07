@@ -1536,6 +1536,14 @@
   .h-sort.sorted.asc::after, .th-sort.sorted.asc button::after{ content: ' ↑'; }
   .th-sort button{ border: none; background: none; font: inherit; color: inherit; letter-spacing: inherit; text-transform: inherit; padding: 4px 0; cursor: pointer; white-space: nowrap; }
   .pl-dir{ font: inherit; font-size: 16px; font-weight: 700; width: 38px; height: 38px; border: none; border-radius: 10px; background: var(--surface); color: var(--text); box-shadow: inset 0 0 0 1px var(--hair); cursor: pointer; }
+  .mx-ctl{ margin: 0 0 12px; border-radius: 14px; background: var(--surface-2); }
+  .mx-ctl-t{ display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 44px; padding: 8px 14px; background: none; border-radius: 14px; color: var(--text-2); font-size: 13px; text-align: left; }
+  .mx-ctl-t b{ color: var(--text); } .mx-ctl-l{ flex: none; font-weight: 600; color: var(--accent); }
+  .mx-ctl-b{ display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 0 14px 12px; }
+  .mx-ctl .seg{ background: var(--surface); } .mx-ctl .seg button{ font-size: 12.5px; padding: 6px 12px; }
+  .mx-sort{ display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); } .mx-sort select{ max-width: 280px; }
+  .mx-dir{ min-width: 40px; min-height: 36px; }
+  .mx-views{ max-width: 100%; overflow-x: auto; scrollbar-width: none; } .mx-views button{ white-space: nowrap; flex: none; }
   .mx-tools{ display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 0 0 10px; }
   .mx-tools .pos-filter{ margin: 0; }
   .mx-count{ font-size: 13px; color: var(--text-3); }
@@ -11893,6 +11901,13 @@
   // Inside the full-screen layer: rows open that player's page; swap buttons work like the panel's.
   maxBody.addEventListener('change', function(e){
   });
+  maxBody.addEventListener('change', function(e){
+    const ms = e.target.closest('[data-mx-sort]'), shown = maxStack[maxStack.length - 1];
+    if(!ms || !shown || shown.kind !== 'fa') return;
+    const sel = document.getElementById('pl-sort');
+    sel.value = ms.value; sel.dispatchEvent(new Event('change'));
+    const y = maxPanel.scrollTop; maxBody.innerHTML = maxWaiversHTML(); maxPanel.scrollTop = y;
+  });
   maxBody.addEventListener('click', function(e){
     const shown = maxStack[maxStack.length - 1];
     if(shown && shown.kind === 'fa'){
@@ -11905,6 +11920,17 @@
       if(rm){ ctx.pl.filters.splice(Number(rm.getAttribute('data-pl-remove')), 1); ctx.faLimit = PL_PAGE; refresh(); return; }
       if(e.target.closest('[data-pl-clear-q]')){ ctx.pl.q = ''; document.getElementById('pl-q').value = ''; ctx.faLimit = PL_PAGE; refresh(); return; }
       if(e.target.closest('[data-mx-more]')){ ctx.faLimit += PL_PAGE; refresh(); return; }
+      if(e.target.closest('[data-mx-ctl]')){ try{ localStorage.setItem('rv-mx-ctl', mxCtlOpen() ? 'closed' : 'open'); }catch(err){} refresh(); return; }
+      const mv = e.target.closest('[data-mx-view]');
+      if(mv){
+        const v = mv.getAttribute('data-mx-view'), tab = document.querySelector('#fa-view [data-pl-view="' + v + '"]');
+        if(v === 'value'){ closeMax(); if(tab) tab.click(); return; }   // Waiver value is its own page, not a table
+        if(tab) tab.click();
+        refresh(); return;
+      }
+      const mk = e.target.closest('[data-mx-kind]');
+      if(mk){ const b = document.querySelector('#pl-trendkind [data-trend-kind="' + mk.getAttribute('data-mx-kind') + '"]'); if(b) b.click(); refresh(); return; }
+      if(e.target.closest('[data-mx-dir]')){ document.getElementById('pl-dir').click(); refresh(); return; }
     }
     const sw = e.target.closest('[data-mx-swap]');
     if(sw){ swapIntoSlot(Number(sw.getAttribute('data-slot')), sw.getAttribute('data-mx-swap')); renderMax(0); return; }
@@ -12547,6 +12573,23 @@
       '</tbody></table></div>';
   }
 
+  // Expanded Players: the same view tabs, sort and direction as the Players tab, in a collapsible bar. They drive the
+  // tab's own controls (one source of truth), then the table redraws.
+  const MX_VIEWS = [['avail', 'Available'], ['mine', 'My players'], ['trend', 'Trending'], ['all', 'All players'], ['value', 'Waiver value']];
+  function mxCtlOpen(){ try{ return localStorage.getItem('rv-mx-ctl') !== 'closed'; }catch(e){ return true; } }
+  function mxControlsHTML(){
+    const st = ctx.pl, open = mxCtlOpen(), sel = document.getElementById('pl-sort');
+    const viewTxt = (MX_VIEWS.find(function(v){ return v[0] === st.view; }) || MX_VIEWS[0])[1];
+    const opt = sel.options[sel.selectedIndex], m = PL_METRICS[sel.value], sortTxt = m ? m.short : opt ? opt.textContent : 'Projection';
+    const kinds = Array.prototype.map.call(document.querySelectorAll('#pl-trendkind [data-trend-kind]'), function(b){ return '<button type="button" data-mx-kind="' + b.getAttribute('data-trend-kind') + '" aria-pressed="' + (st.trendKind === b.getAttribute('data-trend-kind')) + '">' + escapeHTML(b.textContent) + '</button>'; }).join('');
+    return '<div class="mx-ctl' + (open ? ' open' : '') + '">' +
+      '<button type="button" class="mx-ctl-t" data-mx-ctl aria-expanded="' + open + '"><span><b>' + escapeHTML(viewTxt) + '</b> · sorted by ' + escapeHTML(sortTxt) + ' ' + (st.dir === 'asc' ? '↑' : '↓') + '</span><span class="mx-ctl-l">' + (open ? 'Hide' : 'View &amp; sort') + '</span></button>' +
+      (open ? '<div class="mx-ctl-b"><div class="seg mx-views" role="group" aria-label="Players view">' + MX_VIEWS.map(function(v){ return '<button type="button" data-mx-view="' + v[0] + '" aria-pressed="' + (st.view === v[0]) + '">' + v[1] + '</button>'; }).join('') + '</div>' +
+        (st.view === 'trend' && kinds ? '<div class="seg mx-kinds" role="group" aria-label="Trending">' + kinds + '</div>' : '') +
+        '<label class="pl-sort mx-sort"><span>Sort</span><select data-mx-sort aria-label="Sort players">' + sel.innerHTML + '</select></label>' +
+        '<button type="button" class="pl-dir mx-dir" data-mx-dir aria-label="' + (st.dir === 'asc' ? 'Ascending' : 'Descending') + ', tap to flip">' + (st.dir === 'asc' ? '↑' : '↓') + '</button></div>' : '') +
+      '</div>';
+  }
   function maxWaiversHTML(){
     const all = faList(), list = all.slice(0, ctx.faLimit), st = ctx.pl;
     const catcher = function(pid){ return ['RB', 'WR', 'TE'].indexOf(ctx.players[pid].position) !== -1; }; // target/air share only mean something for pass catchers
@@ -12563,13 +12606,13 @@
     // Column order: fantasy points first (projected, then actual), then what predicts them (snap share, target / air
     // share), then the matchup, then rankings, then the season stat line.
     const fpHeads = th('Proj', 'proj') + (weekStarted() ? th('Wk ' + ctx.week, 'wk') : '') + th('Last', 'last') + th('L3', 'l3') + th('Avg', 'avg') + th('xFP', 'xfp') + th('Pts−xFP', 'xfpd') + th('Total', 'tot');
-    const useHeads = th('Snap by week', 'snap') + shareHeads + th('Opp', null, 'l');
+    const useHeads = th('Snap by week', 'snap') + shareHeads + th('Key stats (season)', null, 'l') + th('Opp', null, 'l');
     const nCols = function(h){ return (h.match(/<th/g) || []).length; };
-    return '<div class="mx-tools"><div class="pos-filter mx-pos" role="group" aria-label="Positions">' + posChipsHTML() + '</div>' +
+    return mxControlsHTML() + '<div class="mx-tools"><div class="pos-filter mx-pos" role="group" aria-label="Positions">' + posChipsHTML() + '</div>' +
         '<div class="mx-count">' + all.length + ' player' + (all.length === 1 ? '' : 's') + (chips ? '' : '') + '</div></div>' +
       (chips ? '<div class="pl-active mx-active">' + chips + '</div>' : '') +
-      '<div class="mx-scroll"><table class="mx-tbl"><thead>' + rankGroupHead(1 + nCols(fpHeads + useHeads), 3) + '<tr>' + th('Player', 'name', 'l') + fpHeads + useHeads +
-      rankHeadCells(th) + th('Key stats (season)', null, 'l') +
+      '<div class="mx-scroll"><table class="mx-tbl"><thead>' + rankGroupHead(1 + nCols(fpHeads + useHeads), 2) + '<tr>' + th('Player', 'name', 'l') + fpHeads + useHeads +
+      rankHeadCells(th) +
       '<th class="l" style="padding-left:20px">' + (st.view !== 'avail' ? 'Team / vs yours' : ctx.faPos === 'FLEX' ? 'vs your FLEX' : 'vs your weakest') + '</th><th><span class="sr-only">Compare</span></th></tr></thead><tbody class="stagger">' +
       list.map(function(pid, i){
         const proj = ctx.projections[pid], v = isAvailable(pid) ? faVsParts(pid) : null;
@@ -12586,8 +12629,8 @@
           (isIdp(pid)
             ? '<td class="muted" title="Tackle share">' + pct(seasonShare(pid, 'k')) + '</td><td class="muted" title="Big plays per game">' + (function(){ const b = idpPerGame(pid, 'b'); return b === null ? '<span class="dim">—</span>' : b.toFixed(2); })() + '</td>'
             : '<td class="muted">' + (c ? pct(seasonShare(pid, 't')) : '<span class="dim">—</span>') + '</td><td class="muted">' + (c ? airPct(seasonShare(pid, 'a')) : '<span class="dim">—</span>') + '</td>') +
-          '<td class="l">' + oppCell(pid) + '</td>' + rankCells(pid) +
           '<td class="l key-stats mx-ks">' + (function(){ const r = aggregatedRaw(pid, 'season'), d = POSITION_KEY_STATS[isIdp(pid) ? posGroup(pid) : ctx.players[pid].position]; return r && d ? d.map(function(x){ return r[x[0]] !== undefined ? '<span><span class="kv">' + x[1] + '</span> ' + Math.round(r[x[0]]) + '</span>' : ''; }).join('') : '<span class="dim">—</span>'; })() + '</td>' +
+          '<td class="l">' + oppCell(pid) + '</td>' + rankCells(pid) +
           '<td class="l" style="padding-left:20px">' + vs + '</td><td>' + vsBtn(pid) + '</td></tr>';
       }).join('') + '</tbody></table></div>' +
       (list.length ? '' : '<div class="empty-state">No players match your filters.</div>') +
