@@ -1713,8 +1713,12 @@
   .rc-gap{ display: inline-flex; flex-direction: column; align-items: flex-end; font-weight: 800; } .rc-gap small{ font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
   .rc-gap.yes{ color: var(--warn); } .rc-gap.big{ color: var(--accent); } .rc-gap.over, .rc-gap.none{ color: var(--text-3); }
   .rc-empty{ text-align: center; color: var(--text-3); padding: 18px 6px !important; }
-  .rc-badge{ display: inline-flex; align-items: center; margin-left: 6px; padding: 1px 6px; min-height: 18px; border-radius: 5px; font: 800 10px/1.3 Inter, system-ui, sans-serif; letter-spacing: .03em; vertical-align: 1px; cursor: pointer; }
-  .rc-badge.up{ background: var(--accent-soft); color: var(--accent); } .rc-badge.gap{ background: var(--warn-soft); color: var(--warn); } .rc-badge.gap.big{ background: var(--accent-soft); color: var(--accent); }
+  /* row badges: quiet text, not pills */
+  .rc-badge{ display: inline-flex; align-items: center; margin-left: 6px; padding: 0 2px; min-height: 0; border-radius: 3px; background: none; color: var(--text-3); font: 600 10px/1.3 Inter, system-ui, sans-serif; letter-spacing: .02em; vertical-align: 1px; cursor: pointer; }
+  @media (hover: hover){ .rc-badge:hover{ color: var(--text); } }
+  /* closed: one muted line, no card */
+  .rc-line{ display: block; margin: -4px 0 10px; padding: 4px 2px; background: none; color: var(--text-3); font: 500 12.5px/1.4 Inter, system-ui, sans-serif; text-align: left; border-radius: 6px; }
+  .rc-line span{ color: var(--text-3); } @media (hover: hover){ .rc-line:hover{ color: var(--text-2); } }
   .player-meta .rc-badge{ display: none; } html.cards-detailed .player-meta .rc-badge{ display: inline-flex; }
   @container list (min-width: 600px){ .player-meta .rc-badge{ display: inline-flex; } }
   @media (max-width: 600px){ .rc-h{ padding: 12px 14px; } .rc-b{ padding: 0 12px 12px; } .rc-all{ margin-left: 0; } .rc-t{ font-size: 12.5px; } }
@@ -13898,7 +13902,7 @@
     });
   }
   ctx.rc = { open: false, tab: 'waiver', pos: 'ALL', sort: null, dir: -1, all: false };
-  try{ const s = JSON.parse(localStorage.getItem('rv-rc') || 'null'); if(s){ ctx.rc.open = !!s.open; ctx.rc.tab = s.tab === 'gap' ? 'gap' : 'waiver'; } }catch(e){}
+  try{ const s = JSON.parse(localStorage.getItem('rv-rc') || 'null'); if(s){ ctx.rc.tab = s.tab === 'gap' ? 'gap' : 'waiver'; }   /* always starts closed (one quiet line); only the tab is remembered */ }catch(e){}
   function rcSave(){ try{ localStorage.setItem('rv-rc', JSON.stringify({ open: ctx.rc.open, tab: ctx.rc.tab })); }catch(e){} }
   let rcLoading = false, rcMemo = {};
   // the data: [] until ros.json (and rankings.json) are in; they load in the background on first use
@@ -13939,9 +13943,10 @@
   function rosterCheckHTML(){
     const d = rcData(), rc = ctx.rc;
     const up = d ? d.waiver.filter(rcIsUpgrade).length : 0, under = d ? d.gaps.filter(function(g){ return g.level === 'yes' || g.level === 'big'; }).length : 0;
-    const summary = !d ? 'Loading rest-of-season projections…' :
-      (up ? up + ' waiver upgrade' + (up > 1 ? 's' : '') : 'No waiver upgrades') + ' · ' + (d.fpFresh ? (under ? under + ' player' + (under > 1 ? 's' : '') + ' FantasyPros ranks higher' : 'no big FantasyPros gaps') : 'FantasyPros ranks unavailable');
-    let html = '<div class="card rc' + (rc.open ? ' open' : '') + '"><button type="button" class="rc-h" data-rc-toggle aria-expanded="' + rc.open + '"><span><span class="eyebrow">Roster check · rest of season</span><b>' + escapeHTML(summary) + '</b></span><span class="rc-chev" aria-hidden="true">▾</span></button>';
+    const summary = !d ? 'loading…' :
+      (up ? up + ' waiver upgrade' + (up > 1 ? 's' : '') : 'no waiver upgrades') + ' · ' + (d.fpFresh ? (under ? under + ' FantasyPros gap' + (under > 1 ? 's' : '') : 'no FantasyPros gaps') : 'FantasyPros ranks unavailable');
+    if(!rc.open) return '<button type="button" class="rc-line" data-rc-toggle aria-expanded="false">Roster check <span>· ' + escapeHTML(summary) + '</span> ›</button>';
+    let html = '<div class="card rc open"><button type="button" class="rc-h" data-rc-toggle aria-expanded="true"><span><span class="eyebrow">Roster check · rest of season</span><b>' + escapeHTML(summary) + '</b></span><span class="rc-chev" aria-hidden="true">▾</span></button>';
     if(rc.open && d){
       const rowsAll = rc.tab === 'waiver' ? d.waiver : d.gaps;
       const pos = ['ALL'].concat(Object.keys(rowsAll.reduce(function(o, r){ o[r.pos] = true; return o; }, {})).sort(function(a, b){ return FANTASY_POSITIONS.concat(IDP_GROUPS).indexOf(a) - FANTASY_POSITIONS.concat(IDP_GROUPS).indexOf(b); }));
