@@ -2049,6 +2049,12 @@
   .pl-builder{ padding: 12px 14px; }
   .pl-builder[hidden]{ display: none; }
   .pl-trendkind[hidden], .pl-q-x[hidden]{ display: none; }
+  .pl-show{ display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; font-size: 13px; color: var(--text-2); }
+  .pl-show[hidden]{ display: none; }
+  .pl-show > span{ font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+  .pl-show label{ display: inline-flex; align-items: center; gap: 6px; min-height: 32px; cursor: pointer; }
+  .pl-show input{ width: 18px; height: 18px; min-height: 0; padding: 0; margin: 0; flex: none; accent-color: var(--accent); }
+  .pl-show b{ font-weight: 600; color: var(--text); } .pl-show small{ font-size: 11.5px; color: var(--text-3); font-variant-numeric: tabular-nums; }
   .pl-presets{ display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
   .pl-custom{ display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr) auto; gap: 6px; margin-top: 6px; }
   .pl-custom select, .pl-custom input{ font: inherit; font-size: 16px; min-height: 40px; padding: 6px 8px; border-radius: 10px; border: none; background: var(--surface-2); color: var(--text); box-shadow: inset 0 0 0 1px var(--hair); min-width: 0; width: 100%; }
@@ -3649,7 +3655,7 @@
               <label class="pl-sort"><span>Sort</span><select id="pl-sort" aria-label="Sort players"></select></label>
               <button type="button" class="pl-dir" id="pl-dir">↓</button>
               <button type="button" class="pl-filter-btn" id="pl-filter-btn" aria-expanded="false">Filters</button>
-              <div class="seg pl-trendkind" id="pl-trendkind" hidden><button type="button" data-trend-kind="add">Most added</button><button type="button" data-trend-kind="drop">Most dropped</button><button type="button" data-trend-kind="rise" title="Available players beating their projections (sleepa)">Rising</button></div>
+              <div class="seg pl-trendkind" id="pl-trendkind" hidden><button type="button" data-trend-kind="add">Most added</button><button type="button" data-trend-kind="drop">Most dropped</button><button type="button" data-trend-kind="rise" title="Available players beating their projections (sleepa)">Rising</button></div><div class="pl-show" id="pl-show" role="group" aria-label="Show players" hidden><span>Show</span><label><input type="checkbox" data-pl-show="mine" checked><b>My team</b><small data-pl-show-n="mine"></small></label><label><input type="checkbox" data-pl-show="taken" checked><b>Taken</b><small data-pl-show-n="taken"></small></label><label><input type="checkbox" data-pl-show="avail" checked><b>Available</b><small data-pl-show-n="avail"></small></label></div>
             </div>
             <div class="pl-builder card" id="pl-builder" hidden></div>
             <div class="pl-active" id="pl-active"></div>
@@ -3952,7 +3958,7 @@
     view: 'roster',       // 'roster' | 'fa' | 'compare' | 'settings'
     focus: null,          // what the player panel shows: {kind:'roster', pid, slot} | {kind:'fa', pid}
     faPos: 'ALL', // derived from pl.pos by syncFaPos (older code reads it)
-    pl: { view: 'avail', pos: [], filters: [], q: '', sort: 'default', dir: 'desc', trendKind: 'add' },
+    pl: { view: 'avail', pos: [], filters: [], q: '', sort: 'default', dir: 'desc', trendKind: 'add', show: { mine: true, taken: true, avail: true } },
     faLimit: FA_LIST_LIMIT,
     focusPid: null,       // player currently open in the focus panel (guards async history loads)
     nfl: null,            // nflverse.json contents, or null if unavailable
@@ -10426,10 +10432,13 @@
     return plMemo.trendIdx[pid];
   }
   // pool -> positions -> search -> stat filters -> sort
+  // a player's group in this league, FantasyPros style: on my team, on another team (taken), or available
+  function plGroup(pid){ return isMine(pid) ? 'mine' : ownerOf(pid) !== undefined ? 'taken' : 'avail'; }
   function plList(){
     const st = ctx.pl, lpos = leaguePositions();
     st.pos = st.pos.filter(function(x){ return lpos.indexOf(x) !== -1; });
     let list = plPool();
+    if(st.view === 'all' && st.show && !(st.show.mine && st.show.taken && st.show.avail)) list = list.filter(function(pid){ return st.show[plGroup(pid)]; });
     if(st.pos.length) list = list.filter(function(pid){ return fantasyPositions(pid).some(function(x){ return st.pos.indexOf(x) !== -1; }); });
     const q = normName(st.q).trim();
     if(q){ const words = q.split(/\s+/); list = list.filter(function(pid){ const k = searchKey(pid); return words.every(function(w){ return k.indexOf(' ' + w) !== -1 || k.indexOf(w) !== -1 && w.length > 2; }); }); }
@@ -10527,6 +10536,14 @@
       document.querySelectorAll('[data-pl-view]').forEach(function(b){ b.setAttribute('aria-selected', b.getAttribute('data-pl-view') === st.view); });
       const tk = document.getElementById('pl-trendkind');
       tk.hidden = st.view !== 'trend';
+      const sh = document.getElementById('pl-show');
+      sh.hidden = st.view !== 'all';
+      if(st.view === 'all'){
+        const n = { mine: 0, taken: 0, avail: 0 };
+        plPool().forEach(function(pid){ if(!st.pos.length || fantasyPositions(pid).some(function(x){ return st.pos.indexOf(x) !== -1; })) n[plGroup(pid)]++; });
+        sh.querySelectorAll('[data-pl-show]').forEach(function(c){ c.checked = !!st.show[c.getAttribute('data-pl-show')]; });
+        sh.querySelectorAll('[data-pl-show-n]').forEach(function(x){ x.textContent = n[x.getAttribute('data-pl-show-n')].toLocaleString(); });
+      }
       tk.querySelectorAll('[data-trend-kind]').forEach(function(b){ b.setAttribute('aria-selected', b.getAttribute('data-trend-kind') === st.trendKind); });
       els.faPosFilter.innerHTML = posChipsHTML();
       const sortSel = document.getElementById('pl-sort');
@@ -10627,6 +10644,13 @@
       renderPlayers(); staggerIn(els.faList);
       if(ctx.pl.view === 'trend' && !ctx.trending) loadPlayersData();
     });
+  });
+  document.getElementById('pl-show').addEventListener('change', function(e){
+    const c = e.target.closest('[data-pl-show]');
+    if(!c) return;
+    ctx.pl.show[c.getAttribute('data-pl-show')] = c.checked;
+    if(!ctx.pl.show.mine && !ctx.pl.show.taken && !ctx.pl.show.avail){ ctx.pl.show[c.getAttribute('data-pl-show')] = true; c.checked = true; return; }   /* at least one group stays on */
+    ctx.faLimit = PL_PAGE; renderPlayers();
   });
   document.getElementById('pl-trendkind').addEventListener('click', function(e){
     const b = e.target.closest('[data-trend-kind]');
