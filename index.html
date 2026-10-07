@@ -2756,6 +2756,7 @@
   .home-btn:active{ transform: scale(.9); }
   .home-btn .brand-mark{ width: 22px; height: 22px; }
   .focus-home{ float: right; margin: -6px 8px 0 0; }
+  .xb-lbl{ display: none; }
   .pane-detail .focus-home{ display: none; }
   .focus-home ~ .hero{ padding-right: 88px; } /* room for the floating home + close buttons */
   .pane-detail .focus-home ~ .hero{ padding-right: 0; }
@@ -2858,7 +2859,13 @@
       top: calc(10px + env(safe-area-inset-top)); right: calc(56px + env(safe-area-inset-right));
       width: 38px; height: 38px; background: var(--surface-3);
     }
-    .hero{ gap: 14px; padding-right: 44px; }
+    /* phones: one top bar, so the sheet buttons never overlap: Full player page on the left; VS, home, close on the right */
+    .overlay.open::before{ content: ''; position: fixed; z-index: 1; left: 0; right: 0; top: 0; height: calc(58px + env(safe-area-inset-top)); background: var(--surface); box-shadow: 0 1px 0 var(--hair); }
+    .focus-panel{ padding-top: calc(70px + env(safe-area-inset-top)) !important; }
+    #hero-vs:not([hidden]){ position: fixed; z-index: 2; margin: 0; top: calc(10px + env(safe-area-inset-top)); right: calc(102px + env(safe-area-inset-right)); width: 38px; height: 38px; }
+    #hero-expand{ position: fixed; z-index: 2; margin: 0; top: calc(10px + env(safe-area-inset-top)); left: calc(12px + env(safe-area-inset-left)); width: auto; height: 38px; padding: 0 14px; gap: 7px; display: inline-flex; align-items: center; border-radius: 999px; background: var(--surface-3); color: var(--text); font-size: 13px; font-weight: 600; }
+    #hero-expand .xb-lbl{ display: inline; }
+    .hero, .focus-home ~ .hero{ gap: 14px; padding-right: 0; }
     .hero-avatar{ width: 64px; height: 64px; }
     .hero-name{ font-size: 22px; line-height: 1.15; }
     .hero-meta{ font-size: 13px; }
@@ -3895,7 +3902,7 @@
         <div class="hero-meta" id="hero-meta">—</div>
       </div>
       <button type="button" class="vs-btn hero-vs" id="hero-vs" data-vs="" title="Compare head-to-head">VS</button>
-      <button class="xbtn" id="hero-expand" data-expand="player" aria-label="Open full player page" title="Full screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M10 20H4v-6M20 4l-6.5 6.5M4 20l6.5-6.5"/></svg></button>
+      <button class="xbtn" id="hero-expand" data-expand="player" aria-label="Open full player page" title="Full screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M10 20H4v-6M20 4l-6.5 6.5M4 20l6.5-6.5"/></svg><span class="xb-lbl">Full player page</span></button>
     </div>
     <div class="hero-acts" id="hero-acts" hidden></div>
     <div class="hero-stats" id="hero-stats"></div>
