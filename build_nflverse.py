@@ -26,6 +26,7 @@ SOURCES = {
     'id_map':          'https://raw.githubusercontent.com/dynastyprocess/data/master/files/db_playerids.csv',  # sleeper_id <-> gsis_id
     'sleeper_players': 'https://api.sleeper.app/v1/players/nfl',
     'espn_injuries':   'https://site.api.espn.com/apis/site/v2/sports/football/nfl/injuries',   # unofficial; ~8.7 MB, trimmed to espn.json
+    'xfp':             'https://github.com/ffverse/ffopportunity/releases/download/latest-data/ep_weekly_{season}.csv',  # expected fantasy points (keyed by gsis_id)
 }
 ESPN_TEAM_FIX = {'WSH': 'WAS'}     # ESPN abbreviation -> Sleeper abbreviation
 ESPN_SKIP_POS = {'C', 'G', 'T', 'OT', 'OG', 'OL', 'LS', 'P'}   # offensive line, long snapper, punter: never on a fantasy roster
@@ -515,6 +516,8 @@ def build(season, previous=None):
                 continue
             put(r['player_id'], r['week'], 't', num(r.get('target_share')))
             put(r['player_id'], r['week'], 'a', num(r.get('air_yards_share')))
+            for k, col in (('tg', 'targets'), ('ca', 'carries'), ('wo', 'wopr'), ('ay', 'receiving_air_yards')):
+                put(r['player_id'], r['week'], k, num(r.get(col)) or None)
     except Exception as e:
         print('  (weekly player stats unavailable, keeping previous target/air share:', e, ')', file=sys.stderr)
         stale.append('shares')
@@ -671,6 +674,7 @@ def build(season, previous=None):
         'coverage': dict(method, relevant=len(relevant), snap_rows_unmapped=snap_unmapped),
     }
     slim = {sid: {f: p[f] for f in PLAYER_FIELDS if p.get(f) is not None} for sid, p in sleeper.items()}
+    out['_gsis_of'] = gsis_of   # for build_xfp; popped before nflverse.json is written
     return out, slim
 
 # ---------- Sleepa Intel: the game environment (lines, venue, rest, records, home-field edge) for this week's games ----------
@@ -685,6 +689,36 @@ def build(season, previous=None):
 INTEL_EDGE_SEASONS = 6          # home-field edge sample: the last 6 completed seasons (2020-25 for 2026)
 INTEL_HISTORY_MAX = 60          # line snapshots kept per game
 _SCHED_ROWS = None
+
+
+# xfp.json: ffopportunity's expected stats per player-week (the yards / catches / TDs / first downs a player's
+# opportunities usually produce, from the play-by-play: target depth, field position, down, distance). Stored as Sleeper
+# stat keys so the app scores them with each league's own settings, like a projection. Attempts are the real counts.
+XFP_KEYS = (
+    ('pass_att', 'pass_attempt'), ('pass_cmp', 'pass_completions_exp'), ('pass_yd', 'pass_yards_gained_exp'),
+    ('pass_td', 'pass_touchdown_exp'), ('pass_int', 'pass_interception_exp'), ('pass_fd', 'pass_first_down_exp'),
+    ('pass_2pt', 'pass_two_point_conv_exp'),
+    ('rush_att', 'rush_attempt'), ('rush_yd', 'rush_yards_gained_exp'), ('rush_td', 'rush_touchdown_exp'),
+    ('rush_fd', 'rush_first_down_exp'), ('rush_2pt', 'rush_two_point_conv_exp'),
+    ('rec_tgt', 'rec_attempt'), ('rec', 'receptions_exp'), ('rec_yd', 'rec_yards_gained_exp'),
+    ('rec_td', 'rec_touchdown_exp'), ('rec_fd', 'rec_first_down_exp'), ('rec_2pt', 'rec_two_point_conv_exp'),
+)
+
+
+def build_xfp(season, gsis_of):
+    sid_of = {g: sid for sid, g in gsis_of.items()}
+    players, through = {}, 0
+    for r in csv_rows(SOURCES['xfp'].format(season=season)):
+        sid = sid_of.get(r.get('player_id'))
+        if not sid or not r.get('week') or r.get('season') != str(season):
+            continue
+        vals = [round(num(r.get(col)) or 0, 2) for _, col in XFP_KEYS]
+        if not any(vals):
+            continue
+        w = int(float(r['week']))
+        players.setdefault(sid, {})[str(w)] = [int(v) if v == int(v) else v for v in vals]
+        through = max(through, w)
+    return {'keys': [k for k, _ in XFP_KEYS], 'through_week': through, 'players': players}
 
 
 def schedule_rows():
@@ -895,6 +929,7 @@ def main():
 
     old = load_previous(args.out)
     out, slim = build(args.season, old)
+    gsis_of = out.pop('_gsis_of', {})
 
     # Defense vs position (completed weeks) goes in nflverse.json; rest-of-season projections in their own file,
     # which the app only loads for the waiver screen and the trade helper.
@@ -993,6 +1028,19 @@ def main():
             print('No rankings changes; rankings.json left as is.', file=sys.stderr)
     except Exception as e:
         print('  (rankings unavailable, keeping the previous rankings.json:', e, ')', file=sys.stderr)
+
+    xfp_path = os.path.join(os.path.dirname(os.path.abspath(args.out)), 'xfp.json')
+    try:
+        xfp = build_xfp(args.season, gsis_of)
+        old_xfp = load_previous(xfp_path)
+        if xfp['players'] and (old_xfp.get('players') != xfp['players'] or old_xfp.get('keys') != xfp['keys']):
+            with open(xfp_path, 'w', encoding='utf-8') as f:
+                json.dump(dict({'season': args.season, 'generated': out['generated']}, **xfp), f, separators=(',', ':'))
+            print(f"Wrote {xfp_path} ({os.path.getsize(xfp_path):,} bytes, {len(xfp['players']):,} players, through week {xfp['through_week']}).", file=sys.stderr)
+        else:
+            print('No expected-points changes; xfp.json left as is.', file=sys.stderr)
+    except Exception as e:
+        print('  (expected points unavailable, keeping the previous xfp.json:', e, ')', file=sys.stderr)
 
     ros_path = os.path.join(os.path.dirname(os.path.abspath(args.out)), 'ros.json')
     try:

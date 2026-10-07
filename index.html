@@ -864,14 +864,21 @@
   }
 
   /* Players list: fantasy points sit next to the name, then opportunity (snap, target share), then the matchup */
-  #fa-list .col-avg, #fa-view .pl-head .h-avg{ margin-right: 12px; }
+  #fa-list .col-xd, #fa-view .pl-head .h-xd{ margin-right: 12px; }
+  .col-xd.over, .xd.over{ color: var(--warn) !important; font-weight: 700; } .col-xd.under, .xd.under{ color: var(--grp-avail) !important; font-weight: 700; }
+  .xd{ font-weight: 600; color: var(--text-3); }
+  .xfp-note{ display: flex; align-items: flex-start; gap: 10px; margin: 0 0 10px; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); font-size: 12.5px; line-height: 1.45; color: var(--text-2); }
+  .xfp-note[hidden]{ display: none; } .xfp-note b{ color: var(--text); }
+  .xfp-x{ flex: none; width: 28px; height: 28px; min-height: 0; padding: 0; border-radius: 8px; background: none; color: var(--text-3); font-size: 18px; line-height: 1; }
+  .slot-row .col.col-xfp, .list-head .h-col.h-xfp, .slot-row .col.col-xd, .list-head .h-col.h-xd{ display: none; }
   #fa-list .col-snap, #fa-view .pl-head .h-snap{ width: 58px; }
   #fa-list .col-opp, #fa-view .pl-head .h-opp{ padding-left: 10px; }
   /* names first, then points: L3 / Avg always show in table mode; snap, target share and the matchup join as the list widens */
   @container list (min-width: 600px){ #fa-list .col.col-l3, #fa-view .pl-head .h-col.h-l3, #fa-list .col.col-avg, #fa-view .pl-head .h-col.h-avg{ display: block; width: 50px; text-align: right; color: var(--text-2); } }
-  @container list (max-width: 759px){ #fa-list .col.col-snap, #fa-view .pl-head .h-col.h-snap{ display: none; } }
-  @container list (max-width: 879px){ #fa-list .col.col-tgt, #fa-view .pl-head .h-col.h-tgt{ display: none; } }
-  @container list (max-width: 979px){ #fa-list .col.col-opp, #fa-view .pl-head .h-col.h-opp{ display: none; } #fa-list .slot-row .m-opp{ display: inline; } }
+  @container list (min-width: 720px){ #fa-list .col.col-xfp, #fa-view .pl-head .h-col.h-xfp, #fa-list .col.col-xd, #fa-view .pl-head .h-col.h-xd{ display: block; width: 56px; text-align: right; color: var(--text-2); } #fa-list .col.col-xd, #fa-view .pl-head .h-col.h-xd{ width: 64px; } }
+  @container list (max-width: 859px){ #fa-list .col.col-snap, #fa-view .pl-head .h-col.h-snap{ display: none; } }
+  @container list (max-width: 939px){ #fa-list .col.col-tgt, #fa-view .pl-head .h-col.h-tgt{ display: none; } }
+  @container list (max-width: 1019px){ #fa-list .col.col-opp, #fa-view .pl-head .h-col.h-opp{ display: none; } #fa-list .slot-row .m-opp{ display: inline; } }
   .col-l3.hot, .pl-fs.hot{ color: var(--accent) !important; font-weight: 700; } .col-l3.cold, .pl-fs.cold{ color: var(--danger) !important; font-weight: 700; }
   .pl-fs{ font-weight: 600; color: var(--text); }
   /* expand buttons */
@@ -951,6 +958,32 @@
   .pf-stat .v{ font-size: 24px; font-weight: 600; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
   .pf-stat .k{ font-size: 10.5px; color: var(--text-3); margin-top: 2px; text-transform: uppercase; letter-spacing: .07em; font-weight: 600; }
   .pf-grid{ display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 18px; align-items: start; }
+  .pf-grid.solo{ grid-template-columns: minmax(0, 1fr); }
+  /* Trends chart (player page) */
+  .pc{ margin-bottom: 18px; }
+  .pc-top{ display: flex; align-items: center; justify-content: space-between; gap: 8px 14px; flex-wrap: wrap; }
+  .pc-top .pf-sec{ margin-bottom: 6px; justify-content: flex-start; gap: 10px; } .pc-mode{ width: fit-content; margin-top: 10px; } .pc-mode button{ padding: 6px 12px; min-height: 32px; font-size: 12.5px; }
+  .pc-keys{ display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 12px; }
+  .pc-key{ display: inline-flex; align-items: center; gap: 7px; min-height: 30px; padding: 4px 11px; border-radius: 999px; background: var(--surface-2); color: var(--text); font-size: 12.5px; font-weight: 600; }
+  .pc-key[aria-pressed="false"]{ background: none; color: var(--text-3); box-shadow: inset 0 0 0 1px var(--hair); }
+  .pc-key i{ width: 14px; height: 3px; border-radius: 2px; background: var(--c); } .pc-key i.dash{ background: repeating-linear-gradient(90deg, var(--c) 0 4px, transparent 4px 7px); }
+  .pc-key[aria-pressed="false"] i{ opacity: .35; }
+  .pc-plot{ position: relative; height: 230px; margin: 0 0 0 34px; touch-action: pan-y; }
+  .pc-plot svg{ position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .pc-gl{ position: absolute; left: 0; right: 0; border-top: 1px solid var(--hair); } .pc-gl span{ position: absolute; right: calc(100% + 8px); top: -8px; font-size: 11px; color: var(--text-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .pc-dot{ position: absolute; width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; border-radius: 50%; background: var(--c); pointer-events: none; }
+  .pc-dot.big{ width: 10px; height: 10px; margin: -5px 0 0 -5px; box-shadow: 0 0 0 2px var(--surface); } .pc-dot.hollow{ background: var(--surface); box-shadow: inset 0 0 0 2px var(--c); }
+  .pc-bar{ position: absolute; bottom: 0; top: 0; transform: translateX(-50%); pointer-events: none; } .pc-bar i{ position: absolute; left: 0; right: 0; border-radius: 3px; box-shadow: 0 1px 0 var(--surface) inset; }
+  .pc-hit{ position: absolute; top: 0; bottom: 0; padding: 0; min-height: 0; border-radius: 6px; background: none; } .pc-hit.on{ background: color-mix(in srgb, var(--text) 6%, transparent); }
+  .pc-hit:focus-visible{ outline: 2px solid var(--accent); outline-offset: -2px; }
+  .pc-x{ position: relative; height: 18px; margin: 6px 0 0 34px; font-size: 11px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+  .pc-x span{ position: absolute; transform: translateX(-50%); } .pc-x span.cur{ color: var(--text); font-weight: 700; }
+  .pc-tip{ position: absolute; top: 6px; z-index: 2; min-width: 168px; max-width: 230px; padding: 10px 12px; border-radius: 12px; background: var(--surface); box-shadow: var(--shadow), 0 0 0 1px var(--hair); font-size: 12.5px; pointer-events: none; }
+  .pc-th{ font-weight: 700; margin-bottom: 6px; } .pc-tr{ display: flex; align-items: center; gap: 7px; padding: 2px 0; } .pc-tr i{ width: 8px; height: 8px; border-radius: 50%; background: var(--c); flex: none; }
+  .pc-tr span{ flex: 1; color: var(--text-2); } .pc-tr b{ font-variant-numeric: tabular-nums; } .pc-d{ border-top: 1px solid var(--hair); margin-top: 4px; padding-top: 5px; }
+  .pc-tr b.over{ color: var(--warn); } .pc-tr b.under{ color: var(--grp-avail); } .pc-sub{ margin-top: 4px; font-size: 11.5px; color: var(--text-3); }
+  .pc-note{ margin: 12px 0 0; font-size: 12px; line-height: 1.45; color: var(--text-3); } .pc-note b{ color: var(--text-2); }
+  @media (max-width: 600px){ .pc-plot{ height: 200px; margin-left: 28px; } .pc-x{ margin-left: 28px; } }
   .pf-card{ padding: 6px 20px 20px; min-width: 0; }
   .pf-week, .pf-log{ margin-bottom: 18px; }   /* full-width stack above the charts / options grid */
   .pf-card .cand-card{ display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; column-gap: 10px; row-gap: 4px; grid-template-areas: "av info act" "av stats act"; padding: 10px; }
@@ -2149,7 +2182,7 @@
   .tr-top{ display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
   .seg{ display: inline-flex; padding: 3px; border-radius: 999px; background: var(--surface-2); }
   .seg button{ border: none; background: none; font: inherit; font-size: 13px; font-weight: 600; color: var(--text-2); padding: 6px 12px; min-height: 32px; border-radius: 999px; cursor: pointer; }
-  .seg button[aria-selected="true"]{ background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+  .seg button[aria-selected="true"], .seg button[aria-pressed="true"]{ background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
   .tr-avail{ display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-2); cursor: pointer; min-height: 32px; white-space: nowrap; }
   .tr-avail input{ width: 18px; height: 18px; min-height: 0; margin: 0; padding: 0; flex: none; accent-color: var(--accent); } /* not the text-input style */
   .tr-row{ display: grid; grid-template-columns: 18px 36px minmax(0, 1fr) auto auto; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--hair); cursor: pointer; }
@@ -3690,7 +3723,8 @@
           <div id="add-drop"></div>
           <div id="wv"></div>
           <div class="section-title"><span id="pl-title">Available</span> <span style="opacity:0.7;" id="fa-sub"></span><div class="pl-density" role="group" aria-label="Row style"><button type="button" data-pl-rows="compact" aria-label="Compact rows" title="Compact"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg></button><button type="button" data-pl-rows="detailed" aria-label="Detailed rows" title="Detailed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="7" rx="2"/><rect x="4" y="13" width="16" height="7" rx="2"/></svg></button></div><button class="xbtn" data-expand="fa" aria-label="Expand waivers to full screen" title="Expand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M10 20H4v-6M20 4l-6.5 6.5M4 20l6.5-6.5"/></svg></button></div>
-          <div class="list-head pl-head"><div class="h-slot"></div><button type="button" class="h-info h-sort" data-pl-sort="name">Player</button><button type="button" class="h-stat h-sort" data-pl-sort="proj" title="Projected points this week">Proj</button><button type="button" class="h-stat h-sort h-last" data-pl-sort="last" title="Points last game">Last</button><button type="button" class="h-col h-l3 h-sort" data-pl-sort="l3" title="Points per game, last 3 games (green / red: running hot / cold vs his season average)">L3</button><button type="button" class="h-col h-avg h-sort" data-pl-sort="avg" title="Points per game, season">Avg</button><button type="button" class="h-col h-snap h-sort" data-pl-sort="snap" title="Season snap share">Snap</button><button type="button" class="h-col h-tgt h-sort" data-pl-sort="tgt" title="Season target share">Tgt</button><div class="h-col h-opp">Opp</div><div class="h-col h-vs">vs your weakest</div><div class="h-pick" aria-hidden="true"></div></div>
+          <div class="xfp-note" id="xfp-note" hidden><span><b>xFP</b> = expected points per game: what a player’s targets, carries and field position usually score in your league. <b>Pts−xFP</b> = actual minus expected: <span class="xd over">orange</span> = running lucky, tends to cool off · <span class="xd under">blue</span> = running unlucky, tends to bounce back while the volume holds.</span><button type="button" class="xfp-x" data-xfp-x aria-label="Hide this note">×</button></div>
+          <div class="list-head pl-head"><div class="h-slot"></div><button type="button" class="h-info h-sort" data-pl-sort="name">Player</button><button type="button" class="h-stat h-sort" data-pl-sort="proj" title="Projected points this week">Proj</button><button type="button" class="h-stat h-sort h-last" data-pl-sort="last" title="Points last game">Last</button><button type="button" class="h-col h-l3 h-sort" data-pl-sort="l3" title="Points per game, last 3 games (green / red: running hot / cold vs his season average)">L3</button><button type="button" class="h-col h-avg h-sort" data-pl-sort="avg" title="Points per game, season">Avg</button><button type="button" class="h-col h-xfp h-sort" data-pl-sort="xfp" title="Expected points per game: what his targets, carries and field position usually score in your league">xFP</button><button type="button" class="h-col h-xd h-sort" data-pl-sort="xfpd" title="Actual minus expected points per game. Orange: running lucky, tends to cool off. Blue: running unlucky, tends to bounce back.">Pts−xFP</button><button type="button" class="h-col h-snap h-sort" data-pl-sort="snap" title="Season snap share">Snap</button><button type="button" class="h-col h-tgt h-sort" data-pl-sort="tgt" title="Season target share">Tgt</button><div class="h-col h-opp">Opp</div><div class="h-col h-vs">vs your weakest</div><div class="h-pick" aria-hidden="true"></div></div>
           <div id="fa-list"></div>
           <button class="fa-more" id="fa-more" style="display:none;">Show more</button>
         </section>
@@ -9781,6 +9815,249 @@
     const r = ctx.ros.players[pid];
     return (rosMemo[pid] = r ? { pts: projPoints(r.s, pid, ctx.league.scoring_settings || {}) || 0, weeks: r.w } : null);
   }
+  // ============ Expected points (xFP) ============
+  // xfp.json (GitHub Action, from ffverse/ffopportunity): each player-week as the catches, yards, TDs and first downs his
+  // opportunities usually produce (target depth, field position, down and distance), in Sleeper stat keys, so it is
+  // scored with this league's own settings like a projection. Volume is steadier week to week than points, so xFP per
+  // game is a strong guide to future scoring; actual minus xFP shows who is running lucky (tends to cool off) or unlucky
+  // (tends to bounce back while the volume holds). Loaded on demand (Players tab, player page).
+  const XFP_URL = 'xfp.json';
+  const XFP_FLAG = 2;   // points per game: Pts − xFP beyond this is colored
+  const XFP_POS = ['QB', 'RB', 'WR', 'TE'];
+  let xfpLoading = null;
+  function loadXfp(){
+    if(ctx.xfp && ctx.xfp.season === ctx.season) return Promise.resolve(ctx.xfp);
+    if(xfpLoading) return xfpLoading;
+    return (xfpLoading = fetch(XFP_URL, { cache: 'no-cache' }).then(function(res){
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    }).then(function(j){
+      if(j.season !== ctx.season || !j.players) throw new Error('xfp.json is for ' + j.season);
+      ctx.xfp = j; ctx.xfpMemo = {}; plReset();
+      return j;
+    }).catch(function(e){ console.warn('Expected points unavailable:', e.message); ctx.xfpFailed = true; return null; })
+      .finally(function(){ xfpLoading = null; }));
+  }
+  function xfpMemoGet(){
+    const id = ctx.league && ctx.league.league_id;
+    if(!ctx.xfpMemo || ctx.xfpMemoLeague !== id){ ctx.xfpMemo = {}; ctx.xfpMemoLeague = id; }
+    return ctx.xfpMemo;
+  }
+  // One week of expected points in this league's scoring (null: no xFP row that week).
+  function xfpWeekPts(pid, w){
+    if(!ctx.xfp || !ctx.league) return null;
+    const m = xfpMemoGet(), k = pid + '|' + w;
+    if(k in m) return m[k];
+    const row = (ctx.xfp.players[pid] || {})[w];
+    if(!row) return (m[k] = null);
+    const raw = {}, pos = (ctx.players[pid] || {}).position;
+    ctx.xfp.keys.forEach(function(key, i){ if(row[i]) raw[key] = row[i]; });
+    if(raw.rec && ['RB', 'WR', 'TE'].indexOf(pos) !== -1) raw['bonus_rec_' + pos.toLowerCase()] = raw.rec;   // TE premium etc.
+    return (m[k] = calcPoints(raw, ctx.league.scoring_settings || {}));
+  }
+  // Season per game over the games he played that have xFP: { xfp, act, diff (actual − xFP), n }.
+  function xfpInfo(pid){
+    if(!ctx.xfp) return null;
+    const m = xfpMemoGet(), k = pid + '|info';
+    if(k in m) return m[k];
+    const h = hist(pid);
+    if(!h) return null;   // history not loaded yet: do not memo
+    let n = 0, x = 0, a = 0;
+    h.forEach(function(g){ const v = xfpWeekPts(pid, g.week); if(v === null) return; n++; x += v; a += g.pts; });
+    return (m[k] = n ? { xfp: x / n, act: a / n, diff: (a - x) / n, n: n } : null);
+  }
+  function xfpDiffTxt(d){ return (d >= 0 ? '+' : '−') + Math.abs(d).toFixed(1); }
+  function xfpDiffCls(d){ return d >= XFP_FLAG ? 'over' : d <= -XFP_FLAG ? 'under' : ''; }
+  function xfpDiffTitle(d){
+    return d >= XFP_FLAG ? 'Scoring ' + d.toFixed(1) + ' pts a game above his expected points: likely to cool off'
+      : d <= -XFP_FLAG ? 'Scoring ' + (-d).toFixed(1) + ' pts a game below his expected points: likely to bounce back if the volume holds'
+      : 'Scoring about what his volume predicts';
+  }
+
+  // ============ Player trend chart (player page) ============
+  // Points (actual, Sleeper projection, xFP, 3-game average, trend line), Usage (snap %, target share, air-yard share,
+  // WOPR) or Volume (targets, carries, pass attempts) by week. Lines are SVG stretched to the box with non-scaling
+  // strokes; dots, labels, bars and the tooltip are HTML on top, so text stays sharp at any width.
+  const PC_SERIES = {
+    pts: [
+      { k: 'act', label: 'Actual', color: 'var(--accent)', w: 2.5 },
+      { k: 'proj', label: 'Projected', color: 'var(--text-3)', w: 1.5, dash: '5 4' },
+      { k: 'xfp', label: 'xFP', color: 'var(--grp-avail)', w: 2 },
+      { k: 'avg3', label: '3-game avg', color: 'var(--warn)', w: 1.5, off: true },
+      { k: 'trend', label: 'Trend', color: 'var(--text-2)', w: 1.5, dash: '1 5', off: true },
+    ],
+    use: [
+      { k: 's', label: 'Snap %', color: 'var(--accent)', w: 2.5 },
+      { k: 't', label: 'Target share', color: 'var(--grp-avail)', w: 2 },
+      { k: 'a', label: 'Air-yard share', color: 'var(--warn)', w: 1.5 },
+      { k: 'wo', label: 'WOPR', color: 'var(--text-2)', w: 1.5, dash: '5 4', off: true },
+    ],
+    vol: [
+      { k: 'tg', label: 'Targets', color: 'var(--grp-avail)' },
+      { k: 'ca', label: 'Carries', color: 'var(--accent)' },
+      { k: 'pa', label: 'Pass att', color: 'var(--text-3)' },
+    ],
+  };
+  const PC_MODES = [['pts', 'Points'], ['use', 'Usage'], ['vol', 'Volume']];
+  const PC_NOTE = {
+    pts: '<b>xFP</b> = expected points: what his targets, carries and field position usually score, in your league’s scoring (ffopportunity model). Well above xFP tends to cool off; well below tends to bounce back while the volume holds. Trend = straight-line fit of his actual points (4+ games).',
+    use: '<b>WOPR</b> = 1.5 × target share + 0.7 × air-yard share, the best single measure of a pass catcher’s role. Shares are of his team’s targets and air yards that week (nflverse).',
+    vol: 'Targets and carries per game (nflverse); pass attempts for quarterbacks (ffopportunity). Volume is the most stable driver of fantasy points.',
+  };
+  try{ ctx.pcMode = PC_SERIES[localStorage.getItem('rv-pc-mode')] ? localStorage.getItem('rv-pc-mode') : 'pts'; }catch(e){ ctx.pcMode = 'pts'; }
+  ctx.pcOff = {};   // series the viewer switched on / off this session: 'mode|key' -> true (off) / false (on)
+  const pcCache = {};
+  function pcIsOff(mode, s){ const k = mode + '|' + s.k; return k in ctx.pcOff ? ctx.pcOff[k] : !!s.off; }
+  function pcData(pid){
+    const p = ctx.players[pid] || {}, h = (hist(pid) || []).slice().sort(function(a, b){ return a.week - b.week; }), byW = {}, nv = {};
+    h.forEach(function(g){ byW[g.week] = g; });
+    if(!isIdp(pid)) (nflWeeks(pid) || []).forEach(function(x){ nv[x.week] = x; });
+    const showNext = typeof ctx.projections[pid] === 'number' && !byW[ctx.week];
+    const n = Math.max.apply(null, [showNext ? ctx.week : 0].concat(h.map(function(g){ return g.week; }), Object.keys(nv).map(Number)));
+    const avg3 = {};
+    h.forEach(function(g, i){ const s = h.slice(Math.max(0, i - 2), i + 1); avg3[g.week] = s.reduce(function(a, x){ return a + x.pts; }, 0) / s.length; });
+    let trend = null;
+    if(h.length >= 4){
+      const xs = h.map(function(g){ return g.week; }), ys = h.map(function(g){ return g.pts; });
+      const mx = xs.reduce(function(a, b){ return a + b; }, 0) / xs.length, my = ys.reduce(function(a, b){ return a + b; }, 0) / ys.length;
+      let sxy = 0, sxx = 0;
+      xs.forEach(function(x, i){ sxy += (x - mx) * (ys[i] - my); sxx += (x - mx) * (x - mx); });
+      const b = sxx ? sxy / sxx : 0;
+      trend = { a: my - b * mx, b: b, from: xs[0], to: xs[xs.length - 1] };
+    }
+    const xrow = (ctx.xfp && ctx.xfp.players[pid]) || {}, paI = ctx.xfp ? ctx.xfp.keys.indexOf('pass_att') : -1;
+    const weeks = [], v = {};
+    for(let w = 1; w <= n; w++){
+      weeks.push(w);
+      const g = byW[w], u = nv[w], m = matchup(p.team, w), cur = w === ctx.week && !g;
+      v[w] = {
+        act: g ? g.pts : null,
+        proj: cur ? ctx.projections[pid] : w < ctx.week ? pastProjPts(pid, w) : null,
+        xfp: g ? xfpWeekPts(pid, w) : null,
+        avg3: g ? avg3[w] : null,
+        trend: trend && w >= trend.from && w <= trend.to ? Math.max(0, trend.a + trend.b * w) : null,
+        s: u && typeof u.s === 'number' ? u.s : null, t: u && typeof u.t === 'number' ? u.t : null,
+        a: u && typeof u.a === 'number' ? u.a : null, wo: u && typeof u.wo === 'number' ? u.wo : null,
+        tg: u ? u.tg || 0 : null, ca: u ? u.ca || 0 : null,
+        pa: p.position === 'QB' && paI !== -1 && xrow[w] ? xrow[w][paI] : null,
+        opp: g && g.opp ? (g.away === true ? '@ ' : g.away === false ? 'vs ' : '') + g.opp : m && !m.bye ? m.text : '',
+        bye: !!(m && m.bye), cur: cur, played: !!g,
+      };
+    }
+    return { pid: pid, weeks: weeks, v: v, pos: p.position };
+  }
+  function pcNice(top){ const st = [0.1, 0.2, 0.25, 0.5, 1, 2, 2.5, 5, 10, 20, 25, 50, 100]; const step = st.find(function(x){ return top / x <= 4; }) || 100; return { max: Math.ceil(top / step) * step || step, step: step }; }
+  function pcFmt(mode, k, val){
+    if(val === null || val === undefined) return '—';
+    if(mode === 'use') return k === 'wo' ? val.toFixed(2) : Math.round(val * 100) + '%';
+    if(mode === 'vol') return String(Math.round(val));
+    return fmtPts(val);
+  }
+  function pcHTML(pid){
+    const D = pcData(pid), mode = ctx.pcMode;
+    pcCache[pid] = D;
+    if(!D.weeks.length) return '';
+    const ser = PC_SERIES[mode].filter(function(s){ return D.weeks.some(function(w){ return typeof D.v[w][s.k] === 'number' && (mode === 'pts' || D.v[w][s.k] > 0); }); });
+    const on = ser.filter(function(s){ return !pcIsOff(mode, s); });
+    let top = 0;
+    D.weeks.forEach(function(w){
+      if(mode === 'vol') top = Math.max(top, on.reduce(function(a, s){ return a + (D.v[w][s.k] || 0); }, 0));
+      else on.forEach(function(s){ const x = D.v[w][s.k]; if(typeof x === 'number') top = Math.max(top, x); });
+    });
+    const nice = mode === 'use' && top <= 1 ? (function(m){ return { max: m, step: m / 4 }; })(top > 0.5 ? 1 : top > 0.25 ? 0.5 : 0.25) : pcNice(Math.max(top, 5) * 1.05), N = D.weeks.length;   /* shares: 25 / 50 / 100% scales */
+    const X = function(w){ return (w - 0.5) / N * 100; }, Y = function(val){ return 100 - Math.max(0, val) / nice.max * 100; };
+    let grid = '';
+    for(let t = 0; t <= nice.max + 1e-9; t += nice.step) grid += '<div class="pc-gl" style="top:' + Y(t).toFixed(2) + '%"><span>' + (mode === 'use' ? Math.round(t * 100) + '%' : mode === 'vol' ? Math.round(t) : (Number.isInteger(t) ? t : t.toFixed(1))) + '</span></div>';
+    let svg = '', dots = '', bars = '';
+    if(mode === 'vol'){
+      D.weeks.forEach(function(w){
+        let acc = 0;
+        const seg = on.map(function(s){ const x = D.v[w][s.k] || 0; if(!x) return ''; const b = acc; acc += x; return '<i style="bottom:' + (b / nice.max * 100).toFixed(2) + '%;height:' + (x / nice.max * 100).toFixed(2) + '%;background:' + s.color + '"></i>'; }).join('');
+        if(seg) bars += '<div class="pc-bar" style="left:' + X(w).toFixed(2) + '%;width:' + Math.min(36, 60 / N * 10).toFixed(1) + 'px">' + seg + '</div>';
+      });
+    }else{
+      on.forEach(function(s){
+        let d = '', pen = false;
+        D.weeks.forEach(function(w){
+          const x = D.v[w][s.k];
+          if(typeof x !== 'number' || (s.k === 'proj' && D.v[w].cur)){ pen = false; return; }
+          d += (pen ? 'L' : 'M') + X(w).toFixed(2) + ' ' + Y(x).toFixed(2) + ' '; pen = true;
+        });
+        if(d) svg += '<path d="' + d + '" fill="none" stroke="' + s.color + '" stroke-width="' + s.w + '"' + (s.dash ? ' stroke-dasharray="' + s.dash + '"' : '') + ' vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/>';
+        if(s.k === 'trend' || s.k === 'avg3') return;
+        D.weeks.forEach(function(w){
+          const x = D.v[w][s.k];
+          if(typeof x !== 'number') return;
+          const hollow = s.k === 'proj' && D.v[w].cur;
+          dots += '<i class="pc-dot' + (s.k === 'act' || hollow ? ' big' : '') + (hollow ? ' hollow' : '') + '" style="left:' + X(w).toFixed(2) + '%;top:' + Y(x).toFixed(2) + '%;--c:' + s.color + '"></i>';
+        });
+      });
+    }
+    const hits = D.weeks.map(function(w){ return '<button type="button" class="pc-hit" data-pc-w="' + w + '" style="left:' + ((w - 1) / N * 100).toFixed(2) + '%;width:' + (100 / N).toFixed(2) + '%" aria-label="Week ' + w + '"></button>'; }).join('');
+    const every = N > 12 ? 2 : 1;
+    const xl = D.weeks.map(function(w){ return w % every && w !== D.weeks[N - 1] ? '' : '<span style="left:' + X(w).toFixed(2) + '%"' + (D.v[w].cur ? ' class="cur"' : '') + '>' + w + '</span>'; }).join('');
+    const legend = ser.map(function(s){ const off = pcIsOff(mode, s); return '<button type="button" class="pc-key" data-pc-ser="' + s.k + '" aria-pressed="' + !off + '"><i style="--c:' + s.color + '"' + (s.dash ? ' class="dash"' : '') + '></i>' + escapeHTML(s.label) + '</button>'; }).join('');
+    return '<div class="card pf-card pc" data-pc-pid="' + escapeHTML(pid) + '">' +
+      '<div class="pc-top"><div class="pf-sec"><h3>Trends</h3><span class="eyebrow">by week · tap a week</span></div>' +
+        '<div class="seg pc-mode" role="group" aria-label="Chart">' + PC_MODES.map(function(m){ return '<button type="button" data-pc-mode="' + m[0] + '" aria-pressed="' + (m[0] === mode) + '">' + m[1] + '</button>'; }).join('') + '</div></div>' +
+      (ser.length ? '<div class="pc-keys">' + legend + '</div>' +
+        '<div class="pc-plot"><div class="pc-grid">' + grid + '</div><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">' + svg + '</svg>' + bars + dots + hits + '<div class="pc-tip" hidden></div></div>' +
+        '<div class="pc-x">' + xl + '</div>'
+        : '<div class="ad-none">' + (mode === 'pts' ? 'No games yet.' : 'No ' + (mode === 'use' ? 'usage' : 'volume') + ' data for this player (nflverse covers QB / RB / WR / TE).') + '</div>') +
+      '<p class="pc-note">' + PC_NOTE[mode] + (mode === 'pts' && !ctx.xfp ? (ctx.xfpFailed ? ' Expected points are unavailable right now.' : ' Loading expected points…') : '') + '</p></div>';
+  }
+  function pcTipHTML(D, w){
+    const r = D.v[w], mode = ctx.pcMode;
+    let rows = '';
+    if(r.bye) rows = '<div class="pc-tr"><span>Bye week</span></div>';
+    else if(!r.played && !r.cur && mode === 'pts') rows = '<div class="pc-tr"><span>Did not play</span></div>';
+    if(!r.bye){
+      PC_SERIES[mode].forEach(function(s){
+        const x = r[s.k];
+        if(typeof x !== 'number' || s.k === 'trend' || (mode === 'vol' && !x)) return;
+        rows += '<div class="pc-tr"><i style="--c:' + s.color + '"></i><span>' + escapeHTML(s.label) + (s.k === 'proj' && r.cur ? ' (this week)' : '') + '</span><b>' + pcFmt(mode, s.k, x) + '</b></div>';
+      });
+      if(mode === 'pts' && typeof r.act === 'number' && typeof r.xfp === 'number'){
+        const d = r.act - r.xfp;
+        rows += '<div class="pc-tr pc-d"><span>Actual − xFP</span><b class="' + xfpDiffCls(d) + '">' + xfpDiffTxt(d) + '</b></div>';
+      }
+      if(mode === 'pts' && (r.s !== null || r.tg || r.ca)){
+        const bits = [r.s !== null ? Math.round(r.s * 100) + '% snaps' : '', r.tg ? r.tg + ' tgt' : '', r.ca ? r.ca + ' car' : ''].filter(Boolean);
+        if(bits.length) rows += '<div class="pc-sub">' + bits.join(' · ') + '</div>';
+      }
+    }
+    return '<div class="pc-th">Week ' + w + (r.opp ? ' · ' + escapeHTML(r.opp) : '') + '</div>' + (rows || '<div class="pc-tr"><span>No data</span></div>');
+  }
+  function pcShow(hit){
+    const pc = hit.closest('.pc'), D = pcCache[pc.getAttribute('data-pc-pid')], w = Number(hit.getAttribute('data-pc-w'));
+    if(!D || !D.v[w]) return;
+    const tip = pc.querySelector('.pc-tip'), plot = pc.querySelector('.pc-plot');
+    pc.querySelectorAll('.pc-hit.on').forEach(function(b){ b.classList.remove('on'); });
+    hit.classList.add('on');
+    tip.innerHTML = pcTipHTML(D, w);
+    tip.hidden = false;
+    const x = (w - 0.5) / D.weeks.length * plot.clientWidth, tw = tip.offsetWidth;
+    tip.style.left = Math.max(0, Math.min(plot.clientWidth - tw, x + (x > plot.clientWidth / 2 ? -tw - 12 : 12))) + 'px';
+  }
+  function pcHide(pc){ const t = pc.querySelector('.pc-tip'); if(t) t.hidden = true; pc.querySelectorAll('.pc-hit.on').forEach(function(b){ b.classList.remove('on'); }); }
+  function pcRerender(pc){ const pid = pc.getAttribute('data-pc-pid'); pc.outerHTML = pcHTML(pid); }
+  document.addEventListener('pointerover', function(e){ const h = e.target.closest && e.target.closest('.pc-hit'); if(h) pcShow(h); });
+  document.addEventListener('focusin', function(e){ const h = e.target.closest && e.target.closest('.pc-hit'); if(h) pcShow(h); });
+  document.addEventListener('pointerout', function(e){
+    const plot = e.target.closest && e.target.closest('.pc-plot');
+    if(plot && e.pointerType === 'mouse' && !(e.relatedTarget && plot.contains(e.relatedTarget))) pcHide(plot.closest('.pc'));
+  });
+  document.addEventListener('click', function(e){
+    const t = e.target.closest && e.target.closest('.pc [data-pc-mode], .pc [data-pc-ser], .pc .pc-hit');
+    if(!t) return;
+    e.stopPropagation();
+    const pc = t.closest('.pc');
+    if(t.classList.contains('pc-hit')){ pcShow(t); return; }
+    if(t.hasAttribute('data-pc-mode')){ ctx.pcMode = t.getAttribute('data-pc-mode'); try{ localStorage.setItem('rv-pc-mode', ctx.pcMode); }catch(err){} }
+    else { const s = PC_SERIES[ctx.pcMode].find(function(x){ return x.k === t.getAttribute('data-pc-ser'); }); ctx.pcOff[ctx.pcMode + '|' + s.k] = !pcIsOff(ctx.pcMode, s); }
+    pcRerender(pc);
+  }, true);
+
   function recentTrend(pid){
     const h = hist(pid);
     if(!h || h.length < 3) return null;
@@ -10347,6 +10624,8 @@
     last: { label: 'Last game points', short: 'Last', unit: 'pts', actual: true, get: function(pid){ return lastGamePts(pid); } },
     l3:   { label: 'Last 3 games avg', short: 'L3', unit: 'pts', actual: true, get: function(pid){ return last3Avg(pid); } },
     avg:  { label: 'Season avg points', short: 'Avg', unit: 'pts', actual: true, get: function(pid){ const v = seasonValue(pid); return v ? v.avg : null; } },
+    xfp:  { label: 'Expected points per game (xFP: what his targets, carries and field position usually score)', short: 'xFP', unit: 'pts', actual: true, xfp: true, pos: XFP_POS, get: function(pid){ const x = xfpInfo(pid); return x ? x.xfp : null; } },
+    xfpd: { label: 'Points over expected per game (actual − xFP; high = running lucky, low = due)', short: 'Pts−xFP', unit: 'pts', actual: true, xfp: true, pos: XFP_POS, get: function(pid){ const x = xfpInfo(pid); return x ? x.diff : null; } },
     tot:  { label: 'Season total points', short: 'Total', unit: 'pts', actual: true, get: function(pid){ return seasonTotalPts(pid); } },
     snap: { label: 'Snap share (offense, or defense for defenders)', short: 'Snap', pct: true, get: function(pid){ return seasonShare(pid, 's'); } },
     tgt:  { label: 'Target share', short: 'Tgt', pct: true, get: function(pid){ return seasonShare(pid, 't'); } },
@@ -10390,7 +10669,7 @@
     return 'mixed';
   }
   let plMemo = {}; // derived lists and per-player metric values; cleared when data changes
-  function plReset(){ plMemo = {}; rankMemo = null; if(ctx.tf){ ctx.tf.results = null; ctx.tf.key = ''; } }
+  function plReset(){ plMemo = {}; rankMemo = null; ctx.xfpMemo = {}; if(ctx.tf){ ctx.tf.results = null; ctx.tf.key = ''; } }
   function metric(key, pid){
     const m = plMemo.m || (plMemo.m = {}), k = key + '|' + pid;
     if(k in m) return m[k];
@@ -10529,6 +10808,7 @@
     else { st.sort = key; st.dir = key === 'name' || (PL_METRICS[key] && PL_METRICS[key].low) ? 'asc' : 'desc'; }   // ranks / tiers: best first
     ctx.faLimit = PL_PAGE;
     if((key === 'ros' && !ctx.ros) || (PL_METRICS[key] && PL_METRICS[key].actual && !ctx.weekly)) loadPlayersData();
+    if(PL_METRICS[key] && PL_METRICS[key].xfp && !ctx.xfp) loadXfp().then(function(j){ if(j && ctx.view === 'fa') renderPlayers(); });
   }
   function sortedClass(key){
     const st = ctx.pl, active = st.sort === key || (key === 'proj' && st.sort === 'default' && st.view !== 'trend');
@@ -10592,11 +10872,15 @@
   // Toolbar + list. listOnly: re-render just the results (typing in search must not rebuild the input).
   function renderPlayers(listOnly){
     const st = ctx.pl;
+    if(!ctx.xfp && !ctx.xfpFailed) loadXfp().then(function(j){ if(j && ctx.view === 'fa') renderPlayers(); });
     syncFaPos();
     if(!listOnly){
       document.querySelectorAll('[data-pl-view]').forEach(function(b){ b.setAttribute('aria-selected', b.getAttribute('data-pl-view') === st.view); });
       const tk = document.getElementById('pl-trendkind');
       tk.hidden = st.view !== 'trend';
+      const xn = document.getElementById('xfp-note');
+      let xnOff = false; try{ xnOff = localStorage.getItem('rv-xfp-note') === 'off'; }catch(e){}
+      xn.hidden = xnOff || !ctx.xfp || st.view === 'value';
       const sh = document.getElementById('pl-show');
       sh.hidden = st.view !== 'all';
       if(st.view === 'all'){
@@ -10673,10 +10957,17 @@
       '<div class="col col-avg">' + fmtPts(seasonAvgPts(pid)) + '</div>';
   }
   // Phone: the same two numbers lead the stats line under the name.
+  function plXfpCols(pid){
+    const x = XFP_POS.indexOf((ctx.players[pid] || {}).position) !== -1 ? xfpInfo(pid) : null;
+    if(!x) return '<div class="col col-xfp dim">—</div><div class="col col-xd dim">—</div>';
+    return '<div class="col col-xfp">' + fmtPts(x.xfp) + '</div><div class="col col-xd ' + xfpDiffCls(x.diff) + '" title="' + xfpDiffTitle(x.diff) + '">' + xfpDiffTxt(x.diff) + '</div>';
+  }
   function plFormStats(pid){
     const l3 = last3Avg(pid), avg = seasonAvgPts(pid), f = plForm(pid);
     if(l3 == null && avg == null) return '';
-    return '<span class="pl-fs' + (f ? ' ' + f : '') + '"><span class="kv">L3</span> ' + fmtPts(l3) + '</span><span class="pl-fs"><span class="kv">Avg</span> ' + fmtPts(avg) + '</span>';
+    const x = XFP_POS.indexOf((ctx.players[pid] || {}).position) !== -1 ? xfpInfo(pid) : null;
+    return '<span class="pl-fs' + (f ? ' ' + f : '') + '"><span class="kv">L3</span> ' + fmtPts(l3) + '</span><span class="pl-fs"><span class="kv">Avg</span> ' + fmtPts(avg) + '</span>' +
+      (x ? '<span class="pl-fs"><span class="kv">xFP</span> ' + fmtPts(x.xfp) + ' <span class="xd ' + xfpDiffCls(x.diff) + '">' + xfpDiffTxt(x.diff) + '</span></span>' : '');
   }
   function plRowHTML(pid){
     const p = ctx.players[pid], color = posColor(posGroup(pid)), avail = isAvailable(pid), mine = isMine(pid), owner = ownerOf(pid);
@@ -10695,7 +10986,7 @@
           (function(){ const k = plFormStats(pid) + keyStatsLine(pid, p.position); return k ? '<div class="key-stats">' + k + '</div>' : ''; })() +
           who + signalsHTML(pid, true) +
         '</div>' +
-        pointsColsHTML(pid) + plFormCols(pid) +
+        pointsColsHTML(pid) + plFormCols(pid) + plXfpCols(pid) +
         '<div class="col col-snap">' + snapCell(pid) + '</div>' +
         '<div class="col col-tgt">' + (isIdp(pid) ? '<span title="Tackle share">' + pct(seasonShare(pid, 'k')) + '</span>' : SKILL_POSITIONS.indexOf(p.position) !== -1 && p.position !== 'QB' ? pct(seasonShare(pid, 't')) : '—') + '</div>' +
         '<div class="col col-opp">' + oppOnly(p.team) + (gameStatusHTML(p.team, true) ? '' : dvpChipHTML(pid, true)) + '</div>' +
@@ -10725,6 +11016,11 @@
       renderPlayers(); staggerIn(els.faList);
       if(ctx.pl.view === 'trend' && !ctx.trending) loadPlayersData();
     });
+  });
+  document.getElementById('xfp-note').addEventListener('click', function(e){
+    if(!e.target.closest('[data-xfp-x]')) return;
+    try{ localStorage.setItem('rv-xfp-note', 'off'); }catch(err){}
+    this.hidden = true;
   });
   document.getElementById('pl-show').addEventListener('change', function(e){
     const c = e.target.closest('[data-pl-show]');
@@ -11532,6 +11828,9 @@
     if(e.kind === 'player' && !hist(e.pid)){
       ensureHistory(e.pid).then(function(){ if(maxOpen() && maxStack[maxStack.length - 1] === e) renderMax(0); });
     }
+    if(e.kind === 'player' && !ctx.xfp && !ctx.xfpFailed){
+      loadXfp().then(function(j){ if(j && maxOpen() && maxStack[maxStack.length - 1] === e && hist(e.pid)){ const y = maxPanel.scrollTop; renderMax(0); maxPanel.scrollTop = y; } });
+    }
     if(e.kind === 'player' && !ctx.pastProj[e.pid]){
       ensurePastProj(e.pid).then(function(){ if(maxOpen() && maxStack[maxStack.length - 1] === e && hist(e.pid)){ const y = maxPanel.scrollTop; renderMax(0); maxPanel.scrollTop = y; } });
     }
@@ -12263,7 +12562,7 @@
       : sm === 'mixed' ? th('Tgt · Tkl share', 'use') + th('Air share · Big/gm', null) : th('Tgt share', 'tgt') + th('Air share', 'air');
     // Column order: fantasy points first (projected, then actual), then what predicts them (snap share, target / air
     // share), then the matchup, then rankings, then the season stat line.
-    const fpHeads = th('Proj', 'proj') + (weekStarted() ? th('Wk ' + ctx.week, 'wk') : '') + th('Last', 'last') + th('L3', 'l3') + th('Avg', 'avg') + th('Total', 'tot');
+    const fpHeads = th('Proj', 'proj') + (weekStarted() ? th('Wk ' + ctx.week, 'wk') : '') + th('Last', 'last') + th('L3', 'l3') + th('Avg', 'avg') + th('xFP', 'xfp') + th('Pts−xFP', 'xfpd') + th('Total', 'tot');
     const useHeads = th('Snap by week', 'snap') + shareHeads + th('Opp', null, 'l');
     const nCols = function(h){ return (h.match(/<th/g) || []).length; };
     return '<div class="mx-tools"><div class="pos-filter mx-pos" role="group" aria-label="Positions">' + posChipsHTML() + '</div>' +
@@ -12280,7 +12579,9 @@
         return '<tr style="--i:' + i + '" data-open="' + escapeHTML(pid) + '"><td class="l">' + mxWho(pid) + '</td>' +
           '<td><span class="proj">' + fmtPts(proj) + '</span></td>' +
           (weekStarted() ? (function(){ const wa = weekActual(pid); return '<td class="' + (wa === null ? 'dim' : 'act-live') + '">' + (wa === null ? '—' : fmtPts(wa)) + '</td>'; })() : '') +
-          '<td>' + fmtPts(lastGamePts(pid)) + '</td><td' + (plForm(pid) ? ' class="col-l3 ' + plForm(pid) + '"' : '') + '>' + fmtPts(last3Avg(pid)) + '</td><td>' + fmtPts(seasonAvgPts(pid)) + '</td><td class="muted">' + fmtPts(seasonTotalPts(pid)) + '</td>' +
+          '<td>' + fmtPts(lastGamePts(pid)) + '</td><td' + (plForm(pid) ? ' class="col-l3 ' + plForm(pid) + '"' : '') + '>' + fmtPts(last3Avg(pid)) + '</td><td>' + fmtPts(seasonAvgPts(pid)) + '</td>' +
+          (function(){ const x = XFP_POS.indexOf(ctx.players[pid].position) !== -1 ? xfpInfo(pid) : null; return x ? '<td>' + fmtPts(x.xfp) + '</td><td class="col-xd ' + xfpDiffCls(x.diff) + '" title="' + xfpDiffTitle(x.diff) + '">' + xfpDiffTxt(x.diff) + '</td>' : '<td class="dim">—</td><td class="dim">—</td>'; })() +
+          '<td class="muted">' + fmtPts(seasonTotalPts(pid)) + '</td>' +
           '<td>' + snapByWeek(pid) + '</td>' +
           (isIdp(pid)
             ? '<td class="muted" title="Tackle share">' + pct(seasonShare(pid, 'k')) + '</td><td class="muted" title="Big plays per game">' + (function(){ const b = idpPerGame(pid, 'b'); return b === null ? '<span class="dim">—</span>' : b.toFixed(2); })() + '</td>'
@@ -12308,7 +12609,7 @@
       [loading ? '…' : fmtPts(last3Avg(pid)), 'Last 3 avg'],
       [loading ? '…' : fmtPts(seasonAvgPts(pid)), 'Avg'],
       [loading ? '…' : fmtPts(seasonTotalPts(pid)), 'Total'],
-    ]).concat(positionCards(pid, p.position, loading, tr));
+    ]).concat((function(){ const x = XFP_POS.indexOf(p.position) !== -1 && !loading ? xfpInfo(pid) : null; return x ? [[fmtPts(x.xfp), 'xFP / game', '', xfpDiffTxt(x.diff) + ' actual vs xFP']] : []; })()).concat(positionCards(pid, p.position, loading, tr));
     const hero = '<div class="pf-hero" style="--team:' + teamColor(p.team) + '">' + avatarTag(pid, 'mx-av') +
       '<div><div class="pf-name">' + escapeHTML(playerName(p)) + '</div>' +
       '<div class="pf-meta">' + escapeHTML(eligLabel(pid)) + (eligLabel(pid).indexOf('/') !== -1 ? ' <span class="dim">(eligible at both)</span>' : '') + ' · ' + escapeHTML(p.team || 'FA') +
@@ -12327,26 +12628,11 @@
     }
     const logCard = '<div class="card pf-card pf-log"><div class="pf-sec"><h3>Game log</h3><span class="eyebrow">League scoring</span></div>' +
       (loading ? '<div style="display:grid;gap:10px;padding:6px 0 4px">' + [80, 100, 100, 70].map(function(w){ return '<span class="skel" style="height:14px;width:' + w + '%"></span>'; }).join('') + '</div>' : gameLogHTML(pid)) + '</div>';
-    if(!loading && games.length){
-      const maxPts = Math.max.apply(null, games.map(function(h){ return h.pts; }).concat([ctx.projections[pid] || 0, 1]));
-      left += '<div class="pf-sec"><h3>Points by week</h3><span class="eyebrow">vs this week&#39;s projection</span></div><div class="bars">' +
-        games.map(function(h, i){
-          const opp = h.opp ? (h.away === true ? '@ ' : h.away === false ? 'vs ' : '') + h.opp : '';
-          return '<div class="bar"><span class="lbl">Wk ' + h.week + ' ' + escapeHTML(opp) + '</span><div class="track"><div class="fill" style="--i:' + i + ';width:' + Math.max(0, h.pts / maxPts * 100) + '%"></div></div><b>' + fmtPts(h.pts) + '</b></div>';
-        }).join('') +
-        (wa !== null && !games.some(function(g){ return g.week === ctx.week; }) ? '<div class="bar"><span class="lbl">Wk ' + ctx.week + (wg && wg.state === 'post' ? ' final' : ' live') + '</span><div class="track"><div class="fill live" style="--i:' + games.length + ';width:' + Math.max(0, Math.min(100, wa / maxPts * 100)) + '%"></div></div><b>' + fmtPts(wa) + '</b></div>' : '') +
-        (typeof ctx.projections[pid] === 'number' ? '<div class="bar"><span class="lbl">Wk ' + ctx.week + ' proj</span><div class="track"><div class="fill proj" style="--i:' + games.length + ';width:' + (ctx.projections[pid] / maxPts * 100) + '%"></div></div><b class="dim">' + fmtPts(ctx.projections[pid]) + '</b></div>' : '') +
-        '</div>';
-    }
-    const snaps = (nflWeeks(pid) || []).filter(function(x){ return typeof x.s === 'number'; });
-    if(snaps.length){
-      left += '<div class="pf-sec"' + (left ? ' style="margin-top:22px"' : '') + '><h3>Snap share by week</h3><span class="eyebrow">Role</span></div><div class="bars">' +
-        snaps.map(function(x, i){ return '<div class="bar"><span class="lbl">Wk ' + x.week + '</span><div class="track"><div class="fill snap" style="--i:' + i + ';width:' + (x.s * 100) + '%"></div></div><b>' + pct(x.s) + '</b></div>'; }).join('') + '</div>';
-    }
+    const trendCard = loading ? '' : pcHTML(pid);
     left = left ? '<div class="card pf-card pf-charts">' + left + '</div>' : '<div></div>';
     const dvp = dvpInfo(pid);
     const context = rangeDetailHTML(pid) + idpRangeNote(pid) + (dvp ? '<div class="dvp-line"><span class="dvp-chip ' + (dvp.early ? 'early' : dvp.tone) + '">Matchup</span> ' + escapeHTML(dvpSentence(dvp)) + '</div>' : '');
-    return byeCallouts([pid]) + hero + injurySourcesHTML(pid) + (loading ? '' : context) + '<div class="pf-duo-w"><div class="pf-duo"><div class="card pf-card pf-rk"><div class="pf-sec"><h3>Rankings &amp; value</h3><span class="eyebrow">consensus · market</span></div>' + rankingsHTML(pid) + '</div>' + ownCardHTML(pid) + '</div></div>' + weekCard + logCard + '<div class="pf-grid">' + left + '<div class="card pf-card">' + maxSideHTML(pid) + '</div></div>';
+    return byeCallouts([pid]) + hero + injurySourcesHTML(pid) + (loading ? '' : context) + trendCard + '<div class="pf-duo-w"><div class="pf-duo"><div class="card pf-card pf-rk"><div class="pf-sec"><h3>Rankings &amp; value</h3><span class="eyebrow">consensus · market</span></div>' + rankingsHTML(pid) + '</div>' + ownCardHTML(pid) + '</div></div>' + weekCard + logCard + '<div class="pf-grid' + (left === '<div></div>' ? ' solo' : '') + '">' + (left === '<div></div>' ? '' : left) + '<div class="card pf-card">' + maxSideHTML(pid) + '</div></div>';
   }
 
   // The last two header cards depend on the position, so there's never a card that can't apply (no "snap %" for a kicker).
