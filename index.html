@@ -384,6 +384,24 @@
   .slot-row.bye-start .slot-tag{ color: var(--danger) !important; }
   .bye-alert{ background: var(--danger-soft); border-radius: var(--radius); color: var(--danger); padding: 12px 16px; margin: 0 0 16px; font-size: 13.5px; line-height: 1.45; }
   .bye-alert strong{ font-weight: 600; }
+  /* Inactive check (Lineup) */
+  .inx{ margin: 0 0 16px; padding: 14px 16px 12px; border-radius: var(--radius); background: var(--warn-soft); box-shadow: inset 4px 0 0 var(--warn); }
+  .inx.out{ background: var(--danger-soft); box-shadow: inset 4px 0 0 var(--danger); }
+  .inx-h{ display: flex; align-items: center; justify-content: space-between; gap: 8px 14px; flex-wrap: wrap; margin-bottom: 6px; }
+  .inx-h b{ font-size: 15px; color: var(--danger); } .inx.gtd .inx-h b{ color: var(--warn); }
+  .inx-bell{ min-height: 32px; padding: 4px 12px; border-radius: 999px; background: var(--surface); color: var(--text); font-size: 12.5px; font-weight: 600; }
+  .inx-on{ font-size: 12px; color: var(--text-3); }
+  .inx-row{ display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-top: 1px solid color-mix(in srgb, var(--text) 8%, transparent); }
+  .inx-h + .inx-row{ border-top: none; }
+  .inx-av{ flex: none; width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: var(--surface-2); }
+  .inx-info{ flex: 1; min-width: 0; } .inx-name{ display: flex; align-items: center; gap: 6px; flex-wrap: wrap; } .inx-name b{ font-size: 14.5px; font-weight: 650; color: var(--text); }
+  .inx-meta{ font-size: 12.5px; color: var(--text-2); margin-top: 2px; } .inx-lg{ font-weight: 600; color: var(--text); }
+  .inx-note{ font-size: 13px; color: var(--text); margin-top: 4px; line-height: 1.45; } .inx-note a{ color: var(--accent); font-weight: 600; text-decoration: none; white-space: nowrap; }
+  .inx-link{ padding: 0; min-height: 0; background: none; color: var(--text); font: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+  .inx-chk{ font-size: 11.5px; color: var(--text-3); white-space: nowrap; }
+  .inx-btn{ flex: none; align-self: center; min-height: 36px; padding: 6px 14px; border-radius: 999px; background: var(--surface); color: var(--text); font-size: 13px; font-weight: 600; }
+  .inx-foot{ margin-top: 8px; font-size: 11.5px; color: var(--text-3); line-height: 1.4; }
+  @media (max-width: 600px){ .inx{ padding: 12px 12px 10px; } .inx-row{ flex-wrap: wrap; } .inx-info{ flex: 1 1 calc(100% - 52px); } .inx-btn{ margin-left: 52px; } }
   .sig{ display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 12px; margin-top: 4px; }
   .depth-chip{ font-size: 11px; font-weight: 600; letter-spacing: 0.02em; padding: 1px 6px; border-radius: 5px; background: var(--surface-2); color: var(--text-2); }
   .sig-item{ white-space: nowrap; font-size: 12.5px; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--text); }
@@ -3686,6 +3704,7 @@
     <div id="lineup-top">
       <div id="mu-slot"></div>
       <div id="huddle-slot"></div>
+      <div id="inx-slot"></div>
       <div class="bye-alert gone" id="bye-alert" role="alert"></div>
       <div id="rc-slot"></div>
     </div>
@@ -7452,10 +7471,12 @@
     const e = ctx.nfl && ctx.nfl.inj ? ctx.nfl.inj[pid] : null;
     return e && e.w === ctx.week ? e : null;
   }
-  // The official game status wins when there is one (it's this week's); otherwise Sleeper's.
+  // The official game status wins when there is one (it's this week's); otherwise Sleeper's. Except: when Sleeper says
+  // he can't play and the official report doesn't (a game-day inactive, or news after Friday's report), Sleeper wins.
   function effectiveStatus(pid){
-    const off = officialInjury(pid), p = ctx.players[pid];
-    return (off && off.st) || (p && p.injury_status) || '';
+    const off = officialInjury(pid), p = ctx.players[pid], sl = (p && p.injury_status) || '';
+    if(off && off.st && !(cantPlay(sl) && !cantPlay(off.st))) return off.st;
+    return sl;
   }
   // Same rule as build_nflverse.py practice_days(): three report days before the game (short weeks shift a day).
   function practiceDays(gameISO){
@@ -8153,7 +8174,7 @@
 
     // Lineup problems: starters on a bye, starters ruled out (game not started) and empty starting slots. None score.
     const byeStarters = ctx.draftStarters.filter(function(pid){ return pid && pid !== '0' && isOnBye(pid); });
-    const outStarters = ctx.draftStarters.filter(function(pid){ return pid && pid !== '0' && ctx.players[pid] && !isOnBye(pid) && !isLocked(pid) && cantPlay(effectiveStatus(pid)); });
+    const outStarters = [];   // ruled-out starters: the Inactive check card above (renderInx)
     const emptySlots = emptyStarterSlots();
     const problems = byeStarters.length + outStarters.length + emptySlots.length;
     els.byeAlert.classList.toggle('gone', !problems);
@@ -8171,6 +8192,7 @@
         '</div><button class="bye-fix" data-fix-slot="' + firstSlot + '">' + (byeStarters.length || outStarters.length ? 'Show options' : 'Fill it') + '</button>';
     }
 
+    renderInx(); inxPoll();
     document.querySelectorAll('.slot-row[data-player-id]').forEach(function(row){
       row.addEventListener('click', function(){
         if(paneShowing(row)){ closePane(); return; }
@@ -14317,6 +14339,144 @@
   });
   document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && !zoneGuide.hidden){ e.preventDefault(); e.stopImmediatePropagation(); zoneGuideClose(); } }, true);
   document.querySelectorAll('[data-zone-name]').forEach(function(el){ el.textContent = ZONE_NAME; });
+  // ============ Inactive check (pre-kickoff) ============
+  // Every starter in your saved Sleeper lineups, in every league, whose game has not kicked off: ruled out (Out,
+  // Doubtful, IR, ...) or a game-time decision (Questionable). Teams name their inactives about 90 minutes before
+  // kickoff; Sleeper usually marks an inactive player Out within minutes. So within INX.watch of a kickoff, each of those
+  // starters is re-checked every INX.poll from Sleeper (one small request per player) instead of waiting for the
+  // 30-minute data build. A starter who flips to out raises a browser notification if the viewer turned them on.
+  const INX = { watch: 3 * 60 * 60 * 1000, poll: 5 * 60 * 1000, inactives: 90 * 60 * 1000, gtdFrom: 48 * 60 * 60 * 1000 };
+  ctx.liveStatus = {};   // pid -> { st, at (fetched), news }
+  function inxIsGtd(st){ const i = statusInfo(st); return !!i && !i.out && i.label === 'Questionable'; }
+  // Starters across leagues: { pid, slot, slotIndex, league: { id, name, current }, bench: [pid] }
+  function inxStarters(){
+    const out = [];
+    ownLeagueList().forEach(function(L){
+      let starters, slots, roster;
+      if(L.current){ roster = ctx.myRoster; starters = (roster && roster.starters) || []; slots = ctx.rosterPositions || []; }
+      else {
+        const m = ctx.zone.meta[L.id];
+        if(!m || !m.roster) return;
+        roster = m.roster; starters = roster.starters || []; slots = ((m.league && m.league.roster_positions) || []).filter(function(s){ return s !== 'BN' && s !== 'IR' && s !== 'TAXI'; });
+      }
+      const parked = new Set([].concat(roster.reserve || [], roster.taxi || [])), on = new Set(starters);
+      const bench = (roster.players || []).filter(function(pid){ return !on.has(pid) && !parked.has(pid) && ctx.players[pid]; });
+      starters.forEach(function(pid, i){
+        if(pid && pid !== '0' && ctx.players[pid]) out.push({ pid: pid, slot: slots[i], slotIndex: i, league: { id: L.id, name: L.name, current: L.current }, bench: bench });
+      });
+    });
+    return out;
+  }
+  // The problems: { kind: 'out' | 'gtd', ...starter, kick, st, swap }
+  function inxProblems(){
+    const now = Date.now();
+    return inxStarters().map(function(s){
+      const p = ctx.players[s.pid], kick = kickoff(p.team, ctx.week);
+      if(!kick || kick <= now) return null;   // bye (the lineup alert has it) or already playing
+      const st = effectiveStatus(s.pid);
+      const kind = cantPlay(st) ? 'out' : inxIsGtd(st) && kick - now <= INX.gtdFrom ? 'gtd' : null;
+      if(!kind) return null;
+      // best bench player who can fill the slot, has not kicked off and is not ruled out
+      let swap = null;
+      s.bench.forEach(function(b){
+        const bp = ctx.players[b], bk = kickoff(bp.team, ctx.week);
+        if(!canFill(b, s.slot) || isOnBye(b) || cantPlay(effectiveStatus(b)) || (bk && bk <= now)) return;
+        const pr = ctx.projections[b] || 0;
+        if(!swap || pr > swap.proj) swap = { pid: b, proj: pr };
+      });
+      return Object.assign({ kind: kind, kick: kick, st: st, swap: swap }, s);
+    }).filter(Boolean).sort(function(a, b){ return (a.kind === 'out' ? 0 : 1) - (b.kind === 'out' ? 0 : 1) || a.kick - b.kick; });
+  }
+  function inxIn(ms){
+    if(ms <= 0) return 'now';
+    const m = Math.round(ms / 60000), h = Math.floor(m / 60);
+    return h >= 24 ? Math.round(h / 24) + 'd' : h ? h + 'h ' + (m % 60) + 'm' : m + 'm';
+  }
+  function inxClock(t){ return new Date(t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); }
+  function renderInx(){
+    const el = document.getElementById('inx-slot');
+    if(!el) return;
+    if(!ctx.myRoster || !ctx.nfl){ el.innerHTML = ''; return; }
+    const need = ownNeed();
+    if(need.length) Promise.allSettled(need.map(ownFetch)).then(function(){ renderInx(); });
+    const list = inxProblems(), now = Date.now();
+    if(!list.length){ el.innerHTML = ''; return; }
+    const outs = list.filter(function(x){ return x.kind === 'out'; }).length, multi = (ctx.pendingLeagues || []).length > 1;
+    const head = outs ? outs + ' starter' + (outs === 1 ? ' is' : 's are') + ' ruled out' + (list.length > outs ? ' · ' + (list.length - outs) + ' game-time decision' + (list.length - outs === 1 ? '' : 's') : '')
+      : list.length + ' game-time decision' + (list.length === 1 ? '' : 's');
+    const rows = list.map(function(x){
+      const p = ctx.players[x.pid], info = statusInfo(x.st), inact = x.kick - INX.inactives, live = ctx.liveStatus[x.pid];
+      const when = kickText(x.kick) + ' · in ' + inxIn(x.kick - now);
+      const note = x.kind === 'out'
+        ? (x.swap ? 'Start <button type="button" class="inx-link" data-inx-open="' + escapeHTML(x.swap.pid) + '">' + escapeHTML(playerName(ctx.players[x.swap.pid])) + '</button> (' + fmtPts(x.swap.proj) + ' proj) instead.' : 'Nobody on your bench can fill ' + escapeHTML(x.slot) + ': check waivers.')
+        : (now < inact ? 'Inactives come out around ' + inxClock(inact) + '.' : 'Inactives are out: if he is not listed Out, he is expected to play.') +
+          (x.swap ? ' Pivot: <button type="button" class="inx-link" data-inx-open="' + escapeHTML(x.swap.pid) + '">' + escapeHTML(playerName(ctx.players[x.swap.pid])) + '</button> (' + fmtPts(x.swap.proj) + ' proj).' : '');
+      const act = x.league.current
+        ? '<button type="button" class="inx-btn" data-inx-slot="' + x.slotIndex + '" data-inx-pid="' + escapeHTML(x.pid) + '">Options</button>'
+        : '<button type="button" class="inx-btn" data-inx-league="' + escapeHTML(x.league.id) + '">Open league</button>';
+      return '<div class="inx-row ' + x.kind + '">' + avatarTag(x.pid, 'inx-av') +
+        '<div class="inx-info"><div class="inx-name"><b>' + escapeHTML(playerName(p)) + '</b> ' + injuryChip(x.st) + '</div>' +
+          '<div class="inx-meta">' + escapeHTML(x.slot || '') + ' · ' + escapeHTML(p.team || '') + ' · ' + escapeHTML(when) + (multi ? ' · <span class="inx-lg">' + escapeHTML(x.league.name) + '</span>' : '') + '</div>' +
+          '<div class="inx-note">' + note + ' <a href="' + escapeHTML(injuryNewsLink(x.pid).href) + '" target="_blank" rel="noopener noreferrer">News ↗</a>' + (live ? ' <span class="inx-chk">checked ' + inxClock(live.at) + '</span>' : '') + '</div></div>' +
+        act + '</div>';
+    }).join('');
+    const canNotify = 'Notification' in window, perm = canNotify ? Notification.permission : 'denied';
+    el.innerHTML = '<div class="inx ' + (outs ? 'out' : 'gtd') + '" role="alert"><div class="inx-h"><b>' + head + '</b>' +
+        (canNotify && perm === 'default' ? '<button type="button" class="inx-bell" data-inx-notify>Alert me if a starter is ruled out</button>' : canNotify && perm === 'granted' ? '<span class="inx-on">Alerts on while Sleepa is open</span>' : '') + '</div>' +
+      rows +
+      '<div class="inx-foot">Your saved Sleeper lineups' + (multi ? ' in every league' : '') + '. Within 3 hours of kickoff each listed starter is re-checked with Sleeper every 5 minutes. Sleepa can’t change your lineup: make the swap in Sleeper.</div></div>';
+  }
+  // Re-check statuses near kickoff (watched: listed starters plus every starter kicking off within the window)
+  async function inxPoll(){
+    if(!ctx.myRoster || !ctx.nfl || ctx.inxPolling) return;   /* runs in a background tab too: that is when an alert matters */
+    const now = Date.now(), want = {};
+    inxStarters().forEach(function(s){
+      const k = kickoff(ctx.players[s.pid].team, ctx.week);
+      if(!k || k <= now || k - now > INX.watch) return;
+      const l = ctx.liveStatus[s.pid];
+      if(!l || now - l.at >= INX.poll) want[s.pid] = s;
+    });
+    const ids = Object.keys(want);
+    if(!ids.length) return;
+    let changed = false;
+    ctx.inxPolling = true;
+    await Promise.all(ids.map(function(pid){
+      return fetchJSON(UNOFFICIAL + '/players/nfl/' + encodeURIComponent(pid)).then(function(r){
+        if(!r) return;
+        const p = ctx.players[pid], before = cantPlay(effectiveStatus(pid)), st = r.injury_status || null;
+        ctx.liveStatus[pid] = { st: st, at: Date.now(), news: r.news_updated || null };
+        if(p && (p.injury_status || null) !== st){
+          p.injury_status = st; p.injury_body_part = r.injury_body_part || null; p.injury_notes = r.injury_notes || null;
+          changed = true;
+          if(!before && cantPlay(effectiveStatus(pid))) inxNotify(want[pid], st);
+        }
+      }).catch(function(e){ console.warn('Status check failed for', pid, e); });
+    }));
+    ctx.inxPolling = false;
+    if(changed && ctx.view === 'roster') renderAll(); else renderInx();
+  }
+  function inxNotify(s, st){
+    if(!('Notification' in window) || Notification.permission !== 'granted') return;
+    const key = 'rv-inx-' + ctx.season + '-' + ctx.week + '-' + s.league.id + '-' + s.pid;
+    try{ if(localStorage.getItem(key)) return; localStorage.setItem(key, '1'); }catch(e){}
+    const p = ctx.players[s.pid], k = kickoff(p.team, ctx.week);
+    try{
+      const n = new Notification(playerName(p) + ' is ' + ((statusInfo(st) || {}).label || st) , { body: 'Starting at ' + s.slot + ' in ' + s.league.name + ' · kicks off ' + kickText(k) + '. Swap him in Sleeper.', tag: key, icon: playerImageUrl(s.pid) });
+      n.onclick = function(){ window.focus(); n.close(); };
+    }catch(e){ console.warn('Notification failed', e); }
+  }
+  setInterval(function(){ inxPoll(); renderInx(); }, 60 * 1000);   // also keeps the countdowns current
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'visible') inxPoll(); });
+  document.addEventListener('click', function(e){
+    const t = e.target.closest && e.target.closest('#inx-slot [data-inx-slot], #inx-slot [data-inx-league], #inx-slot [data-inx-open], #inx-slot [data-inx-notify]');
+    if(!t) return;
+    if(t.hasAttribute('data-inx-notify')){ Notification.requestPermission().then(function(){ renderInx(); }); return; }
+    if(t.hasAttribute('data-inx-open')){ const pid = t.getAttribute('data-inx-open'); const i = ctx.draftStarters.indexOf(pid); openFocus(pid, i === -1 ? null : i); return; }
+    if(t.hasAttribute('data-inx-league')){ loadEverything(t.getAttribute('data-inx-league'), t); return; }
+    const i = Number(t.getAttribute('data-inx-slot')), pid = t.getAttribute('data-inx-pid'), j = ctx.draftStarters.indexOf(pid);
+    openFocus(pid, j === -1 ? i : j);
+  });
+
   // ============ Roster check (Lineup): waiver upgrades + FantasyPros ranking gaps ============
   // Two lenses on rest of season (ROS), both from data already loaded:
   //  · Waiver upgrades: each rostered player vs the best AVAILABLE player at his position (Sleeper rosters → free agents),
