@@ -2757,6 +2757,11 @@
   .home-btn .brand-mark{ width: 22px; height: 22px; }
   .focus-home{ float: right; margin: -6px 8px 0 0; }
   .xb-lbl{ display: none; }
+  #focus-deep:empty{ display: none; }
+  #focus-deep{ margin-top: 26px; scroll-margin-top: 70px; }
+  #focus-deep > *{ scroll-margin-top: 70px; }
+  .fd-h{ margin: 0 0 14px; padding-top: 18px; border-top: 1px solid var(--hair); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+  #focus-deep .pf-card{ padding: 4px 14px 16px; } #focus-deep .pc{ margin-bottom: 14px; } #focus-deep .inj-sources{ margin-bottom: 14px; }
   .pane-detail .focus-home{ display: none; }
   .focus-home ~ .hero{ padding-right: 88px; } /* room for the floating home + close buttons */
   .pane-detail .focus-home ~ .hero{ padding-right: 0; }
@@ -2864,7 +2869,7 @@
     .focus-panel{ padding-top: calc(70px + env(safe-area-inset-top)) !important; }
     #hero-vs:not([hidden]){ position: fixed; z-index: 2; margin: 0; top: calc(10px + env(safe-area-inset-top)); right: calc(102px + env(safe-area-inset-right)); width: 38px; height: 38px; }
     #hero-expand{ position: fixed; z-index: 2; margin: 0; top: calc(10px + env(safe-area-inset-top)); left: calc(12px + env(safe-area-inset-left)); width: auto; height: 38px; padding: 0 14px; gap: 7px; display: inline-flex; align-items: center; border-radius: 999px; background: var(--surface-3); color: var(--text); font-size: 13px; font-weight: 600; }
-    #hero-expand .xb-lbl{ display: inline; }
+    #hero-expand{ display: none !important; }   /* the sheet is the full page on phones */
     .hero, .focus-home ~ .hero{ gap: 14px; padding-right: 0; }
     .hero-avatar{ width: 64px; height: 64px; }
     .hero-name{ font-size: 22px; line-height: 1.15; }
@@ -3909,6 +3914,7 @@
     <div class="hero-slot-note" id="hero-slot-note"></div>
     <div class="focus-section-title" id="focus-section-title">Options for this slot</div>
     <div id="candidates-list"></div>
+    <div id="focus-deep"></div>
   </div>
 </div>
 
@@ -5528,6 +5534,12 @@
     const t = e.target.closest && e.target.closest('[data-analyze]');
     if(!t) return;
     e.stopPropagation(); e.preventDefault();
+    const deep = document.getElementById('focus-deep');
+    if(!paneMode() && deep && t.closest('.focus-panel') && !t.closest('#candidates-list') && deep.getAttribute('data-pid') === t.getAttribute('data-analyze')){
+      const sec = deep.querySelector(t.classList.contains('inj-more') ? '.inj-sources' : t.classList.contains('all-stats') ? '.pf-log' : '.fd-h') || deep;
+      sec.scrollIntoView({ block: 'start', behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+      return;
+    }
     openAnalysis(t.getAttribute('data-analyze'), t.closest('.slot-row, .cand-card, .focus-panel') || t);
   }, true);
   function showOverlay(el){
@@ -5558,7 +5570,7 @@
     }
   }
   placeFocusPanel();
-  if(paneMQ.addEventListener) paneMQ.addEventListener('change', function(){ placeFocusPanel(); if(ctx.myRoster) selectDefaultFocus(); });
+  if(paneMQ.addEventListener) paneMQ.addEventListener('change', function(){ placeFocusPanel(); if(ctx.myRoster) selectDefaultFocus(); renderFocusDeep(); });
   function focusVisible(){ return paneMode() ? !els.panes.classList.contains('solo') && !ctx.paneClosed : els.overlay.classList.contains('open'); }
   // Wide screens: the player panel can be closed (× on it, clicking the selected player again, Esc). Closed, the list
   // takes the full width and nothing opens it by itself (refreshes, switching tabs); picking a player opens it again.
@@ -5572,6 +5584,7 @@
   // the row that's showing in the open panel: clicking it again closes the panel
   function paneShowing(row){ return paneMode() && !ctx.paneClosed && !!row && row.classList.contains('sel'); }
   function showFocus(){
+    renderFocusDeep();
     if(paneMode()){ ctx.paneClosed = false; els.panes.classList.remove('closed'); paneHeroFinish(); }
     markSelected();
     if(paneMode()){
@@ -5582,6 +5595,30 @@
     showOverlay(els.overlay);
   }
   function closeFocus(){ if(!paneMode()) hideOverlay(els.overlay); }
+  // Phones: the player sheet is the player page. Under the quick part (stat tiles, rankings, swap options) it goes on
+  // with the full page sections (injury reports, typical week, Trends, League ownership, this week, game log), so there is
+  // one view instead of a sheet with a second full-screen page behind it. Wide screens keep the side panel quick, with
+  // the full page one click away. Missing data (history, past projections, xFP, other leagues) loads, then redraws.
+  const fdTried = {};
+  function focusDeepPid(){ const f = ctx.focus; return !paneMode() && f && (f.kind === 'roster' || f.kind === 'fa') && ctx.players[f.pid] ? f.pid : null; }
+  function renderFocusDeep(){
+    const el = document.getElementById('focus-deep');
+    if(!el) return;
+    const pid = focusDeepPid();
+    if(!pid){ el.innerHTML = ''; el.removeAttribute('data-pid'); return; }
+    el.setAttribute('data-pid', pid);
+    el.innerHTML = '<div class="fd-h">More on ' + escapeHTML(playerName(ctx.players[pid])) + '</div>' + maxPlayerHTML(pid, { embed: true });
+    const again = function(){
+      if(focusDeepPid() !== pid || el.getAttribute('data-pid') !== pid) return;
+      const y = els.overlay.scrollTop; renderFocusDeep(); els.overlay.scrollTop = y;
+    };
+    const once = function(k){ if(fdTried[k + pid]) return false; fdTried[k + pid] = true; return true; };
+    if(!hist(pid) && once('h')) ensureHistory(pid).then(again, function(){});
+    if(!ctx.pastProj[pid] && once('p')) ensurePastProj(pid).then(again);
+    if(!ctx.xfp && !ctx.xfpFailed) loadXfp().then(function(j){ if(j) again(); });
+    const need = ownNeed();
+    if(need.length) Promise.allSettled(need.map(ownFetch)).then(again);
+  }
   // Highlight the row whose details are showing (only meaningful when the panel is on screen next to the list).
   function markSelected(){
     const f = ctx.focus;
@@ -12706,7 +12743,7 @@
       (all.length > list.length ? '<button type="button" class="fa-more" data-mx-more>Show ' + Math.min(PL_PAGE, all.length - list.length) + ' more (' + (all.length - list.length) + ' left)</button>' : '');
   }
 
-  function maxPlayerHTML(pid){
+  function maxPlayerHTML(pid, opts){
     const p = ctx.players[pid];
     if(!p) return '<div class="empty-state">Unknown player.</div>';
     const loading = !hist(pid);
@@ -12744,6 +12781,8 @@
     left = left ? '<div class="card pf-card pf-charts">' + left + '</div>' : '<div></div>';
     const dvp = dvpInfo(pid);
     const context = rangeDetailHTML(pid) + idpRangeNote(pid) + (dvp ? '<div class="dvp-line"><span class="dvp-chip ' + (dvp.early ? 'early' : dvp.tone) + '">Matchup</span> ' + escapeHTML(dvpSentence(dvp)) + '</div>' : '');
+    // embedded in the phone sheet: it already shows the header, stat tiles, rankings and swap options
+    if(opts && opts.embed) return injurySourcesHTML(pid) + (loading ? '' : context) + trendCard + '<div class="pf-duo-w">' + ownCardHTML(pid) + '</div>' + weekCard + logCard;
     return byeCallouts([pid]) + hero + injurySourcesHTML(pid) + (loading ? '' : context) + trendCard + '<div class="pf-duo-w"><div class="pf-duo"><div class="card pf-card pf-rk"><div class="pf-sec"><h3>Rankings &amp; value</h3><span class="eyebrow">consensus · market</span></div>' + rankingsHTML(pid) + '</div>' + ownCardHTML(pid) + '</div></div>' + weekCard + logCard + '<div class="pf-grid' + (left === '<div></div>' ? ' solo' : '') + '">' + (left === '<div></div>' ? '' : left) + '<div class="card pf-card">' + maxSideHTML(pid) + '</div></div>';
   }
 
@@ -12889,8 +12928,9 @@
     if(!b) return;
     const id = b.getAttribute('data-own-retry'), l = (ctx.pendingLeagues || []).find(function(x){ return x.league_id === id; });
     const t = maxOpen() && maxStack[maxStack.length - 1];
-    if(!l || !t) return;
+    if(!l) return;
     delete OWN.err[id];
+    if(!t){ ownFetch(l).then(renderFocusDeep); renderFocusDeep(); return; }
     ownFetch(l).then(function(){ ownRedraw(t); });
     ownRedraw(t);
   });
