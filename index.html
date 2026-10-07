@@ -36,6 +36,7 @@
     --bg:#E8E5DE; --surface:#F4F2EC; --surface-2:#ECE9E1; --surface-3:#E0DCD2;
     --text:#23221F; --text-2:#5C5950; --text-3:#8B877D; --hair:rgba(60,50,30,0.10);
     --accent:#18814E; --accent-soft:rgba(24,129,78,0.12); --on-accent:#F6F4EE;
+    --grp-mine:#18814E; --grp-avail:#2F6FDB; --grp-taken:#8A8A8A;   /* All players row groups */
     --danger:#C4321F; --danger-soft:rgba(196,50,31,0.10);
     --warn:#A2670F; --warn-soft:rgba(200,140,30,0.17);
     --shadow:0 1px 2px rgba(60,50,30,0.06), 0 8px 24px rgba(60,50,30,0.06);
@@ -51,6 +52,7 @@
       --bg:#0B0B0D; --surface:#151518; --surface-2:#1E1E22; --surface-3:#29292F;
       --text:#F5F5F7; --text-2:#A1A1AA; --text-3:#6E6E78; --hair:rgba(255,255,255,0.07);
       --accent:#3DD68C; --accent-soft:rgba(61,214,140,0.13); --on-accent:#06240F;
+      --grp-mine:#3DD68C; --grp-avail:#5B9BFF; --grp-taken:#8E8E93;
       --danger:#FF5A4F; --danger-soft:rgba(255,90,79,0.12);
       --warn:#FFB340; --warn-soft:rgba(255,179,64,0.15);
       --shadow:none; --shadow-lg:0 24px 60px rgba(0,0,0,0.5);
@@ -64,6 +66,7 @@
     --bg:#0B0B0D; --surface:#151518; --surface-2:#1E1E22; --surface-3:#29292F;
     --text:#F5F5F7; --text-2:#A1A1AA; --text-3:#6E6E78; --hair:rgba(255,255,255,0.07);
     --accent:#3DD68C; --accent-soft:rgba(61,214,140,0.13); --on-accent:#06240F;
+    --grp-mine:#3DD68C; --grp-avail:#5B9BFF; --grp-taken:#8E8E93;
     --danger:#FF5A4F; --danger-soft:rgba(255,90,79,0.12);
     --warn:#FFB340; --warn-soft:rgba(255,179,64,0.15);
     --shadow:none; --shadow-lg:0 24px 60px rgba(0,0,0,0.5);
@@ -1461,6 +1464,7 @@
   /* ---- injury reports by source ---- */
   .inj-sources{ margin: 0 0 16px; }
   .inj-title{ display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 0 2px 8px; }
+  .inj-news{ margin-left: auto; font-size: 13px; font-weight: 600; color: var(--accent); text-decoration: none; } .inj-news:hover{ text-decoration: underline; }
   .inj-title h3{ margin: 0; font-size: 17px; } .inj-title span{ font-size: 12.5px; color: var(--text-3); }
   .inj-grid{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
   .inj-src{ background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 12px 14px; min-width: 0; }
@@ -2054,6 +2058,11 @@
   .pl-show > span{ font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
   .pl-show label{ display: inline-flex; align-items: center; gap: 6px; min-height: 32px; cursor: pointer; }
   .pl-show input{ width: 18px; height: 18px; min-height: 0; padding: 0; margin: 0; flex: none; accent-color: var(--accent); }
+  .pl-show label:has([data-pl-show="mine"]){ --grp: var(--grp-mine); } .pl-show label:has([data-pl-show="avail"]){ --grp: var(--grp-avail); } .pl-show label:has([data-pl-show="taken"]){ --grp: var(--grp-taken); }
+  .pl-show input{ accent-color: var(--grp, var(--accent)) !important; }
+  .slot-row.grp-mine{ --grp: var(--grp-mine); } .slot-row.grp-avail{ --grp: var(--grp-avail); } .slot-row.grp-taken{ --grp: var(--grp-taken); }
+  .slot-row[class*=" grp-"]{ background: color-mix(in srgb, var(--grp) 14%, transparent); box-shadow: inset 4px 0 0 var(--grp); }
+  .slot-row.grp-taken{ background: color-mix(in srgb, var(--grp) 7%, transparent); }
   .pl-show b{ font-weight: 600; color: var(--text); } .pl-show small{ font-size: 11.5px; color: var(--text-3); font-variant-numeric: tabular-nums; }
   .pl-presets{ display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
   .pl-custom{ display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr) auto; gap: 6px; margin-top: 6px; }
@@ -3813,10 +3822,10 @@
 (function(){
   const API = 'https://api.sleeper.app/v1';
   const UNOFFICIAL = 'https://api.sleeper.app';
-  const PLAYERS_CACHE_KEY = 'sleeper_players_cache_v4'; // v4 = + fantasy_positions, source (players.json / sleeper)
+  const PLAYERS_CACHE_KEY = 'sleeper_players_cache_v5'; // v5 = + rotowire_id (v4 = + fantasy_positions, source)
   // Keep in sync with PLAYER_FIELDS in build_nflverse.py, which writes players.json with exactly these fields.
   const PLAYER_FIELDS = ['full_name','first_name','last_name','position','fantasy_positions','team','injury_status',
-    'injury_body_part','injury_notes','injury_start_date','practice_participation','practice_description','espn_id'];
+    'injury_body_part','injury_notes','injury_start_date','practice_participation','practice_description','espn_id','rotowire_id'];
   // The trimmed player database the GitHub Action publishes next to this page (~260 KB gzipped, rebuilt every
   // 30 min on game days). Sleeper's own /players/nfl (2.6 MB gzipped, 14.7 MB raw) is only the fallback.
   const PLAYERS_URL = 'players.json';
@@ -5280,6 +5289,14 @@
     return '<a class="ext-link" href="' + escapeHTML(href) + '" target="_blank" rel="noopener noreferrer">' + escapeHTML(label) +
       (note ? '<small>' + escapeHTML(note) + '</small>' : '') + EXT_ICON + '</a>';
   }
+  // Best free source for a player's latest injury news: his RotoWire page (fast, free news blurbs), by Sleeper's
+  // rotowire_id; else his ESPN page (espn_id); else RotoWire's injury report. A team defense goes to the report.
+  function injuryNewsLink(pid){
+    const p = ctx.players[pid] || {};
+    if(p.position !== 'DEF' && p.rotowire_id) return { href: 'https://www.rotowire.com/football/player.php?id=' + encodeURIComponent(p.rotowire_id), src: 'RotoWire' };
+    if(p.position !== 'DEF' && p.espn_id) return { href: 'https://www.espn.com/nfl/player/_/id/' + encodeURIComponent(p.espn_id), src: 'ESPN' };
+    return { href: 'https://www.rotowire.com/football/injury-report.php', src: 'RotoWire' };
+  }
   function playerLinksHTML(pid){
     const p = ctx.players[pid];
     if(!p) return '';
@@ -5290,7 +5307,8 @@
     else if(n.nfl) nfl = 'https://www.nfl.com/players/' + n.nfl + '/stats/';
     else { nfl = 'https://www.nfl.com/players/active/all?query=' + encodeURIComponent(p.full_name || ((p.first_name || '') + ' ' + (p.last_name || '')).trim()); nflNote = 'search'; }
     const sh = n.sh ? 'https://www.stathead.app/#/player/' + n.sh : 'https://www.stathead.app/';
-    return '<div class="pf-links">' + extLink(nfl, 'Official NFL Stats', nflNote) + extLink(sh, 'View on StatHead', n.sh ? '' : 'home') + '</div>';
+    const inj = injuryNewsLink(pid);
+    return '<div class="pf-links">' + extLink(inj.href, 'Latest injury news', inj.src) + extLink(nfl, 'Official NFL Stats', nflNote) + extLink(sh, 'View on StatHead', n.sh ? '' : 'home') + '</div>';
   }
   function kickText(t){ return t ? new Date(t).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }) : 'time TBD'; }
   // Flex slots currently holding a tight end (flagged on the row and in the optimizer note).
@@ -7535,7 +7553,7 @@
          '<p class="inj-fine">Unofficial ESPN data, matched to this player by ' + (en.m === 'espn_id' ? 'ESPN ID' : 'name and team') + '.</p>')
         : srcSection('ESPN', asOf, [], '', 'No data from this source.');
     }
-    return '<div class="inj-sources"><div class="inj-title"><h3>Injury reports</h3><span>Three sources, shown as each reports it</span></div><div class="inj-grid">' + sl + nv + es + '</div></div>';
+    return '<div class="inj-sources"><div class="inj-title"><h3>Injury reports</h3><span>Three sources, shown as each reports it</span>' + (function(){ const l = injuryNewsLink(pid); return '<a class="inj-news" href="' + escapeHTML(l.href) + '" target="_blank" rel="noopener noreferrer">Latest news on ' + l.src + ' ↗</a>'; })() + '</div><div class="inj-grid">' + sl + nv + es + '</div></div>';
   }
   // Player panel / iPhone sheet: one line per source, full breakdown on the player page.
   function injuryMiniHTML(pid){
@@ -10634,7 +10652,7 @@
     const who = avail ? faVsLine(pid, p.position)
       : '<div class="fa-vs"><span class="own-tag' + (mine ? ' mine' : '') + '">' + (mine ? 'On your team' : owner !== undefined ? escapeHTML(rosterName(owner)) : 'Not on an NFL team') + '</span></div>';
     const tc = ctx.pl.view === 'trend' ? trendCount(pid) : null;
-    return '<div class="slot-row" data-fa-id="' + escapeHTML(pid) + '">' +
+    return '<div class="slot-row' + (ctx.pl.view === 'all' ? ' grp-' + plGroup(pid) : '') + '" data-fa-id="' + escapeHTML(pid) + '">' +
         '<div class="slot-tag" style="color:' + color + '; border-color:' + color + ';">' + escapeHTML(posGroup(pid)) + '</div>' +
         '<img class="avatar" src="' + escapeHTML(playerImageUrl(pid)) + '" loading="lazy" onerror="this.style.visibility=\'hidden\'" style="--team:' + teamColor(p.team) + '"' + analyzeAttr(pid) + '>' +
         '<div class="player-info">' +

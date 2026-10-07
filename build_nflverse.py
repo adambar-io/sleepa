@@ -35,7 +35,7 @@ INJURY_POS = SKILL + ('K',)        # positions that get injury / practice data
 # players.json: the Sleeper player fields the app uses (keep in sync with PLAYER_FIELDS in index.html). About 260 KB
 # gzipped instead of the 2.6 MB / 14.7 MB raw /players/nfl, so the app can re-check it on every open.
 PLAYER_FIELDS = ['full_name', 'first_name', 'last_name', 'position', 'fantasy_positions', 'team', 'injury_status',
-                 'injury_body_part', 'injury_notes', 'injury_start_date', 'practice_participation', 'practice_description', 'espn_id']
+                 'injury_body_part', 'injury_notes', 'injury_start_date', 'practice_participation', 'practice_description', 'espn_id', 'rotowire_id']
 # Sleeper stat/projection keys that never score (the app scores with the league's own settings).
 NON_SCORING = re.compile(r'^(pts_(std|ppr|half_ppr|idp)$|pos_rank|rank_|adp_|pos_adp|gp$|gs$|gms_active$|tm_|off_snp$|def_snp$|st_snp$|cmp_pct$|.*_(ypa|ypc|ypr|ypt|pct|rtg|lng|avg)$)')
 DVP_POS = ('QB', 'RB', 'WR', 'TE', 'K')
