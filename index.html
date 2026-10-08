@@ -3045,8 +3045,6 @@
   .zn-ref span{ font-variant-numeric: tabular-nums; font-weight: 500; }
   .zn-ref.busy svg{ animation: znSpin 1s linear infinite; }
   .zn-ref.stale{ color: var(--warn); }
-  .zn-photos[aria-pressed="true"]{ color: var(--text); }
-  .zn-photos[aria-pressed="false"] svg{ opacity: .45; }
   @keyframes znSpin{ to{ transform: rotate(360deg); } }
   .zm-dt{ display: none !important; }
   .zn-main{ position: relative; min-height: 0; }
@@ -3168,8 +3166,6 @@
     .zn-top .zn-ico{ order: 1; }
     .zn-wk{ order: 2; }
     .zn-top [data-zn-mode]{ display: none; }
-    .zn-photos{ order: 3; }
-    .zn-photos span{ display: none; }
     .zn-ref{ order: 4; margin-left: auto; }
   }
   @container zn (min-width: 900px){
@@ -3239,24 +3235,22 @@
   .zn-tile.focus .zt-top{ font-size: 13.5px; }
   .zn-tile.focus .zt-open{ color: var(--text-2); }
   /* photos off */
-  .zn.no-photos .zh{ display: none; }
-  .zn.no-photos .zg-r{ grid-template-columns: 36px minmax(0, 1fr) auto; }
   /* card cells: photo on the outer edge */
   .zp-i{ grid-area: i; width: 28px; height: 28px; align-self: center; }
-  .zn:not(.no-photos) .zp:not(.empty){ grid-template-columns: 28px minmax(0, 1fr) auto; grid-template-areas: "i t v" "i m c" "x x x"; column-gap: 7px; }
-  .zn:not(.no-photos) .zp.them:not(.empty){ grid-template-columns: auto minmax(0, 1fr) 28px; grid-template-areas: "v t i" "c m i" "x x x"; }
-  .zn:not(.no-photos) .zn-car.ring:not(.flat) .zp:not(.empty){ grid-template-columns: 36px minmax(0, 1fr) auto; column-gap: 9px; }
-  .zn:not(.no-photos) .zn-car.ring:not(.flat) .zp.them:not(.empty){ grid-template-columns: auto minmax(0, 1fr) 36px; }
+  .zn .zp:not(.empty){ grid-template-columns: 28px minmax(0, 1fr) auto; grid-template-areas: "i t v" "i m c" "x x x"; column-gap: 7px; }
+  .zn .zp.them:not(.empty){ grid-template-columns: auto minmax(0, 1fr) 28px; grid-template-areas: "v t i" "c m i" "x x x"; }
+  .zn .zn-car.ring:not(.flat) .zp:not(.empty){ grid-template-columns: 36px minmax(0, 1fr) auto; column-gap: 9px; }
+  .zn .zn-car.ring:not(.flat) .zp.them:not(.empty){ grid-template-columns: auto minmax(0, 1fr) 36px; }
   .zn-car.ring:not(.flat) .zp-i{ width: 36px; height: 36px; }
   /* phones: narrow cells, so with photos the name gets its own line beside the photo, points under it, game line below */
-  .zn:not(.no-photos) .zn-car.flat .zp:not(.empty){ grid-template-columns: 24px auto minmax(0, 1fr); grid-template-areas: "i t t" "i v c" "m m m"; column-gap: 6px; }
-  .zn:not(.no-photos) .zn-car.flat .zp.them:not(.empty){ grid-template-columns: minmax(0, 1fr) auto 24px; grid-template-areas: "t t i" "c v i" "m m m"; }
-  .zn:not(.no-photos) .zn-car.flat .zp-i{ width: 24px; height: 24px; }
-  .zn:not(.no-photos) .zn-car.flat .zp-c{ align-self: center; text-align: left; }
-  .zn:not(.no-photos) .zn-car.flat .zp.them .zp-c{ text-align: right; }
-  .zn:not(.no-photos) .zn-car.flat .zp-v{ text-align: left; }
-  .zn:not(.no-photos) .zn-car.flat .zp.them .zp-v{ text-align: right; }
-  .zn:not(.no-photos) .zn-car.flat .zp-m{ margin-top: 2px; }
+  .zn .zn-car.flat .zp:not(.empty){ grid-template-columns: 24px auto minmax(0, 1fr); grid-template-areas: "i t t" "i v c" "m m m"; column-gap: 6px; }
+  .zn .zn-car.flat .zp.them:not(.empty){ grid-template-columns: minmax(0, 1fr) auto 24px; grid-template-areas: "t t i" "c v i" "m m m"; }
+  .zn .zn-car.flat .zp-i{ width: 24px; height: 24px; }
+  .zn .zn-car.flat .zp-c{ align-self: center; text-align: left; }
+  .zn .zn-car.flat .zp.them .zp-c{ text-align: right; }
+  .zn .zn-car.flat .zp-v{ text-align: left; }
+  .zn .zn-car.flat .zp.them .zp-v{ text-align: right; }
+  .zn .zn-car.flat .zp-m{ margin-top: 2px; }
   .zt-full{ display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 16px; }
   .zt-full:empty{ display: none; }
   .zt-col .zt-h{ border-top: 0; padding-top: 4px; }
@@ -13118,7 +13112,6 @@
   try{
     ctx.zone.dense = localStorage.getItem('rv-zone-dense') === 'condensed' ? 'condensed' : 'detailed';
     ctx.zone.collapsed = JSON.parse(localStorage.getItem('rv-zone-collapsed') || '{}') || {};
-    ctx.zone.photos = localStorage.getItem('rv-zone-photos') !== 'off';
     ctx.zone.feedMin = localStorage.getItem('rv-zone-feed') === 'min';
   }catch(e){}
   function zSave(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
@@ -13918,7 +13911,6 @@
     cards: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="6" y="4" width="12" height="16" rx="2"/><path d="M3 7v10M21 7v10"/></svg>',
     fold: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 6l6 6-6 6M5 6l6 6-6 6"/></svg>',
     unfold: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 6l-6 6 6 6M19 6l-6 6 6 6"/></svg>',
-    photo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="9" r="3.5"/><path d="M5 20c1.2-3.6 4-5.5 7-5.5s5.8 1.9 7 5.5"/></svg>',
   };
   const CHEV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 10l4 4 4-4"/></svg>';
   const CHEV_UP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 14l4-4 4 4"/></svg>';
@@ -13930,7 +13922,6 @@
         '<div class="zn-title"><b>' + ZONE_NAME + '</b><span id="zn-sub"></span></div>' +
         '<div class="wk-seg zn-wk" role="group" aria-label="Week"><button type="button" data-zn-wk="-1" aria-label="Previous week">‹</button><span id="zn-wk-l"></span><button type="button" data-zn-wk="1" aria-label="Next week">›</button></div>' +
         '<button type="button" class="zn-btn" data-zn-mode aria-pressed="false"></button>' +
-        '<button type="button" class="zn-btn zn-photos" data-zn-photos aria-pressed="true">' + ICO.photo + '<span>Photos</span></button>' +
         '<button type="button" class="zn-btn zn-ref" data-zn-ref aria-label="Refresh scores">' + ICO.ref + '<span data-zn-ago></span></button>' +
         '<button type="button" class="zn-btn zn-ico" data-zone-guide aria-label="How ' + ZONE_NAME + ' reads the game">' + ICO.info + '</button>' +
       '</header>' +
@@ -14113,10 +14104,7 @@
     const all = z.leagues.length && z.leagues.every(function(L){ return z.collapsed[L.id]; });
     const h = zoneView.querySelector('[data-zn-hideall]');
     if(h) h.innerHTML = (all ? 'Show all players' : 'Hide all players');
-    zoneView.classList.toggle('no-photos', !z.photos);
     zoneView.classList.toggle('feed-min', !!z.feedMin);
-    const ph = zoneView.querySelector('[data-zn-photos]');
-    if(ph){ ph.setAttribute('aria-pressed', String(z.photos)); ph.title = z.photos ? 'Hide player photos' : 'Show player photos'; }
   }
   // Focus (desktop grid): the league lifts forward, centered over the grid in full detail (both teams side by side); the
   // others dim behind it; the live feed stays put. A placeholder keeps its spot so nothing reflows. Click its header again,
@@ -14472,7 +14460,6 @@
       ctx.zone.feedMin = !ctx.zone.feedMin; zSave('rv-zone-feed', ctx.zone.feedMin ? 'min' : 'open');
       zoneRenderBar(); zonePlaceFocus(); return;
     }
-    if(t.closest('[data-zn-photos]')){ ctx.zone.photos = !ctx.zone.photos; zSave('rv-zone-photos', ctx.zone.photos ? 'on' : 'off'); zoneRenderBar(); return; }
     const dn = t.closest('[data-zn-dense]');
     if(dn){ ctx.zone.dense = dn.getAttribute('data-zn-dense'); zSave('rv-zone-dense', ctx.zone.dense); zoneRender(false); return; }
     if(t.closest('[data-zn-hideall]')){
