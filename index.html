@@ -5550,8 +5550,8 @@
     e.stopPropagation(); e.preventDefault();
     const deep = document.getElementById('focus-deep');
     if(!paneMode() && deep && t.closest('.focus-panel') && !t.closest('#candidates-list') && deep.getAttribute('data-pid') === t.getAttribute('data-analyze')){
-      const sec = deep.querySelector(t.classList.contains('inj-more') ? '.inj-sources' : t.classList.contains('all-stats') ? '.pf-log' : '.fd-h') || deep;
-      sec.scrollIntoView({ block: 'start', behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+      const sel = t.classList.contains('inj-more') ? '.inj-sources' : t.classList.contains('all-stats') ? '.pf-log' : '.fd-h';
+      scrollToSection(deep.querySelector(sel) || deep, sel);
       return;
     }
     openAnalysis(t.getAttribute('data-analyze'), t.closest('.slot-row, .cand-card, .focus-panel') || t);
@@ -5609,6 +5609,15 @@
     showOverlay(els.overlay);
   }
   function closeFocus(){ if(!paneMode()) hideOverlay(els.overlay); }
+  // Scroll a section of the phone sheet or the player page so its top sits just under that screen's top bar. The bar is
+  // measured (on iPhones the sheet bar grows by the status-bar inset), so the heading never ends up underneath it.
+  function scrollToSection(el, sel){
+    const inSheet = !!el.closest('#overlay'), box = inSheet ? els.overlay : maxPanel;
+    if(inSheet && sel) ctx.sheetJump = { sel: sel, at: Date.now() };   // re-pinned if the sheet redraws as data arrives
+    const bar = inSheet ? (parseFloat(getComputedStyle(els.overlay, '::before').height) || 0) : ((maxEl.querySelector('.max-bar') || {}).offsetHeight || 0);
+    const top = el.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop - bar - 10;
+    box.scrollTo({ top: Math.max(0, top), behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+  }
   // Phones: the player sheet is the player page. Under the quick part (stat tiles, rankings, swap options) it goes on
   // with the full page sections (injury reports, typical week, Trends, League ownership, this week, game log), so there is
   // one view instead of a sheet with a second full-screen page behind it. Wide screens keep the side panel quick, with
@@ -5625,6 +5634,8 @@
     const again = function(){
       if(focusDeepPid() !== pid || el.getAttribute('data-pid') !== pid) return;
       const y = els.overlay.scrollTop; renderFocusDeep(); els.overlay.scrollTop = y;
+      const j = ctx.sheetJump, to = j && Date.now() - j.at < 5000 && el.querySelector(j.sel);
+      if(to) scrollToSection(to);   /* a section was just jumped to: keep its top under the bar */
     };
     const once = function(k){ if(fdTried[k + pid]) return false; fdTried[k + pid] = true; return true; };
     if(!hist(pid) && once('h')) ensureHistory(pid).then(again, function(){});
@@ -11979,7 +11990,7 @@
     if(!pc){ openMax({ kind: 'player', pid: pid, anchor: 'trends' }, from); return; }   // side panel: on the player page
     pcRerender(pc);
     const fresh = root.querySelector('.pc[data-pc-pid="' + pid + '"]');
-    fresh.scrollIntoView({ block: 'start', behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+    scrollToSection(fresh, '.pc');
     fresh.classList.add('flash'); setTimeout(function(){ fresh.classList.remove('flash'); }, 1600);
   }
   function tileToggle(t){
