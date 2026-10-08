@@ -3149,7 +3149,9 @@
   .am-pos{ justify-self: start; font-size: 10px; font-weight: 800; padding: 2px 5px; border-radius: 6px; color: var(--pc); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--pc) 55%, transparent); }
   .am-prn{ min-width: 0; } .am-prn b{ display: block; font-size: 13px; font-weight: 650; overflow-wrap: anywhere; line-height: 1.25; }
   .am-prn small{ display: block; font-size: 11px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .am-prv{ font-size: 15px; font-weight: 750; font-variant-numeric: tabular-nums; } .am-prv.pos{ color: var(--accent); }
+  .am-prv{ font-size: 15px; font-weight: 750; font-variant-numeric: tabular-nums; text-align: right; } .am-prv.pos{ color: var(--accent); }
+  .am-prv small{ display: block; font-size: 10px; font-weight: 600; color: var(--text-3); white-space: nowrap; }
+  .am-lp.best{ box-shadow: inset 0 0 0 1px currentColor; }
   .am-lcs2{ display: flex; gap: 3px; flex-wrap: wrap; justify-content: flex-end; }
   .am-ou{ text-align: right; } .am-ou b{ display: block; font-size: 14px; font-variant-numeric: tabular-nums; } .am-ou small{ font-size: 10px; color: var(--text-3); }
   .am-ou.over b{ color: var(--accent); } .am-ou.under b{ color: var(--danger); }
@@ -15060,7 +15062,26 @@
   function amWho(pid){ const p = ctx.players[pid] || {}; return p.position === 'DEF' ? (p.team || pid) + ' D/ST' : (p.first_name && p.last_name ? p.first_name.charAt(0) + '. ' + p.last_name : playerName(p) || pid); }
   function amStarted(pid){ const p = ctx.players[pid] || {}, g = zGame(p.team || (p.position === 'DEF' ? pid : null), ctx.zone.week); return g ? g.state : 'bye'; }
   function amSideCls(x){ return x.mine ? ' mine' : x.opp ? ' opp' : ''; }
-  // Top scorers: highest-scoring starters across every matchup, each in its own league (points aren't comparable across leagues)
+  // A league's typical starter this week: the average points of its started starters across every matchup (8+ of them),
+  // else the average projection. Rankings use points ÷ this, so one high-scoring league (BATTLEBALL's scoring is much
+  // richer) doesn't fill every list; the points shown stay the real ones.
+  function amTypical(L){
+    const z = ctx.zone, meta = z.meta[L.id], mu = L.muWeek === z.week ? L.mu : null;
+    if(!mu || !meta) return 1;
+    const key = (L.muTs || 0) + ':' + z.week + ':' + (z.gamesTs || 0) + ':' + (z.projTs || 0);
+    if(L._typ && L._typ.key === key) return L._typ.v;
+    let n = 0, sum = 0, pn = 0, psum = 0;
+    mu.forEach(function(e){ (e.starters || []).forEach(function(pid){
+      if(!pid || pid === '0') return;
+      const st = amStarted(pid), v = (e.players_points || {})[pid], pr = zProj(L, meta, pid);
+      if((st === 'in' || st === 'post') && typeof v === 'number'){ n++; sum += v; }
+      if(typeof pr === 'number'){ pn++; psum += pr; }
+    }); });
+    L._typ = { key: key, v: Math.max(1, n >= 8 ? sum / n : pn ? psum / pn : 1) };
+    return L._typ.v;
+  }
+  function amRel(n){ return n.toFixed(1) + '× typical'; }
+  // Top scorers: highest-scoring starters across every matchup, each in its own league, ranked against that league's typical starter
   function amTopHTML(){
     const z = ctx.zone, S = amStarters(), f = z.am.posf.top, rows = [];
     Object.keys(S).forEach(function(pid){
@@ -15068,17 +15089,19 @@
       if((st !== 'in' && st !== 'post') || !amPosOk(pid, f)) return;
       S[pid].forEach(function(x){
         const v = (x.e.players_points || {})[pid];
-        if(typeof v === 'number') rows.push({ pid: pid, x: x, v: v, st: st });
+        if(typeof v === 'number') rows.push({ pid: pid, x: x, v: v, st: st, n: v / amTypical(x.L) });
       });
     });
-    rows.sort(function(a, b){ return b.v - a.v; });
-    const list = rows.slice(0, 25);
+    // one row per player: his best league (relative to its typical starter) leads; his other leagues ride along as chips
+    const by = {};
+    rows.forEach(function(r){ const b = by[r.pid]; if(!b) by[r.pid] = Object.assign({ also: [] }, r); else if(r.n > b.n){ const old = Object.assign({}, b); delete old.also; by[r.pid] = Object.assign({ also: b.also.concat([old]) }, r); } else b.also.push(r); });
+    const list = Object.keys(by).map(function(k){ return by[k]; }).sort(function(a, b){ return b.n - a.n || b.v - a.v; }).slice(0, 25);
     if(!list.length) return amPosChips('top') + '<p class="am-none">' + (Object.keys(S).length ? 'No starters have played yet this week.' : 'Loading matchups…') + '</p>';
     return amPosChips('top') + '<div class="am-rows">' + list.map(function(r){
       const t = zTeam(r.x.meta, r.x.rid);
       return '<div class="am-pr' + amSideCls(r.x) + '" data-am-pl="' + escapeHTML(r.pid) + '" role="button" tabindex="0">' + amPosTag(r.pid) + '<span class="am-prn"><b>' + escapeHTML(amWho(r.pid)) + '</b><small>' + escapeHTML(t.name) + (r.x.mine ? ' · you' : r.x.opp ? ' · your opponent' : '') + (r.st === 'in' ? ' · live' : '') + '</small></span>' +
-        '<span class="am-lp">' + escapeHTML(amCode(r.x.L.name)) + '</span><b class="am-prv">' + fmtPts(r.v) + '</b></div>';
-    }).join('') + '</div>';
+        '<span class="am-lcs2"><span class="am-lp best" title="Points shown are in this league">' + escapeHTML(amCode(r.x.L.name)) + '</span>' + r.also.map(function(o){ return '<span class="am-lp' + (o.x.mine ? ' mine' : o.x.opp ? ' opp' : '') + '" title="' + escapeHTML(zTeam(o.x.meta, o.x.rid).name + ': ' + fmtPts(o.v)) + '">' + escapeHTML(amCode(o.x.L.name)) + '</span>'; }).join('') + '</span><b class="am-prv">' + fmtPts(r.v) + '<small>' + amRel(r.n) + '</small></b></div>';
+    }).join('') + '</div>' + '<p class="am-fine">Ranked against each league’s typical starter this week (points ÷ the average started starter there), so no league’s scoring drowns out the others.</p>';
   }
   // Biggest plays: plays from the live feed, each worth what it scores for a starter in each league where he starts
   function amPlaysHTML(){
@@ -15096,13 +15119,14 @@
             if(seen[x.L.id]) return;
             seen[x.L.id] = 1;
             const v = calcPoints(pl.st[pid], x.meta.league.scoring_settings || {});
-            if(typeof v === 'number' && v > 0.004) legs.push({ L: x.L, v: v, mine: xs.some(function(y){ return y.L.id === x.L.id && y.mine; }), opp: xs.some(function(y){ return y.L.id === x.L.id && y.opp; }) });
+            if(typeof v === 'number' && v > 0.004) legs.push({ L: x.L, v: v, n: v / amTypical(x.L), mine: xs.some(function(y){ return y.L.id === x.L.id && y.mine; }), opp: xs.some(function(y){ return y.L.id === x.L.id && y.opp; }) });
           });
           if(!legs.length) return;
-          out.push({ pl: pl, pid: pid, legs: legs, v: Math.max.apply(null, legs.map(function(l){ return l.v; })) });
+          const best = legs.reduce(function(a, l){ return !a || l.n > a.n ? l : a; }, null);
+          out.push({ pl: pl, pid: pid, legs: legs, best: best, v: best.v, n: best.n });
         });
       });
-      out.sort(function(a, b){ return b.v - a.v; });
+      out.sort(function(a, b){ return b.n - a.n || b.v - a.v; });
       z._amPl = { key: key, v: out.slice(0, 200) };
     }
     const list = z._amPl.v.filter(function(r){ return amPosOk(r.pid, f); }).slice(0, 20);
@@ -15110,8 +15134,8 @@
     return amPosChips('plays') + '<div class="am-rows">' + list.map(function(r){
       const p = ctx.players[r.pid] || {}, d = String(r.pl.d || '').replace(/\s+/g, ' ').trim();
       return '<div class="am-pr play" data-am-pl="' + escapeHTML(r.pid) + '" role="button" tabindex="0">' + amPosTag(r.pid) + '<span class="am-prn"><b>' + escapeHTML(amWho(r.pid)) + '</b><small title="' + escapeHTML(d) + '">' + escapeHTML(zClock(r.pl) + ' · ' + (p.team || '') + (d ? ' · ' + d : '')) + '</small></span>' +
-        '<span class="am-lcs2">' + r.legs.map(function(l){ return '<span class="am-lp' + (l.mine ? ' mine' : l.opp ? ' opp' : '') + '">' + escapeHTML(amCode(l.L.name)) + '</span>'; }).join('') + '</span><b class="am-prv pos">+' + r.v.toFixed(2) + '</b></div>';
-    }).join('') + '</div>';
+        '<span class="am-lcs2">' + r.legs.map(function(l){ return '<span class="am-lp' + (l.mine ? ' mine' : l.opp ? ' opp' : '') + (l === r.best ? ' best' : '') + '"' + (l === r.best ? ' title="Points shown are in this league"' : '') + '>' + escapeHTML(amCode(l.L.name)) + '</span>'; }).join('') + '</span><b class="am-prv pos">+' + r.v.toFixed(2) + '<small>' + amRel(r.n) + '</small></b></div>';
+    }).join('') + '</div>' + '<p class="am-fine">Ranked against each league’s typical starter this week (points ÷ the average started starter there), so no league’s scoring drowns out the others.</p>';
   }
   // Over / under: actual vs projection. Finished games count both ways; a live game only once he is already over.
   function amOuHTML(){
@@ -15125,18 +15149,19 @@
         if(typeof v !== 'number' || typeof pr !== 'number') return;
         const d = v - pr;
         if(st === 'in' && d <= 0) return;
-        if(!best || Math.abs(d) > Math.abs(best.d)) best = { x: x, v: v, pr: pr, d: d };
+        const n = Math.abs(d) / amTypical(x.L);
+        if(!best || n > best.n) best = { x: x, v: v, pr: pr, d: d, n: n };
       });
       if(best) rows.push(Object.assign({ pid: pid, st: st, legs: S[pid] }, best));
     });
-    rows.sort(function(a, b){ return Math.abs(b.d) - Math.abs(a.d); });
+    rows.sort(function(a, b){ return b.n - a.n || Math.abs(b.d) - Math.abs(a.d); });
     const list = rows.slice(0, 20);
     if(!list.length) return '<p class="am-none">Gaps show up as games finish.</p>';
     return '<div class="am-rows">' + list.map(function(r){
       const p = ctx.players[r.pid] || {}, codes = {}, chips = r.legs.filter(function(x){ if(codes[x.L.id]) return false; codes[x.L.id] = 1; return true; }).map(function(x){ return '<span class="am-lp' + (x.mine ? ' mine' : x.opp ? ' opp' : '') + '">' + escapeHTML(amCode(x.L.name)) + '</span>'; }).join('');
       return '<div class="am-pr" data-am-pl="' + escapeHTML(r.pid) + '" role="button" tabindex="0">' + amPosTag(r.pid) + '<span class="am-prn"><b>' + escapeHTML(amWho(r.pid)) + '</b><small>' + escapeHTML((p.team || '') + ' · ' + fmtPts(r.v) + ' vs ' + fmtPts(r.pr) + ' proj' + (r.st === 'in' ? ' · live' : '')) + '</small></span>' +
-        '<span class="am-lcs2">' + chips + '</span><span class="am-ou ' + (r.d > 0 ? 'over' : 'under') + '"><b>' + (r.d > 0 ? '+' : '−') + Math.abs(r.d).toFixed(2) + '</b><small>' + (r.d > 0 ? 'over' : 'under') + '</small></span></div>';
-    }).join('') + '</div>';
+        '<span class="am-lcs2">' + chips + '</span><span class="am-ou ' + (r.d > 0 ? 'over' : 'under') + '"><b>' + (r.d > 0 ? '+' : '−') + Math.abs(r.d).toFixed(2) + '</b><small>' + (r.d > 0 ? 'over' : 'under') + ' · ' + escapeHTML(amCode(r.x.L.name)) + '</small></span></div>';
+    }).join('') + '</div>' + '<p class="am-fine">Ranked against each league’s typical starter this week (points ÷ the average started starter there), so no league’s scoring drowns out the others.</p>';
   }
   // League high score: leagues that also play the league median (Sleeper's league_average_match), with the week's leader
   function amHsHTML(){
