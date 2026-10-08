@@ -3053,7 +3053,7 @@
   .am-st.live b{ color: var(--danger); } .am-st .live-dot{ width: 6px; height: 6px; margin: 0; }
   .am-ts{ grid-area: ts; display: grid; gap: 5px; min-width: 0; }
   .am-t{ display: flex; align-items: center; gap: 7px; min-width: 0; }
-  .am-tn{ flex: 1; min-width: 0; font-size: 13.5px; font-weight: 600; color: var(--text-2); overflow-wrap: anywhere; line-height: 1.25; }
+  .am-tn{ flex: 1; min-width: 0; font-size: 13.5px; font-weight: 600; color: var(--text-2); overflow-wrap: break-word; line-height: 1.25; }
   .am-t.lead .am-tn{ color: var(--text); font-weight: 700; } .am-tn.dim{ color: var(--text-3); font-weight: 500; }
   .am-you{ flex: none; font-size: 9.5px; font-weight: 800; letter-spacing: .04em; padding: 1px 5px; border-radius: 5px; background: var(--accent); color: var(--on-accent); }
   .am-sc{ flex: none; display: flex; flex-direction: column; align-items: flex-end; line-height: 1.1; }
@@ -3139,6 +3139,25 @@
   .am-lp.opp{ background: color-mix(in srgb, var(--impact-neg) 12%, transparent); color: var(--impact-neg); }
   .am-xr.am-mine{ box-shadow: inset 3px 0 0 var(--impact-pos); } .am-xr.am-opp{ box-shadow: inset 3px 0 0 var(--impact-neg); } .am-xr.am-both{ box-shadow: inset 3px 0 0 var(--impact-mixed); }
   .am-xr.wav{ cursor: pointer; } @media (hover: hover){ .am-xr.wav:hover, .am-rg:hover{ background: var(--surface-3); } }
+  .am-tt.full{ opacity: .45; }
+  .am-pf{ display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; flex: none; padding-bottom: 2px; }
+  .am-pf button{ flex: none; min-height: 26px; padding: 0 9px; border-radius: 999px; background: var(--surface-2); color: var(--text-2); font-size: 11.5px; font-weight: 600; }
+  .am-pf button[aria-pressed="true"]{ background: var(--text); color: var(--bg); }
+  .am-pr{ display: grid; grid-template-columns: 36px minmax(0, 1fr) auto auto; align-items: center; gap: 8px; padding: 7px 9px; border-radius: 12px; background: var(--surface-2); cursor: pointer; }
+  @media (hover: hover){ .am-pr:hover{ background: var(--surface-3); } }
+  .am-pr.mine{ box-shadow: inset 3px 0 0 var(--impact-pos); } .am-pr.opp{ box-shadow: inset 3px 0 0 var(--impact-neg); }
+  .am-pos{ justify-self: start; font-size: 10px; font-weight: 800; padding: 2px 5px; border-radius: 6px; color: var(--pc); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--pc) 55%, transparent); }
+  .am-prn{ min-width: 0; } .am-prn b{ display: block; font-size: 13px; font-weight: 650; overflow-wrap: anywhere; line-height: 1.25; }
+  .am-prn small{ display: block; font-size: 11px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .am-prv{ font-size: 15px; font-weight: 750; font-variant-numeric: tabular-nums; } .am-prv.pos{ color: var(--accent); }
+  .am-lcs2{ display: flex; gap: 3px; flex-wrap: wrap; justify-content: flex-end; }
+  .am-ou{ text-align: right; } .am-ou b{ display: block; font-size: 14px; font-variant-numeric: tabular-nums; } .am-ou small{ font-size: 10px; color: var(--text-3); }
+  .am-ou.over b{ color: var(--accent); } .am-ou.under b{ color: var(--danger); }
+  .am-hs{ display: grid; gap: 4px; padding: 9px 10px; border-radius: 12px; background: var(--surface-2); }
+  .am-hsh{ display: flex; align-items: center; gap: 6px; font-size: 13px; }
+  .am-hsr{ display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 8px; font-size: 12.5px; align-items: baseline; }
+  .am-hsr span{ font-size: 11px; color: var(--text-3); } .am-hsr b{ font-weight: 600; overflow-wrap: anywhere; } .am-hsr em{ font-style: normal; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .am-hsr.you b, .am-hsr.you em{ color: var(--accent); }
   /* desktop: league board left, tile board right; the drill-down takes the full width */
   @media (min-width: 900px){
     .zn.am-on .am{ display: grid; grid-template-columns: minmax(400px, 560px) minmax(0, 1fr); grid-template-areas: "board tiles"; gap: 18px; align-items: start; align-content: start; padding: 16px 24px 28px; }
@@ -3151,9 +3170,8 @@
     .am-tile{ height: 420px; max-height: none; }
     .am-lgs{ display: flex; flex-wrap: wrap; } .am-lg{ justify-content: flex-start; padding: 0 14px; }
     .am-lg .am-lgn, .am-lg small{ display: inline; } .am-lg .am-lgc{ display: none; }
-    .am-mu{ grid-template-columns: 58px minmax(0, 1fr) 132px; grid-template-areas: "st ts wp"; }
+    .am-mu{ grid-template-columns: 58px minmax(0, 1fr) 112px; grid-template-areas: "st ts wp"; }
     .am-wp{ grid-template-columns: 1fr; gap: 4px; }
-    .am-sc{ flex-direction: row; align-items: baseline; gap: 8px; } .am-pj{ min-width: 72px; text-align: right; }
     .am-dg:has(.am-stake){ grid-template-columns: minmax(0, 1fr) 300px; }
     .am-dp{ font-size: 36px; }
   }
@@ -13454,6 +13472,15 @@
         if(/^[A-Z]{2,3}$/.test(pid)) defTeams[pid] = 1;
       }); });
     });
+    if(ctx.zone.am && ctx.zone.am.open) ctx.zone.leagues.forEach(function(L){
+      const mu = L.muWeek === week ? L.mu : null;
+      (mu || []).forEach(function(e){ (e.starters || []).forEach(function(pid){
+        if(!pid || pid === '0') return;
+        keep[pid] = 1;
+        const p = ctx.players[pid], t = (p && p.team) || (/^[A-Z]{2,3}$/.test(pid) ? pid : null);
+        if(t) teams[t] = 1;
+      }); });
+    });
     return { keep: keep, teams: teams, defTeams: defTeams };
   }
   function zTrimPlay(x, keep, defTeams){
@@ -14661,14 +14688,18 @@
     { id: 'root', title: 'Rooting guide', eyebrow: 'Games to watch' },
     { id: 'expo', title: 'My exposure', eyebrow: 'Your players, every league' },
     { id: 'wav', title: 'Waiver radar', eyebrow: 'Free agents who just scored' },
+    { id: 'top', title: 'Top scorers', eyebrow: 'Starters, every matchup' },
+    { id: 'plays', title: 'Biggest plays', eyebrow: 'Highest-scoring this week' },
+    { id: 'ou', title: 'Over / under performers', eyebrow: 'Actual vs projection' },
+    { id: 'hs', title: 'League high score', eyebrow: 'Median leagues' },
   ];
   const AM_TILE_CAP = 6, AM_WAV_MIN = 8, AM_EXPO_MAX = 40;
-  ctx.zone.am = { open: false, lid: null, mid: null, tilesOpen: false, on: { root: true, expo: true, wav: true }, expo: 'mine', game: null };
+  ctx.zone.am = { open: false, lid: null, mid: null, tilesOpen: false, on: { root: true, expo: true, wav: true, top: true, plays: true, ou: true, hs: false }, expo: 'mine', game: null, posf: { top: 'All', plays: 'All' } };
   try{
     const s = JSON.parse(localStorage.getItem('rv-am') || 'null');
-    if(s){ if(s.on) Object.keys(ctx.zone.am.on).forEach(function(k){ if(typeof s.on[k] === 'boolean') ctx.zone.am.on[k] = s.on[k]; }); if(/^(mine|against|both)$/.test(s.expo)) ctx.zone.am.expo = s.expo; if(s.lid) ctx.zone.am.lid = s.lid; }
+    if(s){ if(s.on) Object.keys(ctx.zone.am.on).forEach(function(k){ if(typeof s.on[k] === 'boolean') ctx.zone.am.on[k] = s.on[k]; }); if(/^(mine|against|both)$/.test(s.expo)) ctx.zone.am.expo = s.expo; if(s.lid) ctx.zone.am.lid = s.lid; if(s.posf) Object.keys(ctx.zone.am.posf).forEach(function(k){ if(typeof s.posf[k] === 'string') ctx.zone.am.posf[k] = s.posf[k]; }); }
   }catch(e){}
-  function amSave(){ const a = ctx.zone.am; zSave('rv-am', JSON.stringify({ on: a.on, expo: a.expo, lid: a.lid })); }
+  function amSave(){ const a = ctx.zone.am; zSave('rv-am', JSON.stringify({ on: a.on, expo: a.expo, lid: a.lid, posf: a.posf })); }
   // league short codes: initials (The League → TL, Last Minute League → LML); one word → its first letter + the first
   // letter of a sports ending it carries (BATTLEBALL → BB), else its first two letters
   function amCode(name){
@@ -14992,12 +15023,144 @@
         '<span class="am-xk">' + x.legs.length + ' open</span></div>';
     }).join('') + '</div>';
   }
+  // ---- phase 3 tiles: top scorers, biggest plays, over / under performers, league high score ----
+  // Every starter in every matchup of every league this week: pid -> [{ L, meta, rid, team, mine, opp }] (memoized)
+  function amStarters(){
+    const z = ctx.zone, key = z.week + ':' + z.leagues.map(function(L){ return (L.muTs || 0); }).join(',');
+    if(z._amSt && z._amSt.key === key) return z._amSt.v;
+    const out = {};
+    amLeagues().forEach(function(L){
+      const meta = z.meta[L.id], mu = L.muWeek === z.week ? L.mu : null;
+      if(!mu) return;
+      const mine = mu.find(function(m){ return m.roster_id === meta.rosterId; });
+      mu.forEach(function(e){
+        const opp = !!(mine && mine.matchup_id != null && e.matchup_id === mine.matchup_id && e.roster_id !== meta.rosterId);
+        (e.starters || []).forEach(function(pid){
+          if(!pid || pid === '0') return;
+          (out[pid] = out[pid] || []).push({ L: L, meta: meta, e: e, rid: e.roster_id, mine: e.roster_id === meta.rosterId, opp: opp });
+        });
+      });
+    });
+    z._amSt = { key: key, v: out };
+    return out;
+  }
+  const AM_POS_F = [['All'], ['Offense'], ['IDP'], ['QB'], ['RB'], ['WR'], ['TE'], ['K']];
+  function amPosOk(pid, f){
+    if(!f || f === 'All') return true;
+    const g = posGroup(pid);
+    if(f === 'Offense') return ['QB', 'RB', 'WR', 'TE', 'K'].indexOf(g) !== -1;
+    if(f === 'IDP') return IDP_GROUPS.indexOf(g) !== -1;
+    return g === f;
+  }
+  function amPosChips(tile){
+    const f = ctx.zone.am.posf[tile] || 'All', idp = amLeagues().some(function(L){ return /IDP/.test(amFormat(ctx.zone.meta[L.id])); });
+    return '<div class="am-pf" role="group" aria-label="Positions">' + AM_POS_F.filter(function(x){ return x[0] !== 'IDP' || idp; }).map(function(x){ return '<button type="button" data-am-pf="' + tile + '|' + x[0] + '" aria-pressed="' + (f === x[0]) + '">' + x[0] + '</button>'; }).join('') + '</div>';
+  }
+  function amPosTag(pid){ const g = posGroup(pid); return '<span class="am-pos" style="--pc:' + posColor(g) + '">' + escapeHTML(g === 'DEF' ? 'D/ST' : g) + '</span>'; }
+  function amWho(pid){ const p = ctx.players[pid] || {}; return p.position === 'DEF' ? (p.team || pid) + ' D/ST' : (p.first_name && p.last_name ? p.first_name.charAt(0) + '. ' + p.last_name : playerName(p) || pid); }
+  function amStarted(pid){ const p = ctx.players[pid] || {}, g = zGame(p.team || (p.position === 'DEF' ? pid : null), ctx.zone.week); return g ? g.state : 'bye'; }
+  function amSideCls(x){ return x.mine ? ' mine' : x.opp ? ' opp' : ''; }
+  // Top scorers: highest-scoring starters across every matchup, each in its own league (points aren't comparable across leagues)
+  function amTopHTML(){
+    const z = ctx.zone, S = amStarters(), f = z.am.posf.top, rows = [];
+    Object.keys(S).forEach(function(pid){
+      const st = amStarted(pid);
+      if((st !== 'in' && st !== 'post') || !amPosOk(pid, f)) return;
+      S[pid].forEach(function(x){
+        const v = (x.e.players_points || {})[pid];
+        if(typeof v === 'number') rows.push({ pid: pid, x: x, v: v, st: st });
+      });
+    });
+    rows.sort(function(a, b){ return b.v - a.v; });
+    const list = rows.slice(0, 25);
+    if(!list.length) return amPosChips('top') + '<p class="am-none">' + (Object.keys(S).length ? 'No starters have played yet this week.' : 'Loading matchups…') + '</p>';
+    return amPosChips('top') + '<div class="am-rows">' + list.map(function(r){
+      const t = zTeam(r.x.meta, r.x.rid);
+      return '<div class="am-pr' + amSideCls(r.x) + '" data-am-pl="' + escapeHTML(r.pid) + '" role="button" tabindex="0">' + amPosTag(r.pid) + '<span class="am-prn"><b>' + escapeHTML(amWho(r.pid)) + '</b><small>' + escapeHTML(t.name) + (r.x.mine ? ' · you' : r.x.opp ? ' · your opponent' : '') + (r.st === 'in' ? ' · live' : '') + '</small></span>' +
+        '<span class="am-lp">' + escapeHTML(amCode(r.x.L.name)) + '</span><b class="am-prv">' + fmtPts(r.v) + '</b></div>';
+    }).join('') + '</div>';
+  }
+  // Biggest plays: plays from the live feed, each worth what it scores for a starter in each league where he starts
+  function amPlaysHTML(){
+    const z = ctx.zone, F = z.feed, f = z.am.posf.plays;
+    if(!F || F.week !== z.week) return amPosChips('plays') + '<p class="am-none">' + (z.feedDiff ? 'Play-by-play is unavailable right now.' : 'Plays show up once this week’s games kick off.') + '</p>';
+    const S = amStarters(), key = F.v + ':' + (z._amSt && z._amSt.key);
+    if(!z._amPl || z._amPl.key !== key){
+      const out = [];
+      zFeedSortedPlays().forEach(function(pl){
+        Object.keys(pl.st || {}).forEach(function(pid){
+          const xs = S[pid], p = ctx.players[pid];
+          if(!xs || !p || p.position === 'DEF') return;
+          const seen = {}, legs = [];
+          xs.forEach(function(x){
+            if(seen[x.L.id]) return;
+            seen[x.L.id] = 1;
+            const v = calcPoints(pl.st[pid], x.meta.league.scoring_settings || {});
+            if(typeof v === 'number' && v > 0.004) legs.push({ L: x.L, v: v, mine: xs.some(function(y){ return y.L.id === x.L.id && y.mine; }), opp: xs.some(function(y){ return y.L.id === x.L.id && y.opp; }) });
+          });
+          if(!legs.length) return;
+          out.push({ pl: pl, pid: pid, legs: legs, v: Math.max.apply(null, legs.map(function(l){ return l.v; })) });
+        });
+      });
+      out.sort(function(a, b){ return b.v - a.v; });
+      z._amPl = { key: key, v: out.slice(0, 200) };
+    }
+    const list = z._amPl.v.filter(function(r){ return amPosOk(r.pid, f); }).slice(0, 20);
+    if(!list.length) return amPosChips('plays') + '<p class="am-none">No scoring plays for your leagues’ starters yet.</p>';
+    return amPosChips('plays') + '<div class="am-rows">' + list.map(function(r){
+      const p = ctx.players[r.pid] || {}, d = String(r.pl.d || '').replace(/\s+/g, ' ').trim();
+      return '<div class="am-pr play" data-am-pl="' + escapeHTML(r.pid) + '" role="button" tabindex="0">' + amPosTag(r.pid) + '<span class="am-prn"><b>' + escapeHTML(amWho(r.pid)) + '</b><small title="' + escapeHTML(d) + '">' + escapeHTML(zClock(r.pl) + ' · ' + (p.team || '') + (d ? ' · ' + d : '')) + '</small></span>' +
+        '<span class="am-lcs2">' + r.legs.map(function(l){ return '<span class="am-lp' + (l.mine ? ' mine' : l.opp ? ' opp' : '') + '">' + escapeHTML(amCode(l.L.name)) + '</span>'; }).join('') + '</span><b class="am-prv pos">+' + r.v.toFixed(2) + '</b></div>';
+    }).join('') + '</div>';
+  }
+  // Over / under: actual vs projection. Finished games count both ways; a live game only once he is already over.
+  function amOuHTML(){
+    const z = ctx.zone, S = amStarters(), rows = [];
+    Object.keys(S).forEach(function(pid){
+      const st = amStarted(pid);
+      if(st !== 'in' && st !== 'post') return;
+      let best = null;
+      S[pid].forEach(function(x){
+        const v = (x.e.players_points || {})[pid], pr = zProj(x.L, x.meta, pid);
+        if(typeof v !== 'number' || typeof pr !== 'number') return;
+        const d = v - pr;
+        if(st === 'in' && d <= 0) return;
+        if(!best || Math.abs(d) > Math.abs(best.d)) best = { x: x, v: v, pr: pr, d: d };
+      });
+      if(best) rows.push(Object.assign({ pid: pid, st: st, legs: S[pid] }, best));
+    });
+    rows.sort(function(a, b){ return Math.abs(b.d) - Math.abs(a.d); });
+    const list = rows.slice(0, 20);
+    if(!list.length) return '<p class="am-none">Gaps show up as games finish.</p>';
+    return '<div class="am-rows">' + list.map(function(r){
+      const p = ctx.players[r.pid] || {}, codes = {}, chips = r.legs.filter(function(x){ if(codes[x.L.id]) return false; codes[x.L.id] = 1; return true; }).map(function(x){ return '<span class="am-lp' + (x.mine ? ' mine' : x.opp ? ' opp' : '') + '">' + escapeHTML(amCode(x.L.name)) + '</span>'; }).join('');
+      return '<div class="am-pr" data-am-pl="' + escapeHTML(r.pid) + '" role="button" tabindex="0">' + amPosTag(r.pid) + '<span class="am-prn"><b>' + escapeHTML(amWho(r.pid)) + '</b><small>' + escapeHTML((p.team || '') + ' · ' + fmtPts(r.v) + ' vs ' + fmtPts(r.pr) + ' proj' + (r.st === 'in' ? ' · live' : '')) + '</small></span>' +
+        '<span class="am-lcs2">' + chips + '</span><span class="am-ou ' + (r.d > 0 ? 'over' : 'under') + '"><b>' + (r.d > 0 ? '+' : '−') + Math.abs(r.d).toFixed(2) + '</b><small>' + (r.d > 0 ? 'over' : 'under') + '</small></span></div>';
+    }).join('') + '</div>';
+  }
+  // League high score: leagues that also play the league median (Sleeper's league_average_match), with the week's leader
+  function amHsHTML(){
+    const z = ctx.zone, ls = amLeagues().filter(function(L){ const m = z.meta[L.id]; return m.league.settings && m.league.settings.league_average_match; });
+    if(!ls.length) return '<p class="am-none">None of your leagues play the league median, so there is no weekly high-score race to show.</p>';
+    return '<div class="am-rows">' + ls.map(function(L){
+      const meta = z.meta[L.id], mu = L.muWeek === z.week ? L.mu : null;
+      if(!mu || !mu.length) return '<div class="am-hs"><b>' + escapeHTML(L.name) + '</b><small>Loading…</small></div>';
+      const pts = mu.map(function(m){ return { rid: m.roster_id, v: m.points || 0 }; }).sort(function(a, b){ return b.v - a.v; }), n = pts.length;
+      const med = n % 2 ? pts[(n - 1) / 2].v : (pts[n / 2 - 1].v + pts[n / 2].v) / 2, me = pts.findIndex(function(x){ return x.rid === meta.rosterId; }), top = pts[0];
+      return '<div class="am-hs"><div class="am-hsh"><span class="am-lp">' + escapeHTML(amCode(L.name)) + '</span><b>' + escapeHTML(L.name) + '</b></div>' +
+        '<div class="am-hsr"><span>High</span><b>' + escapeHTML(zTeam(meta, top.rid).name) + '</b><em>' + fmtPts(top.v) + '</em></div>' +
+        '<div class="am-hsr"><span>Median</span><b></b><em>' + fmtPts(med) + '</em></div>' +
+        (me !== -1 ? '<div class="am-hsr you"><span>You</span><b>' + ordinal(me + 1) + ' of ' + n + ' · ' + (pts[me].v >= med ? 'above' : 'below') + ' the median</b><em>' + fmtPts(pts[me].v) + '</em></div>' : '') + '</div>';
+    }).join('') + '</div>';
+  }
+
   function amTilesHTML(){
     const a = ctx.zone.am, on = AM_TILES.filter(function(t){ return a.on[t.id]; });
-    const bar = '<div class="am-tbar"><span>Tiles · ' + on.length + ' of ' + AM_TILE_CAP + '</span>' + AM_TILES.map(function(t){ return '<button type="button" class="am-tt" data-am-tile="' + t.id + '" aria-pressed="' + !!a.on[t.id] + '">' + (a.on[t.id] ? '✓ ' : '+ ') + escapeHTML(t.title) + '</button>'; }).join('') + '</div>';
-    const body = function(t){ return t.id === 'root' ? amRootHTML() : t.id === 'expo' ? amExpoHTML() : amWaiverHTML(); };
+    const bar = '<div class="am-tbar"><span>Tiles · ' + on.length + ' of ' + AM_TILE_CAP + '</span>' + AM_TILES.map(function(t){ const full = !a.on[t.id] && on.length >= AM_TILE_CAP; return '<button type="button" class="am-tt' + (full ? ' full' : '') + '" data-am-tile="' + t.id + '" aria-pressed="' + !!a.on[t.id] + '"' + (full ? ' title="' + AM_TILE_CAP + ' tiles max: turn one off first"' : '') + '>' + (a.on[t.id] ? '✓ ' : '+ ') + escapeHTML(t.title) + '</button>'; }).join('') + '</div>';
+    const AM_BODY = { root: amRootHTML, expo: amExpoHTML, wav: amWaiverHTML, top: amTopHTML, plays: amPlaysHTML, ou: amOuHTML, hs: amHsHTML };
+    const body = function(t){ return AM_BODY[t.id](); };
     const tiles = on.map(function(t){ return '<section class="am-tile" data-tid="' + t.id + '"><div class="am-th"><small>' + escapeHTML(t.eyebrow) + '</small><b>' + escapeHTML(t.title) + '</b></div><div class="am-tb">' + body(t) + '</div></section>'; }).join('') +
-      (on.length < AM_TILES.length ? '<div class="am-tile am-open">Open slot<br><small>Turn on a tile above</small></div>' : '');
+      (on.length < AM_TILE_CAP && on.length < AM_TILES.length ? '<div class="am-tile am-open">Open slot<br><small>Turn on a tile above</small></div>' : '');
     return '<button type="button" class="am-acc" data-am-acc aria-expanded="' + !!a.tilesOpen + '"><span><b>Across leagues</b><small>' + on.length + ' tile' + (on.length === 1 ? '' : 's') + (on.length ? ' · ' + on.map(function(t){ return t.title.toLowerCase(); }).join(', ') : '') + '</small></span>' + CHEV + '</button>' +
       '<div class="am-tw">' + bar + '<div class="am-grid">' + tiles + '</div></div>';
   }
@@ -15062,6 +15225,8 @@
       if(!a.on[id] && n >= AM_TILE_CAP) return true;
       a.on[id] = !a.on[id]; amSave(); amRender(); return true;
     }
+    const pf = t.closest('[data-am-pf]');
+    if(pf){ const v = pf.getAttribute('data-am-pf').split('|'); a.posf[v[0]] = v[1]; amSave(); amRender(); return true; }
     const ex = t.closest('[data-am-expo]');
     if(ex){ a.expo = ex.getAttribute('data-am-expo'); amSave(); amRender(); return true; }
     const g = t.closest('[data-am-g]');
