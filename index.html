@@ -3037,6 +3037,8 @@
   .am-lg{ display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 38px; padding: 0 10px; border-radius: 999px; background: var(--surface-2); color: var(--text-2); font-size: 13px; font-weight: 700; }
   .am-lg[aria-selected="true"]{ background: var(--text); color: var(--bg); }
   .am-lg .am-lgn, .am-lg small{ display: none; } .am-lg small{ font-size: 10.5px; font-weight: 600; opacity: .7; }
+  .am-lgs{ grid-template-columns: repeat(var(--n, 5), minmax(0, 1fr)); } .am-lg{ padding: 0 6px; font-size: 12.5px; }
+  .am-list + .am-lh{ margin-top: 20px; }
   .am-dot{ width: 6px; height: 6px; border-radius: 50%; background: color-mix(in srgb, var(--text-3) 70%, transparent); flex: none; }
   .am-dot.live{ background: var(--danger); box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 22%, transparent); }
   .am-lh{ display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 8px; margin: 2px 2px 10px; }
@@ -14716,10 +14718,9 @@
     return (rec >= 1 ? 'PPR' : rec >= 0.5 ? 'Half PPR' : 'Standard') + (idp ? ' · IDP' : '');
   }
   function amLeagues(){ return ctx.zone.leagues.filter(function(L){ const m = ctx.zone.meta[L.id]; return m && m.rosterId !== null; }); }
-  function amLeague(){
-    const a = ctx.zone.am, ls = amLeagues();
-    return ls.find(function(L){ return L.id === a.lid; }) || ls[0] || null;
-  }
+  // the board's selection: 'all' (every league, the default), 'live' (live matchups in every league) or one league
+  function amSel(){ const a = ctx.zone.am; return a.lid === 'live' ? 'live' : amLeagues().some(function(L){ return L.id === a.lid; }) ? a.lid : 'all'; }
+  function amLeague(){ const id = amSel(); return amLeagues().find(function(L){ return L.id === id; }) || null; }
   // a side's expected final and its variance (the lineup's wpTeam, from Zone's per-league player rows)
   function amWpTeam(S){
     let mean = 0, v = 0;
@@ -14805,26 +14806,37 @@
   }
   function amRowHTML(P){
     const lead = P.B && P.started ? (P.A.pts > P.B.pts + 0.004 ? 1 : P.B.pts > P.A.pts + 0.004 ? -1 : 0) : 0;
-    return '<button type="button" class="am-mu' + (P.mine ? ' mine' : '') + (P.live ? ' live' : '') + (P.final ? ' final' : '') + '" data-am-mu="' + P.mid + '">' +
+    return '<button type="button" class="am-mu' + (P.mine ? ' mine' : '') + (P.live ? ' live' : '') + (P.final ? ' final' : '') + '" data-am-mu="' + escapeHTML(P.L.id) + '|' + P.mid + '">' +
       amWhen(P) + '<span class="am-ts">' + amSideHTML(P.ta, P.A, P, lead === 1, P.mine) + (P.B ? amSideHTML(P.tb, P.B, P, lead === -1, false) : '<span class="am-t"><span class="am-tn dim">No opponent</span></span>') + '</span>' +
       amWpBar(P) + '</button>';
   }
   function amBoardHTML(){
-    const a = ctx.zone.am, ls = amLeagues(), L = amLeague();
-    if(!L) return '<div class="am-empty">' + (ctx.zone.leagues.length ? 'Loading your leagues…' : 'No leagues.') + '</div>';
-    const sw = '<div class="am-lgs" role="tablist" aria-label="Leagues" style="--n:' + ls.length + '">' + ls.map(function(x){
-      const ps = amPairs(x), live = ps && ps.some(function(P){ return P.live; });
-      return '<button type="button" role="tab" class="am-lg" data-am-lg="' + escapeHTML(x.id) + '" aria-selected="' + (x.id === L.id) + '"><span class="am-dot' + (live ? ' live' : '') + '"></span><b class="am-lgn">' + escapeHTML(x.name) + '</b><b class="am-lgc">' + escapeHTML(amCode(x.name)) + '</b><small>' + escapeHTML(amFormat(ctx.zone.meta[x.id])) + '</small></button>';
-    }).join('') + '</div>';
-    const ps = amPairs(L), meta = ctx.zone.meta[L.id];
-    let list;
-    if(!ps) list = '<div class="am-empty">' + (L.muErr ? 'Couldn’t load this league’s matchups.' : 'Loading matchups…') + '</div>';
-    else if(!ps.length) list = '<div class="am-empty">No matchups in week ' + ctx.zone.week + '.</div>';
-    else list = ps.map(amRowHTML).join('');
-    const live = ps ? ps.filter(function(P){ return P.live; }).length : 0, pre = ps ? ps.filter(function(P){ return !P.started; }).length : 0, fin = ps ? ps.filter(function(P){ return P.final; }).length : 0;
-    const sum = [live ? live + ' live' : '', pre ? pre + ' not started' : '', fin ? fin + ' final' : ''].filter(Boolean).join(' · ');
-    return sw + '<div class="am-lh"><b>' + escapeHTML(L.name) + '</b><span>' + escapeHTML(amFormat(meta)) + ' · ' + ((meta && meta.rosters) || []).length + ' teams</span><em>' + escapeHTML(sum) + '</em></div><div class="am-list">' + list + '</div>';
+    const ls = amLeagues(), sel = amSel();
+    if(!ls.length) return '<div class="am-empty">' + (ctx.zone.leagues.length ? 'Loading your leagues…' : 'No leagues.') + '</div>';
+    const anyLive = ls.some(function(x){ const ps = amPairs(x); return ps && ps.some(function(P){ return P.live; }); });
+    const btn = function(id, name, code, sub, live){ return '<button type="button" role="tab" class="am-lg" data-am-lg="' + escapeHTML(id) + '" aria-selected="' + (sel === id) + '"><span class="am-dot' + (live ? ' live' : '') + '"></span><b class="am-lgn">' + escapeHTML(name) + '</b><b class="am-lgc">' + escapeHTML(code) + '</b>' + (sub ? '<small>' + escapeHTML(sub) + '</small>' : '') + '</button>'; };
+    const sw = '<div class="am-lgs" role="tablist" aria-label="Leagues" style="--n:' + (ls.length + 2) + '">' + btn('all', 'All', 'All', '', false) + btn('live', 'Live', 'Live', '', anyLive) +
+      ls.map(function(x){ const ps = amPairs(x); return btn(x.id, x.name, amCode(x.name), amFormat(ctx.zone.meta[x.id]), ps && ps.some(function(P){ return P.live; })); }).join('') + '</div>';
+    const sumOf = function(ps){
+      const live = ps.filter(function(P){ return P.live; }).length, pre = ps.filter(function(P){ return !P.started; }).length, fin = ps.filter(function(P){ return P.final; }).length;
+      return [live ? live + ' live' : '', pre ? pre + ' not started' : '', fin ? fin + ' final' : ''].filter(Boolean).join(' · ');
+    };
+    const block = function(L, onlyLive){
+      const ps = amPairs(L), meta = ctx.zone.meta[L.id];
+      let rows = ps ? (onlyLive ? ps.filter(function(P){ return P.live; }) : ps) : null;
+      if(onlyLive && (!rows || !rows.length)) return '';
+      const list = !rows ? '<div class="am-empty">' + (L.muErr ? 'Couldn’t load this league’s matchups.' : 'Loading matchups…') + '</div>'
+        : !rows.length ? '<div class="am-empty">No matchups in week ' + ctx.zone.week + '.</div>' : rows.map(amRowHTML).join('');
+      return '<div class="am-lh"><b>' + escapeHTML(L.name) + '</b><span>' + escapeHTML(amFormat(meta)) + ' · ' + ((meta && meta.rosters) || []).length + ' teams</span><em>' + escapeHTML(ps ? (onlyLive ? rows.length + ' live' : sumOf(ps)) : '') + '</em></div><div class="am-list">' + list + '</div>';
+    };
+    if(sel === 'all') return sw + ls.map(function(L){ return block(L, false); }).join('');
+    if(sel === 'live'){
+      const h = ls.map(function(L){ return block(L, true); }).join('');
+      return sw + (h || '<div class="am-empty">No matchups are live right now. They show up here as soon as a starter’s game kicks off.</div>');
+    }
+    return sw + block(amLeague(), false);
   }
+
 
   // ---- drill-down: two teams' starters, colored by my stake ----
   function amCell(r, side, lid, win){
@@ -15196,10 +15208,9 @@
   function amRender(){
     const z = ctx.zone, a = z.am, el = zoneView.querySelector('.am');
     if(!el || !a.open) return;
-    const L = amLeague();
-    if(L && a.lid !== L.id){ a.lid = L.id; }
-    const P = a.mid !== null && L ? (amPairs(L) || []).find(function(x){ return x.mid === a.mid; }) : null;
-    if(a.mid !== null && !P && amPairs(L)) a.mid = null;
+    const DL = a.mid !== null ? zLeague(a.dlid) : null;
+    const P = DL ? (amPairs(DL) || []).find(function(x){ return x.mid === a.mid; }) : null;
+    if(a.mid !== null && !P && (!DL || amPairs(DL))) a.mid = null;
     el.classList.toggle('drill', !!P);
     el.classList.toggle('tiles-open', !!a.tilesOpen);
     const board = el.querySelector('.am-board'), tiles = el.querySelector('.am-tiles');
@@ -15230,12 +15241,13 @@
     zoneView.querySelector('.zn-title b').textContent = ZONE_NAME;
     zoneRender(false);
   }
-  function amDrill(mid){
-    const a = ctx.zone.am;
-    a.mid = mid; amRender();
-    const el = zoneView.querySelector('.am'); if(el) el.scrollTop = 0;
+  function amDrill(lid, mid){
+    const a = ctx.zone.am, el = zoneView.querySelector('.am');
+    a.backY = el ? el.scrollTop : 0;
+    a.dlid = lid; a.mid = mid; amRender();
+    if(el) el.scrollTop = 0;
   }
-  function amBack(){ const a = ctx.zone.am; a.mid = null; amRender(); }
+  function amBack(){ const a = ctx.zone.am, el = zoneView.querySelector('.am'); a.mid = null; amRender(); if(el) el.scrollTop = a.backY || 0; }   // back to the same spot in the list
   // clicks inside the view (called from Zone's click handler; true = handled)
   function amClick(t){
     const a = ctx.zone.am;
@@ -15245,7 +15257,7 @@
     const lg = t.closest('[data-am-lg]');
     if(lg){ a.lid = lg.getAttribute('data-am-lg'); a.mid = null; amSave(); amRender(); return true; }
     const mu = t.closest('[data-am-mu]');
-    if(mu){ amDrill(Number(mu.getAttribute('data-am-mu'))); return true; }
+    if(mu){ const v = mu.getAttribute('data-am-mu').split('|'); amDrill(v[0], Number(v[1])); return true; }
     const tt = t.closest('[data-am-tile]');
     if(tt){
       const id = tt.getAttribute('data-am-tile'), n = AM_TILES.filter(function(x){ return a.on[x.id]; }).length;
