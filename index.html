@@ -3025,6 +3025,139 @@
   /* ============ Sleepa Zone: every league at once ============ */
   /* Impact colors (Phase 2 feed): always the effect on ME. Soft versions of the existing palette. */
   :root{ --impact-pos: var(--accent); --impact-neg: var(--danger); --impact-mixed: var(--warn); --impact-neutral: var(--text-3); }
+  /* ---- Sleepa Zone: All matchups ---- */
+  .am{ display: none; }
+  .zn.am-on .am{ display: flex; flex-direction: column; height: 100%; overflow-y: auto; overscroll-behavior: contain; box-sizing: border-box; padding: 12px 14px calc(env(safe-area-inset-bottom) + 28px); }
+  .zn.am-on .zn-car, .zn.am-on .zn-alt, .zn.am-on .zn-bot, .zn.am-on [data-zn-mode]{ display: none !important; }
+  .zn-am-btn[aria-pressed="true"]{ background: var(--text); color: var(--bg); }
+  .am-board{ min-width: 0; }
+  .am-empty{ padding: 28px 8px; text-align: center; color: var(--text-3); font-size: 13.5px; }
+  /* league switcher: names on desktop, short codes in equal pills on phones */
+  .am-lgs{ display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); gap: 6px; margin: 0 0 12px; }
+  .am-lg{ display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 38px; padding: 0 10px; border-radius: 999px; background: var(--surface-2); color: var(--text-2); font-size: 13px; font-weight: 700; }
+  .am-lg[aria-selected="true"]{ background: var(--text); color: var(--bg); }
+  .am-lg .am-lgn, .am-lg small{ display: none; } .am-lg small{ font-size: 10.5px; font-weight: 600; opacity: .7; }
+  .am-dot{ width: 6px; height: 6px; border-radius: 50%; background: color-mix(in srgb, var(--text-3) 70%, transparent); flex: none; }
+  .am-dot.live{ background: var(--danger); box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 22%, transparent); }
+  .am-lh{ display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 8px; margin: 2px 2px 10px; }
+  .am-lh b{ font-size: 18px; } .am-lh span{ font-size: 12px; color: var(--text-3); } .am-lh em{ margin-left: auto; font-style: normal; font-size: 12px; color: var(--text-2); }
+  /* matchup rows */
+  .am-list{ display: grid; gap: 8px; }
+  .am-mu{ display: grid; grid-template-columns: 50px minmax(0, 1fr); grid-template-areas: "st ts" "wp wp"; align-items: center; gap: 8px 10px; width: 100%; padding: 10px 12px; border-radius: 14px;
+    background: var(--surface-2); color: var(--text); text-align: left; font-weight: 400; transition: background .15s var(--ease), box-shadow .15s var(--ease); }
+  @media (hover: hover){ .am-mu:hover{ background: var(--surface-3); } }
+  .am-mu.mine{ background: color-mix(in srgb, var(--accent) 8%, var(--surface-2)); box-shadow: inset 0 0 0 1.5px var(--accent); }
+  .am-mu.final{ opacity: .82; }
+  .am-st{ grid-area: st; display: flex; flex-direction: column; gap: 2px; font-size: 11px; color: var(--text-3); }
+  .am-st b{ display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--text-2); }
+  .am-st.live b{ color: var(--danger); } .am-st .live-dot{ width: 6px; height: 6px; margin: 0; }
+  .am-ts{ grid-area: ts; display: grid; gap: 5px; min-width: 0; }
+  .am-t{ display: flex; align-items: center; gap: 7px; min-width: 0; }
+  .am-tn{ flex: 1; min-width: 0; font-size: 13.5px; font-weight: 600; color: var(--text-2); overflow-wrap: anywhere; line-height: 1.25; }
+  .am-t.lead .am-tn{ color: var(--text); font-weight: 700; } .am-tn.dim{ color: var(--text-3); font-weight: 500; }
+  .am-you{ flex: none; font-size: 9.5px; font-weight: 800; letter-spacing: .04em; padding: 1px 5px; border-radius: 5px; background: var(--accent); color: var(--on-accent); }
+  .am-sc{ flex: none; display: flex; flex-direction: column; align-items: flex-end; line-height: 1.1; }
+  .am-pts{ font-size: 17px; font-weight: 750; font-variant-numeric: tabular-nums; color: var(--text-2); }
+  .am-t.lead .am-pts{ color: var(--text); } .am-pts.pre{ color: var(--text-3); font-weight: 600; }
+  .am-pj{ font-size: 10.5px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+  .am-wp{ grid-area: wp; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; font-size: 11px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+  .am-wp.none{ display: block; color: var(--text-3); }
+  .am-wpb{ display: block; height: 5px; border-radius: 3px; background: color-mix(in srgb, var(--text) 12%, transparent); overflow: hidden; }
+  .am-wpb i{ display: block; height: 100%; border-radius: 3px; background: var(--text-3); transition: width .5s var(--ease); }
+  .am-wp.mine .am-wpb i, .am-wpbig.mine .am-wpb i{ background: var(--accent); } .am-wp.mine.behind .am-wpb i, .am-wpbig.mine.behind .am-wpb i{ background: var(--warn); }
+  /* drill-down */
+  .am-drill{ display: grid; gap: 12px; }
+  .am-dh{ display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .am-dt{ min-width: 0; } .am-dt b{ display: block; font-size: 17px; line-height: 1.25; } .am-dt span{ font-size: 12px; color: var(--text-3); }
+  .am-dt .live-dot{ width: 6px; height: 6px; margin: 0 3px 0 2px; }
+  .am-db{ display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 10px; padding: 14px; border-radius: var(--radius-lg); background: var(--surface); border: 1px solid var(--hair); }
+  .am-db.mine{ box-shadow: inset 0 0 0 1.5px var(--accent); }
+  .am-ds{ display: grid; justify-items: start; gap: 3px; min-width: 0; } .am-ds.them{ justify-items: end; text-align: right; }
+  .am-dn{ font-size: 14px; font-weight: 650; max-width: 100%; overflow-wrap: anywhere; }
+  .am-dp{ font-size: 30px; font-weight: 800; line-height: 1.05; font-variant-numeric: tabular-nums; } .am-dp.pre{ color: var(--text-3); }
+  .am-ds small{ font-size: 11.5px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+  .am-lead{ font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: 2px 7px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); }
+  .am-dvs{ color: var(--text-3); font-size: 12px; }
+  .am-wpl{ display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; margin-bottom: 5px; font-variant-numeric: tabular-nums; } .am-wpl span{ color: var(--text-3); font-size: 11px; }
+  .am-wpbig .am-wpb{ height: 7px; }
+  .am-sent{ margin: 0; font-size: 13px; color: var(--text-2); line-height: 1.5; } .am-sent b{ color: var(--text); }
+  .am-dg{ display: grid; gap: 14px; align-items: start; }
+  .am-zc .zc-c.am-mine .zc-n{ color: var(--impact-pos); } .am-zc .zc-c.am-opp .zc-n{ color: var(--impact-neg); } .am-zc .zc-c.am-both .zc-n{ color: var(--impact-mixed); }
+  .am-zc .zc-c.am-mine .zc-i{ box-shadow: 0 0 0 2px var(--surface-2), 0 0 0 3.5px var(--impact-pos); }
+  .am-zc .zc-c.am-opp .zc-i{ box-shadow: 0 0 0 2px var(--surface-2), 0 0 0 3.5px var(--impact-neg); }
+  .am-zc .zc-c.am-both .zc-i{ box-shadow: 0 0 0 2px var(--surface-2), 0 0 0 3.5px var(--impact-mixed); }
+  .am-chip{ flex: none; font-size: 9px; font-weight: 800; letter-spacing: .02em; padding: 0 4px; border-radius: 4px; line-height: 1.55; }
+  .am-chip.mine{ background: color-mix(in srgb, var(--impact-pos) 16%, transparent); color: var(--impact-pos); }
+  .am-chip.opp{ background: color-mix(in srgb, var(--impact-neg) 14%, transparent); color: var(--impact-neg); }
+  .am-chip.both{ background: color-mix(in srgb, var(--impact-mixed) 18%, transparent); color: var(--impact-mixed); }
+  .am-stake{ display: grid; gap: 7px; align-content: start; padding: 12px; border-radius: var(--radius-lg); background: var(--surface); border: 1px solid var(--hair); }
+  .am-sth{ font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+  .am-sr{ display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 8px; align-items: center; font-size: 13px; }
+  .am-sr small{ display: block; font-size: 11px; color: var(--text-3); line-height: 1.3; }
+  .am-sr em{ font-style: normal; font-weight: 700; font-variant-numeric: tabular-nums; } .am-sr em i{ font-style: normal; font-weight: 600; color: var(--text-3); }
+  .ph.am-si, .ph.am-xi{ width: 30px; height: 30px; }
+  .am-sr.am-mine b{ color: var(--impact-pos); } .am-sr.am-opp b{ color: var(--impact-neg); } .am-sr.am-both b{ color: var(--impact-mixed); }
+  .am-net{ display: flex; justify-content: space-between; gap: 10px; border-top: 1px solid var(--hair); padding-top: 8px; font-size: 13px; } .am-net b{ color: var(--accent); font-variant-numeric: tabular-nums; }
+  /* tiles */
+  .am-tiles{ min-width: 0; }
+  .am-acc{ display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 12px; padding: 12px 14px; border-radius: 14px; background: var(--surface-2); color: var(--text); text-align: left; font-weight: 600; }
+  .am-acc small{ display: block; margin-top: 2px; font-size: 11.5px; font-weight: 500; color: var(--text-3); }
+  .am-acc svg{ width: 18px; height: 18px; flex: none; color: var(--text-3); transition: transform .2s var(--ease); }
+  .am.tiles-open .am-acc svg{ transform: rotate(180deg); }
+  .am-tw{ display: none; }
+  .am.tiles-open .am-tw{ display: block; margin-bottom: 16px; }
+  .am-tbar{ display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 10px; }
+  .am-tbar > span{ font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); margin-right: 4px; }
+  .am-tt{ min-height: 30px; padding: 0 11px; border-radius: 999px; background: var(--surface-2); color: var(--text-2); font-size: 12px; font-weight: 600; }
+  .am-tt[aria-pressed="true"]{ background: var(--text); color: var(--bg); }
+  .am-grid{ display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
+  .am-tile{ display: flex; flex-direction: column; min-width: 0; max-height: 460px; padding: 12px 14px; border-radius: var(--radius-lg); background: var(--surface); border: 1px solid var(--hair); box-sizing: border-box; }
+  .am-th small{ display: block; font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); } .am-th b{ font-size: 16px; }
+  .am-tb{ flex: 1; min-height: 0; overflow-y: auto; margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
+  .am-open{ min-height: 120px; align-items: center; justify-content: center; text-align: center; color: var(--text-3); font-size: 13px; background: none; border: 1.5px dashed color-mix(in srgb, var(--text) 20%, transparent); }
+  .am-rows{ display: grid; gap: 6px; }
+  .am-none{ margin: 4px 0; font-size: 13px; color: var(--text-3); }
+  .am-todo{ margin: 0; font-size: 12.5px; color: var(--text-2); } .am-fine{ margin: 2px 0 0; font-size: 11px; color: var(--text-3); line-height: 1.4; }
+  .am-seg{ width: fit-content; flex: none; } .am-seg button{ font-size: 12px; padding: 5px 11px; min-height: 28px; }
+  .am-rg{ display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 6px 8px; align-items: start; padding: 8px 10px; border-radius: 12px; background: var(--surface-2); cursor: pointer; }
+  .am-rg.top{ box-shadow: inset 3px 0 0 var(--accent); } .am-rg.done{ opacity: .6; }
+  .am-gst{ font-size: 10.5px; font-weight: 700; color: var(--text-2); padding: 2px 4px; border-radius: 6px; box-shadow: inset 0 0 0 1px var(--hair); text-align: center; white-space: nowrap; }
+  .am-gst.live{ color: var(--danger); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--danger) 40%, transparent); }
+  .am-rgm{ min-width: 0; font-size: 13px; } .am-rgm small{ display: block; font-size: 11.5px; color: var(--text-3); } .am-rgm .dim{ color: var(--text-3); }
+  .am-lcs{ display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+  .am-lc, .am-lp{ font-size: 10.5px; font-weight: 700; padding: 1px 6px; border-radius: 6px; background: var(--surface-3); color: var(--text-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .am-lc.up{ color: var(--accent); } .am-lc.dn{ color: var(--warn); }
+  .am-rgv{ text-align: right; } .am-rgv b{ font-size: 15px; font-variant-numeric: tabular-nums; } .am-rgv small{ display: block; font-size: 10.5px; color: var(--text-3); }
+  .am-gd{ grid-column: 1 / -1; display: grid; gap: 6px; padding-top: 4px; border-top: 1px solid var(--hair); }
+  .am-gl{ display: flex; flex-wrap: wrap; gap: 3px 10px; align-items: center; font-size: 12px; } .am-gl b{ width: 100%; font-size: 11px; color: var(--text-3); }
+  .am-gp.mine{ color: var(--impact-pos); } .am-gp.opp{ color: var(--impact-neg); } .am-gp i{ font-style: normal; color: var(--text-3); }
+  .am-xr{ display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; grid-template-areas: "i n k" "i c c"; gap: 3px 8px; align-items: center; padding: 7px 9px; border-radius: 12px; background: var(--surface-2); }
+  .am-xr > .ph{ grid-area: i; } .am-xn{ grid-area: n; min-width: 0; } .am-xc{ grid-area: c; display: flex; flex-wrap: wrap; gap: 4px; } .am-xk{ grid-area: k; font-size: 11px; font-weight: 700; color: var(--text-3); white-space: nowrap; }
+  .am-xn b{ display: block; font-size: 13px; font-weight: 650; overflow-wrap: anywhere; line-height: 1.25; } .am-xn small{ font-size: 11px; color: var(--text-3); }
+  .am-lp b{ color: var(--text); } .am-lp b.pj{ color: var(--text-3); font-weight: 600; }
+  .am-lp.mine{ background: color-mix(in srgb, var(--impact-pos) 14%, transparent); color: var(--impact-pos); }
+  .am-lp.opp{ background: color-mix(in srgb, var(--impact-neg) 12%, transparent); color: var(--impact-neg); }
+  .am-xr.am-mine{ box-shadow: inset 3px 0 0 var(--impact-pos); } .am-xr.am-opp{ box-shadow: inset 3px 0 0 var(--impact-neg); } .am-xr.am-both{ box-shadow: inset 3px 0 0 var(--impact-mixed); }
+  .am-xr.wav{ cursor: pointer; } @media (hover: hover){ .am-xr.wav:hover, .am-rg:hover{ background: var(--surface-3); } }
+  /* desktop: league board left, tile board right; the drill-down takes the full width */
+  @media (min-width: 900px){
+    .zn.am-on .am{ display: grid; grid-template-columns: minmax(400px, 560px) minmax(0, 1fr); grid-template-areas: "board tiles"; gap: 18px; align-items: start; align-content: start; padding: 16px 24px 28px; }
+    .zn.am-on .am.drill{ grid-template-columns: minmax(0, 1fr); grid-template-areas: "board"; }
+    .am-board{ grid-area: board; padding: 14px; border-radius: var(--radius-lg); background: var(--surface); border: 1px solid var(--hair); }
+    .am.drill .am-board{ padding: 0; background: none; border: 0; }
+    .am-tiles{ grid-area: tiles; } .am.drill .am-tiles{ display: none; }
+    .am-acc{ display: none; } .am-tw{ display: block !important; margin: 0 !important; }
+    .am-grid{ grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+    .am-tile{ height: 420px; max-height: none; }
+    .am-lgs{ display: flex; flex-wrap: wrap; } .am-lg{ justify-content: flex-start; padding: 0 14px; }
+    .am-lg .am-lgn, .am-lg small{ display: inline; } .am-lg .am-lgc{ display: none; }
+    .am-mu{ grid-template-columns: 58px minmax(0, 1fr) 132px; grid-template-areas: "st ts wp"; }
+    .am-wp{ grid-template-columns: 1fr; gap: 4px; }
+    .am-sc{ flex-direction: row; align-items: baseline; gap: 8px; } .am-pj{ min-width: 72px; text-align: right; }
+    .am-dg:has(.am-stake){ grid-template-columns: minmax(0, 1fr) 300px; }
+    .am-dp{ font-size: 36px; }
+  }
+
   .zn{ position: fixed; inset: 0; z-index: 48; background: var(--bg); display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; container-type: inline-size; container-name: zn; }
   .zn[hidden]{ display: none; }
   html.zone-open, html.zone-open body{ overflow: hidden; }
@@ -13107,8 +13240,8 @@
   const ZONE_RZ_POS = { QB: 1, RB: 1, WR: 1, TE: 1, K: 1 };   // offensive players: "in the red zone" means their team has the ball inside the 20
   ctx.zone = { open: false, week: 0, mode: 'car', idx: 0, leagues: [], meta: {}, games: null, gamesWeek: 0, gamesTs: 0, scores: null, scoresWeek: 0, scoresTs: 0,
     projRaw: null, projWeek: 0, projTs: 0, ts: 0, busy: false, failed: false, loadId: 0, built: false,
-    dense: 'detailed', collapsed: {}, photos: true, focus: null, feedMin: false };
-  // grid detail level, leagues whose players are hidden, photos on/off: remembered on this device
+    dense: 'detailed', collapsed: {}, focus: null, feedMin: false };
+  // grid detail level, leagues whose players are hidden, live feed open / collapsed: remembered on this device
   try{
     ctx.zone.dense = localStorage.getItem('rv-zone-dense') === 'condensed' ? 'condensed' : 'detailed';
     ctx.zone.collapsed = JSON.parse(localStorage.getItem('rv-zone-collapsed') || '{}') || {};
@@ -13212,12 +13345,12 @@
       },
       apply: function(){ return true; } },
     // raw stats for the week (desktop stat lines; Sleeper caches this for 5 minutes, so every 3 is plenty)
-    { name: 'stats', gap: 3 * 60 * 1000, optional: true, when: function(){ return zoneWide(); },
+    { name: 'stats', gap: 3 * 60 * 1000, optional: true, when: function(){ return zoneWide() || ctx.zone.am.open; },
       run: function(week){ return fetchJSON(UNOFFICIAL + '/stats/nfl/' + ctx.season + '/' + week + '?season_type=regular&' + zonePositions().map(function(p){ return 'position[]=' + p; }).join('&')); },
       apply: function(arr, week){
         const out = {};
         (Array.isArray(arr) ? arr : []).forEach(function(e){ if(e && e.player_id && e.stats) out[e.player_id] = e.stats; });
-        ctx.zone.stats = out; ctx.zone.statsWeek = week; return true;
+        ctx.zone.stats = out; ctx.zone.statsWeek = week; ctx.zone.statsTs = Date.now(); return true;
       } },
     { name: 'projections', gap: ZONE_PROJ_GAP, run: zoneFetchProj,
       apply: function(p, week){ ctx.zone.projRaw = p; ctx.zone.projWeek = week; ctx.zone.projTs = Date.now(); ctx.zone.leagues.forEach(function(L){ L.pp = {}; }); return true; } },
@@ -13921,11 +14054,12 @@
         '<button type="button" class="pr-exit" data-zn-exit aria-label="Leave ' + ZONE_NAME + '">' + ICO.back + '<span>Back</span></button>' +
         '<div class="zn-title"><b>' + ZONE_NAME + '</b><span id="zn-sub"></span></div>' +
         '<div class="wk-seg zn-wk" role="group" aria-label="Week"><button type="button" data-zn-wk="-1" aria-label="Previous week">‹</button><span id="zn-wk-l"></span><button type="button" data-zn-wk="1" aria-label="Next week">›</button></div>' +
+        '<button type="button" class="zn-btn zn-am-btn" data-zn-am aria-pressed="false" title="Every matchup in every league"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3.5" y="4" width="7.5" height="4.5" rx="1.2"/><rect x="13" y="4" width="7.5" height="4.5" rx="1.2"/><rect x="3.5" y="10" width="7.5" height="4.5" rx="1.2"/><rect x="13" y="10" width="7.5" height="4.5" rx="1.2"/><rect x="3.5" y="16" width="7.5" height="4.5" rx="1.2"/><rect x="13" y="16" width="7.5" height="4.5" rx="1.2"/></svg><span>All matchups</span></button>' +
         '<button type="button" class="zn-btn" data-zn-mode aria-pressed="false"></button>' +
         '<button type="button" class="zn-btn zn-ref" data-zn-ref aria-label="Refresh scores">' + ICO.ref + '<span data-zn-ago></span></button>' +
         '<button type="button" class="zn-btn zn-ico" data-zone-guide aria-label="How ' + ZONE_NAME + ' reads the game">' + ICO.info + '</button>' +
       '</header>' +
-      '<main class="zn-main"><div class="zn-car" tabindex="-1"></div>' +
+      '<main class="zn-main"><div class="am"><div class="am-tiles"></div><div class="am-board"></div></div><div class="zn-car" tabindex="-1"></div>' +
         '<div class="zn-alt" hidden><div class="zn-gcol">' +
           '<div class="zn-gbar"><div class="wk-seg zn-dense" role="group" aria-label="Detail"><button type="button" data-zn-dense="detailed">Detailed</button><button type="button" data-zn-dense="condensed">Condensed</button></div>' +
           '<button type="button" class="zn-btn" data-zn-hideall></button><span class="zn-gtip">Click a league’s header to focus on it</span></div>' +
@@ -13984,7 +14118,7 @@
   // a fantasy team's picture: the manager's Sleeper avatar, or the team's initials (same look as Compare's teamAvHTML)
   function zAvHTML(t, cls){
     if(!t) return '';
-    const ini = String(t.name || '').replace(/[^A-Za-z0-9 ]/g, '').split(/s+/).filter(Boolean).slice(0, 2).map(function(w){ return w.charAt(0).toUpperCase(); }).join('') || '?';
+    const ini = String(t.name || '').replace(/[^A-Za-z0-9 ]/g, '').split(/\s+/).filter(Boolean).slice(0, 2).map(function(w){ return w.charAt(0).toUpperCase(); }).join('') || '?';
     return '<span class="t-av ' + (cls || '') + '" aria-hidden="true"><b>' + escapeHTML(ini) + '</b>' + (t.av ? '<img src="' + escapeHTML(t.av) + '" alt="" loading="lazy" onerror="this.remove()">' : '') + '</span>';
   }
   function zTeamHTML(t){ return t ? zAvHTML(t, 'zav') + '<span>' + escapeHTML(t.name) + '</span>' : ''; }
@@ -14008,6 +14142,7 @@
       : '<span class="zn-lcsum ok">Lineups set ✓</span>');
     document.getElementById('zn-wk-l').textContent = 'Wk ' + z.week;
     zoneRenderBar();
+    if(z.am.open) amRender();
     zoneView.querySelector('[data-zn-wk="-1"]').disabled = z.week <= 1;
     zoneView.querySelector('[data-zn-wk="1"]').disabled = z.week >= MAX_PLAN_WEEK;
     zoneRenderAgo();
@@ -14381,7 +14516,7 @@
       const old = z.leagues.find(function(L){ return L.id === l.league_id; });
       return { id: l.league_id, name: l.name, src: l, mu: old && old.mu, muWeek: old && old.muWeek, muTs: old && old.muTs, pp: {} };
     });
-    z.prev = {}; z.focus = null;
+    z.prev = {}; z.focus = null; z.am.open = false; z.am.mid = null; zoneView.classList.remove('am-on');
     zoneSources.forEach(function(s){ s.ts = 0; s.week = 0; });
     z.idx = Math.max(0, z.leagues.findIndex(function(L){ return ctx.league && L.id === ctx.league.league_id; }));
     z.open = true;
@@ -14439,7 +14574,8 @@
     if(bd){ e.stopPropagation(); zoneBreakdown(bd); return; }
     if(bdEl && !bdEl.hidden && !bdEl.contains(t)){ closeBreakdown(); return; }   // a tap outside just closes it
     if(Date.now() - zDragMoved < 400) return;   // the end of a ring drag isn't a click
-    if(t.closest('[data-zn-exit]')){ zoneClose(); return; }
+    if(t.closest('[data-zn-exit]')){ if(ctx.zone.am.open){ if(ctx.zone.am.mid !== null) amBack(); else amClose(); return; } zoneClose(); return; }
+    if(amClick(t)) return;
     if(t.closest('[data-zn-ref]')){ zoneRefresh({ force: true }); return; }
     const lcg = t.closest('[data-zn-lcgo]');
     if(lcg){
@@ -14498,10 +14634,11 @@
       e.preventDefault(); e.stopImmediatePropagation();
       const bd = zoneView.querySelector('.zbd');
       if(bd && !bd.hidden){ closeBreakdown(); return; }
+      if(ctx.zone.am.open){ if(ctx.zone.am.mid !== null) amBack(); else amClose(); return; }
       if(ctx.zone.focus){ zoneFocus(null); return; }
       zoneClose(); return;
     }
-    if((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('zn-tile')){ e.preventDefault(); e.target.click(); return; }
+    if((e.key === 'Enter' || e.key === ' ') && e.target.classList && (e.target.classList.contains('zn-tile') || e.target.hasAttribute('data-am-g') || e.target.hasAttribute('data-am-pl'))){ e.preventDefault(); e.target.click(); return; }
     if(ctx.zone.mode !== 'car' || !zoneGuide.hidden || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') || e.altKey || e.metaKey || e.ctrlKey) return;
     if(document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) return;
     e.preventDefault();
@@ -14512,6 +14649,442 @@
     const b = e.target.closest && e.target.closest('[data-zone-open]');
     if(b){ e.preventDefault(); zoneOpen(); }
   });
+
+  // ============ Sleepa Zone: All matchups ============
+  // Every matchup in every one of my leagues (not just mine), a drill-down into any of them colored by my stake, and
+  // cross-league tiles (rooting guide, my exposure, waiver radar). Spec: "Sleepa Zone all-matchups view" (Oct 7 2026).
+  // Data: Zone already loads each league's full week of matchups (L.mu, every team, players_points scored in that
+  // league's settings), the projections and game states; waiver radar uses Zone's weekly raw stats (ctx.zone.stats).
+  // Win probability is the lineup's formula (winProb: expected finals + a typical swing per player), so it runs for
+  // every matchup at once.
+  const AM_TILES = [
+    { id: 'root', title: 'Rooting guide', eyebrow: 'Games to watch' },
+    { id: 'expo', title: 'My exposure', eyebrow: 'Your players, every league' },
+    { id: 'wav', title: 'Waiver radar', eyebrow: 'Free agents who just scored' },
+  ];
+  const AM_TILE_CAP = 6, AM_WAV_MIN = 8, AM_EXPO_MAX = 40;
+  ctx.zone.am = { open: false, lid: null, mid: null, tilesOpen: false, on: { root: true, expo: true, wav: true }, expo: 'mine', game: null };
+  try{
+    const s = JSON.parse(localStorage.getItem('rv-am') || 'null');
+    if(s){ if(s.on) Object.keys(ctx.zone.am.on).forEach(function(k){ if(typeof s.on[k] === 'boolean') ctx.zone.am.on[k] = s.on[k]; }); if(/^(mine|against|both)$/.test(s.expo)) ctx.zone.am.expo = s.expo; if(s.lid) ctx.zone.am.lid = s.lid; }
+  }catch(e){}
+  function amSave(){ const a = ctx.zone.am; zSave('rv-am', JSON.stringify({ on: a.on, expo: a.expo, lid: a.lid })); }
+  // league short codes: initials (The League → TL, Last Minute League → LML); one word → its first letter + the first
+  // letter of a sports ending it carries (BATTLEBALL → BB), else its first two letters
+  function amCode(name){
+    const w = String(name || '').replace(/[\u0027\u2019]/g, '').replace(/[^A-Za-z0-9 ]/g, ' ').split(/\s+/).filter(Boolean);
+    if(w.length > 1) return w.slice(0, 3).map(function(x){ return x.charAt(0).toUpperCase(); }).join('');
+    const one = (w[0] || '?').toUpperCase(), m = one.match(/^(.+?)(BALL|BOWL|LEAGUE|BASH|CUP|WARS?|FEST|DOME|ZONE|CLUB)$/);
+    return m ? m[1].charAt(0) + m[2].charAt(0) : one.slice(0, 2);
+  }
+  function amFormat(meta){
+    const sc = (meta && meta.league && meta.league.scoring_settings) || {}, rec = sc.rec || 0;
+    const idp = (meta && meta.slots || []).some(function(s){ return (FLEX_GROUPS[s] || [s]).some(function(x){ return IDP_GROUPS.indexOf(x) !== -1; }); });
+    return (rec >= 1 ? 'PPR' : rec >= 0.5 ? 'Half PPR' : 'Standard') + (idp ? ' · IDP' : '');
+  }
+  function amLeagues(){ return ctx.zone.leagues.filter(function(L){ const m = ctx.zone.meta[L.id]; return m && m.rosterId !== null; }); }
+  function amLeague(){
+    const a = ctx.zone.am, ls = amLeagues();
+    return ls.find(function(L){ return L.id === a.lid; }) || ls[0] || null;
+  }
+  // a side's expected final and its variance (the lineup's wpTeam, from Zone's per-league player rows)
+  function amWpTeam(S){
+    let mean = 0, v = 0;
+    S.rows.forEach(function(r){
+      if(r.empty) return;
+      mean += r.fin || 0;
+      if(r.state !== 'pre' && r.state !== 'in') return;
+      const frac = r.state === 'pre' ? 1 : remainingFrac(r.g).f, own = volatility(r.pid), base = WP_CV[posGroup(r.pid)] || 0.5;
+      const cv = own ? (base + Math.max(0.3, Math.min(1, own))) / 2 : base, sd = Math.max(3, r.proj || 0) * cv;
+      v += sd * sd * frac;
+    });
+    return { mean: mean, v: v };
+  }
+  // every matchup of the week in a league, mine first, then live, upcoming, final
+  function amPairs(L){
+    const z = ctx.zone, meta = z.meta[L.id], mu = L.muWeek === z.week ? L.mu : null;
+    if(!meta || !mu) return null;
+    const key = (L.muTs || 0) + ':' + z.week + ':' + (z.projTs || 0) + ':' + (z.gamesTs || 0);
+    if(L._am && L._am.key === key) return L._am.v;
+    const by = {};
+    mu.forEach(function(e){ if(e.matchup_id != null) (by[e.matchup_id] = by[e.matchup_id] || []).push(e); });
+    const out = Object.keys(by).map(function(k){
+      let a = by[k][0], b = by[k][1] || null;
+      if(b && b.roster_id === meta.rosterId){ const t = a; a = b; b = t; }   // mine on the left
+      const A = zSide(L, meta, a, z.week), B = b ? zSide(L, meta, b, z.week) : null;
+      const P = { mid: Number(k), L: L, meta: meta, a: a, b: b, A: A, B: B, ta: zTeam(meta, a.roster_id), tb: b ? zTeam(meta, b.roster_id) : null, mine: a.roster_id === meta.rosterId };
+      P.started = A.started || !!(B && B.started);
+      P.live = A.inG + (B ? B.inG : 0) > 0;
+      P.final = P.started && A.allFinal && (!B || B.allFinal);
+      P.toPlay = A.pre + A.inG + (B ? B.pre + B.inG : 0);
+      P.wp = B ? winProb(amWpTeam(A), amWpTeam(B)) : null;
+      [A, B].forEach(function(s){ if(s) s.rows.forEach(function(r){ if(r.state === 'pre' && r.g && r.g.kick && (!P.kick || r.g.kick < P.kick)) P.kick = r.g.kick; }); });
+      P.group = P.mine ? -1 : P.live ? 0 : P.final ? 2 : 1;
+      return P;
+    }).sort(function(x, y){ return x.group - y.group || (x.kick || 0) - (y.kick || 0) || x.mid - y.mid; });
+    L._am = { key: key, v: out };
+    return out;
+  }
+  // my stake in a player: the leagues where he is on my roster, and where a team I face this week starts him
+  function amStake(){
+    const z = ctx.zone, key = z.week + ':' + z.leagues.map(function(L){ return (L.muTs || 0) + '/' + ((z.meta[L.id] || {}).ts || 0); }).join(',');
+    if(z._amStake && z._amStake.key === key) return z._amStake.v;
+    const own = {}, face = {};
+    z.leagues.forEach(function(L){
+      const meta = z.meta[L.id];
+      if(!meta || !meta.roster) return;
+      (meta.roster.players || []).forEach(function(pid){ (own[pid] = own[pid] || []).push(L.id); });
+      const mu = L.muWeek === z.week ? L.mu : null, mine = mu && mu.find(function(m){ return m.roster_id === meta.rosterId; });
+      const opp = mine && mine.matchup_id != null ? mu.find(function(m){ return m.matchup_id === mine.matchup_id && m.roster_id !== meta.rosterId; }) : null;
+      ((opp && opp.starters) || []).forEach(function(pid){ if(pid && pid !== '0') (face[pid] = face[pid] || []).push(L.id); });
+    });
+    z._amStake = { key: key, v: { own: own, face: face } };
+    return z._amStake.v;
+  }
+  function amStakeOf(pid){
+    const S = amStake(), o = (S.own[pid] || []).length, f = (S.face[pid] || []).length;
+    return { own: o, face: f, cls: o && f ? 'both' : o ? 'mine' : f ? 'opp' : '' };
+  }
+  function amStakeChip(s){
+    if(!s.cls) return '';
+    return '<span class="am-chip ' + s.cls + '">' + (s.cls === 'both' ? 'MINE ×' + s.own + ' · OPP ×' + s.face : s.own ? 'MINE ×' + s.own : 'OPP ×' + s.face) + '</span>';
+  }
+  function amFirst(t){ return t ? String(t.name).split(/\s+/)[0] : ''; }
+  function amWhen(P){
+    if(P.live) return '<span class="am-st live"><b><span class="live-dot"></span>Live</b><small>' + P.toPlay + ' to play</small></span>';
+    if(P.final) return '<span class="am-st"><b>Final</b></span>';
+    if(P.started) return '<span class="am-st"><b>In prog.</b><small>' + P.toPlay + ' to play</small></span>';
+    const k = P.kick ? new Date(P.kick) : null;
+    return '<span class="am-st"><b>' + (k ? escapeHTML(k.toLocaleDateString([], { weekday: 'short' }).toUpperCase()) : '—') + '</b><small>' + (k ? escapeHTML(zKickShort(P.kick).split(' ')[1] || '') : '') + '</small></span>';
+  }
+  function amWpBar(P, big){
+    if(P.wp === null) return '<span class="am-wp none"><small>No opponent</small></span>';
+    const pa = P.final ? (P.A.pts > P.B.pts + 0.004 ? 1 : P.B.pts > P.A.pts + 0.004 ? 0 : 0.5) : P.wp;
+    const favA = pa >= 0.5, pct = Math.round((favA ? pa : 1 - pa) * 100), who = favA ? P.ta : P.tb;
+    const cls = P.mine ? (pa >= 0.5 ? ' mine' : ' mine behind') : '';
+    if(big) return '<div class="am-wpbig' + cls + '"><div class="am-wpl"><b>' + Math.round(pa * 100) + '%</b><span>Win probability</span><b>' + Math.round((1 - pa) * 100) + '%</b></div><div class="am-wpb"><i style="width:' + (pa * 100).toFixed(1) + '%"></i></div></div>';
+    return '<span class="am-wp' + cls + '"><span class="am-wpb"><i style="width:' + (pa * 100).toFixed(1) + '%"></i></span><small>' + (P.final ? (pa === 0.5 ? 'Tied' : escapeHTML(amFirst(who)) + ' won') : escapeHTML(amFirst(who)) + ' ' + pct + '%') + '</small></span>';
+  }
+  function amSideHTML(t, S, P, lead, you){
+    const v = P.started ? S.pts : 0;
+    return '<span class="am-t' + (lead ? ' lead' : '') + '">' + zAvHTML(t, 'zav-xs') + '<span class="am-tn">' + escapeHTML(t ? t.name : '') + '</span>' + (you ? '<span class="am-you">YOU</span>' : '') +
+      '<span class="am-sc"><b class="am-pts' + (P.started ? '' : ' pre') + '">' + fmtPts(v) + '</b><small class="am-pj">proj ' + fmtPts(S.fin) + '</small></span></span>';
+  }
+  function amRowHTML(P){
+    const lead = P.B && P.started ? (P.A.pts > P.B.pts + 0.004 ? 1 : P.B.pts > P.A.pts + 0.004 ? -1 : 0) : 0;
+    return '<button type="button" class="am-mu' + (P.mine ? ' mine' : '') + (P.live ? ' live' : '') + (P.final ? ' final' : '') + '" data-am-mu="' + P.mid + '">' +
+      amWhen(P) + '<span class="am-ts">' + amSideHTML(P.ta, P.A, P, lead === 1, P.mine) + (P.B ? amSideHTML(P.tb, P.B, P, lead === -1, false) : '<span class="am-t"><span class="am-tn dim">No opponent</span></span>') + '</span>' +
+      amWpBar(P) + '</button>';
+  }
+  function amBoardHTML(){
+    const a = ctx.zone.am, ls = amLeagues(), L = amLeague();
+    if(!L) return '<div class="am-empty">' + (ctx.zone.leagues.length ? 'Loading your leagues…' : 'No leagues.') + '</div>';
+    const sw = '<div class="am-lgs" role="tablist" aria-label="Leagues" style="--n:' + ls.length + '">' + ls.map(function(x){
+      const ps = amPairs(x), live = ps && ps.some(function(P){ return P.live; });
+      return '<button type="button" role="tab" class="am-lg" data-am-lg="' + escapeHTML(x.id) + '" aria-selected="' + (x.id === L.id) + '"><span class="am-dot' + (live ? ' live' : '') + '"></span><b class="am-lgn">' + escapeHTML(x.name) + '</b><b class="am-lgc">' + escapeHTML(amCode(x.name)) + '</b><small>' + escapeHTML(amFormat(ctx.zone.meta[x.id])) + '</small></button>';
+    }).join('') + '</div>';
+    const ps = amPairs(L), meta = ctx.zone.meta[L.id];
+    let list;
+    if(!ps) list = '<div class="am-empty">' + (L.muErr ? 'Couldn’t load this league’s matchups.' : 'Loading matchups…') + '</div>';
+    else if(!ps.length) list = '<div class="am-empty">No matchups in week ' + ctx.zone.week + '.</div>';
+    else list = ps.map(amRowHTML).join('');
+    const live = ps ? ps.filter(function(P){ return P.live; }).length : 0, pre = ps ? ps.filter(function(P){ return !P.started; }).length : 0, fin = ps ? ps.filter(function(P){ return P.final; }).length : 0;
+    const sum = [live ? live + ' live' : '', pre ? pre + ' not started' : '', fin ? fin + ' final' : ''].filter(Boolean).join(' · ');
+    return sw + '<div class="am-lh"><b>' + escapeHTML(L.name) + '</b><span>' + escapeHTML(amFormat(meta)) + ' · ' + ((meta && meta.rosters) || []).length + ' teams</span><em>' + escapeHTML(sum) + '</em></div><div class="am-list">' + list + '</div>';
+  }
+
+  // ---- drill-down: two teams' starters, colored by my stake ----
+  function amCell(r, side, lid, win){
+    if(!r || r.empty) return '<div class="zc-c ' + side + ' empty"><span class="zh zc-i"></span><span class="zc-t"><span class="zc-n">Empty</span><span class="zc-m">No one in this slot</span></span></div>';
+    const st = r.state === 'pre' ? statusInfo(r.st) : null, s = amStakeOf(r.pid);
+    return '<div class="zc-c ' + side + ' s-' + r.state + (st && st.out ? ' out' : '') + (win ? ' win' : '') + (s.cls ? ' am-' + s.cls : '') + '" style="--pc:' + posColor(r.p.position) + '">' +
+      zImg(r, 'zc-i') + '<span class="zc-t"><span class="zc-n">' + escapeHTML(zName(r)) + (r.rz ? ' <span class="zn-rz">RZ</span>' : '') + '</span>' +
+      '<span class="zc-m">' + amStakeChip(s) + zMeta(r, ctx.zone.week) + (st ? ' ' + injuryChip(r.st) : '') + '</span></span>' +
+      zValHTML(r, lid, 'zc-v') + '</div>';
+  }
+  function amRooting(P){
+    const sides = [[P.A, P.ta], [P.B, P.tb]], list = [];
+    const score = sides.map(function(x){
+      let w = 0, pts = 0;
+      if(x[0]) x[0].rows.forEach(function(r){
+        if(r.empty) return;
+        const s = amStakeOf(r.pid), k = s.own - s.face;
+        if(!s.cls) return;
+        list.push({ r: r, s: s, t: x[1] });
+        w += k; pts += k * (r.state === 'in' || r.state === 'post' ? (r.pts || 0) : 0);
+      });
+      return { w: w, pts: pts };
+    });
+    const d = score[0].w - score[1].w;
+    return { list: list, lean: d > 0 ? P.ta : d < 0 ? P.tb : null, net: Math.abs(score[0].pts - score[1].pts), w: score };
+  }
+  function amDrillHTML(P){
+    const L = P.L, lead = P.B && P.started ? P.A.pts - P.B.pts : 0, R = amRooting(P);
+    const side = function(t, S, isA){
+      const leads = P.started && P.B && (isA ? lead > 0.004 : lead < -0.004);
+      return '<div class="am-ds' + (isA ? '' : ' them') + (leads ? ' lead' : '') + '">' + zAvHTML(t, 'zav') + '<b class="am-dn">' + escapeHTML(t ? t.name : 'No opponent') + '</b>' +
+        (S ? '<b class="am-dp' + (P.started ? '' : ' pre') + '">' + fmtPts(P.started ? S.pts : S.fin) + '</b><small>' + (P.started ? 'proj ' + fmtPts(S.fin) : 'projected') + '</small>' : '') +
+        (leads ? '<span class="am-lead">Leading +' + Math.abs(lead).toFixed(2) + '</span>' : '') + '</div>';
+    };
+    const rows = (function(){
+      const a = P.A.rows, b = P.B ? P.B.rows : null;
+      let h = '<div class="zc' + (b ? '' : ' solo') + ' am-zc">';
+      a.forEach(function(r, i){
+        const o = b ? b[i] : null, va = zSlotVal(r), vb = zSlotVal(o);
+        h += '<div class="zc-r">' + amCell(r, 'me', L.id, b && va > vb + 0.004) + '<span class="zc-s">' + escapeHTML(r.sname || slotShort(r.slot)) + '</span>' + (b ? amCell(o, 'them', L.id, vb > va + 0.004) : '<span></span>') + '</div>';
+      });
+      return h + '</div>';
+    })();
+    const own = R.list.filter(function(x){ return x.s.own; }).length, faced = R.list.filter(function(x){ return x.s.face; }).length;
+    const sentence = R.list.length
+      ? (own ? 'You own ' + own + ' of these starters' + (P.mine ? '' : ' in other leagues') : '') + (own && faced ? '; ' : '') + (faced ? faced + ' start for teams you face this week' : '') + '. ' +
+        (R.lean ? 'Root for <b>' + escapeHTML(R.lean.name) + '</b>.' : 'No lean either way.')
+      : 'None of these starters are yours or your opponents’ this week.';
+    const stake = R.list.length ? '<aside class="am-stake"><div class="am-sth">My stake</div>' + R.list.map(function(x){
+        const r = x.r, s = x.s;
+        const lbl = (s.own ? 'Yours in ' + s.own + ' league' + (s.own === 1 ? '' : 's') : '') + (s.own && s.face ? ' · ' : '') + (s.face ? 'faced in ' + s.face : '') + ' · for ' + (x.t ? x.t.name : '');
+        return '<div class="am-sr am-' + s.cls + '">' + zImg(r, 'am-si') + '<span><b>' + escapeHTML(zName(r)) + '</b><small>' + escapeHTML(lbl) + '</small></span><em>' + (r.state === 'in' || r.state === 'post' ? fmtPts(r.pts || 0) : '<i>' + fmtPts(r.proj) + '</i>') + '</em></div>';
+      }).join('') + (R.lean ? '<div class="am-net"><span>Net for ' + escapeHTML(R.lean.name) + '</span><b>+' + R.net.toFixed(2) + '</b></div>' : '') + '</aside>' : '';
+    return '<div class="am-drill">' +
+      '<div class="am-dh"><button type="button" class="pr-exit am-back" data-am-back>' + ICO.back + '<span>All matchups</span></button>' +
+        '<div class="am-dt"><b>' + escapeHTML(P.ta.name) + (P.tb ? ' vs ' + escapeHTML(P.tb.name) : '') + '</b><span>' + escapeHTML(L.name + ' · ' + amFormat(P.meta) + ' · Week ' + ctx.zone.week) + (P.live ? ' · <span class="live-dot"></span>Live · ' + P.toPlay + ' to play' : P.final ? ' · Final' : '') + '</span></div></div>' +
+      '<div class="am-db' + (P.mine ? ' mine' : '') + '">' + side(P.ta, P.A, true) + '<span class="am-dvs">vs</span>' + side(P.tb, P.B, false) + '</div>' +
+      (P.B ? amWpBar(P, true) : '') +
+      '<p class="am-sent">' + sentence + '</p>' +
+      '<div class="am-dg">' + rows + stake + '</div></div>';
+  }
+
+  // ---- tiles ----
+  function phi(z){ return Math.exp(-z * z / 2) / 2.5066282746; }
+  // the NFL game a team plays this week: "AWAY@HOME"
+  function amGameKey(team, week){
+    const m = matchup(team, week);
+    if(!m || m.bye) return null;
+    const opp = String(m.text).replace(/^(@|vs)\s*/, '');
+    return /^@/.test(m.text) ? team + '@' + opp : opp + '@' + team;
+  }
+  // Rooting guide: per NFL game, which team I want and how much it can still move my win probabilities. A point for a
+  // starter moves a matchup's win probability by about φ(z) / σ (the slope of the normal curve at the current gap), so a
+  // close matchup weighs a game's remaining points more than a blowout does.
+  function amRootData(){
+    const z = ctx.zone, week = z.week, games = {};
+    z.leagues.forEach(function(L){
+      const M = zModel(L);
+      if(M.kind !== 'ok' || !M.my || !M.opp) return;
+      const a = amWpTeam(M.my), b = amWpTeam(M.opp), sd = Math.sqrt(a.v + b.v), p = winProb(a, b);
+      const dens = sd > 0.01 ? phi((a.mean - b.mean) / sd) / sd : 0;
+      [[M.my, 1], [M.opp, -1]].forEach(function(x){
+        x[0].rows.forEach(function(r){
+          if(r.empty || !r.team || r.state === 'bye') return;
+          const gk = amGameKey(r.team, week);
+          if(!gk) return;
+          const rem = r.state === 'pre' ? (r.proj || 0) : r.state === 'in' ? (r.proj || 0) * remainingFrac(r.g).f : 0;
+          if(!games[gk]){ const g0 = zGame(r.team, week); games[gk] = { key: gk, teams: gk.split('@'), legs: {}, state: g0 ? g0.state : 'pre', kick: g0 && g0.kick }; }
+          const G = games[gk];
+          const leg = G.legs[L.id] = G.legs[L.id] || { L: L, p: p, dens: dens, net: {}, real: {}, mine: [], opp: [], v: 0 };
+          if(r.state === 'pre' || r.state === 'in'){ const own = volatility(r.pid), base = WP_CV[posGroup(r.pid)] || 0.5, cv = own ? (base + Math.max(0.3, Math.min(1, own))) / 2 : base, sd = Math.max(3, r.proj || 0) * cv; leg.v += sd * sd * (r.state === 'pre' ? 1 : remainingFrac(r.g).f); }
+          leg.net[r.team] = (leg.net[r.team] || 0) + x[1] * rem;
+          leg.real[r.team] = (leg.real[r.team] || 0) + x[1] * (r.state === 'pre' ? 0 : (r.pts || 0));
+          (x[1] > 0 ? leg.mine : leg.opp).push(r);
+        });
+      });
+    });
+    const out = Object.keys(games).map(function(k){
+      const G = games[k], t = G.teams, legs = Object.keys(G.legs).map(function(id){ return G.legs[id]; });
+      const pref = function(leg){ return (leg.net[t[0]] || 0) - (leg.net[t[1]] || 0); };   // > 0: this league wants team 0
+      const val = legs.reduce(function(s, leg){ return s + leg.dens * pref(leg); }, 0);
+      G.root = Math.abs(val) < 1e-6 ? null : val > 0 ? t[0] : t[1];
+      G.other = G.root === t[0] ? t[1] : t[0];
+      G.helps = legs.filter(function(leg){ const d = pref(leg); return G.root && (G.root === t[0] ? d : -d) > 0.05; }).length;
+      G.hurts = legs.filter(function(leg){ const d = pref(leg); return G.root && (G.root === t[0] ? d : -d) < -0.05; }).length;
+      // swing: how far this game's still-to-play points typically move my win probabilities (slope × the points' spread), summed over leagues
+      G.swing = Math.min(1, legs.reduce(function(s, leg){ return s + leg.dens * Math.sqrt(leg.v); }, 0));
+      G.legsList = legs.sort(function(x, y){ return Math.abs(x.p - 0.5) - Math.abs(y.p - 0.5); });
+      G.done = G.swing < 0.001;
+      G.realNet = legs.reduce(function(s, leg){ return s + (leg.real[t[0]] || 0) + (leg.real[t[1]] || 0); }, 0);
+      return G;
+    });
+    return out.sort(function(x, y){ return (x.done ? 1 : 0) - (y.done ? 1 : 0) || y.swing - x.swing; });
+  }
+  function amGameState(G){
+    if(G.done) return '<span class="am-gst">Final</span>';
+    if(G.state === 'in') return '<span class="am-gst live">Live</span>';
+    return '<span class="am-gst">' + (G.kick ? escapeHTML(zKickShort(G.kick)) : '—') + '</span>';
+  }
+  function amRootHTML(){
+    const gs = amRootData(), a = ctx.zone.am;
+    if(!gs.length) return '<p class="am-none">Nothing at stake yet: your matchups and their starters show up here.</p>';
+    const active = gs.filter(function(G){ return !G.done && G.root; }), top = active.slice(0, 3);
+    const lead = top.length ? '<p class="am-todo">Watch: ' + top.map(function(G){ return '<b>' + escapeHTML(G.key) + '</b>'; }).join(' · ') + '</p>' : '';
+    return lead + '<div class="am-rows">' + gs.map(function(G){
+      const isTop = top.indexOf(G) !== -1, open = a.game === G.key;
+      const head = G.done ? '<b>' + escapeHTML(G.key) + '</b>' : G.root ? '<b>Root for ' + escapeHTML(G.root) + '</b><span class="dim"> vs ' + escapeHTML(G.other) + '</span>' : '<b>' + escapeHTML(G.key) + '</b><span class="dim"> · no lean</span>';
+      const sub = G.done ? 'Done · ' + (G.realNet >= 0 ? '+' : '−') + Math.abs(G.realNet).toFixed(2) + ' net for you' : (G.helps ? 'helps in ' + G.helps + ' league' + (G.helps === 1 ? '' : 's') : '') + (G.helps && G.hurts ? ', ' : '') + (G.hurts ? 'hurts in ' + G.hurts : '') || 'mixed';
+      const chips = G.legsList.map(function(leg){ return '<span class="am-lc' + (leg.p >= 0.5 ? ' up' : ' dn') + '">' + escapeHTML(amCode(leg.L.name)) + ' ' + Math.round(leg.p * 100) + '%</span>'; }).join('');
+      const detail = open ? '<div class="am-gd">' + G.legsList.map(function(leg){
+          const one = function(r, cls){ return '<span class="am-gp ' + cls + '">' + escapeHTML(zName(r)) + ' <i>' + (r.state === 'pre' ? fmtPts(r.proj) + ' proj' : fmtPts(r.pts || 0)) + '</i></span>'; };
+          return '<div class="am-gl"><b>' + escapeHTML(leg.L.name) + '</b>' + leg.mine.map(function(r){ return one(r, 'mine'); }).join('') + leg.opp.map(function(r){ return one(r, 'opp'); }).join('') + '</div>';
+        }).join('') + '</div>' : '';
+      return '<div class="am-rg' + (isTop ? ' top' : '') + (G.done ? ' done' : '') + (open ? ' open' : '') + '" data-am-g="' + escapeHTML(G.key) + '" role="button" tabindex="0">' + amGameState(G) +
+        '<div class="am-rgm"><div>' + head + '</div><small>' + escapeHTML(sub) + '</small><div class="am-lcs">' + chips + '</div></div>' +
+        (G.done ? '' : '<div class="am-rgv"><b>±' + Math.round(G.swing / Math.max(1, G.legsList.length) * 100) + '%</b><small>' + (G.legsList.length > 1 ? 'per league' : 'win prob.') + '</small></div>') + detail + '</div>';
+    }).join('') + '</div><p class="am-fine">±% = how far the game’s remaining points typically move your win probability, per league at stake. Games are ranked by the total over your leagues; close matchups count more.</p>';
+  }
+  // per-league points for a player this week: his matchup entry there (players_points, that league's scoring), or his projection
+  function amPtsIn(L, pid, rid){
+    const z = ctx.zone, meta = z.meta[L.id], mu = L.muWeek === z.week ? L.mu : null, e = mu && mu.find(function(m){ return m.roster_id === rid; });
+    const p = ctx.players[pid] || {}, g = zGame(p.team || (p.position === 'DEF' ? pid : null), z.week), started = g && (g.state === 'in' || g.state === 'post');
+    if(started && e && typeof (e.players_points || {})[pid] === 'number') return { v: e.players_points[pid], act: true };
+    const pr = meta ? zProj(L, meta, pid) : null;
+    return { v: pr, act: false };
+  }
+  function amExpoHTML(){
+    const z = ctx.zone, a = z.am, S = amStake(), mode = a.expo;
+    const ids = Object.keys(mode === 'mine' ? S.own : mode === 'against' ? S.face : Object.assign({}, S.own, S.face));
+    const rows = ids.filter(function(pid){ return ctx.players[pid] || /^[A-Z]{2,3}$/.test(pid); }).map(function(pid){
+      const o = S.own[pid] || [], f = S.face[pid] || [];
+      return { pid: pid, o: mode === 'against' ? [] : o, f: mode === 'mine' ? [] : f };
+    }).filter(function(x){ return x.o.length || x.f.length; })
+      .sort(function(x, y){ return (y.o.length + y.f.length) - (x.o.length + x.f.length) || ((ctx.projections[y.pid] || 0) - (ctx.projections[x.pid] || 0)); }).slice(0, AM_EXPO_MAX);
+    const seg = '<div class="seg am-seg" role="group" aria-label="Who to list">' + [['mine', 'Mine'], ['against', 'Against'], ['both', 'Both']].map(function(x){ return '<button type="button" data-am-expo="' + x[0] + '" aria-pressed="' + (mode === x[0]) + '">' + x[1] + '</button>'; }).join('') + '</div>';
+    if(!rows.length) return seg + '<p class="am-none">' + (mode === 'mine' ? 'No rostered players yet.' : 'No opponents’ starters yet this week.') + '</p>';
+    return seg + '<div class="am-rows">' + rows.map(function(x){
+      const p = ctx.players[x.pid] || {}, cls = x.o.length && x.f.length ? 'both' : x.o.length ? 'mine' : 'opp';
+      const chips = x.o.map(function(id){ const L = zLeague(id), meta = z.meta[id]; const v = L && meta ? amPtsIn(L, x.pid, meta.rosterId) : { v: null }; return '<span class="am-lp mine">' + escapeHTML(L ? amCode(L.name) : '') + ' <b' + (v.act ? '' : ' class="pj"') + '>' + fmtPts(v.v) + '</b></span>'; })
+        .concat(x.f.map(function(id){
+          const L = zLeague(id), meta = z.meta[id], mu = L && L.muWeek === z.week ? L.mu : null, mine = mu && meta && mu.find(function(m){ return m.roster_id === meta.rosterId; });
+          const opp = mine && mu.find(function(m){ return m.matchup_id === mine.matchup_id && m.roster_id !== meta.rosterId; });
+          const v = opp ? amPtsIn(L, x.pid, opp.roster_id) : { v: null };
+          return '<span class="am-lp opp">' + escapeHTML(L ? amCode(L.name) : '') + ' <b' + (v.act ? '' : ' class="pj"') + '>' + fmtPts(v.v) + '</b></span>';
+        })).join('');
+      const n = x.o.length + x.f.length;
+      return '<div class="am-xr am-' + cls + '">' + photoHTML(x.pid, 'am-xi') + '<span class="am-xn"><b>' + escapeHTML(p.position === 'DEF' ? (p.team || x.pid) + ' D/ST' : playerName(p)) + '</b><small>' + escapeHTML((p.position || '') + ' · ' + (p.team || 'FA')) + '</small></span>' +
+        '<span class="am-xc">' + chips + '</span><span class="am-xk">×' + n + '</span></div>';
+    }).join('') + '</div>';
+  }
+  function amWaiverHTML(){
+    const z = ctx.zone, stats = z.stats && z.statsWeek === z.week ? z.stats : null;
+    if(!stats) return '<p class="am-none">Loading this week’s stats…</p>';
+    const key = (z.statsTs || 0) + ':' + z.week + ':' + z.leagues.map(function(L){ return (z.meta[L.id] || {}).ts || 0; }).join(',');
+    if(!z._amWav || z._amWav.key !== key){
+      const by = {};
+      amLeagues().forEach(function(L){
+        const meta = z.meta[L.id], sc = meta.league.scoring_settings || {}, taken = {}, pos = {};
+        meta.rosters.forEach(function(r){ (r.players || []).forEach(function(pid){ taken[pid] = 1; }); });
+        meta.slots.forEach(function(s){ (FLEX_GROUPS[s] || [s]).forEach(function(x){ pos[x] = 1; }); });
+        Object.keys(stats).forEach(function(pid){
+          if(taken[pid]) return;
+          const p = ctx.players[pid];
+          if(!p || !p.team || !fantasyPositions(pid).some(function(x){ return pos[x]; })) return;
+          const v = calcPoints(stats[pid], sc);
+          if(typeof v !== 'number' || v < AM_WAV_MIN) return;
+          (by[pid] = by[pid] || []).push({ L: L, v: v });
+        });
+      });
+      z._amWav = { key: key, v: Object.keys(by).map(function(pid){ return { pid: pid, legs: by[pid], max: Math.max.apply(null, by[pid].map(function(x){ return x.v; })) }; }).sort(function(a, b){ return b.max - a.max; }).slice(0, 20) };
+    }
+    const list = z._amWav.v;
+    if(!list.length) return '<p class="am-none">' + (Object.keys(stats).length ? 'No free agent has ' + AM_WAV_MIN + '+ points yet this week.' : 'Free agents show up here once this week’s games start.') + '</p>';
+    return '<div class="am-rows">' + list.map(function(x){
+      const p = ctx.players[x.pid], g = zGame(p.team, z.week), st = g && g.state === 'in' ? 'Live' : g && g.state === 'post' ? 'Final' : '';
+      return '<div class="am-xr wav" data-am-pl="' + escapeHTML(x.pid) + '" role="button" tabindex="0">' + photoHTML(x.pid, 'am-xi') + '<span class="am-xn"><b>' + escapeHTML(playerName(p)) + '</b><small>' + escapeHTML((p.position || '') + ' · ' + p.team + (st ? ' · ' + st : '')) + '</small></span>' +
+        '<span class="am-xc">' + x.legs.map(function(l){ return '<span class="am-lp">' + escapeHTML(amCode(l.L.name)) + ' <b>' + fmtPts(l.v) + '</b></span>'; }).join('') + '</span>' +
+        '<span class="am-xk">' + x.legs.length + ' open</span></div>';
+    }).join('') + '</div>';
+  }
+  function amTilesHTML(){
+    const a = ctx.zone.am, on = AM_TILES.filter(function(t){ return a.on[t.id]; });
+    const bar = '<div class="am-tbar"><span>Tiles · ' + on.length + ' of ' + AM_TILE_CAP + '</span>' + AM_TILES.map(function(t){ return '<button type="button" class="am-tt" data-am-tile="' + t.id + '" aria-pressed="' + !!a.on[t.id] + '">' + (a.on[t.id] ? '✓ ' : '+ ') + escapeHTML(t.title) + '</button>'; }).join('') + '</div>';
+    const body = function(t){ return t.id === 'root' ? amRootHTML() : t.id === 'expo' ? amExpoHTML() : amWaiverHTML(); };
+    const tiles = on.map(function(t){ return '<section class="am-tile" data-tid="' + t.id + '"><div class="am-th"><small>' + escapeHTML(t.eyebrow) + '</small><b>' + escapeHTML(t.title) + '</b></div><div class="am-tb">' + body(t) + '</div></section>'; }).join('') +
+      (on.length < AM_TILES.length ? '<div class="am-tile am-open">Open slot<br><small>Turn on a tile above</small></div>' : '');
+    return '<button type="button" class="am-acc" data-am-acc aria-expanded="' + !!a.tilesOpen + '"><span><b>Across leagues</b><small>' + on.length + ' tile' + (on.length === 1 ? '' : 's') + (on.length ? ' · ' + on.map(function(t){ return t.title.toLowerCase(); }).join(', ') : '') + '</small></span>' + CHEV + '</button>' +
+      '<div class="am-tw">' + bar + '<div class="am-grid">' + tiles + '</div></div>';
+  }
+
+  // ---- render / open / close ----
+  function amRender(){
+    const z = ctx.zone, a = z.am, el = zoneView.querySelector('.am');
+    if(!el || !a.open) return;
+    const L = amLeague();
+    if(L && a.lid !== L.id){ a.lid = L.id; }
+    const P = a.mid !== null && L ? (amPairs(L) || []).find(function(x){ return x.mid === a.mid; }) : null;
+    if(a.mid !== null && !P && amPairs(L)) a.mid = null;
+    el.classList.toggle('drill', !!P);
+    el.classList.toggle('tiles-open', !!a.tilesOpen);
+    const board = el.querySelector('.am-board'), tiles = el.querySelector('.am-tiles');
+    const bh = P ? amDrillHTML(P) : amBoardHTML();
+    if(board._h !== bh){ board.innerHTML = bh; board._h = bh; }
+    const th = P ? '' : amTilesHTML();
+    if(tiles._h !== th){ tiles.innerHTML = th; tiles._h = th; }
+    // header: this view's title and counts
+    const ls = amLeagues(), others = ls.reduce(function(s, x){ const ps = amPairs(x); return s + (ps ? ps.filter(function(q){ return !q.mine; }).length : 0); }, 0);
+    zoneView.querySelector('.zn-title b').textContent = 'All matchups';
+    document.getElementById('zn-sub').textContent = 'Week ' + z.week + ' · ' + ls.length + ' league' + (ls.length === 1 ? '' : 's') + ' · ' + others + ' matchup' + (others === 1 ? '' : 's') + ' you’re not in, plus yours';
+  }
+  function amOpen(){
+    const z = ctx.zone, a = z.am;
+    a.open = true; a.mid = null;
+    zoneView.classList.add('am-on');
+    if(z.focus) zoneFocus(null);
+    zoneView.querySelectorAll('[data-zn-am]').forEach(function(b){ b.setAttribute('aria-pressed', 'true'); });
+    amRender();
+    const el = zoneView.querySelector('.am'); if(el) el.scrollTop = 0;
+    zoneRefresh();   // the waiver radar needs this week's stats (loaded on phones only while this view is open)
+  }
+  function amClose(){
+    const z = ctx.zone, a = z.am;
+    a.open = false; a.mid = null;
+    zoneView.classList.remove('am-on');
+    zoneView.querySelectorAll('[data-zn-am]').forEach(function(b){ b.setAttribute('aria-pressed', 'false'); });
+    zoneView.querySelector('.zn-title b').textContent = ZONE_NAME;
+    zoneRender(false);
+  }
+  function amDrill(mid){
+    const a = ctx.zone.am;
+    a.mid = mid; amRender();
+    const el = zoneView.querySelector('.am'); if(el) el.scrollTop = 0;
+  }
+  function amBack(){ const a = ctx.zone.am; a.mid = null; amRender(); }
+  // clicks inside the view (called from Zone's click handler; true = handled)
+  function amClick(t){
+    const a = ctx.zone.am;
+    if(t.closest('[data-zn-am]')){ if(a.open) amClose(); else amOpen(); return true; }
+    if(!a.open) return false;
+    if(t.closest('[data-am-back]')){ amBack(); return true; }
+    const lg = t.closest('[data-am-lg]');
+    if(lg){ a.lid = lg.getAttribute('data-am-lg'); a.mid = null; amSave(); amRender(); return true; }
+    const mu = t.closest('[data-am-mu]');
+    if(mu){ amDrill(Number(mu.getAttribute('data-am-mu'))); return true; }
+    const tt = t.closest('[data-am-tile]');
+    if(tt){
+      const id = tt.getAttribute('data-am-tile'), n = AM_TILES.filter(function(x){ return a.on[x.id]; }).length;
+      if(!a.on[id] && n >= AM_TILE_CAP) return true;
+      a.on[id] = !a.on[id]; amSave(); amRender(); return true;
+    }
+    const ex = t.closest('[data-am-expo]');
+    if(ex){ a.expo = ex.getAttribute('data-am-expo'); amSave(); amRender(); return true; }
+    const g = t.closest('[data-am-g]');
+    if(g && !t.closest('a')){ const k = g.getAttribute('data-am-g'); a.game = a.game === k ? null : k; amRender(); return true; }
+    if(t.closest('[data-am-acc]')){ a.tilesOpen = !a.tilesOpen; amRender(); return true; }
+    const pl = t.closest('[data-am-pl]');
+    if(pl){ openMax({ kind: 'player', pid: pl.getAttribute('data-am-pl') }, pl); return true; }
+    return false;
+  }
+  // phones: swipe the drill-down right to go back to the board
+  (function(){
+    let st = null;
+    zoneView.addEventListener('touchstart', function(e){
+      const d = e.target.closest && e.target.closest('.am.drill');
+      st = d && e.touches.length === 1 && e.touches[0].clientX > 22 ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null;
+    }, { passive: true });
+    zoneView.addEventListener('touchend', function(e){
+      if(!st) return;
+      const t = e.changedTouches[0], dx = t.clientX - st.x, dy = t.clientY - st.y;
+      st = null;
+      if(dx > 90 && Math.abs(dx) > Math.abs(dy) * 1.6 && ctx.zone.am.open && ctx.zone.am.mid !== null) amBack();
+    });
+  })();
 
   // ---- the guide: "How Sleepa Zone reads the game" (Settings + the Zone header). Add a section = add an entry. ----
   const ZONE_GUIDE = [

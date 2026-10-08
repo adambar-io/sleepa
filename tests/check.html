@@ -343,6 +343,15 @@
     eq('levels: 12+ underrated (big), 6+ experts higher, −6 or less projection higher', g.map(function(x){ return x.level; }), ['big', 'yes', 'none', 'over']);
   }
 
+  // ---- 3f. Sleepa Zone All matchups: league short codes ----
+  section('All matchups: league short codes');
+  {
+    const A = new Function(extract('function amCode(') + '; return { amCode };')();
+    const eq = function(name, got, want){ const g = JSON.stringify(got), w = JSON.stringify(want); check(name, g === w, 'got ' + g + (g === w ? '' : ', want ' + w)); };
+    eq('initials of every word', [A.amCode('The League'), A.amCode('Last Minute League')], ['TL', 'LML']);
+    eq('one word with a sports ending: its first letter + the ending', [A.amCode('BATTLEBALL'), A.amCode('Sugarbowl')], ['BB', 'SB']);
+    eq('other single words: first two letters; symbols ignored', [A.amCode('Trenches'), A.amCode("Mick's Dagos!")], ['TR', 'MD']);
+  }
   // ---- 4. injury statuses vs live Sleeper values ----
   section('Injury statuses: every live Sleeper value is known');
   try{
