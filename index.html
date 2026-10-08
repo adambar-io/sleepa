@@ -3119,9 +3119,9 @@
   .am-none{ margin: 4px 0; font-size: 13px; color: var(--text-3); }
   .am-todo{ margin: 0; font-size: 12.5px; color: var(--text-2); } .am-fine{ margin: 2px 0 0; font-size: 11px; color: var(--text-3); line-height: 1.4; }
   .am-seg{ width: fit-content; flex: none; } .am-seg button{ font-size: 12px; padding: 5px 11px; min-height: 28px; }
-  .am-rg{ display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 6px 8px; align-items: start; padding: 8px 10px; border-radius: 12px; background: var(--surface-2); cursor: pointer; }
+  .am-rg{ display: grid; grid-template-columns: 54px minmax(0, 1fr) auto; gap: 6px 8px; align-items: start; padding: 8px 10px; border-radius: 12px; background: var(--surface-2); cursor: pointer; }
   .am-rg.top{ box-shadow: inset 3px 0 0 var(--accent); } .am-rg.done{ opacity: .6; }
-  .am-gst{ font-size: 10.5px; font-weight: 700; color: var(--text-2); padding: 2px 4px; border-radius: 6px; box-shadow: inset 0 0 0 1px var(--hair); text-align: center; white-space: nowrap; }
+  .am-gst{ font-size: 10.5px; line-height: 1.25; font-weight: 700; color: var(--text-2); padding: 3px 4px; border-radius: 6px; box-shadow: inset 0 0 0 1px var(--hair); text-align: center; white-space: nowrap; }
   .am-gst.live{ color: var(--danger); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--danger) 40%, transparent); }
   .am-rgm{ min-width: 0; font-size: 13px; } .am-rgm small{ display: block; font-size: 11.5px; color: var(--text-3); } .am-rgm .dim{ color: var(--text-3); }
   .am-lcs{ display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
@@ -14942,7 +14942,9 @@
   function amGameState(G){
     if(G.done) return '<span class="am-gst">Final</span>';
     if(G.state === 'in') return '<span class="am-gst live">Live</span>';
-    return '<span class="am-gst">' + (G.kick ? escapeHTML(zKickShort(G.kick)) : '—') + '</span>';
+    if(!G.kick) return '<span class="am-gst">—</span>';
+    const k = zKickShort(G.kick).split(' ');   /* day over time, so it fits its column */
+    return '<span class="am-gst">' + escapeHTML(k[0]) + '<br>' + escapeHTML(k[1] || '') + '</span>';
   }
   function amRootHTML(){
     const gs = amRootData(), a = ctx.zone.am;
