@@ -1827,7 +1827,7 @@
   @container list (min-width: 600px){ .player-meta .rc-badge{ display: inline-flex; } }
   @media (max-width: 600px){ .rc-h{ padding: 12px 14px; } .rc-b{ padding: 0 12px 12px; } .rc-all{ margin-left: 0; } .rc-t{ font-size: 12.5px; } }
   .it-chip.pf{ margin-left: 10px; font-size: 12px; padding: 3px 9px; }
-  .it-chip.zn{ margin-left: 4px; font-size: 9.5px; padding: 0 5px; min-height: 16px; }
+  .it-chip.zn-chip{ margin-left: 4px;   /* not "zn": that class is the full-screen Zone layer */ font-size: 9.5px; padding: 0 5px; min-height: 16px; }
   .mu-games{ display: inline-block; margin-top: 10px; font-size: 13px; font-weight: 600; color: var(--accent); }
   .ssg-sec{ grid-column: 1 / -1; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--hair); font-size: 10.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3); }
   .ssg-sec span, .ssg-l span[data-it-go-game]{ cursor: pointer; } .ssg-sec span{ color: var(--accent); }
@@ -13867,7 +13867,7 @@
       const st = r.state === 'pre' ? statusInfo(r.st) : null, line = zStatLine(r), started = r.state === 'in' || r.state === 'post';
       return '<div class="zg-r s-' + r.state + (st && st.out ? ' out' : '') + '" style="--pc:' + posColor(r.p.position) + '"><span class="zg-sl">' + escapeHTML(r.sname || slotShort(r.slot)) + '</span>' + zImg(r) +
         '<div class="zg-m"><div class="zg-n"><span>' + escapeHTML(r.p.position === 'DEF' ? (r.team || r.pid) + ' D/ST' : playerName(r.p)) + '</span>' + (r.rz ? '<span class="zn-rz">RZ</span>' : '') + (st ? injuryChip(r.st) : '') + '</div>' +
-          '<div class="zg-g"><span class="zg-pos">' + escapeHTML(r.p.position || '') + '</span> ' + (r.state === 'in' ? '<span class="live-dot"></span>' : '') + escapeHTML(zGameLine(r, week)) + (week === ctx.week ? itChipHTML(r.team, { scope: 'zone', cls: 'zn', noFlag: true }) : '') + '</div>' +
+          '<div class="zg-g"><span class="zg-pos">' + escapeHTML(r.p.position || '') + '</span> ' + (r.state === 'in' ? '<span class="live-dot"></span>' : '') + escapeHTML(zGameLine(r, week)) + (week === ctx.week ? itChipHTML(r.team, { scope: 'zone', cls: 'zn-chip', noFlag: true }) : '') + '</div>' +
           (line ? '<div class="zg-st" title="' + escapeHTML(line) + '">' + escapeHTML(line) + '</div>' : '') + '</div>' +
         '<div class="zg-p">' + zValHTML(r, lid, 'zg-v') + '<small>' + (started ? (typeof r.proj === 'number' ? 'proj ' + fmtPts(r.proj) : '') : 'proj') + '</small></div></div>';
     }).join('');
