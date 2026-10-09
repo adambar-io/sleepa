@@ -3025,7 +3025,7 @@
   /* ============ Sleepa Zone: every league at once ============ */
   /* Impact colors (Phase 2 feed): always the effect on ME. Soft versions of the existing palette. */
   :root{ --impact-pos: var(--accent); --impact-neg: var(--danger); --impact-mixed: var(--warn); --impact-neutral: var(--text-3); }
-  /* ---- Sleepa Zone: All matchups ---- */
+  /* ---- Sleepa Zone: Scoreboard (every matchup in every league) ---- */
   .am{ display: none; }
   .zn.am-on .am{ display: flex; flex-direction: column; height: 100%; overflow-y: auto; overscroll-behavior: contain; box-sizing: border-box; padding: 12px 14px calc(env(safe-area-inset-bottom) + 28px); }
   .zn.am-on .zn-car, .zn.am-on .zn-alt, .zn.am-on .zn-bot, .zn.am-on [data-zn-mode]{ display: none !important; }
@@ -14085,7 +14085,7 @@
         '<button type="button" class="pr-exit" data-zn-exit aria-label="Leave ' + ZONE_NAME + '">' + ICO.back + '<span>Back</span></button>' +
         '<div class="zn-title"><b>' + ZONE_NAME + '</b><span id="zn-sub"></span></div>' +
         '<div class="wk-seg zn-wk" role="group" aria-label="Week"><button type="button" data-zn-wk="-1" aria-label="Previous week">‹</button><span id="zn-wk-l"></span><button type="button" data-zn-wk="1" aria-label="Next week">›</button></div>' +
-        '<button type="button" class="zn-btn zn-am-btn" data-zn-am aria-pressed="false" title="Every matchup in every league"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3.5" y="4" width="7.5" height="4.5" rx="1.2"/><rect x="13" y="4" width="7.5" height="4.5" rx="1.2"/><rect x="3.5" y="10" width="7.5" height="4.5" rx="1.2"/><rect x="13" y="10" width="7.5" height="4.5" rx="1.2"/><rect x="3.5" y="16" width="7.5" height="4.5" rx="1.2"/><rect x="13" y="16" width="7.5" height="4.5" rx="1.2"/></svg><span>All matchups</span></button>' +
+        '<button type="button" class="zn-btn zn-am-btn" data-zn-am aria-pressed="false" title="Every matchup in every league"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3.5" y="4" width="7.5" height="4.5" rx="1.2"/><rect x="13" y="4" width="7.5" height="4.5" rx="1.2"/><rect x="3.5" y="10" width="7.5" height="4.5" rx="1.2"/><rect x="13" y="10" width="7.5" height="4.5" rx="1.2"/><rect x="3.5" y="16" width="7.5" height="4.5" rx="1.2"/><rect x="13" y="16" width="7.5" height="4.5" rx="1.2"/></svg><span>Scoreboard</span></button>' +
         '<button type="button" class="zn-btn" data-zn-mode aria-pressed="false"></button>' +
         '<button type="button" class="zn-btn zn-ref" data-zn-ref aria-label="Refresh scores">' + ICO.ref + '<span data-zn-ago></span></button>' +
         '<button type="button" class="zn-btn zn-ico" data-zone-guide aria-label="How ' + ZONE_NAME + ' reads the game">' + ICO.info + '</button>' +
@@ -14681,7 +14681,7 @@
     if(b){ e.preventDefault(); zoneOpen(); }
   });
 
-  // ============ Sleepa Zone: All matchups ============
+  // ============ Sleepa Zone: Scoreboard (every matchup in every league) ============
   // Every matchup in every one of my leagues (not just mine), a drill-down into any of them colored by my stake, and
   // cross-league tiles (rooting guide, my exposure, waiver radar). Spec: "Sleepa Zone all-matchups view" (Oct 7 2026).
   // Data: Zone already loads each league's full week of matchups (L.mu, every team, players_points scored in that
@@ -14891,7 +14891,7 @@
         return '<div class="am-sr am-' + s.cls + '">' + zImg(r, 'am-si') + '<span><b>' + escapeHTML(zName(r)) + '</b><small>' + escapeHTML(lbl) + '</small></span><em>' + (r.state === 'in' || r.state === 'post' ? fmtPts(r.pts || 0) : '<i>' + fmtPts(r.proj) + '</i>') + '</em></div>';
       }).join('') + (R.lean ? '<div class="am-net"><span>Net for ' + escapeHTML(R.lean.name) + '</span><b>+' + R.net.toFixed(2) + '</b></div>' : '') + '</aside>' : '';
     return '<div class="am-drill">' +
-      '<div class="am-dh"><button type="button" class="pr-exit am-back" data-am-back>' + ICO.back + '<span>All matchups</span></button>' +
+      '<div class="am-dh"><button type="button" class="pr-exit am-back" data-am-back>' + ICO.back + '<span>Scoreboard</span></button>' +
         '<div class="am-dt"><b>' + escapeHTML(P.ta.name) + (P.tb ? ' vs ' + escapeHTML(P.tb.name) : '') + '</b><span>' + escapeHTML(L.name + ' · ' + amFormat(P.meta) + ' · Week ' + ctx.zone.week) + (P.live ? ' · <span class="live-dot"></span>Live · ' + P.toPlay + ' to play' : P.final ? ' · Final' : '') + '</span></div></div>' +
       '<div class="am-db' + (P.mine ? ' mine' : '') + '">' + side(P.ta, P.A, true) + '<span class="am-dvs">vs</span>' + side(P.tb, P.B, false) + '</div>' +
       (P.B ? amWpBar(P, true) : '') +
@@ -15220,7 +15220,7 @@
     if(tiles._h !== th){ tiles.innerHTML = th; tiles._h = th; }
     // header: this view's title and counts
     const ls = amLeagues(), others = ls.reduce(function(s, x){ const ps = amPairs(x); return s + (ps ? ps.filter(function(q){ return !q.mine; }).length : 0); }, 0);
-    zoneView.querySelector('.zn-title b').textContent = 'All matchups';
+    zoneView.querySelector('.zn-title b').textContent = 'Scoreboard';
     document.getElementById('zn-sub').textContent = 'Week ' + z.week + ' · ' + ls.length + ' league' + (ls.length === 1 ? '' : 's') + ' · ' + others + ' matchup' + (others === 1 ? '' : 's') + ' you’re not in, plus yours';
   }
   function amOpen(){
