@@ -2234,6 +2234,40 @@
   .wv-num.add b{ color: var(--accent); } .wv-num.drop b{ color: var(--danger); } .wv-num.drop.zero b{ color: var(--text-2); }
   @media (max-width: 600px){ #wv .section-title > span{ display: none; } }
   .wv-mode{ width: fit-content; margin: 0 0 10px; }
+  /* Sleepa Assess */
+  .as-tools{ display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 0 0 12px; }
+  .as-tools .wv-mode{ margin: 0; }
+  .as-ck{ display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-2); cursor: pointer; white-space: nowrap; }
+  .as-ck input{ width: auto; min-height: 0; margin: 0; padding: 0; flex: none; accent-color: var(--accent); }
+  .as-sum{ display: flex; flex-direction: column; gap: 3px; margin: 0 2px 14px; }
+  .as-sum b{ font-size: 15px; } .as-sum span{ font-size: 12.5px; color: var(--text-3); line-height: 1.45; }
+  .as-sec{ padding: 4px 0; margin-bottom: 14px; overflow: hidden; }
+  .as-sh{ display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 10px; padding: 12px 16px 8px; }
+  .as-sh h3{ margin: 0; font-size: 15px; } .as-sh span{ font-size: 12px; color: var(--text-3); } .as-sh b{ color: var(--accent); }
+  .as-row{ display: grid; grid-template-columns: 44px 36px minmax(0, 1fr) auto minmax(0, 220px); grid-template-areas: "rk ph who tag note"; align-items: center; column-gap: 10px;
+    padding: 8px 16px; border-top: 1px solid var(--hair); cursor: pointer; }
+  .as-row:hover{ background: var(--surface-2); }
+  .as-row.mine{ background: color-mix(in srgb, var(--accent) 5%, transparent); }
+  .as-row.up{ box-shadow: inset 3px 0 0 var(--accent); }
+  .as-row.up.close{ box-shadow: inset 3px 0 0 color-mix(in srgb, var(--accent) 45%, transparent); }
+  .as-rk{ grid-area: rk; font-size: 13px; font-weight: 700; color: var(--text-2); font-variant-numeric: tabular-nums; }
+  .as-ph{ grid-area: ph; width: 36px; height: 36px; }
+  .as-who{ grid-area: who; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .as-who b{ font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .as-who small{ font-size: 11.5px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .as-tag{ grid-area: tag; padding: 1px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 700; background: color-mix(in srgb, #5aa9ff 16%, transparent); color: #5aa9ff; }
+  .as-tag.mine{ background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
+  .as-n{ grid-area: note; justify-self: end; text-align: right; font-size: 12.5px; color: var(--text-2); }
+  .as-n small{ color: var(--text-3); font-size: 11px; }
+  .as-n.up{ color: var(--accent); font-weight: 650; } .as-row.close .as-n.up{ color: var(--text-2); font-weight: 600; }
+  .as-n.warn{ color: var(--warn); } .as-n.ok{ color: var(--text-3); } .as-n.dim{ color: var(--text-3); }
+  .as-empty{ padding: 10px 16px 14px; font-size: 13px; color: var(--text-3); }
+  .as-foot{ margin: 4px 2px 20px; font-size: 12px; color: var(--text-3); line-height: 1.5; }
+  @media (max-width: 640px){
+    .as-row{ grid-template-columns: 36px 32px minmax(0, 1fr) auto; grid-template-areas: "rk ph who tag" "rk ph note note"; row-gap: 2px; padding: 8px 12px; }
+    .as-ph{ width: 32px; height: 32px; }
+    .as-n{ justify-self: start; text-align: left; }
+  }
   .wv-mode button{ padding: 6px 12px; min-height: 30px; font-size: 12.5px; }
   .wv-mode button[aria-pressed="true"]{ background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
   .tr-top{ display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
@@ -3975,7 +4009,7 @@
         <section class="view" id="fa-view" style="display:none;">
           <div class="pl-tools">
             <div class="seg pl-views" role="tablist" aria-label="Which players">
-              <button type="button" data-pl-view="avail">Available</button><button type="button" data-pl-view="mine" title="Your roster, with the same columns, sorts and filters">My players</button><button type="button" data-pl-view="trend">Trending</button><button type="button" data-pl-view="all">All players</button><button type="button" data-pl-view="value" title="How many points each available player adds to your best lineup, and what each of yours costs to drop">Waiver value</button>
+              <button type="button" data-pl-view="avail">Available</button><button type="button" data-pl-view="mine" title="Your roster, with the same columns, sorts and filters">My players</button><button type="button" data-pl-view="trend">Trending</button><button type="button" data-pl-view="all">All players</button><button type="button" data-pl-view="value" title="How many points each available player adds to your best lineup, and what each of yours costs to drop">Waiver value</button><button type="button" data-pl-view="assess" title="Sleepa Assess: does FantasyPros' expert consensus rank an available player above one of yours?">Assess</button>
             </div>
             <label class="pl-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg><input id="pl-q" type="search" placeholder="Search players by name" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="search"><button type="button" class="pl-q-x" id="pl-q-x" aria-label="Clear search" hidden>×</button></label>
             <div class="pos-filter" id="fa-pos-filter" role="group" aria-label="Positions"></div>
@@ -10598,6 +10632,129 @@
   }
   try{ ctx.wvMode = localStorage.getItem('rv-wv-mode') === 'ros' ? 'ros' : 'week'; }catch(e){ ctx.wvMode = 'week'; }
   try{ ctx.wvSame = localStorage.getItem('rv-wv-same') !== 'any'; }catch(e){ ctx.wvSame = true; }   /* swaps within the same position by default */
+  // ============ Sleepa Assess (Players → Assess): FantasyPros consensus, available players vs mine ============
+  // FantasyPros ranks players within a position (WR12) and on mixed lists (rest of season: PPR overall + IDP; this week:
+  // PPR superflex + IDP; rankings.json `overall`, built by build_rankings.py). One position picked → its position ranks;
+  // several → FantasyPros' mixed list when one covers them (RB + WR, FLEX, all IDP…), otherwise each position on its own.
+  // Players on other teams are left out. An available player is flagged when FantasyPros ranks him above any of mine in
+  // the same comparison, even by one spot (1–3 spots = "close"). The lists use PPR scoring, not the league's.
+  ctx.as = { span: 'ros', mine: true, avail: true, upOnly: false };
+  try{ const s = JSON.parse(localStorage.getItem('rv-assess') || 'null'); if(s){ ctx.as.span = s.span === 'week' ? 'week' : 'ros'; ctx.as.upOnly = !!s.upOnly; } }catch(e){}
+  function asSave(){ try{ localStorage.setItem('rv-assess', JSON.stringify({ span: ctx.as.span, upOnly: ctx.as.upOnly })); }catch(e){} }
+  const AS_OFF = ['QB', 'RB', 'WR', 'TE', 'K', 'DEF'], AS_SFLEX = ['QB', 'RB', 'WR', 'TE'], AS_CLOSE = 3;
+  // pure: rows [{ pid, rank, mine }] (one comparison) → per pid: available → { beat: my pids he outranks, worst-ranked
+  // first, gap: spots above the worst of them }; mine → { ahead: available players ranked above him }
+  function asFlags(rows){
+    const mine = rows.filter(function(r){ return r.mine && r.rank; }), fa = rows.filter(function(r){ return !r.mine && r.rank; }), out = {};
+    fa.forEach(function(a){
+      const beat = mine.filter(function(m){ return m.rank > a.rank; }).sort(function(x, y){ return y.rank - x.rank; });
+      out[a.pid] = { beat: beat.map(function(m){ return m.pid; }), gap: beat.length ? beat[0].rank - a.rank : 0 };
+    });
+    mine.forEach(function(m){ out[m.pid] = { ahead: fa.filter(function(a){ return a.rank < m.rank; }).length }; });
+    return out;
+  }
+  // which comparisons to show for the picked positions
+  function asSets(groups, span){
+    const src = (ctx.rk && ctx.rk.sources) || {}, ov = ctx.rk && ctx.rk.overall;
+    const ovOk = span === 'ros' ? !!(ov && ov.ros) : !!(ov && ov.weekly && src.overall && src.overall.weekly_week === ctx.week);
+    const sets = [];
+    const label = function(gs){ return gs.join(',') === 'RB,WR,TE' ? 'FLEX · RB + WR + TE' : gs.join(',') === IDP_GROUPS.join(',') ? 'IDP · DL + LB + DB' : gs.join(' + '); };
+    const add = function(gs, list){
+      if(gs.length > 1 && ovOk) sets.push({ groups: gs, list: list, label: label(gs) });
+      else gs.forEach(function(g){ sets.push({ groups: [g], label: g }); });
+    };
+    const off = groups.filter(function(g){ return AS_OFF.indexOf(g) !== -1; }), idp = groups.filter(function(g){ return IDP_GROUPS.indexOf(g) !== -1; });
+    // QB / RB / WR / TE share FantasyPros' mixed list; kickers and defenses sit at the bottom of the overall list, so
+    // comparing them with skill players means nothing: they're always their own comparison
+    add(off.filter(function(g){ return AS_SFLEX.indexOf(g) !== -1; }), 'off');
+    off.filter(function(g){ return AS_SFLEX.indexOf(g) === -1; }).forEach(function(g){ sets.push({ groups: [g], label: g }); });
+    add(idp, 'idp');
+    return { sets: sets, mixedFallback: !ovOk && (off.filter(function(g){ return AS_SFLEX.indexOf(g) !== -1; }).length > 1 || idp.length > 1) };
+  }
+  function asRankOf(pid, set, span){
+    if(set.list){ const m = ctx.rk.overall[span === 'ros' ? 'ros' : 'weekly'][set.list] || {}; return m[pid] || null; }
+    const e = (span === 'ros' ? ctx.rk.ros : ctx.rk.weekly)[pid];
+    return e && (!e.p || e.p === posGroup(pid)) ? posNum(e.pr) : null;
+  }
+  function renderAssess(){
+    const el = document.getElementById('wv');
+    if(!el) return;
+    const A = ctx.as, ros = A.span === 'ros';
+    const head = '<div class="section-title">Sleepa Assess <span>FantasyPros expert consensus: available players vs yours</span></div>' +
+      '<div class="as-tools"><div class="seg wv-mode" role="group" aria-label="Time frame"><button type="button" data-as-span="ros" aria-pressed="' + ros + '">Rest of season</button><button type="button" data-as-span="week" aria-pressed="' + !ros + '">This week</button></div>' +
+      '<label class="as-ck"><input type="checkbox" data-as-show="mine"' + (A.mine ? ' checked' : '') + '> My team</label>' +
+      '<label class="as-ck"><input type="checkbox" data-as-show="avail"' + (A.avail ? ' checked' : '') + '> Available</label>' +
+      '<label class="as-ck" title="Only available players FantasyPros ranks above one of yours, and the players of yours they outrank"><input type="checkbox" data-as-up' + (A.upOnly ? ' checked' : '') + '> Only upgrades</label></div>';
+    if(!ctx.myRoster){ el.innerHTML = head + '<div class="empty-state">Load a league first.</div>'; return; }
+    if(!ctx.rk){ el.innerHTML = head + '<div class="empty-state">Loading FantasyPros rankings…</div>'; loadRankings().then(function(){ if(ctx.view === 'fa' && ctx.pl.view === 'assess') renderAssess(); }); return; }
+    const src = ctx.rk.sources || {};
+    if(ros && !(src.ros && ctx.rk.ros)){ el.innerHTML = head + '<div class="empty-state">FantasyPros rest-of-season rankings aren’t available right now.</div>'; return; }
+    if(!ros && !(src.weekly && src.weekly.week === ctx.week)){
+      el.innerHTML = head + '<div class="empty-state">FantasyPros’ week ' + ctx.week + ' rankings aren’t out yet' + (src.weekly && src.weekly.week ? ' (the latest are for week ' + src.weekly.week + ')' : '') + '. Rest of season works now.</div>';
+      return;
+    }
+    const lp = leaguePositions(), groups = (ctx.pl.pos.length ? ctx.pl.pos : lp).filter(function(g){ return lp.indexOf(g) !== -1; });
+    const S = asSets(groups, A.span);
+    const myIds = (ctx.myRoster.players || []).filter(function(pid){ return ctx.players[pid]; });
+    const faIds = []; Object.keys(ctx.freeAgents || {}).forEach(function(pos){ (ctx.freeAgents[pos] || []).forEach(function(pid){ if(ctx.players[pid] && faIds.indexOf(pid) === -1) faIds.push(pid); }); });
+    let upTotal = 0;
+    const sections = S.sets.map(function(set){
+      const inSet = function(pid){ return set.groups.indexOf(posGroup(pid)) !== -1; };
+      const rows = myIds.filter(inSet).map(function(pid){ return { pid: pid, mine: true, rank: asRankOf(pid, set, A.span) }; })
+        .concat(faIds.filter(inSet).map(function(pid){ return { pid: pid, mine: false, rank: asRankOf(pid, set, A.span) }; }).filter(function(r){ return r.rank; }));
+      const F = asFlags(rows);
+      const ups = rows.filter(function(r){ return !r.mine && F[r.pid] && F[r.pid].beat.length; });
+      upTotal += ups.length;
+      const shown = rows.filter(function(r){
+        if(r.mine ? !A.mine : !A.avail) return false;
+        if(A.upOnly) return r.mine ? F[r.pid] && F[r.pid].ahead > 0 : F[r.pid] && F[r.pid].beat.length > 0;
+        return true;
+      }).sort(function(a, b){ return (a.rank || 1e9) - (b.rank || 1e9); });
+      const body = shown.map(function(r){
+        const p = ctx.players[r.pid], f = F[r.pid] || {};
+        const posRk = set.list ? (function(){ const e = (ros ? ctx.rk.ros : ctx.rk.weekly)[r.pid]; return e && e.pr ? e.pr : ''; })() : '';
+        let note = '', cls = r.mine ? ' mine' : ' fa';
+        if(!r.rank) note = '<span class="as-n dim">Not ranked by FantasyPros</span>';
+        else if(r.mine) note = f.ahead ? '<span class="as-n warn">' + f.ahead + ' available ranked higher</span>' : '<span class="as-n ok">No available player ranked higher</span>';
+        else if(f.beat && f.beat.length){
+          const w = ctx.players[f.beat[0]], wr = rows.find(function(x){ return x.pid === f.beat[0]; });
+          cls += f.gap <= AS_CLOSE ? ' up close' : ' up';
+          note = '<span class="as-n up">Above your ' + escapeHTML(lastName(f.beat[0])) + ' <small>#' + wr.rank + '</small> by ' + f.gap + (f.beat.length > 1 ? ' <small>+' + (f.beat.length - 1) + ' more of yours</small>' : '') + '</span>';
+          if(w && w.position) cls += '';
+        }
+        return '<div class="as-row' + cls + '" data-as-pid="' + escapeHTML(r.pid) + '" role="button" tabindex="0">' +
+          '<span class="as-rk">' + (r.rank ? '#' + r.rank : '—') + '</span>' + photoHTML(r.pid, 'as-ph') +
+          '<span class="as-who"><b>' + escapeHTML(playerName(p)) + '</b><small>' + escapeHTML(posGroup(r.pid) + ' · ' + (p.team || 'FA')) + (posRk ? ' · ' + escapeHTML(posRk) : '') + ' ' + injuryChip(effectiveStatus(r.pid)) + '</small></span>' +
+          '<span class="as-tag' + (r.mine ? ' mine">Yours' : '">Available') + '</span>' + note + '</div>';
+      }).join('');
+      return '<section class="as-sec card"><div class="as-sh"><h3>' + escapeHTML(set.label) + '</h3><span>' + (set.list ? 'FantasyPros ' + (set.list === 'idp' ? 'IDP' : ros ? 'PPR overall' : 'PPR superflex') + ' rank' : 'position rank') +
+          ' · ' + (ups.length ? '<b>' + ups.length + ' available above yours</b>' : 'none available above yours') + '</span></div>' +
+        (body || '<div class="as-empty">' + (A.upOnly ? 'FantasyPros doesn’t rank any available player above yours here.' : 'Nothing to show.') + '</div>') + '</section>';
+    }).join('');
+    const scraped = ros ? src.ros.scraped : src.weekly.scraped;
+    el.innerHTML = head +
+      '<div class="as-sum"><b>' + (upTotal ? upTotal + ' available player' + (upTotal === 1 ? '' : 's') + ' FantasyPros ranks above someone on your team' : 'FantasyPros doesn’t rank any available player above yours') + '</b>' +
+        '<span>' + (ros ? 'Rest of season' : 'Week ' + ctx.week) + ' · FantasyPros consensus' + (scraped ? ', updated ' + escapeHTML(fmtSrcDay(scraped)) : '') + '. Even one spot counts; 1–3 spots are marked as close.' +
+        (S.mixedFallback ? ' FantasyPros’ weekly cross-position list isn’t out for week ' + ctx.week + ' yet, so each position is compared on its own.' : '') + '</span></div>' +
+      sections +
+      '<p class="as-foot">Expert consensus uses PPR scoring, not your league’s settings. For points in your scoring, see Waiver value. Pick positions with the chips above: one position compares position ranks; several (FLEX, RB + WR, IDP…) use FantasyPros’ mixed list.</p>';
+  }
+  document.addEventListener('click', function(e){
+    if(!e.target.closest || ctx.pl.view !== 'assess') return;
+    const sp = e.target.closest('[data-as-span]');
+    if(sp){ ctx.as.span = sp.getAttribute('data-as-span'); asSave(); renderAssess(); return; }
+    const row = e.target.closest('#wv .as-row');
+    if(row && !e.target.closest('button, a, input, label')) openPlayerFromList(row.getAttribute('data-as-pid'), row);
+  });
+  document.addEventListener('change', function(e){
+    if(!e.target.closest || ctx.pl.view !== 'assess') return;
+    const sh = e.target.closest('[data-as-show]');
+    if(sh){ ctx.as[sh.getAttribute('data-as-show')] = sh.checked; if(!ctx.as.mine && !ctx.as.avail){ ctx.as[sh.getAttribute('data-as-show') === 'mine' ? 'avail' : 'mine'] = true; } renderAssess(); return; }
+    if(e.target.closest('[data-as-up]')){ ctx.as.upOnly = e.target.checked; asSave(); renderAssess(); }
+  });
+  document.addEventListener('keydown', function(e){
+    if((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('as-row')){ e.preventDefault(); e.target.click(); }
+  });
   function renderWaiverValue(){
     const el = document.getElementById('wv');
     if(!el) return;
@@ -11205,7 +11362,7 @@
       tk.hidden = st.view !== 'trend';
       const xn = document.getElementById('xfp-note');
       let xnOff = false; try{ xnOff = localStorage.getItem('rv-xfp-note') === 'off'; }catch(e){}
-      xn.hidden = xnOff || !ctx.xfp || st.view === 'value';
+      xn.hidden = xnOff || !ctx.xfp || st.view === 'value' || st.view === 'assess';
       const sh = document.getElementById('pl-show');
       sh.hidden = st.view !== 'all';
       if(st.view === 'all'){
@@ -11224,8 +11381,9 @@
       const q = document.getElementById('pl-q');
       if(q.value !== st.q) q.value = st.q;
     }
-    document.getElementById('fa-view').classList.toggle('pl-value', st.view === 'value');
+    document.getElementById('fa-view').classList.toggle('pl-value', st.view === 'value' || st.view === 'assess');
     if(st.view === 'value'){ renderWaiverValue(); return; }
+    if(st.view === 'assess'){ renderAssess(); return; }
     document.getElementById('wv').innerHTML = '';
     document.getElementById('pl-q-x').hidden = !st.q;
     const dirBtn = document.getElementById('pl-dir');
@@ -16547,7 +16705,7 @@
     } else{
       const v = ctx.view;
       if(v === 'roster') sel = '.mu-card[data-open-opp], .hd-card, #starters-list .slot-row, #bench-list .slot-row';
-      else if(v === 'fa') sel = ctx.pl.view === 'value' ? '#wv .wv-item' : '#fa-list .slot-row';
+      else if(v === 'fa') sel = ctx.pl.view === 'value' ? '#wv .wv-item' : ctx.pl.view === 'assess' ? '#wv .as-row' : '#fa-list .slot-row';
       else if(v === 'league') sel = '.mu-card[data-open-opp], #standings .st-row[data-open-trade]';
       else if(v === 'intel') sel = itDesk() && ctx.it.mode === 'cards' ? '' : '#it-root .it-tile';
       else if(v === 'compare'){

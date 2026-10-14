@@ -164,8 +164,8 @@ def fp_weekly(m, kick):
     return {'week': week, 'scraped': max(scraped) if scraped else None, 'players': out, 'unmatched': unmatched, 'rows': rows}
 
 
-def fp_ros(m):
-    rows = csv_rows('db_fpecr_latest.csv')
+def fp_ros(m, rows=None):
+    rows = rows if rows is not None else csv_rows('db_fpecr_latest.csv')
     out, unmatched, scraped, by_page = {}, [], set(), {}
     for r in rows:
         if ROS_PAGES.get(r.get('fp_page')) and num(r.get('ecr')) is not None:
@@ -183,6 +183,52 @@ def fp_ros(m):
             else:
                 unmatched.append({'n': r.get('player'), 't': team, 'pos': pos, 'fpid': r.get('id'), 'pr': rec['pr']})
     return {'scraped': max(scraped) if scraped else None, 'players': out, 'unmatched': unmatched}
+
+
+# Cross-position lists (Sleepa Assess compares RB + WR, FLEX, all IDP...): positional ranks can't be compared across
+# positions, so these keep FantasyPros' own mixed rankings. Rest of season: PPR overall (QB/RB/WR/TE/K/DST) and IDP.
+# This week: PPR superflex (QB/RB/WR/TE) and IDP. Rank = order of average rank on the page (unmatched rows included).
+OVERALL_PAGES = {'/nfl/rankings/ros-ppr-overall.php': ('ros', 'off'), '/nfl/rankings/ros-idp.php': ('ros', 'idp'),
+                 '/nfl/rankings/ppr-superflex.php': ('weekly', 'off'), '/nfl/rankings/idp.php': ('weekly', 'idp')}
+OVR_POS = {'DST': 'DEF', 'DE': 'DL', 'DT': 'DL', 'CB': 'DB', 'S': 'DB'}
+
+
+def scrape_week(day, kick):
+    """The week a list scraped on `day` (YYYY-MM-DD) was made for: the first week whose last game starts after that day."""
+    if not day or not kick:
+        return None
+    end = datetime.datetime.fromisoformat(day + 'T23:59:59+00:00')
+    last = {}
+    for team, weeks in kick.items():
+        for w, iso in weeks.items():
+            k = datetime.datetime.fromisoformat(iso.replace('Z', '+00:00'))
+            if int(w) not in last or k > last[int(w)]:
+                last[int(w)] = k
+    later = [w for w, k in last.items() if k > end]
+    return min(later) if later else None
+
+
+def fp_overall(m, rows, kick):
+    out = {'ros': {'off': {}, 'idp': {}}, 'weekly': {'off': {}, 'idp': {}}}
+    scraped = {'ros': set(), 'weekly': set()}
+    by_page = {}
+    for r in rows:
+        if r.get('fp_page') in OVERALL_PAGES and num(r.get('ecr')) is not None:
+            by_page.setdefault(r['fp_page'], []).append(r)
+    for page, prs in by_page.items():
+        span, kind = OVERALL_PAGES[page]
+        for i, r in enumerate(sorted(prs, key=lambda x: num(x.get('ecr')))):
+            pos = OVR_POS.get(r.get('pos'), r.get('pos'))
+            if (kind == 'idp') != (pos in ('DL', 'LB', 'DB')):
+                continue   # a stray offensive row on the IDP page (or the reverse)
+            scraped[span].add(r.get('scrape_date'))
+            team = TEAM.get(r.get('team'), r.get('team'))
+            sid, how = m.fp_player(r.get('id'), r.get('player'), team, pos)
+            if sid and sid not in out[span][kind]:
+                out[span][kind][sid] = i + 1
+    wk_day = max(scraped['weekly']) if scraped['weekly'] else None
+    return {'ranks': out, 'ros_scraped': max(scraped['ros']) if scraped['ros'] else None,
+            'weekly_scraped': wk_day, 'weekly_week': scrape_week(wk_day, kick)}
 
 
 def boris_tiers(weekly_rows, m, kick):
@@ -287,10 +333,18 @@ def build_rankings(sleeper, kick, season, week):
     out['sources']['weekly'] = {'week': wk['week'], 'scraped': wk['scraped'], 'n': len(wk['players'])}
     out['unmatched']['weekly'] = wk['unmatched']
     try:
-        ro = fp_ros(m)
+        ecr_rows = csv_rows('db_fpecr_latest.csv')
+        ro = fp_ros(m, ecr_rows)
         out['ros'] = ro['players']
         out['sources']['ros'] = {'scraped': ro['scraped'], 'n': len(ro['players'])}
         out['unmatched']['ros'] = ro['unmatched']
+        try:
+            ov = fp_overall(m, ecr_rows, kick)
+            out['overall'] = ov['ranks']
+            out['sources']['overall'] = {'ros_scraped': ov['ros_scraped'], 'weekly_scraped': ov['weekly_scraped'], 'weekly_week': ov['weekly_week'],
+                                         'n': {sp: {k: len(v) for k, v in d.items()} for sp, d in ov['ranks'].items()}}
+        except Exception as e:
+            print('  (FantasyPros overall lists unavailable:', e, ')', file=sys.stderr)
     except Exception as e:
         print('  (FantasyPros ROS mirror unavailable:', e, ')', file=sys.stderr)
     try:

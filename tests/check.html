@@ -342,6 +342,17 @@
     eq('gap = league ROS rank − FantasyPros ROS rank', g.map(function(x){ return x.pid + ':' + x.gap; }), ['a:15', 'b:7', 'c:-2', 'd:-9']);
     eq('levels: 12+ underrated (big), 6+ experts higher, −6 or less projection higher', g.map(function(x){ return x.level; }), ['big', 'yes', 'none', 'over']);
   }
+  // ---- 3f. Sleepa Assess: available players FantasyPros ranks above mine ----
+  section('Sleepa Assess: available players ranked above any of mine (even by one spot)');
+  {
+    const A = new Function(extract('function asFlags(') + '; return { asFlags };')();
+    const eq = function(name, got, want){ const g = JSON.stringify(got), w = JSON.stringify(want); check(name, g === w, 'got ' + g + (g === w ? '' : ', want ' + w)); };
+    const F = A.asFlags([{ pid: 'm1', mine: true, rank: 10 }, { pid: 'm2', mine: true, rank: 30 }, { pid: 'm3', mine: true, rank: null },
+      { pid: 'a1', mine: false, rank: 5 }, { pid: 'a2', mine: false, rank: 29 }, { pid: 'a3', mine: false, rank: 31 }]);
+    eq('an available player is flagged over every one of mine he outranks, worst-ranked first', [F.a1.beat, F.a2.beat, F.a3.beat], [['m2', 'm1'], ['m2'], []]);
+    eq('gap = spots above the worst-ranked of mine he beats; one spot counts', [F.a1.gap, F.a2.gap, F.a3.gap], [25, 1, 0]);
+    eq('mine: how many available players rank above him; unranked players are left out', [F.m1.ahead, F.m2.ahead, F.m3], [1, 2, undefined]);
+  }
 
   // ---- 3f. Sleepa Zone All matchups: league short codes ----
   section('All matchups: league short codes');
