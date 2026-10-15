@@ -2137,6 +2137,11 @@
   .section-title #pl-title{ font-size: inherit; font-weight: inherit; } /* the heading itself, not a subtitle */
   .pl-views{ width: fit-content; max-width: 100%; }
   .pl-views button, .pl-trendkind button{ padding: 7px 14px; }
+  /* six views on one line: labels never wrap; a little tighter so they fit next to the desktop side panel, and if the
+     column is narrower still the row scrolls sideways instead of squeezing (.seg, defined later, would win without .seg here) */
+  .seg.pl-views{ display: flex; overflow-x: auto; scrollbar-width: none; }
+  .seg.pl-views::-webkit-scrollbar{ display: none; }
+  .seg.pl-views button{ flex: none; white-space: nowrap; padding: 7px 9px; }
   .pl-search{ display: flex; align-items: center; gap: 8px; padding: 0 6px 0 12px; min-height: 44px; border-radius: 12px; background: var(--surface); box-shadow: var(--shadow), inset 0 0 0 1px var(--hair); color: var(--text-3); }
   .pl-search svg{ width: 17px; height: 17px; flex-shrink: 0; }
   .pl-search input{ flex: 1; min-width: 0; border: none; background: none; box-shadow: none; outline: none; padding: 10px 0; min-height: 0; font: inherit; font-size: 16px; color: var(--text); }
@@ -2181,7 +2186,8 @@
   .tr-count{ font-weight: 700; } .tr-count.add{ color: var(--accent); } .tr-count.drop{ color: var(--danger); }
   .tr-count.rise{ color: var(--accent); font-weight: 600; font-size: 11.5px; } .tr-count.rise.down{ color: var(--danger); }
   @media (max-width: 560px){
-    .pl-views{ width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); }
+    .seg.pl-views{ width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; overflow: visible; border-radius: 18px; }   /* phones: 3 × 2, same size */
+    .seg.pl-views button{ padding: 7px 4px; text-overflow: ellipsis; overflow: hidden; }
     .pl-custom{ grid-template-columns: 1fr 1fr; }
     .pl-custom select:first-child{ grid-column: 1 / -1; }
     .pl-add{ grid-column: 1 / -1; }
