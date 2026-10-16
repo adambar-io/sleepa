@@ -32,6 +32,8 @@ ESPN_TEAM_FIX = {'WSH': 'WAS'}     # ESPN abbreviation -> Sleeper abbreviation
 ESPN_SKIP_POS = {'C', 'G', 'T', 'OT', 'OG', 'OL', 'LS', 'P'}   # offensive line, long snapper, punter: never on a fantasy roster
 TEAM_FIX = {'LA': 'LAR'}           # nflverse abbreviation -> Sleeper abbreviation
 SKILL = ('QB', 'RB', 'WR', 'TE')   # positions that get snap / share / depth data
+# defensive depth-chart slots (nflverse pos_abb; rank 1 = the starter in that slot): IDP leagues' opportunity watch
+DEF_DEPTH = ('LDE', 'RDE', 'LDT', 'RDT', 'NT', 'MLB', 'WLB', 'SLB', 'LILB', 'RILB', 'LCB', 'RCB', 'NB', 'FS', 'SS')
 INJURY_POS = SKILL + ('K',)        # positions that get injury / practice data
 # players.json: the Sleeper player fields the app uses (keep in sync with PLAYER_FIELDS in index.html). About 260 KB
 # gzipped instead of the 2.6 MB / 14.7 MB raw /players/nfl, so the app can re-check it on every open.
@@ -482,7 +484,8 @@ def build(season, previous=None):
         key = (norm_name(r.get('display_name')), team(r.get('latest_team', '')))
         by_name_team.setdefault(key, set()).add(gsis)
 
-    relevant = {sid: p for sid, p in sleeper.items() if p.get('position') in INJURY_POS and p.get('team')}
+    # QB / RB / WR / TE / K, plus defenders (IDP: their depth chart and official injury report)
+    relevant = {sid: p for sid, p in sleeper.items() if p.get('team') and (p.get('position') in INJURY_POS or set(p.get('fantasy_positions') or []) & set(IDP_POS))}
     gsis_of, method = {}, {'id_map': 0, 'sleeper_gsis': 0, 'name_team': 0, 'unmatched': 0}
     for sid, p in relevant.items():
         g = dp_sleeper_gsis.get(sid)
@@ -538,11 +541,11 @@ def build(season, previous=None):
         print('  (snap counts unavailable, keeping previous snap share:', e, ')', file=sys.stderr)
         stale.append('snaps')
 
-    # --- depth chart: latest snapshot per team, offense skill positions, label = pos_abb + pos_rank ---
+    # --- depth chart: latest snapshot per team, offense skill positions and defensive slots, label = pos_abb + pos_rank ---
     latest = {}  # team -> (dt, rows)
     try:
         for r in csv_rows(SOURCES['depth'].format(season=season)):
-            if r.get('pos_abb') not in SKILL or not r.get('gsis_id'):
+            if r.get('pos_abb') not in SKILL + DEF_DEPTH or not r.get('gsis_id'):
                 continue
             t, dt = team(r['team']), r['dt']
             cur = latest.get(t)
