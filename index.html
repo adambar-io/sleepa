@@ -16696,8 +16696,10 @@
   // every league: is he mine, on another team, or a free agent? (League ownership's cache of the other leagues)
   function injOwners(pid){
     const out = { mine: [], fa: [], taken: [] };
+    const fp = fantasyPositions(pid);
     ownLeagueList().forEach(function(L){
       if(!L.rosters) return;
+      if(!(L.slots || []).some(function(sl){ return (FLEX_GROUPS[sl] || [sl]).some(function(x){ return fp.indexOf(x) !== -1; }); })) return;   // e.g. a defender in a league without IDP
       const r = L.rosters.find(function(x){ return (x.players || []).indexOf(pid) !== -1; }), code = amCode(L.name);
       if(!r) out.fa.push(code);
       else if(r.owner_id === ctx.userId || (r.co_owners || []).indexOf(ctx.userId) !== -1) out.mine.push(code);
@@ -16728,7 +16730,7 @@
     return v;
   }
   function injStarts(pos){ return INJ_STARTS[pos] || (INJ_DEF_SLOTS[pos] ? 1 : 0); }
-  function injOut(pid){ const I = injInfo(pid); return !!INJ_OUT[injNorm(I.st)] || I.srcs.some(function(x){ return INJ_OUT[injNorm(x[1])]; }); }
+  function injOut(pid){ return !!INJ_OUT[injNorm(injInfo(pid).st)]; }   // the status the chip shows
   // Opportunity watch: an offensive player in a starting depth slot is out; the next healthy players at his position move up
   function injOppData(){
     const D = injDepth(), out = [];
