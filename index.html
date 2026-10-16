@@ -3065,6 +3065,36 @@
   /* ============ Sleepa Zone: every league at once ============ */
   /* Impact colors (Phase 2 feed): always the effect on ME. Soft versions of the existing palette. */
   :root{ --impact-pos: var(--accent); --impact-neg: var(--danger); --impact-mixed: var(--warn); --impact-neutral: var(--text-3); }
+  /* ---- Intel: Injuries tab ---- */
+  .it-tabs{ width: fit-content; } .it-tabs button{ padding: 7px 16px; font-size: 13px; }
+  .inj-top{ display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; } .inj-scope button{ padding: 6px 12px; font-size: 12.5px; } .inj-asof{ font-size: 11.5px; color: var(--text-3); }
+  .inj-sched{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .inj-st{ padding: 9px 11px; border-radius: 12px; background: var(--surface-2); opacity: .6; } .inj-st small{ display: block; font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
+  .inj-st b{ display: block; font-size: 13.5px; } .inj-st span{ font-size: 11.5px; color: var(--text-3); } .inj-st.on{ opacity: 1; box-shadow: inset 0 0 0 1.5px var(--accent); } .inj-st.done{ opacity: .85; }
+  .inj-sec{ padding: 14px 16px; } .inj-sh{ display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; margin-bottom: 10px; } .inj-sh b{ font-size: 16px; } .inj-sh span{ font-size: 12px; color: var(--text-3); }
+  .inj-rows{ display: grid; gap: 6px; }
+  .inj-r{ display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 12px; background: var(--surface-2); cursor: pointer; }
+  @media (hover: hover){ .inj-r:hover{ background: var(--surface-3); } }
+  .ph.inj-av{ width: 40px; height: 40px; } .inj-rm{ min-width: 0; }
+  .inj-rn{ display: flex; align-items: center; flex-wrap: wrap; gap: 5px 7px; } .inj-rn b{ font-size: 14px; font-weight: 650; }
+  .inj-rs{ font-size: 12px; color: var(--text-3); margin-top: 2px; } .inj-rs b{ color: var(--text-2); font-weight: 600; }
+  .inj-rnote{ margin-top: 4px; font-size: 12.5px; color: var(--text-2); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .inj-dis{ font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 6px; color: var(--warn); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--warn) 45%, transparent); }
+  .inj-tag{ font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 6px; background: var(--surface-3); color: var(--text-2); } .inj-tag.start{ background: var(--accent-soft); color: var(--accent); }
+  .inj-tag.mine{ background: color-mix(in srgb, var(--impact-pos) 16%, transparent); color: var(--impact-pos); } .inj-tag.opp{ background: color-mix(in srgb, var(--impact-neg) 14%, transparent); color: var(--impact-neg); } .inj-tag.fa{ color: var(--text-3); }
+  .inj-rr{ display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .inj-pr{ display: inline-flex; gap: 3px; } .inj-pr i{ width: 18px; height: 18px; border-radius: 5px; display: grid; place-items: center; font-style: normal; font-size: 9.5px; font-weight: 800; background: var(--surface-3); color: var(--text-3); }
+  .inj-pr i.fp{ background: var(--accent-soft); color: var(--accent); } .inj-pr i.lp{ background: var(--warn-soft); color: var(--warn); } .inj-pr i.dnp{ background: var(--danger-soft); color: var(--danger); }
+  .inj-act{ display: grid; gap: 6px; padding: 6px; border-radius: 14px; } .inj-act.out{ background: var(--danger-soft); } .inj-act.gtd{ background: var(--warn-soft); }
+  .inj-fix{ display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 0 6px 4px; font-size: 12.5px; color: var(--text-2); }
+  .inj-btn{ min-height: 32px; padding: 0 12px; border-radius: 999px; background: var(--surface); color: var(--text); font-size: 12.5px; font-weight: 600; }
+  .inj-feed{ display: grid; gap: 8px; }
+  .inj-f{ padding: 10px 12px; border-radius: 12px; background: var(--surface-2); } .inj-f p{ margin: 6px 0 0; font-size: 13px; line-height: 1.5; color: var(--text-2); } .inj-fs b{ color: var(--text); }
+  .inj-ft{ display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 11px; color: var(--text-3); } .inj-src{ font-weight: 700; color: var(--text-2); }
+  .inj-fh{ display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; margin-top: 6px; cursor: pointer; } .ph.inj-fi{ width: 28px; height: 28px; } .inj-fh b{ font-size: 14px; } .inj-fh small{ font-size: 11.5px; color: var(--text-3); }
+  .inj-fl summary{ margin-top: 6px; cursor: pointer; font-size: 12px; font-weight: 600; color: var(--accent); } .inj-fl p{ color: var(--text); }
+  .inx-all{ min-height: 30px; padding: 0 12px; border-radius: 999px; background: var(--surface); color: var(--text); font-size: 12.5px; font-weight: 600; }
+  @media (max-width: 600px){ .inj-sched{ grid-template-columns: 1fr; } .inj-st{ display: flex; align-items: baseline; gap: 8px; } .inj-st small{ width: 62px; flex: none; } .inj-r{ grid-template-columns: 40px minmax(0, 1fr); } .inj-rr{ grid-column: 2; flex-direction: row; justify-content: space-between; } }
   /* ---- Sleepa Zone: Game sheet ---- */
   [data-zgs]{ cursor: pointer; }
   @media (hover: hover){ .zp[data-zgs]:hover, .zg-r[data-zgs]:hover, .zc-c[data-zgs]:hover .zc-n{ filter: brightness(1.08); } .zc-c[data-zgs]:hover .zc-n, .zg-r[data-zgs]:hover .zg-n span{ text-decoration: underline; text-underline-offset: 2px; } }
@@ -15885,6 +15915,7 @@
     const need = ownNeed();
     if(need.length) Promise.allSettled(need.map(ownFetch)).then(function(){ renderInx(); });
     const list = inxProblems(), now = Date.now();
+    injBadge(list.filter(function(x){ return x.league.current; }).length);
     if(!list.length){ el.innerHTML = ''; return; }
     const outs = list.filter(function(x){ return x.kind === 'out'; }).length, multi = (ctx.pendingLeagues || []).length > 1;
     const head = outs ? outs + ' starter' + (outs === 1 ? ' is' : 's are') + ' ruled out' + (list.length > outs ? ' · ' + (list.length - outs) + ' game-time decision' + (list.length - outs === 1 ? '' : 's') : '')
@@ -15906,7 +15937,7 @@
         act + '</div>';
     }).join('');
     const canNotify = 'Notification' in window, perm = canNotify ? Notification.permission : 'denied';
-    el.innerHTML = '<div class="inx ' + (outs ? 'out' : 'gtd') + '" role="alert"><div class="inx-h"><b>' + head + '</b>' +
+    el.innerHTML = '<div class="inx ' + (outs ? 'out' : 'gtd') + '" role="alert"><div class="inx-h"><b>' + head + '</b><button type="button" class="inx-all" data-inj-go>See all injuries ›</button>' +
         (canNotify && perm === 'default' ? '<button type="button" class="inx-bell" data-inx-notify>Alert me if a starter is ruled out</button>' : canNotify && perm === 'granted' ? '<span class="inx-on">Alerts on while Sleepa is open</span>' : '') + '</div>' +
       rows +
       '<div class="inx-foot">Your saved Sleeper lineups' + (multi ? ' in every league' : '') + '. Within 3 hours of kickoff each listed starter is re-checked with Sleeper every 5 minutes. Sleepa can’t change your lineup: make the swap in Sleeper.</div></div>';
@@ -16496,11 +16527,193 @@
   }
 
   // ---- render: the Intel view (desktop List / Cards, phone Slate) ----
+  // ============ Intel: Injuries tab ============
+  // One place for injuries. This league (default): my starters at risk (Needs action), my injured players, my opponent's
+  // injured starters; All players: every injured fantasy-relevant player. Both: the report schedule and the Injury feed.
+  // Sources, never merged: Sleeper (players.json), the official report + practice log (nflverse), ESPN (espn.json: each
+  // player's latest dated note with a short and a full writeup). ESPN only carries the latest note, so every note and
+  // every Sleeper status change is saved on this device as it arrives (IndexedDB 'inj-feed'): the feed grows a history.
+  const INJ_FEED_KEY = 'inj-feed', INJ_KEEP = 21 * DAY, INJ_FEED_MAX = 1500, INJ_PAGE = 40;
+  ctx.inj = { scope: 'league', feed: null, n: INJ_PAGE, snapTs: 0, espnTs: 0 };
+  try{ ctx.inj.scope = localStorage.getItem('rv-inj-scope') === 'all' ? 'all' : 'league'; }catch(e){}
+  try{ ctx.it.tab = localStorage.getItem('rv-it-tab') === 'inj' ? 'inj' : 'games'; }catch(e){ ctx.it.tab = 'games'; }
+  function injNorm(st){
+    const s = String(st || '').toLowerCase();
+    if(!s || s === 'healthy' || s === 'active') return '';
+    if(/^q/.test(s)) return 'Q'; if(/doubt/.test(s)) return 'D'; if(/^out/.test(s)) return 'O'; if(/reserve|^ir/.test(s)) return 'IR';
+    if(/pup|physically/.test(s)) return 'PUP'; if(/susp/.test(s)) return 'SUS'; if(/^na$|non.?football|not active/.test(s)) return 'NA'; if(/day/.test(s)) return 'DTD';
+    return s.toUpperCase().slice(0, 4);
+  }
+  function injRelevant(pid){
+    const p = ctx.players[pid];
+    if(!p || !p.team) return false;
+    const lp = leaguePositions();
+    return fantasyPositions(pid).some(function(x){ return lp.indexOf(x) !== -1; }) && p.position !== 'DEF';
+  }
+  function injInfo(pid){
+    const p = ctx.players[pid] || {}, off = officialInjury(pid), en = espnEntry(pid);
+    const srcs = [['Sleeper', p.injury_status], ['Official report', off && off.st], ['ESPN', en && en.st]].filter(function(x){ return injNorm(x[1]); });
+    const kinds = srcs.map(function(x){ return injNorm(x[1]); }).filter(function(x, i, a){ return a.indexOf(x) === i; });
+    const st = effectiveStatus(pid) || (srcs[0] && srcs[0][1]) || '';
+    return { st: st, hurt: !!injNorm(st) || srcs.length > 0, off: off, en: en, srcs: srcs, disagree: kinds.length > 1,
+      body: p.injury_body_part || (off && (off.ri || off.pi)) || (en && en.type) || '', ret: en && en.ret };
+  }
+  function injPracticeHTML(off){
+    if(!off || !off.g) return '';
+    return '<span class="inj-pr" title="Practice: Wed / Thu / Fri (official report)">' + practiceDays(off.g).map(function(d){
+      const c = (off.p || {})[d], lbl = c && PRAC[c] ? PRAC[c][0] : 'No report';
+      return '<i class="' + (c === 'FP' ? 'fp' : c === 'LP' ? 'lp' : c === 'DNP' ? 'dnp' : 'none') + '" title="' + escapeHTML(dowShort(d) + ': ' + lbl) + '">' + escapeHTML(dowShort(d).charAt(0)) + '</i>';
+    }).join('') + '</span>';
+  }
+  function injOwnerTag(pid){
+    if(isMine(pid)) return '<span class="inj-tag mine">Yours</span>';
+    const mu = myMatchup();
+    if(mu && mu.starters.indexOf(pid) !== -1) return '<span class="inj-tag opp">Opponent starts</span>';
+    const o = ownerOf(pid);
+    return o !== undefined ? '<span class="inj-tag">' + escapeHTML(rosterName(o)) + '</span>' : '<span class="inj-tag fa">Free agent</span>';
+  }
+  function injRowHTML(pid, tag){
+    const p = ctx.players[pid] || {}, I = injInfo(pid), k = kickoff(p.team, ctx.week), m = matchup(p.team, ctx.week);
+    const game = m && m.bye ? 'Bye' : k ? (k <= Date.now() ? 'Played' : kickText(k)) : '';
+    return '<div class="inj-r"' + analyzeAttr(pid) + ' role="button" tabindex="0">' + photoHTML(pid, 'inj-av') +
+      '<div class="inj-rm"><div class="inj-rn"><b>' + escapeHTML(playerName(p)) + '</b>' + injuryChip(I.st) + (I.disagree ? '<span class="inj-dis" title="' + escapeHTML(I.srcs.map(function(x){ return x[0] + ': ' + x[1]; }).join(' · ')) + '">Sources differ</span>' : '') + (tag || '') + '</div>' +
+        '<div class="inj-rs">' + escapeHTML([eligLabel(pid) + ' · ' + (p.team || 'FA'), I.body, game].filter(Boolean).join(' · ')) + (I.ret ? ' · <b>back ' + escapeHTML(fmtDay(I.ret)) + '</b>' : '') + '</div>' +
+        (I.en && I.en.short ? '<div class="inj-rnote">' + escapeHTML(I.en.short) + '</div>' : '') + '</div>' +
+      '<div class="inj-rr">' + injPracticeHTML(I.off) + '<a class="inj-news" href="' + escapeHTML(injuryNewsLink(pid).href) + '" target="_blank" rel="noopener noreferrer">News ↗</a></div></div>';
+  }
+  // ---- the feed: ESPN notes + Sleeper status changes, kept on this device ----
+  async function injFeedLoad(){
+    if(ctx.inj.feed) return ctx.inj.feed;
+    let f = null;
+    try{ f = await idbGet(INJ_FEED_KEY); }catch(e){}
+    ctx.inj.feed = f && f.items ? f : { items: {}, snap: {} };
+    return ctx.inj.feed;
+  }
+  function injFeedMerge(){
+    const F = ctx.inj.feed, now = Date.now();
+    if(!F) return;
+    let added = 0;
+    if(ctx.espn && ctx.espn.players && ctx.inj.espnTs !== ctx.espnTs){
+      ctx.inj.espnTs = ctx.espnTs;
+      Object.keys(ctx.espn.players).forEach(function(pid){
+        const e = ctx.espn.players[pid];
+        if(!e || !e.date || !(e.short || e.long)) return;
+        const k = 'e:' + pid + ':' + e.date;
+        if(F.items[k]) return;
+        F.items[k] = { k: k, pid: pid, t: Date.parse(e.date) || now, src: 'ESPN', st: e.st || '', short: e.short || '', long: e.long || '' };
+        added++;
+      });
+    }
+    if(ctx.playersTs && ctx.inj.snapTs !== ctx.playersTs){
+      ctx.inj.snapTs = ctx.playersTs;
+      const snap = F.snap, first = !Object.keys(snap).length;
+      Object.keys(ctx.players).forEach(function(pid){
+        const st = ctx.players[pid].injury_status || '', was = snap[pid] || '';
+        if(st === was) return;
+        if(!first && injRelevant(pid)){ const k = 's:' + pid + ':' + now; F.items[k] = { k: k, pid: pid, t: now, src: 'Sleeper', from: was, to: st }; added++; }
+        if(st) snap[pid] = st; else delete snap[pid];
+      });
+      added++;   // the snapshot changed: save it
+    }
+    if(!added) return;
+    const keys = Object.keys(F.items).filter(function(k){ return now - F.items[k].t > INJ_KEEP; });
+    keys.forEach(function(k){ delete F.items[k]; });
+    const all = Object.keys(F.items);
+    if(all.length > INJ_FEED_MAX) all.sort(function(a, b){ return F.items[a].t - F.items[b].t; }).slice(0, all.length - INJ_FEED_MAX).forEach(function(k){ delete F.items[k]; });
+    try{ idbSet(INJ_FEED_KEY, F); }catch(e){}
+  }
+  function injAgo(t){
+    const m = Math.round((Date.now() - t) / 60000);
+    if(m < 1) return 'just now';
+    if(m < 60) return m + 'm ago';
+    if(m < 24 * 60) return Math.round(m / 60) + 'h ago';
+    return new Date(t).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+  }
+  // an ESPN note is an injury update when the player has an injury status there, or the note talks about one
+  const INJ_WORDS = new RegExp('(?:^|[^a-z])(?:' + 'injur|practic|questionable|doubtful|ruled out|inactive|concussion|hamstring|sidelined|surgery|strain|sprain|illness|week-to-week|day-to-day|did not practice|activated|injured reserve' + '|(?:' + 'ir|pup|ankle|knee|groin|shoulder|foot|toe|calf|quad|hip|wrist|hand|elbow|ribs?|limited|dnp|mri|returned from|return from|out for the season|out indefinitely' + ')(?![a-z]))', 'i');   /* whole words for the short ones; no backslashes */
+  function injIsUpdate(x){ return x.src !== 'ESPN' || !!injNorm(x.st) || INJ_WORDS.test((x.short || '') + ' ' + (x.long || '')); }
+  function injFeedHTML(){
+    const F = ctx.inj.feed, sc = ctx.inj.scope;
+    if(!F) return '<p class="am-none">Loading…</p>';
+    const items = Object.keys(F.items).map(function(k){ return F.items[k]; }).filter(function(x){
+      return ctx.players[x.pid] && injIsUpdate(x) && (sc === 'all' ? injRelevant(x.pid) : ownerOf(x.pid) !== undefined || isMine(x.pid));
+    }).sort(function(a, b){ return b.t - a.t; });
+    if(!items.length) return '<p class="am-none">No injury updates yet' + (sc === 'league' ? ' for players in this league' : '') + '. New notes and status changes collect here as they come in.</p>';
+    return '<div class="inj-feed">' + items.slice(0, ctx.inj.n).map(function(x){
+      const p = ctx.players[x.pid];
+      const body = x.src === 'Sleeper'
+        ? '<p class="inj-fs"><b>Status: ' + escapeHTML(x.from || 'Healthy') + ' → ' + escapeHTML(x.to || 'Healthy') + '</b></p>'
+        : '<p>' + escapeHTML(x.short) + '</p>' + (x.long ? '<details class="inj-fl"><summary>Full writeup</summary><p>' + escapeHTML(x.long) + '</p></details>' : '');
+      return '<article class="inj-f"><div class="inj-ft"><span>' + escapeHTML(injAgo(x.t)) + '</span><span class="inj-src">' + x.src + '</span>' + injOwnerTag(x.pid) + '</div>' +
+        '<div class="inj-fh"' + analyzeAttr(x.pid) + ' role="button" tabindex="0">' + photoHTML(x.pid, 'inj-fi') + '<b>' + escapeHTML(playerName(p)) + '</b><small>' + escapeHTML(eligLabel(x.pid) + ' · ' + (p.team || 'FA')) + '</small>' + injuryChip(x.src === 'Sleeper' ? x.to : x.st) + '</div>' + body + '</article>';
+    }).join('') + '</div>' + (items.length > ctx.inj.n ? '<button type="button" class="fa-more" data-inj-more>Show more (' + (items.length - ctx.inj.n) + ' left)</button>' : '');
+  }
+  // ---- report schedule: where we are in the week ----
+  function injScheduleHTML(){
+    const dow = etInfo(Date.now()).dow;
+    const step = { Wed: 0, Thu: 0, Fri: 1, Sat: 2, Sun: 2, Mon: 2, Tue: -1 }[dow];
+    const steps = [['Wed–Thu', 'Practice reports', 'about 4 PM ET'], ['Fri', 'Game statuses', 'Out / Doubtful / Questionable'], ['Game day', 'Inactives', '90 min before each kickoff']];
+    return '<div class="inj-sched">' + steps.map(function(s, i){ return '<div class="inj-st' + (i === step ? ' on' : i < step ? ' done' : '') + '"><small>' + s[0] + '</small><b>' + s[1] + '</b><span>' + s[2] + '</span></div>'; }).join('') + '</div>' +
+      (step === -1 ? '<p class="am-fine">Tuesday: no reports yet. The first practice report comes out Wednesday (Tuesday for Thursday games).</p>' : '');
+  }
+  function injSection(title, sub, body){ return body ? '<section class="card inj-sec"><div class="inj-sh"><b>' + title + '</b>' + (sub ? '<span>' + sub + '</span>' : '') + '</div>' + body + '</section>' : ''; }
+  function injHTML(){
+    const sc = ctx.inj.scope, seg = '<div class="wk-seg inj-scope" role="group" aria-label="Whose injuries"><button type="button" data-inj-scope="league" aria-pressed="' + (sc === 'league') + '">' + escapeHTML(ctx.league ? ctx.league.name : 'This league') + '</button><button type="button" data-inj-scope="all" aria-pressed="' + (sc === 'all') + '">All players</button></div>';
+    let h = '<div class="inj-top">' + seg + (ctx.espnTs ? '<span class="inj-asof">ESPN notes as of ' + escapeHTML(fmtWhen(ctx.espnTs)) + '</span>' : '') + '</div>' + injScheduleHTML();
+    if(sc === 'league' && ctx.myRoster){
+      const act = inxProblems().filter(function(x){ return x.league.current; });
+      h += injSection('Needs action', 'your starters this week', act.length ? '<div class="inj-rows">' + act.map(function(x){
+        return '<div class="inj-act ' + x.kind + '">' + injRowHTML(x.pid, '<span class="inj-tag">' + escapeHTML(x.slot || '') + '</span>') +
+          '<div class="inj-fix">' + (x.kind === 'out' ? (x.swap ? 'Start <b>' + escapeHTML(playerName(ctx.players[x.swap.pid])) + '</b> (' + fmtPts(x.swap.proj) + ' proj) instead.' : 'Nobody on your bench can fill ' + escapeHTML(x.slot) + '.') : 'Game-time decision' + (x.swap ? ' · pivot: <b>' + escapeHTML(playerName(ctx.players[x.swap.pid])) + '</b>' : '')) +
+          '<button type="button" class="inj-btn" data-inj-fix="' + escapeHTML(x.pid) + '">Options in Lineup ›</button></div></div>';
+      }).join('') + '</div>' : '');
+      const parked = new Set([].concat(ctx.myRoster.reserve || [], ctx.myRoster.taxi || [])), starters = new Set(ctx.myRoster.starters || []);
+      const mine = (ctx.myRoster.players || []).filter(function(pid){ return ctx.players[pid] && injInfo(pid).hurt; })
+        .sort(function(a, b){ const r = function(pid){ return starters.has(pid) ? 0 : parked.has(pid) ? 2 : 1; }; return r(a) - r(b) || (kickoff(ctx.players[a].team, ctx.week) || 9e15) - (kickoff(ctx.players[b].team, ctx.week) || 9e15); });
+      h += injSection('Your injured players', mine.length + ' on your roster', mine.length ? '<div class="inj-rows">' + mine.map(function(pid){ return injRowHTML(pid, '<span class="inj-tag ' + (starters.has(pid) ? 'start' : '') + '">' + (starters.has(pid) ? 'Starting' : parked.has(pid) ? 'IR / taxi' : 'Bench') + '</span>'); }).join('') + '</div>' : '<p class="am-none">Nobody on your roster is listed as injured.</p>');
+      const mu = myMatchup(), opp = mu ? mu.starters.filter(function(pid){ return pid && pid !== '0' && ctx.players[pid] && injInfo(pid).hurt; }) : [];
+      if(mu) h += injSection('Your opponent’s injured starters', escapeHTML(mu.name), opp.length ? '<div class="inj-rows">' + opp.map(function(pid){ return injRowHTML(pid, ''); }).join('') + '</div>' : '<p class="am-none">' + escapeHTML(mu.name) + ' has no injured starters.</p>');
+    } else if(sc === 'all'){
+      const list = Object.keys(ctx.players).filter(function(pid){ return injRelevant(pid) && injInfo(pid).hurt && injNorm(injInfo(pid).st) !== ''; })
+        .sort(function(a, b){ return (ctx.projections[b] || (rosValue(b) || {}).pts || 0) - (ctx.projections[a] || (rosValue(a) || {}).pts || 0); }).slice(0, 60);
+      h += injSection('Notable injuries', 'most valuable first', list.length ? '<div class="inj-rows">' + list.map(function(pid){ return injRowHTML(pid, injOwnerTag(pid)); }).join('') + '</div>' : '');
+    }
+    h += injSection('Injury feed', 'new notes and status changes, newest first', injFeedHTML());
+    return h;
+  }
+  function injWant(){
+    let changed = false;
+    const done = function(){ injFeedMerge(); if(ctx.view === 'intel' && ctx.it.tab === 'inj') renderIntel(); };
+    if(!ctx.espn && !ctx.espnFailed) loadEspn().then(done, done), changed = true;
+    if(!ctx.inj.feed) injFeedLoad().then(done), changed = true;
+    if(!changed) injFeedMerge();
+  }
+  function injGo(){ ctx.it.tab = 'inj'; zSave('rv-it-tab', 'inj'); kbView('intel')(); }
+  function injBadge(n){
+    document.querySelectorAll('[data-view="intel"]').forEach(function(b){
+      let bd = b.querySelector('.nav-badge');
+      if(!n){ if(bd) bd.remove(); return; }
+      if(!bd){ bd = document.createElement('span'); bd.className = 'nav-badge inj-nb'; b.appendChild(bd); }
+      bd.textContent = n; bd.setAttribute('aria-label', n + ' of your starters with an injury status');
+    });
+  }
+  document.addEventListener('click', function(e){
+    const t = e.target.closest && e.target.closest('[data-it-tab], [data-inj-scope], [data-inj-more], [data-inj-fix], [data-inj-go]');
+    if(!t) return;
+    if(t.hasAttribute('data-inj-go')){ injGo(); return; }
+    if(t.hasAttribute('data-it-tab')){ ctx.it.tab = t.getAttribute('data-it-tab'); zSave('rv-it-tab', ctx.it.tab); renderIntel(); return; }
+    if(t.hasAttribute('data-inj-scope')){ ctx.inj.scope = t.getAttribute('data-inj-scope'); ctx.inj.n = INJ_PAGE; zSave('rv-inj-scope', ctx.inj.scope); renderIntel(); return; }
+    if(t.hasAttribute('data-inj-more')){ ctx.inj.n += INJ_PAGE; renderIntel(); return; }
+    if(t.hasAttribute('data-inj-fix')){ const pid = t.getAttribute('data-inj-fix'), i = ctx.draftStarters.indexOf(pid); kbView('roster')(); setTimeout(function(){ openFocus(pid, i === -1 ? null : i); }, 60); }
+  });
+
   function renderIntel(){
     const root = document.getElementById('it-root');
     if(!root) return;
+    const tabs = '<div class="wk-seg it-tabs" role="group" aria-label="Intel"><button type="button" data-it-tab="games" aria-pressed="' + (ctx.it.tab !== 'inj') + '">Games</button><button type="button" data-it-tab="inj" aria-pressed="' + (ctx.it.tab === 'inj') + '">Injuries</button></div>';
+    if(ctx.it.tab === 'inj'){ injWant(); root.innerHTML = tabs + injHTML(); return; }
     const d = intelData();
-    if(!d){ root.innerHTML = '<div class="card it-card it-empty"><b>Intel isn’t ready for week ' + ctx.week + ' yet.</b><p class="it-none">Lines and venues refresh a few times a day; check back soon.</p></div>'; return; }
+    if(!d){ root.innerHTML = tabs + '<div class="card it-card it-empty"><b>Intel isn’t ready for week ' + ctx.week + ' yet.</b><p class="it-none">Lines and venues refresh a few times a day; check back soon.</p></div>'; return; }
     const L = itList(), models = L.games.map(function(g){ return itModel(g, L.mine); });
     ctx.it.ids = models.map(function(m){ return m.g.id; });
     if(ctx.it.idx >= models.length) ctx.it.idx = 0;
@@ -16517,7 +16730,7 @@
       html += (desk ? '<div class="it-lh"><span class="it-hint">Click a game to lift it. Esc or a click outside returns it.</span>' + seg('data-it-dense', [['detailed', 'Detailed'], ['condensed', 'Condensed']], ctx.it.dense) + '</div>' : '') +
         '<div class="it-slate">' + itWindowsHTML(models) + '</div>';
     }
-    root.innerHTML = html;
+    root.innerHTML = tabs + html;
     if(ctx.it.focus && desk && ctx.it.mode === 'list') itLift(ctx.it.focus, true);
     itCountUp(root);
     itWantWeather(L.games);
@@ -17106,6 +17319,7 @@
     ['Sleepa Huddle', 'set lineup power rank cards build', 'H', function(){ openHuddle(); }],
     ['Players', 'free agents waivers available', 'P', function(){ kbView('fa')(); }],
     ['Waiver value', 'pickups adds drops best available', '', ckSec('fa', '[data-pl-view="value"]')],
+    ['Injuries', 'injury report hurt questionable doubtful out practice inactives news', '', function(){ injGo(); }],
     ['Trending players', 'adds drops hot', '', ckSec('fa', '[data-pl-view="trend"]')],
     ['League', 'standings playoff picture table', 'E', function(){ kbView('league')(); }],
     ['This week’s matchup', 'opponent compare lineups vs versus score', '', function(){ kbView('roster')(); if(myMatchup()) openMax({ kind: 'opp' }); }],
