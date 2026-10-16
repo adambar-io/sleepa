@@ -3272,6 +3272,19 @@
   .zn-btn:active{ transform: scale(.96); }
   .zn-ico{ padding: 0; width: 36px; justify-content: center; }
   .zn-ref span{ font-variant-numeric: tabular-nums; font-weight: 500; }
+  .zn-ref{ color: var(--text); }
+  .zn-ref .zn-ref-l{ font-weight: 650; }
+  .zn-ref [data-zn-ago]:not(:empty)::before{ content: '·'; margin-right: 6px; color: var(--text-3); }
+  .zn-ref [data-zn-ago]{ color: var(--text-3); }
+  /* points that include live plays Sleeper hasn't scored yet */
+  .zbd-go.pend::after{ content: ''; display: inline-block; width: 5px; height: 5px; margin-left: 4px; border-radius: 50%; background: var(--accent); vertical-align: 2px; animation: znPend 1.6s ease-in-out infinite; }
+  @keyframes znPend{ 50%{ opacity: .35; } }
+  /* pull to refresh (phones) */
+  .zn-pull{ position: absolute; left: 50%; top: 6px; z-index: 7; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px;
+    background: var(--surface); box-shadow: var(--shadow); font-size: 12.5px; font-weight: 650; color: var(--text-2); transform: translate(-50%, -60px); opacity: 0; pointer-events: none; }
+  .zn-pull svg{ width: 15px; height: 15px; transition: transform .2s; }
+  .zn-pull.ready{ color: var(--accent); } .zn-pull.ready svg{ transform: rotate(180deg); }
+  .zn-pull.go{ transition: transform .25s var(--ease), opacity .25s; }
   .zn-ref.busy svg{ animation: znSpin 1s linear infinite; }
   .zn-ref.stale{ color: var(--warn); }
   @keyframes znSpin{ to{ transform: rotate(360deg); } }
@@ -3396,6 +3409,7 @@
     .zn-wk{ order: 2; }
     .zn-top [data-zn-mode]{ display: none; }
     .zn-ref{ order: 4; margin-left: auto; }
+    .zn-ref [data-zn-ago]{ display: none; }
   }
   @container zn (min-width: 900px){
     .zn-bot-mode{ display: none; }
@@ -3603,7 +3617,7 @@
   @media (prefers-reduced-motion: reduce){
     .zn-car.ring .zn-card{ transform: translateX(calc(-50% + var(--o, 0) * 104%)) !important; transition: none !important; }
     .zn-car.ring.flat .zn-card{ transform: translateX(calc(var(--o, 0) * 100%)) !important; }
-    .zn-rz, .zd-live, .zn-card.flip .zn-card-in, .zn-tile.flip, .zn-card.flip .zn-lc, .zn-ref.busy svg{ animation: none !important; }
+    .zn-rz, .zd-live, .zn-card.flip .zn-card-in, .zn-tile.flip, .zn-card.flip .zn-lc, .zn-ref.busy svg, .zbd-go.pend::after{ animation: none !important; }
   }
 
   /* the guide: condensed accordions */
@@ -13455,7 +13469,11 @@
   // scored with that league's settings), one projections call for all leagues (scored per league with calcPoints),
   // ESPN's scoreboard for game state/clock (fetchGames) and Sleeper's scores for red zone (undocumented; wrapped).
   const ZONE_NAME = 'Sleepa Zone';
-  const ZONE_POLL = 30 * 1000, ZONE_PROJ_GAP = 10 * 60 * 1000, ZONE_META_TTL = 6 * HOUR, ZONE_STALE = 3 * 60 * 1000;
+  // 15 s while a game is live (and Zone is on screen): Sleeper's league points move in batches every ~20–60 s and its
+  // CDN holds a copy up to 60 s, so this keeps our share of the delay small; the play feed (~1 play at a time) runs
+  // ahead of them and fills the gap (zPend). ~70 requests a minute on a full Sunday slate, far under Sleeper's
+  // ~1,000-a-minute guidance; roughly 1 MB a minute of data, only while live and visible.
+  const ZONE_POLL = 15 * 1000, ZONE_REF_MIN = 3 * 1000, ZONE_PROJ_GAP = 10 * 60 * 1000, ZONE_META_TTL = 6 * HOUR, ZONE_STALE = 3 * 60 * 1000;
   const ZONE_SKIP_SLOTS = { BN: 1, IR: 1, TAXI: 1 };
   const ZONE_RZ_POS = { QB: 1, RB: 1, WR: 1, TE: 1, K: 1 };   // offensive players: "in the red zone" means their team has the ball inside the 20
   ctx.zone = { open: false, week: 0, mode: 'car', idx: 0, leagues: [], meta: {}, games: null, gamesWeek: 0, gamesTs: 0, scores: null, scoresWeek: 0, scoresTs: 0,
@@ -13547,7 +13565,8 @@
       apply: function(res, week){
         let ok = 0;
         res.forEach(function(r){ if(!r) return; const L = zLeague(r.id); if(!L) return; if(r.err){ L.muErr = true; return; }
-          if(L.muWeek === week && L.mu) zFeedDiffCapture(L, L.mu, r.mu, week);
+          if(L.muWeek === week && L.mu){ zFeedDiffCapture(L, L.mu, r.mu, week); zMarkChanges(L, L.mu, r.mu); }
+          else{ L.chg = {}; L.chgBase = Date.now(); }
           L.mu = r.mu; L.muWeek = week; L.muErr = false; L.muTs = Date.now(); ok++; });
         return ok > 0 || !res.some(Boolean);
       } },
@@ -13697,7 +13716,9 @@
       qn: m.quarter_name || '', mm: m.time_remaining_minutes, ss: m.time_remaining_seconds, d: m.fantasy_description || m.description || '',
       s: m.is_scoring_play ? 1 : 0, tm: m.team || '', hp: m.home_points, ap: m.away_points, st: st, any: any ? 1 : 0 };
   }
-  function zFeedMerge(F, arr, keep, defTeams){
+  // quiet: plays that arrive in a backfill or the first poll of a session get seen = 0, so they never count as "ahead of
+  // Sleeper's points" (zPend); plays from later polls carry the time they first showed up
+  function zFeedMerge(F, arr, keep, defTeams, quiet){
     let added = 0;
     arr.forEach(function(x){
       if(!x || !x.play_id) return;
@@ -13706,8 +13727,8 @@
       const p = zTrimPlay(x, keep, defTeams);
       if(!p.any && !p.s) return;
       const old = F.plays[p.id];
-      if(!old){ F.plays[p.id] = p; added++; }
-      else if(p.u > old.u){ F.plays[p.id] = p; added++; }   // Sleeper corrected the play
+      if(!old){ p.seen = quiet ? 0 : Date.now(); F.plays[p.id] = p; added++; }
+      else if(p.u > old.u){ p.seen = old.seen || 0; F.plays[p.id] = p; added++; }   // Sleeper corrected the play (keeps when it first came in)
     });
     if(added){ F.v++; ctx.zone.feedSorted = null; }
     return added;
@@ -13727,21 +13748,24 @@
     const stale = started.some(function(g){ return !F.sync[g.gid] || (!F.done[g.gid] && now - F.sync[g.gid] > FEED_STALE); });
     if(stale && now - (F.backfillTs || 0) > FEED_BACKFILL_GAP){
       const d = await zGql(zPlaysQ('week: ' + week));
-      const added = zFeedMerge(F, d.plays || [], rel.keep, rel.defTeams);
+      const added = zFeedMerge(F, d.plays || [], rel.keep, rel.defTeams, true);
+      if(!z.feedBase) z.feedBase = Date.now();
       started.forEach(function(g){ F.sync[g.gid] = Date.now(); if(g.done) F.done[g.gid] = 1; });
       F.backfillTs = Date.now(); zFeedSave();
       return { added: added, backfill: true };
     }
     let added = 0;
+    const quiet = !z.feedBase;   // the first poll of a session catches up quietly
     await Promise.all(started.filter(function(g){ return !F.done[g.gid]; }).map(function(g){
       const had = F.max[g.gid] || 0;
       return zGql(zPlaysQ('game_id: "' + g.gid + '"')).then(function(d){
         const arr = d.plays || [], oldest = arr.length ? Math.min.apply(null, arr.map(function(x){ return Number(x.sequence) || 0; })) : 0;
         F.sync[g.gid] = had && arr.length >= 20 && oldest > had ? 0 : Date.now();   // 0 = a gap: backfill next time
-        added += zFeedMerge(F, arr, rel.keep, rel.defTeams);
+        added += zFeedMerge(F, arr, rel.keep, rel.defTeams, quiet);
         if(g.done) F.done[g.gid] = 1;
       });
     }));
+    if(!z.feedBase) z.feedBase = Date.now();
     zFeedSave();
     return { added: added };
   }
@@ -13824,9 +13848,9 @@
           const pts = now - prev; prev = now; last = pl;
           if(Math.abs(pts) >= 0.005) ev.push({ k: pl.id + ':' + pid, pid: pid, side: side, pts: pts, pl: pl, r: r });
         });
-        if(r.state === 'post' && typeof r.pts === 'number' && Math.abs(r.pts - prev) >= 0.01){
+        if(r.state === 'post' && typeof r.ptsOff === 'number' && !r.pend && Math.abs(r.ptsOff - prev) >= 0.01){
           const lp = last || { g: '', q: 0, t: 0, qn: 'F' };
-          ev.push({ k: 'adj:' + pid, pid: pid, side: side, pts: r.pts - prev, adj: 1, r: r,
+          ev.push({ k: 'adj:' + pid, pid: pid, side: side, pts: r.ptsOff - prev, adj: 1, r: r,
             pl: { id: 'adj' + pid, g: lp.g, q: lp.q + 0.5, t: lp.t, qn: 'F', d: 'Scoring adjustment (bonuses and totals Sleeper only has for the whole game)' } });
         }
       });
@@ -13982,13 +14006,62 @@
   }
   // One starter: actual (Sleeper, league-scored), projection, game state, and projected final (the same rule as the
   // lineup's projFinal: final = actual, not started = projection, live = actual + projection × share of game left).
+  // ---- live points from the play feed, ahead of Sleeper's official numbers ----
+  // Sleeper's league points (matchups) move in batches every ~20–60 s; plays arrive one at a time ~30 s after they
+  // happen (live test, Oct 4 2026). For each starter: the points of plays that showed up AFTER Sleeper's number for him
+  // last changed (scored with his running totals in this league's settings, so bonuses land on the right play) are
+  // added on top of the official number, marked live. Once Sleeper's number moves, it is the base again. Never for
+  // team defenses (their points depend on the game's total score); plays expire after ZONE_PEND_TTL if Sleeper never
+  // counts them (a penalty wiped the play out); a per-player cap guards against a bad play record.
+  const ZONE_PEND_TTL = 6 * 60 * 1000, ZONE_PEND_CAP = 25;
+  function zMarkChanges(L, before, after){
+    const now = Date.now(), old = {};
+    L.chg = L.chg || {};
+    before.forEach(function(e){ const pp = e.players_points || {}; for(const pid in pp) old[pid] = pp[pid]; });
+    after.forEach(function(e){ const pp = e.players_points || {}; for(const pid in pp){ if(Math.abs((old[pid] || 0) - pp[pid]) >= 0.005) L.chg[pid] = now; } });
+  }
+  function zPlayIdx(){
+    const z = ctx.zone, F = z.feed;
+    if(!F) return null;
+    if(z.pidx && z.pidx.f === F && z.pidx.v === F.v) return z.pidx.by;
+    const by = {};
+    zFeedSortedPlays().forEach(function(pl){ for(const id in pl.st){ (by[id] = by[id] || []).push(pl); } });
+    z.pidx = { f: F, v: F.v, by: by };
+    return by;
+  }
+  function zPend(L, meta, pid, week){
+    const z = ctx.zone, F = z.feed;
+    if(!F || F.week !== week || !z.feedBase || z.feedDiff || !L.chgBase) return 0;
+    const p = ctx.players[pid];
+    if(!p || p.position === 'DEF') return 0;
+    const plays = (zPlayIdx() || {})[pid];
+    if(!plays) return 0;
+    return zPendSum(plays, pid, Math.max(z.feedBase, (L.chg && L.chg[pid]) || L.chgBase), Date.now(), meta.league.scoring_settings || {});
+  }
+  // pure: a player's plays (in order) → the points of the ones that showed up after `since` (and within the TTL),
+  // each worth the change in his running total scored with `sc` (so a 100-yard bonus lands on the play that crossed it)
+  function zPendSum(plays, pid, since, now, sc){
+    const fresh = function(pl){ return pl.seen > since && now - pl.seen < ZONE_PEND_TTL; };
+    if(!plays.some(fresh)) return 0;
+    const cum = {};
+    let prev = 0, pend = 0;
+    plays.forEach(function(pl){
+      zAddStats(cum, pl.st[pid] || {});
+      const v = calcPoints(zDerive(cum, null), sc) || 0;
+      if(fresh(pl)) pend += v - prev;
+      prev = v;
+    });
+    return Math.abs(pend) < 0.005 || Math.abs(pend) > ZONE_PEND_CAP ? 0 : pend;
+  }
   function zPlayer(L, meta, entry, pid, i, week){
     if(!pid || pid === '0') return { empty: true };
     const p = ctx.players[pid] || { full_name: pid, position: /^[A-Z]{2,3}$/.test(pid) ? 'DEF' : '', team: /^[A-Z]{2,3}$/.test(pid) ? pid : null };
     const team = p.team || (p.position === 'DEF' ? pid : null);
     const g = zGame(team, week);
     const pp = entry && entry.players_points || {};
-    const pts = typeof pp[pid] === 'number' ? pp[pid] : (entry && entry.starters_points && typeof entry.starters_points[i] === 'number' ? entry.starters_points[i] : null);
+    const ptsOff = typeof pp[pid] === 'number' ? pp[pid] : (entry && entry.starters_points && typeof entry.starters_points[i] === 'number' ? entry.starters_points[i] : null);
+    const pend = g && (g.state === 'in' || g.state === 'post') ? zPend(L, meta, pid, week) : 0;
+    const pts = pend ? (ptsOff || 0) + pend : ptsOff;
     const proj = zProj(L, meta, pid);
     let state, fin, est = false;
     if(!g){ state = 'bye'; fin = 0; }
@@ -13996,7 +14069,7 @@
     else if(g.state === 'pre'){ state = 'pre'; fin = proj || 0; }
     else if(g.state === 'post'){ state = 'post'; fin = pts || 0; est = g.src === 'estimate'; }
     else{ const r = remainingFrac(g); state = 'in'; fin = (pts || 0) + (proj || 0) * r.f; est = r.est; }
-    return { pid: pid, p: p, team: team, g: g, pts: pts, proj: proj, state: state, fin: fin, est: est, st: effectiveStatus(pid),
+    return { pid: pid, p: p, team: team, g: g, pts: pts, ptsOff: ptsOff, pend: pend, proj: proj, state: state, fin: fin, est: est, st: effectiveStatus(pid),
       rz: state === 'in' && !!ZONE_RZ_POS[p.position] && zRedZone(team, week) };
   }
   // "WR1", "WR2", "FLEX1"…: numbered when a slot repeats, so "that's my WR1" reads at a glance
@@ -14010,16 +14083,17 @@
   function zSide(L, meta, entry, week){
     const starters = entry.starters || [], names = zSlotNames(meta);
     const rows = meta.slots.map(function(sl, i){ return Object.assign({ slot: sl, sname: names[i] }, zPlayer(L, meta, entry, starters[i], i, week)); });
-    const s = { rows: rows, fin: 0, proj: 0, pre: 0, inG: 0, post: 0, rz: 0, est: false, hasProj: false };
+    const s = { rows: rows, fin: 0, proj: 0, pre: 0, inG: 0, post: 0, rz: 0, est: false, hasProj: false, pend: 0 };
     let sum = 0;
     rows.forEach(function(r){
       if(r.empty) return;
       s.fin += r.fin; if(typeof r.proj === 'number'){ s.proj += r.proj; s.hasProj = true; } if(r.est) s.est = true;
       if(r.state === 'pre') s.pre++; else if(r.state === 'in') s.inG++; else if(r.state === 'post') s.post++;
       if(r.rz) s.rz++;
-      if(typeof r.pts === 'number') sum += r.pts;
+      if(typeof r.ptsOff === 'number') sum += r.ptsOff;
+      if(r.pend) s.pend += r.pend;
     });
-    s.pts = typeof entry.points === 'number' ? entry.points : sum;
+    s.pts = (typeof entry.points === 'number' ? entry.points : sum) + s.pend;   // Sleeper's official total + live plays it hasn't counted yet
     s.started = s.inG + s.post > 0;
     s.allFinal = s.pre === 0 && s.inG === 0;
     return s;
@@ -14173,7 +14247,9 @@
   // An actual score you can tap for its breakdown (stats × this league's scoring).
   function zValHTML(r, lid, cls){
     const started = r.state === 'in' || r.state === 'post';
-    if(started && typeof r.pts === 'number') return '<button type="button" class="' + cls + ' zbd-go' + (r.state === 'in' ? ' live' : '') + '" data-zbd="' + escapeHTML(lid + '|' + r.pid) + '" data-pts="' + r.pts + '" aria-label="' + escapeHTML(playerName(r.p)) + ': ' + fmtPts(r.pts) + ' points, show how they add up">' + fmtPts(r.pts) + '</button>';
+    if(started && typeof r.pts === 'number') return '<button type="button" class="' + cls + ' zbd-go' + (r.state === 'in' ? ' live' : '') + (r.pend ? ' pend' : '') + '" data-zbd="' + escapeHTML(lid + '|' + r.pid) + '" data-pts="' + (typeof r.ptsOff === 'number' ? r.ptsOff : r.pts) + '"' +
+      (r.pend ? ' title="Includes ' + (r.pend > 0 ? '+' : '−') + Math.abs(r.pend).toFixed(2) + ' from live plays Sleeper hasn’t scored yet (official: ' + fmtPts(r.ptsOff || 0) + ')"' : '') +
+      ' aria-label="' + escapeHTML(playerName(r.p)) + ': ' + fmtPts(r.pts) + ' points' + (r.pend ? ', including live plays' : '') + ', show how they add up">' + fmtPts(r.pts) + '</button>';
     return '<div class="' + cls + (started ? '' : ' proj') + '">' + (started ? fmtPts(r.pts || 0) : fmtPts(r.proj)) + '</div>';
   }
   function zCellHTML(r, side, week, lid){
@@ -14257,7 +14333,7 @@
   function zNums(M, s){
     if(!s) return null;
     if(!M.started) return { v: s.proj, kind: 'proj', cap: s.hasProj ? 'PROJ' : 'PROJ · not out yet', sub: '' };
-    return { v: s.pts, kind: 'act', cap: s.allFinal ? '' : 'Proj final ' + fmtPts(s.fin) + (s.est ? ' · est' : ''),
+    return { v: s.pts, kind: 'act', cap: (s.pend ? 'Live plays ' + (s.pend > 0 ? '+' : '−') + Math.abs(s.pend).toFixed(2) + (s.allFinal ? '' : ' · ') : '') + (s.allFinal ? '' : 'Proj final ' + fmtPts(s.fin) + (s.est ? ' · est' : '')),
       sub: s.allFinal ? '' : (s.pre ? s.pre + ' yet to play' : 'All playing or done') };
   }
 
@@ -14285,7 +14361,7 @@
         '<div class="wk-seg zn-wk" role="group" aria-label="Week"><button type="button" data-zn-wk="-1" aria-label="Previous week">‹</button><span id="zn-wk-l"></span><button type="button" data-zn-wk="1" aria-label="Next week">›</button></div>' +
         '<button type="button" class="zn-btn zn-am-btn" data-zn-am aria-pressed="false" title="Every matchup in every league"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3.5" y="4" width="7.5" height="4.5" rx="1.2"/><rect x="13" y="4" width="7.5" height="4.5" rx="1.2"/><rect x="3.5" y="10" width="7.5" height="4.5" rx="1.2"/><rect x="13" y="10" width="7.5" height="4.5" rx="1.2"/><rect x="3.5" y="16" width="7.5" height="4.5" rx="1.2"/><rect x="13" y="16" width="7.5" height="4.5" rx="1.2"/></svg><span>Scoreboard</span></button>' +
         '<button type="button" class="zn-btn" data-zn-mode aria-pressed="false"></button>' +
-        '<button type="button" class="zn-btn zn-ref" data-zn-ref aria-label="Refresh scores">' + ICO.ref + '<span data-zn-ago></span></button>' +
+        '<button type="button" class="zn-btn zn-ref" data-zn-ref aria-label="Refresh scores" title="Refresh scores now">' + ICO.ref + '<span class="zn-ref-l">Refresh</span><span data-zn-ago></span></button>' +
         '<button type="button" class="zn-btn zn-ico" data-zone-guide aria-label="How ' + ZONE_NAME + ' reads the game">' + ICO.info + '</button>' +
       '</header>' +
       '<main class="zn-main"><div class="am"><div class="am-tiles"></div><div class="am-board"></div></div><div class="zn-car" tabindex="-1"></div>' +
@@ -14554,6 +14630,8 @@
     const stale = !!z.ts && live && Date.now() - z.ts > ZONE_STALE;
     btn.classList.toggle('stale', stale || (!!z.failed && !z.busy));
     el.textContent = z.busy && !z.ts ? 'Loading…' : z.failed && !z.busy ? 'Couldn’t update · retry' : z.ts ? 'Updated ' + (Date.now() - z.ts < 10000 ? 'just now' : agoText(z.ts).replace(/^at /, '')) : '';
+    btn.title = (z.busy ? 'Refreshing…' : 'Refresh scores now') + (el.textContent ? ' · ' + el.textContent : '');
+    const lbl = btn.querySelector('.zn-ref-l'); if(lbl) lbl.textContent = z.busy ? 'Refreshing' : z.failed && !z.busy ? 'Retry' : 'Refresh';
   }
 
   // ---- carousel ----
@@ -14755,6 +14833,7 @@
     try{ st = await fetchJSON(API + '/state/nfl'); }catch(e){ console.warn('Sleepa Zone: NFL state unavailable, using the app\'s week', e); }
     z.week = zoneDefaultWeek(st);
     z.homeWeek = z.week; z.feedSeen = null; z.leadEv = [];
+    z.feedBase = 0;   // the first plays poll after opening catches up quietly (they're in Sleeper's numbers already)
     zoneBuild();
     zoneView.hidden = false;
     document.documentElement.classList.add('zone-open');
@@ -14782,9 +14861,19 @@
     zoneRender(false);
     zoneRefresh({ force: true });
   }
+  // manual refresh (button, pull down): everything, now; a short cooldown so repeated taps don't stack requests
+  function zoneManualRefresh(){
+    const z = ctx.zone;
+    if(z.busy || Date.now() - (z.manualTs || 0) < ZONE_REF_MIN) return;
+    z.manualTs = Date.now();
+    zoneRefresh({ force: true });
+  }
   // live-only auto refresh: a game on (or kicking off within a minute) among my or my opponents' starters, tab visible
   function zoneLive(){
-    const now = Date.now();
+    const now = Date.now(), z = ctx.zone;
+    // any NFL game in progress this week: the Scoreboard and the "All NFL" feed show matchups beyond mine
+    if(z.week === z.homeWeek && z.games && z.gamesWeek === z.week && Object.keys(z.games).some(function(t){ const g = z.games[t]; return g && g.state === 'in'; })) return true;
+    if(z.week === z.homeWeek && (z.sgames || []).some(function(g){ return g.live; })) return true;
     return !!(ctx.zone.models && ctx.zone.models.some(function(M){
       return M.live || [M.my, M.opp].some(function(s){ return s && s.rows.some(function(r){ return r.state === 'pre' && r.g && r.g.kick && r.g.kick - now < 60 * 1000; }); });
     }));
@@ -14795,8 +14884,51 @@
     if(!z.busy && zoneLive() && Date.now() - z.ts >= ZONE_POLL - 2000) zoneRefresh();
     else zoneRenderAgo();
   }, 5 * 1000);
-  document.addEventListener('visibilitychange', function(){ if(ctx.zone.open && document.visibilityState === 'visible' && zoneLive()) zoneRefresh(); });
+  document.addEventListener('visibilitychange', function(){
+    const z = ctx.zone;
+    if(document.visibilityState === 'hidden'){ z.hiddenTs = Date.now(); return; }
+    if(z.hiddenTs && Date.now() - z.hiddenTs > 60 * 1000) z.feedBase = 0;   // away a while: catch up quietly, same as opening
+    if(z.open && zoneLive()) zoneRefresh();
+  });
 
+  (function(){
+    const zp = { y0: 0, x0: 0, el: null, on: false, dy: 0 }, PULL = 70;
+    let pill = null;
+    const sc = function(t){ return t.closest && t.closest('.zn-card-in, .zn-alt, .am'); };
+    zoneView.addEventListener('touchstart', function(e){
+      zp.on = false; zp.el = null;
+      if(e.touches.length !== 1 || ctx.zone.busy) return;
+      const el = sc(e.target);
+      if(!el || el.scrollTop > 0) return;
+      zp.el = el; zp.y0 = e.touches[0].clientY; zp.x0 = e.touches[0].clientX; zp.dy = 0;
+    }, { passive: true });
+    zoneView.addEventListener('touchmove', function(e){
+      if(!zp.el) return;
+      const dy = e.touches[0].clientY - zp.y0, dx = e.touches[0].clientX - zp.x0;
+      if(!zp.on){
+        if(Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)){ zp.el = null; return; }   // a sideways swipe (the carousel)
+        if(dy < 8) { if(dy < -4) zp.el = null; return; }
+        if(zp.el.scrollTop > 0){ zp.el = null; return; }
+        zp.on = true;
+        if(!pill){ pill = document.createElement('div'); pill.className = 'zn-pull'; pill.innerHTML = ICO.ref + '<span></span>'; zoneView.querySelector('.zn-main').appendChild(pill); }
+        pill.classList.remove('go');
+      }
+      zp.dy = dy;
+      const k = Math.min(1, dy / PULL);
+      pill.style.transform = 'translate(-50%, ' + (-60 + 72 * k) + 'px)'; pill.style.opacity = String(k);
+      pill.classList.toggle('ready', dy >= PULL);
+      pill.querySelector('span').textContent = dy >= PULL ? 'Release to refresh' : 'Pull to refresh';
+    }, { passive: true });
+    const end = function(){
+      if(!zp.on || !pill){ zp.el = null; return; }
+      const go = zp.dy >= PULL;
+      zp.on = false; zp.el = null;
+      pill.classList.add('go'); pill.style.transform = ''; pill.style.opacity = '';
+      if(go) zoneManualRefresh();
+    };
+    zoneView.addEventListener('touchend', end);
+    zoneView.addEventListener('touchcancel', end);
+  })();
   zoneView.addEventListener('click', function(e){
     const t = e.target;
     const bdEl = zoneView.querySelector('.zbd');
@@ -14810,7 +14942,7 @@
     if(zgsClick(t)) return;
     if(t.closest('[data-zn-exit]')){ if(ctx.zone.am.open){ if(ctx.zone.am.mid !== null) amBack(); else amClose(); return; } zoneClose(); return; }
     if(amClick(t)) return;
-    if(t.closest('[data-zn-ref]')){ zoneRefresh({ force: true }); return; }
+    if(t.closest('[data-zn-ref]')){ zoneManualRefresh(); return; }
     const lcg = t.closest('[data-zn-lcgo]');
     if(lcg){
       const id = lcg.getAttribute('data-zn-lcgo'), z = ctx.zone;
@@ -14942,7 +15074,8 @@
   function amPairs(L){
     const z = ctx.zone, meta = z.meta[L.id], mu = L.muWeek === z.week ? L.mu : null;
     if(!meta || !mu) return null;
-    const key = (L.muTs || 0) + ':' + z.week + ':' + (z.projTs || 0) + ':' + (z.gamesTs || 0);
+    // the feed version and the minute: live plays (zPend) move the scores between matchup updates, and expire
+    const key = (L.muTs || 0) + ':' + z.week + ':' + (z.projTs || 0) + ':' + (z.gamesTs || 0) + ':' + (z.feed ? z.feed.v : 0) + ':' + Math.floor(Date.now() / 60000);
     if(L._am && L._am.key === key) return L._am.v;
     const by = {};
     mu.forEach(function(e){ if(e.matchup_id != null) (by[e.matchup_id] = by[e.matchup_id] || []).push(e); });

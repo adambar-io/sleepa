@@ -342,6 +342,20 @@
     eq('gap = league ROS rank − FantasyPros ROS rank', g.map(function(x){ return x.pid + ':' + x.gap; }), ['a:15', 'b:7', 'c:-2', 'd:-9']);
     eq('levels: 12+ underrated (big), 6+ experts higher, −6 or less projection higher', g.map(function(x){ return x.level; }), ['big', 'yes', 'none', 'over']);
   }
+  // ---- 3g. Sleepa Zone: live points from plays Sleeper hasn't scored yet ----
+  section('Sleepa Zone: live points from the play feed (ahead of Sleeper’s league numbers)');
+  {
+    const Z = new Function(['function calcPoints(', 'function zPtsBand(', 'function zDerive(', 'function zAddStats(', 'const ZONE_PEND_TTL', 'function zPendSum('].map(extract).join('\n') + '; return { zPendSum };')();
+    const sc = { rec: 1, rec_yd: 0.1, rec_td: 6, bonus_rec_yd_100: 3, fum_lost: -2 }, now = 1000000;
+    const pl = function(seen, st){ return { seen: seen, st: { p: st } }; };
+    const plays = [pl(0, { rec: 1, rec_yd: 40 }), pl(now - 90000, { rec: 1, rec_yd: 50 }), pl(now - 30000, { rec: 1, rec_yd: 15, rec_td: 1 })];
+    const near = function(a, b){ return Math.abs(a - b) < 1e-9; };
+    check('only plays after Sleeper last moved count (catch-up plays never do)', near(Z.zPendSum(plays, 'p', now - 60000, now, sc), 1 + 1.5 + 6 + 3), 'got ' + Z.zPendSum(plays, 'p', now - 60000, now, sc));
+    check('a bonus lands on the play that crossed it (100 rec yards: +3 on the third play)', near(Z.zPendSum(plays, 'p', now - 120000, now, sc), (1 + 5) + (1 + 1.5 + 6 + 3)), 'got ' + Z.zPendSum(plays, 'p', now - 120000, now, sc));
+    check('nothing newer than Sleeper’s last change: no live points', Z.zPendSum(plays, 'p', now - 1000, now, sc) === 0);
+    check('plays older than 6 minutes stop counting (Sleeper never scored them)', Z.zPendSum([pl(now - 7 * 60000, { rec_td: 1 })], 'p', 0, now, sc) === 0);
+    check('negative plays count too (a lost fumble)', near(Z.zPendSum([pl(now - 1000, { fum_lost: 1 })], 'p', 0, now, sc), -2));
+  }
   // ---- 3f. Sleepa Assess: available players FantasyPros ranks above mine ----
   section('Sleepa Assess: available players ranked above any of mine (even by one spot)');
   {
