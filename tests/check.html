@@ -377,6 +377,62 @@
     eq('one word with a sports ending: its first letter + the ending', [A.amCode('BATTLEBALL'), A.amCode('Sugarbowl')], ['BB', 'SB']);
     eq('other single words: first two letters; symbols ignored', [A.amCode('Trenches'), A.amCode("Mick's Dagos!")], ['TR', 'MD']);
   }
+  // ---- 3g. Real-week fixture: a frozen week of the real leagues (tests/fixtures/week4.json, made by tools/make-fixture.js) ----
+  // Live data drifts every week; this one never changes, so these results are exact and repeatable.
+  section('Real week (fixture): scoring, totals, win probability, league codes, injury notes');
+  try{
+    const fx = await (await fetch('fixtures/week4.json', { cache: 'no-cache' })).json();
+    const W = new Function(['function normCdf(', 'function winProb(', 'function amCode(', 'const INJ_WORDS'].map(extract).join('\n') + '; return { winProb, amCode, INJ_WORDS };')();
+    fx.leagues.forEach(function(L){
+      let n = 0, bad = [], tot = [];
+      L.matchups.forEach(function(e){
+        let sum = 0;
+        (e.starters || []).forEach(function(pid, i){
+          if(!pid || pid === '0') return;
+          const want = e.starters_points[i]; sum += want || 0;
+          if(!fx.stats[pid]) return;
+          n++;
+          const got = f.calcPoints(fx.stats[pid], L.scoring_settings);
+          if(Math.abs(got - want) > 0.011) bad.push(((fx.players[pid] || {}).full_name || pid) + ' ' + got.toFixed(2) + ' vs ' + want);
+        });
+        if(Math.abs(sum - e.points) > 0.011) tot.push('roster ' + e.roster_id + ': ' + sum.toFixed(2) + ' vs ' + e.points);
+      });
+      check(L.name + ': every starter scores what Sleeper scored (' + n + ' players, week ' + fx.week + ')', n > 50 && !bad.length, bad.slice(0, 4).join('; '));
+      check(L.name + ': each team total = its starters', !tot.length, tot.slice(0, 3).join('; '));
+      // all games final (no variance left): the higher score wins with certainty
+      const pairs = {}; L.matchups.forEach(function(e){ if(e.matchup_id != null) (pairs[e.matchup_id] = pairs[e.matchup_id] || []).push(e); });
+      const wrong = Object.keys(pairs).filter(function(k){ const p = pairs[k]; if(p.length < 2) return false; const w = W.winProb({ mean: p[0].points, v: 0 }, { mean: p[1].points, v: 0 }); return p[0].points > p[1].points ? w !== 1 : p[0].points < p[1].points ? w !== 0 : w !== 0.5; });
+      check(L.name + ': final scores give the winner 100% win probability', !wrong.length, wrong.join(', '));
+    });
+    check('league short codes from the real names', JSON.stringify(fx.leagues.map(function(L){ return W.amCode(L.name); })) === JSON.stringify(['TL', 'LML', 'BB']), fx.leagues.map(function(L){ return L.name + '=' + W.amCode(L.name); }).join(', '));
+    // real ESPN notes (Oct 2026): injury updates in, game recaps and roster news out
+    const notes = [
+      ['McConkey (foot) was listed as a limited participant in Thursday\'s practice.', true],
+      ['Rice (hamstring/knee) isn\'t participating in Thursday\'s practice, Matt Derrick of ChiefsDigest.com reports.', true],
+      ['Shipley (foot) didn\'t practice Thursday.', true],
+      ['The Texans ruled Montgomery (groin) out for Sunday\'s game against the Jaguars in London.', true],
+      ['Stafford completed 40 of 54 passes for 383 yards with three touchdowns and no interceptions in the Rams\' 37-34 overtime loss to the Bills on Monday night.', false],
+      ['Strange caught seven of eight targets for 68 yards in Sunday\'s 19-17 win over the Eagles.', false],
+      ['After breaking out for a 7-95-0 line last week, Strange tied that season high in catches, although for less yardage.', false],
+      ['Texans head coach DeMeco Ryans confirmed Wednesday that Harrison will make his team debut Sunday versus the Jaguars in London.', false],
+    ];
+    const miss = notes.filter(function(x){ return W.INJ_WORDS.test(x[0]) !== x[1]; });
+    check('injury feed filter: ' + notes.length + ' real ESPN notes sorted into updates vs recaps', !miss.length, miss.map(function(x){ return (x[1] ? 'missed: ' : 'let in: ') + x[0].slice(0, 60); }).join(' | '));
+  }catch(e){ check('real-week fixture loads', false, e.message); }
+
+  // ---- 3h. Never crash: a failing part is contained and logged; build timestamps parse ----
+  section('Never crash: failing parts are contained and logged');
+  try{
+    const G = new Function('const ctx = {}; const console = { error: function(){} }; function escapeHTML(x){ return String(x); }\n' + ['function dhErr(', 'function safeHTML(', 'function safeRun(', 'function dhTime('].map(extract).join('\n') + '; return { ctx, safeHTML, safeRun, dhTime };')();
+    const boom = function(){ throw new Error('tile exploded'); };
+    const h1 = G.safeHTML('Top scorers', boom), h2 = G.safeHTML('Top scorers', boom);
+    check('a throwing section renders a note instead of crashing', /oops/.test(h1) && /Top scorers/.test(h1), h1.slice(0, 80));
+    check('a working section renders normally', G.safeHTML('ok', function(){ return '<p>fine</p>'; }) === '<p>fine</p>');
+    check('safeRun swallows and logs', G.safeRun('bg', boom) === undefined && G.ctx.errs.length === 2, JSON.stringify(G.ctx.errs));
+    check('repeat errors are counted, not duplicated', G.ctx.errs.filter(function(x){ return x.where === 'Top scorers'; }).length === 1 && G.ctx.errs[1].n === 2, JSON.stringify(G.ctx.errs));
+    check('build stamps without seconds parse (2026-10-16T03:32Z)', G.dhTime('2026-10-16T03:32Z') === Date.UTC(2026, 9, 16, 3, 32), String(G.dhTime('2026-10-16T03:32Z')));
+  }catch(e){ check('never-crash helpers load', false, e.message); }
+
   // ---- 4. injury statuses vs live Sleeper values ----
   section('Injury statuses: every live Sleeper value is known');
   try{

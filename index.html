@@ -718,6 +718,16 @@
   .set-card .quiet-btn{ margin-top: 12px; }
   .quiet-btn{ background: var(--surface-2); color: var(--text); }
   .set-data{ font-size: 13.5px; color: var(--text-2); line-height: 1.6; }
+  .oops{ padding: 12px 14px; border-radius: 12px; background: var(--warn-soft); color: var(--text-2); font-size: 13px; line-height: 1.45; } .oops b{ color: var(--text); }
+  .dh{ display: grid; gap: 8px; margin-bottom: 12px; }
+  .dh-sum{ display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; }
+  .dh-sum i, .dh-r i{ width: 9px; height: 9px; border-radius: 50%; flex: none; background: var(--accent); } .dh .warn > i{ background: var(--warn); } .dh .bad > i{ background: var(--danger); } .dh .off > i{ background: var(--surface-3); box-shadow: inset 0 0 0 1px var(--hair); }
+  .dh-l{ display: grid; gap: 2px; }
+  .dh-r{ display: grid; grid-template-columns: 9px minmax(0, 1fr) auto; gap: 10px; align-items: start; padding: 8px 2px; border-top: 1px solid var(--hair); } .dh-r i{ margin-top: 5px; }
+  .dh-m{ min-width: 0; display: flex; flex-direction: column; gap: 1px; } .dh-m b{ font-size: 13.5px; } .dh-m small{ font-size: 12px; color: var(--text-3); } .dh-m .dh-n{ color: var(--text-2); } .dh-m .dh-x{ color: var(--danger); font-weight: 600; } .dh-r.warn .dh-x{ color: var(--text); }
+  .dh-r em{ font-style: normal; font-size: 12px; color: var(--text-3); white-space: nowrap; padding-top: 1px; }
+  .dh-errs{ font-size: 12.5px; color: var(--text-2); } .dh-errs summary{ cursor: pointer; font-weight: 600; } .dh-e{ padding: 6px 0; border-top: 1px solid var(--hair); overflow-wrap: anywhere; } .dh-e code{ font-size: 11.5px; color: var(--text-3); }
+  .dh-foot{ font-size: 12px; color: var(--text-3); }
 
   /* floating bottom tab bar */
   .tabbar{
@@ -4181,7 +4191,7 @@
               <button class="quiet-btn" id="back-btn">Use a different Sleeper account</button>
               <p class="set-sub" style="margin:10px 0 0">sleepa remembers your username and league on this device and opens straight to your team. Switch leagues above; this button signs out.</p>
             </div>
-            <div class="card set-card"><h3>Data</h3><div class="set-data" data-status></div></div>
+            <div class="card set-card"><h3>Data health</h3><p class="set-sub">Every source sleepa reads, how fresh it is and how much of it matched. Green is current, amber is aging or partly missing, red is out of date or failed, grey loads when a screen needs it.</p><div class="dh" id="dh"></div><div class="set-data dh-foot" data-status></div></div>
             <div class="card set-card"><h3>Rankings &amp; values</h3><p class="set-sub">Free sources, matched to Sleeper players by ID where possible. Anything older than its limit or not matched isn’t shown.</p><div class="set-data" id="rk-status"></div></div>
             <div class="card set-card"><h3>Injury data matching</h3><p class="set-sub">Injury reports that couldn’t be matched to a Sleeper player are listed here instead of being dropped.</p><div class="set-data" id="inj-match"></div></div>
             <div class="card set-card"><h3>About sleepa</h3><p class="set-sub" style="margin:0">Read only. Lineup changes here are a plan; nothing is sent to Sleeper. Stats and projections come from Sleeper, scored with your league's settings. Opponents, snap share, target share and depth charts come from nflverse.</p><p class="disclaimer">sleepa is an unofficial fan-made companion and isn't affiliated with or endorsed by Sleeper.</p></div>
@@ -5924,7 +5934,7 @@
     const pid = focusDeepPid();
     if(!pid){ el.innerHTML = ''; el.removeAttribute('data-pid'); return; }
     el.setAttribute('data-pid', pid);
-    el.innerHTML = '<div class="fd-h">More on ' + escapeHTML(playerName(ctx.players[pid])) + '</div>' + maxPlayerHTML(pid, { embed: true });
+    el.innerHTML = '<div class="fd-h">More on ' + escapeHTML(playerName(ctx.players[pid])) + '</div>' + safeHTML('Player details', function(){ return maxPlayerHTML(pid, { embed: true }); });
     const again = function(){
       if(focusDeepPid() !== pid || el.getAttribute('data-pid') !== pid) return;
       const y = els.overlay.scrollTop; renderFocusDeep(); els.overlay.scrollTop = y;
@@ -8302,7 +8312,120 @@
     toggleLeagueMenu(false); closeBrandMenu();
   });
 
+  // ---- never crash: a part that throws shows a short note in its place, logs the error (Settings › Data health) and
+  // everything around it keeps working ----
+  function dhErr(where, e){
+    const list = ctx.errs = ctx.errs || [];
+    const msg = String((e && e.message) || e || 'error').slice(0, 200);
+    console.error('[sleepa] ' + where + ':', e);
+    const same = list.find(function(x){ return x.where === where && x.msg === msg; });
+    if(same){ same.n++; same.t = Date.now(); return; }
+    list.unshift({ where: where, msg: msg, t: Date.now(), n: 1 });
+    if(list.length > 20) list.length = 20;
+  }
+  function safeHTML(where, fn){
+    try{ return fn(); }
+    catch(e){ dhErr(where, e); return '<div class="oops" role="status"><b>' + escapeHTML(where) + '</b> couldn’t load. Everything else still works; the details are in Settings › Data health.</div>'; }
+  }
+  function safeRun(where, fn){ try{ return fn(); }catch(e){ dhErr(where, e); } }
+  window.addEventListener('error', function(e){ if(e.message) dhErr('Uncaught', e.error || e.message); });
+  window.addEventListener('unhandledrejection', function(e){ dhErr('Background task', e.reason); });
+
+  // ---- Data health: every source Sleepa reads, how old it is, how much of it matched. Green current, amber aging or
+  // partly missing, red out of date or failed, grey loads when a screen needs it ----
+  function dhTime(s){
+    if(!s) return NaN;
+    if(typeof s === 'number') return s;
+    return Date.parse(/T[0-9][0-9]:[0-9][0-9]Z$/.test(s) ? s.replace('Z', ':00Z') : s);   // build stamps drop the seconds
+  }
+  function dhAgo(t){
+    const m = (Date.now() - t) / 60000;
+    return m < 1 ? 'just now' : m < 60 ? Math.round(m) + 'm ago' : m < 48 * 60 ? Math.round(m / 60) + 'h ago' : Math.round(m / 1440) + 'd ago';
+  }
+  function dhMissing(o, keys){ return keys.filter(function(k){ return o[k] == null; }); }
+  function dhRows(){
+    const nfl = ctx.nfl, wk = ctx.week, done = Math.max(0, wk - 1), rows = [];
+    // lazy = only fetched when a screen needs it (grey until then); warnH / badH = hours before amber / red
+    const add = function(r){ rows.push(r); };
+    const n = function(o){ return o ? Object.keys(o).length : 0; };
+    const behind = function(thru, what){ return thru != null && thru < done ? what + ' through week ' + thru + ', week ' + done + ' is finished' : ''; };
+
+    add({ name: 'Sleeper league & projections', feeds: 'Lineup, matchup, projections', ok: !!ctx.league, t: ctx.lastRefresh, warnH: 6, badH: 24,
+      notes: [ctx.league ? 'Week ' + wk : '', n(ctx.projections) ? n(ctx.projections).toLocaleString() + ' projections' : ''],
+      issue: ctx.refreshFailed ? 'last refresh failed' : '' });
+    add({ name: 'Sleeper players & statuses', feeds: 'Names, teams, injury statuses', ok: n(ctx.players) > 0, t: ctx.playersTs, warnH: 12, badH: 36,
+      notes: [n(ctx.players).toLocaleString() + ' players', ctx.playersSource ? 'from ' + ctx.playersSource : ''] });
+    const anyLive = (function(){ const g = ctx.live.games || {}; for(const t in g){ if(g[t].state === 'in') return true; } return false; })();
+    add({ name: 'Live scoring', feeds: 'Live points, game clock', ok: true, t: anyLive ? ctx.live.statsTs : NaN, warnH: 0.12, badH: 0.5, idle: !anyLive,
+      notes: [anyLive ? 'games on now' : 'no games on: idle', ctx.live.gamesFailed ? 'game clock unavailable' : ''],
+      issue: anyLive && ctx.live.failed ? 'last poll failed' : '' });
+    if(nfl){
+      const c = nfl.coverage || {}, miss = dhMissing(nfl, ['players', 'sched', 'kick', 'inj', 'stats_through_week', 'depth_as_of']);
+      add({ name: 'nflverse stats, snaps & depth', feeds: 'Usage, opponents, depth charts, defense vs position', ok: true, t: dhTime(nfl.generated), warnH: 30, badH: 72,
+        notes: ['Stats through week ' + nfl.stats_through_week, nfl.depth_as_of ? 'depth charts ' + dhAgo(dhTime(nfl.depth_as_of)) : '',
+          c.relevant ? Math.round(100 * (c.relevant - (c.unmatched || 0)) / c.relevant) + '% of ' + c.relevant.toLocaleString() + ' players matched' : ''],
+        issue: [miss.length ? 'missing ' + miss.join(', ') : '', (nfl.stale || []).length ? 'carried forward from the last good build: ' + nfl.stale.join(', ') : '', behind(nfl.stats_through_week, 'stats')].filter(Boolean).join('; ') });
+      add({ name: 'Official injury reports', feeds: 'Practice days, game designations', ok: !!nfl.inj, t: dhTime(nfl.inj_as_of), warnH: 30, badH: 96,
+        notes: [n(nfl.inj) + ' players on this week’s reports', (nfl.inj_unmatched || []).length ? nfl.inj_unmatched.length + ' not matched' : 'all matched'] });
+    } else {
+      add({ name: 'nflverse stats, snaps & depth', feeds: 'Usage, opponents, depth charts', ok: false, issue: 'not loaded: opponents, snaps and depth show “—”' });
+    }
+    const wy = ctx.weekly;
+    add({ name: 'Weekly box scores', feeds: 'Game logs, trends, charts', ok: !!wy, lazy: !wy, t: wy && dhTime(wy.generated), warnH: 30, badH: 72,
+      notes: wy ? ['Through week ' + wy.through_week, n(wy.players).toLocaleString() + ' players'] : [], issue: wy ? behind(wy.through_week, 'box scores') : '' });
+    const xf = ctx.xfp;
+    add({ name: 'Expected fantasy points', feeds: 'xFP, luck vs usage', ok: !!xf || !ctx.xfpFailed, lazy: !xf && !ctx.xfpFailed, t: xf && dhTime(xf.generated), warnH: 30, badH: 96,
+      notes: xf ? ['Through week ' + xf.through_week, n(xf.players).toLocaleString() + ' players'] : [], issue: ctx.xfpFailed ? 'failed to load' : xf ? behind(xf.through_week, 'xFP') : '' });
+    const ro = ctx.ros;
+    add({ name: 'Rest-of-season projections', feeds: 'ROS value, trade and stash ranks', ok: !!ro, lazy: !ro, t: ro && dhTime(ro.generated), warnH: 30, badH: 96,
+      notes: ro ? ['Weeks ' + ro.from_week + '–' + ro.through_week, n(ro.players).toLocaleString() + ' players'] : [], issue: ro && ro.from_week < wk ? 'starts at week ' + ro.from_week + ', this is week ' + wk : '' });
+    const rk = ctx.rk, S = (rk && rk.sources) || {};
+    add({ name: 'Rankings (FantasyPros, tiers, ESPN)', feeds: 'Consensus ranks, tiers', ok: !!rk, lazy: !rk, t: rk && dhTime(rk.generated), warnH: 36, badH: 96,
+      notes: rk ? [S.weekly ? 'FantasyPros week ' + S.weekly.week : 'no weekly ranks', S.tiers ? 'tiers week ' + S.tiers.week : ''] : [],
+      issue: rk && S.weekly && S.weekly.week !== wk ? 'weekly ranks are for week ' + S.weekly.week : '' });
+    const es = ctx.espn;
+    add({ name: 'ESPN news & injury notes', feeds: 'Injury notes, return dates, feed', ok: !!es || !ctx.espnFailed, lazy: !es && !ctx.espnFailed, t: es && (dhTime(es.fetched) || ctx.espnTs), warnH: 12, badH: 48,
+      notes: es ? [n(es.players).toLocaleString() + ' players', (es.unmatched || []).length ? es.unmatched.length + ' not matched' : 'all matched', es.via === 'espn' ? 'fetched from ESPN directly' : ''] : [],
+      issue: ctx.espnFailed ? 'failed to load' : '' });
+    const rp = ctx.recentProj;
+    add({ name: 'Past projections', feeds: 'Projected vs actual', ok: !!rp, lazy: !rp, t: rp && dhTime(rp.generated), warnH: 7 * 24, badH: 14 * 24,
+      notes: rp ? [n(rp.weeks) + ' weeks'] : [] });
+    const z = ctx.zone;
+    if(z && z.built) add({ name: 'Scoreboard (all leagues)', feeds: 'Sleepa Zone, Scoreboard tiles', ok: true, t: z.statsTs || NaN, warnH: anyLive ? 0.12 : 24, badH: anyLive ? 0.5 : 96, idle: !z.statsTs,
+      notes: [z.leagues.length + ' leagues', z.statsTs ? 'week ' + z.statsWeek + ' stats' : 'no stats yet'] });
+    const fd = ctx.inj && ctx.inj.feed;
+    if(fd) add({ name: 'Injury feed (this device)', feeds: 'What changed, notifications', ok: true, t: ctx.inj.snapTs > 0 ? ctx.inj.snapTs : NaN, warnH: 24, badH: 96, idle: !(ctx.inj.snapTs > 0),
+      notes: [n(fd.items) + ' entries saved', (ctx.notes || []).length + ' notifications'] });
+
+    rows.forEach(function(r){
+      r.notes = r.notes || [];
+      const h = (Date.now() - r.t) / 3600e3;
+      r.level = r.lazy ? 'off' : !r.ok ? 'bad' : r.idle ? 'off' : isNaN(h) ? 'warn' : h > r.badH ? 'bad' : h > r.warnH || r.issue ? 'warn' : 'ok';
+      if(r.ok && !r.lazy && !r.idle && isNaN(h)) r.issue = r.issue || 'no timestamp';
+    });
+    return rows;
+  }
+  function dhHTML(){
+    const rows = dhRows(), errs = ctx.errs || [];
+    const bad = rows.filter(function(r){ return r.level === 'bad'; }).length, warn = rows.filter(function(r){ return r.level === 'warn'; }).length;
+    const sum = bad || warn ? [bad ? bad + ' out of date or missing' : '', warn ? warn + ' aging or partial' : ''].filter(Boolean).join(' · ') : 'Everything loaded is current';
+    const LV = { ok: 'Current', warn: 'Check', bad: 'Problem', off: 'Not loaded yet' };
+    return '<div class="dh-sum ' + (bad ? 'bad' : warn ? 'warn' : 'ok') + '"><i></i>' + escapeHTML(sum) + (errs.length ? ' · ' + errs.length + ' error' + (errs.length === 1 ? '' : 's') + ' this session' : '') + '</div>' +
+      '<div class="dh-l">' + rows.map(function(r){
+        const age = r.lazy ? 'loads when needed' : r.idle ? 'idle' : !r.ok ? '—' : isNaN(r.t) ? '—' : dhAgo(r.t);
+        const notes = (r.notes || []).filter(Boolean);
+        return '<div class="dh-r ' + r.level + '"><i title="' + LV[r.level] + '" aria-label="' + LV[r.level] + '"></i><span class="dh-m"><b>' + escapeHTML(r.name) + '</b><small>' + escapeHTML(r.feeds) + '</small>' +
+          (notes.length ? '<small class="dh-n">' + escapeHTML(notes.join(' · ')) + '</small>' : '') + (r.issue ? '<small class="dh-x">' + escapeHTML(r.issue) + '</small>' : '') +
+          '</span><em>' + escapeHTML(age) + '</em></div>';
+      }).join('') + '</div>' +
+      (errs.length ? '<details class="dh-errs"><summary>Errors this session (' + errs.length + ')</summary>' + errs.map(function(x){
+        return '<div class="dh-e"><b>' + escapeHTML(x.where) + '</b>' + (x.n > 1 ? ' ×' + x.n : '') + ' · ' + escapeHTML(dhAgo(x.t)) + '<br><code>' + escapeHTML(x.msg) + '</code></div>';
+      }).join('') + '</details>' : '');
+  }
+
   function renderStatus(){
+    const dh = document.getElementById('dh');
+    if(dh) dh.innerHTML = safeHTML('Data health', dhHTML);
     const nfl = ctx.nfl;
     const hm = function(t){ return t ? new Date(t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '—'; };
     const statTs = (ctx.myRoster && ctx.myRoster.players || []).map(function(pid){ const c = readHistoryCache(pid, ctx.season); return c ? c.ts : 0; }).filter(Boolean);
@@ -8595,7 +8718,7 @@
         '</div><button class="bye-fix" data-fix-slot="' + firstSlot + '">' + (byeStarters.length || outStarters.length ? 'Show options' : 'Fill it') + '</button>';
     }
 
-    renderInx(); inxPoll(); injBackground();
+    safeRun('Inactive check', function(){ renderInx(); inxPoll(); }); safeRun('Injury notifications', injBackground);
     document.querySelectorAll('.slot-row[data-player-id]').forEach(function(row){
       row.addEventListener('click', function(){
         if(paneShowing(row)){ closePane(); return; }
@@ -12512,7 +12635,7 @@
   function renderMax(dir){
     const e = maxStack[maxStack.length - 1];
     const openDetails = dir ? [] : Array.prototype.map.call(maxBody.querySelectorAll('details'), function(d){ return d.open; });
-    maxBody.innerHTML = e.kind === 'roster' ? maxRosterHTML() : e.kind === 'fa' ? maxWaiversHTML() : e.kind === 'h2h' ? h2hHTML(e.pids[0], e.pids[1]) : e.kind === 'opp' ? oppHTML() : e.kind === 'trade' ? tradeHTML() : e.kind === 'proj' ? projBreakdownHTML(e) : maxPlayerHTML(e.pid);
+    maxBody.innerHTML = e.kind === 'roster' ? maxRosterHTML() : e.kind === 'fa' ? maxWaiversHTML() : e.kind === 'h2h' ? h2hHTML(e.pids[0], e.pids[1]) : e.kind === 'opp' ? oppHTML() : e.kind === 'trade' ? tradeHTML() : e.kind === 'proj' ? projBreakdownHTML(e) : safeHTML('Player page', function(){ return maxPlayerHTML(e.pid); });
     if(openDetails.length) maxBody.querySelectorAll('details').forEach(function(d, i){ if(openDetails[i]) d.open = true; });
     maxBody.style.setProperty('--bar-h', maxEl.querySelector('.max-bar').offsetHeight + 'px');
     maxTitle.textContent = maxTitleFor(e);
@@ -15592,7 +15715,7 @@
     const a = ctx.zone.am, on = AM_TILES.filter(function(t){ return a.on[t.id]; });
     const bar = '<div class="am-tbar"><span>Tiles · ' + on.length + ' of ' + AM_TILE_CAP + '</span>' + AM_TILES.map(function(t){ const full = !a.on[t.id] && on.length >= AM_TILE_CAP; return '<button type="button" class="am-tt' + (full ? ' full' : '') + '" data-am-tile="' + t.id + '" aria-pressed="' + !!a.on[t.id] + '"' + (full ? ' title="' + AM_TILE_CAP + ' tiles max: turn one off first"' : '') + '>' + (a.on[t.id] ? '✓ ' : '+ ') + escapeHTML(t.title) + '</button>'; }).join('') + '</div>';
     const AM_BODY = { root: amRootHTML, expo: amExpoHTML, wav: amWaiverHTML, top: amTopHTML, plays: amPlaysHTML, ou: amOuHTML, hs: amHsHTML };
-    const body = function(t){ return AM_BODY[t.id](); };
+    const body = function(t){ return safeHTML(t.title, AM_BODY[t.id]); };   // one tile failing never takes the board down
     const tiles = on.map(function(t){ return '<section class="am-tile" data-tid="' + t.id + '"><div class="am-th"><small>' + escapeHTML(t.eyebrow) + '</small><b>' + escapeHTML(t.title) + '</b></div><div class="am-tb">' + body(t) + '</div></section>'; }).join('') +
       (on.length < AM_TILE_CAP && on.length < AM_TILES.length ? '<div class="am-tile am-open">Open slot<br><small>Turn on a tile above</small></div>' : '');
     return '<button type="button" class="am-acc" data-am-acc aria-expanded="' + !!a.tilesOpen + '"><span><b>Across leagues</b><small>' + on.length + ' tile' + (on.length === 1 ? '' : 's') + (on.length ? ' · ' + on.map(function(t){ return t.title.toLowerCase(); }).join(', ') : '') + '</small></span>' + CHEV + '</button>' +
@@ -16904,7 +17027,7 @@
     const sc = ctx.inj.scope, seg = '<div class="wk-seg inj-scope" role="group" aria-label="Whose injuries"><button type="button" data-inj-scope="league" aria-pressed="' + (sc === 'league') + '">' + escapeHTML(ctx.league ? ctx.league.name : 'This league') + '</button><button type="button" data-inj-scope="all" aria-pressed="' + (sc === 'all') + '">All players</button></div>';
     if(!ctx.inj.seenMarked){ ctx.inj.seenMarked = true; injMarkSeen(); }   // this visit: the next one compares against it
     let h = '<div class="inj-top">' + seg + (ctx.espnTs ? '<span class="inj-asof">ESPN notes as of ' + escapeHTML(fmtWhen(ctx.espnTs)) + '</span>' : '') + '</div>' + injScheduleHTML() +
-      injSection('What changed', 'since your last visit', injChangedHTML());
+      injSection('What changed', 'since your last visit', safeHTML('What changed', injChangedHTML));
     if(sc === 'league' && ctx.myRoster){
       const act = inxProblems().filter(function(x){ return x.league.current; });
       h += injSection('Needs action', 'your starters this week', act.length ? '<div class="inj-rows">' + act.map(function(x){
@@ -16918,14 +17041,14 @@
       h += injSection('Your injured players', mine.length + ' on your roster', mine.length ? injSortSeg() + '<div class="inj-rows">' + mine.map(function(pid){ return injRowHTML(pid, '<span class="inj-tag ' + (starters.has(pid) ? 'start' : '') + '">' + (starters.has(pid) ? 'Starting' : parked.has(pid) ? 'IR / taxi' : 'Bench') + '</span>'); }).join('') + '</div>' : '<p class="am-none">Nobody on your roster is listed as injured.</p>');
       const mu = myMatchup(), opp = mu ? mu.starters.filter(function(pid){ return pid && pid !== '0' && ctx.players[pid] && injInfo(pid).hurt; }) : [];
       if(mu) h += injSection('Your opponent’s injured starters', escapeHTML(mu.name), opp.length ? '<div class="inj-rows">' + opp.map(function(pid){ return injRowHTML(pid, ''); }).join('') + '</div>' : '<p class="am-none">' + escapeHTML(mu.name) + ' has no injured starters.</p>');
-      h += injSection('Opportunity watch', 'who moves up when an offensive starter is out', injOppHTML()) + injSection('Returning soon', 'expected back within three weeks', injReturnHTML());
+      h += injSection('Opportunity watch', 'who moves up when an offensive starter is out', safeHTML('Opportunity watch', injOppHTML)) + injSection('Returning soon', 'expected back within three weeks', safeHTML('Returning soon', injReturnHTML));
     } else if(sc === 'all'){
       const list = Object.keys(ctx.players).filter(function(pid){ return injRelevant(pid) && injInfo(pid).hurt && injNorm(injInfo(pid).st) !== ''; })
         .sort(function(a, b){ return (ctx.inj.sort === 'trend' ? injTrendRank(a) - injTrendRank(b) : 0) || (ctx.projections[b] || (rosValue(b) || {}).pts || 0) - (ctx.projections[a] || (rosValue(a) || {}).pts || 0); }).slice(0, 60);
       h += injSection('Notable injuries', ctx.inj.sort === 'trend' ? 'practice trending down first' : 'most valuable first', list.length ? injSortSeg() + '<div class="inj-rows">' + list.map(function(pid){ return injRowHTML(pid, injOwnerTag(pid)); }).join('') + '</div>' : '') +
-        injSection('Opportunity watch', 'who moves up when an offensive starter is out', injOppHTML()) + injSection('Returning soon', 'expected back within three weeks', injReturnHTML());
+        injSection('Opportunity watch', 'who moves up when an offensive starter is out', safeHTML('Opportunity watch', injOppHTML)) + injSection('Returning soon', 'expected back within three weeks', safeHTML('Returning soon', injReturnHTML));
     }
-    h += injSection('Injury feed', 'new notes and status changes, newest first', injFeedHTML());
+    h += injSection('Injury feed', 'new notes and status changes, newest first', safeHTML('Injury feed', injFeedHTML));
     return h;
   }
   function injWant(){
@@ -16960,6 +17083,10 @@
   function renderIntel(){
     const root = document.getElementById('it-root');
     if(!root) return;
+    try{ renderIntelIn(root); }
+    catch(e){ dhErr('Intel', e); root.innerHTML = '<div class="wk-seg it-tabs" role="group" aria-label="Intel"><button type="button" data-it-tab="games" aria-pressed="' + (ctx.it.tab !== 'inj') + '">Games</button><button type="button" data-it-tab="inj" aria-pressed="' + (ctx.it.tab === 'inj') + '">Injuries</button></div>' + safeHTML(ctx.it.tab === 'inj' ? 'Injuries' : 'Games', function(){ throw e; }); }
+  }
+  function renderIntelIn(root){
     const tabs = '<div class="wk-seg it-tabs" role="group" aria-label="Intel"><button type="button" data-it-tab="games" aria-pressed="' + (ctx.it.tab !== 'inj') + '">Games</button><button type="button" data-it-tab="inj" aria-pressed="' + (ctx.it.tab === 'inj') + '">Injuries</button></div>';
     if(ctx.it.tab === 'inj'){ injWant(); root.innerHTML = tabs + injHTML(); return; }
     const d = intelData();

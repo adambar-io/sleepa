@@ -924,6 +924,25 @@ def build_intel(season, week, venues, by_name, history, previous=None):
     return intel, history
 
 
+def shape_problems(out, slim):
+    """What is wrong with a build, if anything. A broken build is never written: the Action fails and the site keeps
+    serving the last good files (the app shows their age in Settings > Data health)."""
+    p = []
+    for k in ('season', 'generated', 'stats_through_week', 'depth_as_of', 'players', 'sched', 'kick', 'inj', 'coverage'):
+        if k not in out:
+            p.append('missing ' + k)
+    if not isinstance(out.get('stats_through_week'), int):
+        p.append('stats_through_week is not a number')
+    n_players, n_slim = len(out.get('players') or {}), len(slim or {})
+    if n_players < 300:
+        p.append(f'only {n_players} players (expected 2,000+)')
+    if len(out.get('sched') or {}) < 32 or len(out.get('kick') or {}) < 32:
+        p.append('schedule is missing teams')
+    if n_slim < 2000:
+        p.append(f'only {n_slim} Sleeper players (expected 10,000+)')
+    return p
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--season', type=int, default=default_season())
@@ -933,6 +952,10 @@ def main():
     old = load_previous(args.out)
     out, slim = build(args.season, old)
     gsis_of = out.pop('_gsis_of', {})
+    problems = shape_problems(out, slim)
+    if problems:
+        print('Build looks broken, nothing written: ' + '; '.join(problems), file=sys.stderr)
+        sys.exit(1)
 
     # Defense vs position (completed weeks) goes in nflverse.json; rest-of-season projections in their own file,
     # which the app only loads for the waiver screen and the trade helper.
