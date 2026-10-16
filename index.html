@@ -718,6 +718,7 @@
   .set-card .quiet-btn{ margin-top: 12px; }
   .quiet-btn{ background: var(--surface-2); color: var(--text); }
   .set-data{ font-size: 13.5px; color: var(--text-2); line-height: 1.6; }
+  .oops-lk{ display: inline; min-height: 0; padding: 0; background: none; color: var(--accent); font: inherit; font-weight: 600; cursor: pointer; }
   .oops{ padding: 12px 14px; border-radius: 12px; background: var(--warn-soft); color: var(--text-2); font-size: 13px; line-height: 1.45; } .oops b{ color: var(--text); }
   .dh{ display: grid; gap: 8px; margin-bottom: 12px; }
   .dh-sum{ display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; }
@@ -6190,7 +6191,7 @@
         ctx.deferEntrance = false;
         staggerIn(els.startersList); staggerIn(els.benchList);
       };
-      if(/^#huddle$/i.test(location.hash) && !ctx.huddleLinked){ ctx.huddleLinked = true; openHuddle(); }   // a #huddle link / bookmark opens straight into it
+      if(!ctx.linked){ ctx.linked = true; if(!linkApply()) linkWrite(); }   // a #/… link or bookmark opens straight into it (the old #huddle too)
 
       nflPromise.then(function(res){
         if(loadId !== ctx.loadId || !res || !applyNfl(res)) return; // another league loaded meanwhile, no data, or already newer
@@ -8325,7 +8326,7 @@
   }
   function safeHTML(where, fn){
     try{ return fn(); }
-    catch(e){ dhErr(where, e); return '<div class="oops" role="status"><b>' + escapeHTML(where) + '</b> couldn’t load. Everything else still works; the details are in Settings › Data health.</div>'; }
+    catch(e){ dhErr(where, e); return '<div class="oops" role="status"><b>' + escapeHTML(where) + '</b> couldn’t load. Everything else still works; the details are in <button type="button" class="oops-lk" data-act="health">Settings › Data health</button>.</div>'; }
   }
   function safeRun(where, fn){ try{ return fn(); }catch(e){ dhErr(where, e); } }
   window.addEventListener('error', function(e){ if(e.message) dhErr('Uncaught', e.error || e.message); });
@@ -8820,7 +8821,6 @@
     if(b.hasAttribute('data-huddle')){ openHuddle(); return; }
     if(b.getAttribute('data-lu-mode') !== ctx.luMode) setLuMode(b.getAttribute('data-lu-mode'));
   });
-  window.addEventListener('hashchange', function(){ if(/^#huddle$/i.test(location.hash)) openHuddle(); });
   document.addEventListener('keydown', function(e){
     if((e.key !== 'h' && e.key !== 'H') || e.metaKey || e.ctrlKey || e.altKey || ctx.luMode === 'pr' || !ctx.myRoster) return;
     if(e.target && (/INPUT|SELECT|TEXTAREA/.test(e.target.tagName) || e.target.isContentEditable)) return;
@@ -10287,7 +10287,7 @@
   }
   function setView(view){
     const changed = ctx.view !== view;
-    setTimeout(notesBell, 0);
+    setTimeout(notesBell, 0); setTimeout(linkWrite, 0);
     if(changed && ctx.view === 'compare' && view !== 'compare'){ ctx.cmpReturn = null; ctx.ssSheet = false; document.body.classList.remove('no-scroll'); }
     ctx.view = view;
     els.navBtns.forEach(function(t){
@@ -17083,6 +17083,7 @@
   function renderIntel(){
     const root = document.getElementById('it-root');
     if(!root) return;
+    if(ctx.view === 'intel') linkWrite();
     try{ renderIntelIn(root); }
     catch(e){ dhErr('Intel', e); root.innerHTML = '<div class="wk-seg it-tabs" role="group" aria-label="Intel"><button type="button" data-it-tab="games" aria-pressed="' + (ctx.it.tab !== 'inj') + '">Games</button><button type="button" data-it-tab="inj" aria-pressed="' + (ctx.it.tab === 'inj') + '">Injuries</button></div>' + safeHTML(ctx.it.tab === 'inj' ? 'Injuries' : 'Games', function(){ throw e; }); }
   }
@@ -17361,9 +17362,72 @@
   const kbHuddle = function(){ return ctx.luMode === 'pr' && ctx.view === 'roster'; };
   const kbSS = function(){ return ctx.view === 'compare' && ctx.cmpSec === 'ss'; };
 
+  // ---- every place and action, once: search (/ or Ctrl K), the keyboard letters, the cheat sheet, data-act buttons and
+  // #/ deep links are all built from this list. id, title, words (extra search words), key (shortcut), help (cheat-sheet
+  // text when it differs from the title), hash (deep link: sleepa/#/intel/injuries), run ----
+  function ckSec(view, sel){ return function(){ if(ctx.view !== view) setView(view); const b = document.querySelector(sel); if(b) b.click(); window.scrollTo({ top: 0 }); }; }
+  const ACTIONS = [
+    { id: 'lineup', title: 'Lineup', words: 'roster my team starters bench home', key: 'L', hash: 'lineup', run: kbView('roster') },
+    { id: 'huddle', title: 'Sleepa Huddle', words: 'set lineup power rank cards build', key: 'H', hash: 'huddle', run: function(){ openHuddle(); } },
+    { id: 'players', title: 'Players', words: 'free agents waivers available', key: 'P', hash: 'players', run: kbView('fa') },
+    { id: 'waivers', title: 'Waiver value', words: 'pickups adds drops best available', hash: 'players/waivers', run: ckSec('fa', '[data-pl-view="value"]') },
+    { id: 'trending', title: 'Trending players', words: 'adds drops hot', hash: 'players/trending', run: ckSec('fa', '[data-pl-view="trend"]') },
+    { id: 'league', title: 'League', words: 'standings playoff picture table', key: 'E', hash: 'league', run: kbView('league') },
+    { id: 'matchup', title: 'This week’s matchup', words: 'opponent compare lineups vs versus score', hash: 'matchup', run: function(){ kbView('roster')(); if(myMatchup()) openMax({ kind: 'opp' }); } },
+    { id: 'compare', title: 'Compare', words: 'vs versus', key: 'C', hash: 'compare', run: kbView('compare') },
+    { id: 'startsit', title: 'Start / Sit', words: 'who should i start compare sit', hash: 'compare/start-sit', run: ckSec('compare', '[data-cmp-sec="ss"]') },
+    { id: 'needs', title: 'Team needs', words: 'scarcity positions weak strong', hash: 'compare/needs', run: ckSec('compare', '[data-cmp-sec="needs"]') },
+    { id: 'changes', title: 'Lineup changes', words: 'diff sleeper vs plan', hash: 'compare/changes', run: ckSec('compare', '[data-cmp-sec="lineup"]') },
+    { id: 'trade', title: 'Trade builder', words: 'trades calculator offer', hash: 'trade', run: function(){ openTrade(ctx.trade && ctx.trade.team); } },
+    { id: 'finder', title: 'Trade Finder', words: 'trades suggestions find deals', hash: 'trade/finder', run: function(){ openTrade(ctx.trade && ctx.trade.team); ctx.tradeMode = 'finder'; renderCompare(); } },
+    { id: 'intel', title: 'Sleepa Intel', words: 'games lines weather vegas betting environment', key: 'I', hash: 'intel', run: function(){ ctx.it.scope = 'league'; ctx.it.origin = null; if(ctx.view === 'intel') renderIntel(); kbView('intel')(); } },
+    { id: 'games', title: 'Game environments', words: 'intel games lines weather vegas totals spreads', hash: 'intel/games', run: function(){ ctx.it.tab = 'games'; zSave('rv-it-tab', 'games'); ctx.it.scope = 'league'; ctx.it.origin = null; if(ctx.view === 'intel') renderIntel(); kbView('intel')(); } },
+    { id: 'injuries', title: 'Injuries', words: 'injury report hurt questionable doubtful out practice inactives news', hash: 'intel/injuries', run: function(){ injGo(); } },
+    { id: 'zone', title: 'Sleepa Zone', words: 'all leagues live scores', key: 'Z', help: 'Sleepa Zone (again to close)', hash: 'zone', run: function(){ zoneOpen(); } },
+    { id: 'scoreboard', title: 'Scoreboard', words: 'every matchup all leagues live scores tiles rooting', hash: 'scoreboard', run: function(){ if(ctx.zone.open) amOpen(); else zoneOpen().then(function(){ if(ctx.zone.open) amOpen(); }); } },
+    { id: 'notes', title: 'Notifications', words: 'alerts downgrades bell injuries', hash: 'notifications', run: function(){ kbView('roster')(); setTimeout(notesOpen, 0); } },
+    { id: 'refresh', title: 'Refresh scores', words: 'reload update live', key: 'R', run: function(){ refreshData({ manual: true }); } },
+    { id: 'resources', title: 'Resources', words: 'links tools', hash: 'resources', run: kbView('resources') },
+    { id: 'settings', title: 'Settings', words: 'theme options preferences', hash: 'settings', run: kbView('settings') },
+    { id: 'health', title: 'Data health', words: 'sources freshness stale errors status data updated', hash: 'settings/data', run: function(){ kbView('settings')(); const el = document.getElementById('dh'); if(el) el.closest('.card').scrollIntoView({ block: 'start' }); } },
+    { id: 'keys', title: 'Keyboard shortcuts', words: 'help keys cheat sheet', key: '?', run: function(){ kbHelp(true); } },
+  ];
+  function actById(id){ return ACTIONS.find(function(a){ return a.id === id; }); }
+  // a deep link: { id } for a place, { pid } for a player page, null if it isn't one. The old #huddle still works.
+  function linkParse(hash){
+    const raw = String(hash || '').replace(/^#[/]?/, '');
+    if(!raw) return null;
+    const m = /^player[/]([^/?]+)/i.exec(raw);
+    if(m) return { pid: decodeURIComponent(m[1]) };
+    const h = raw.toLowerCase().replace(/[/]+$/, '');
+    const a = ACTIONS.find(function(x){ return x.hash === h; });
+    return a ? { id: a.id } : null;
+  }
+  // the address bar follows the page you are on (copy it to share or bookmark); overlays opened by a link settle back to it
+  const VIEW_HASH = { roster: 'lineup', fa: 'players', league: 'league', compare: 'compare', resources: 'resources', settings: 'settings' };
+  function linkWrite(){
+    if(!ctx.linked || !ctx.myRoster || !history.replaceState) return;
+    const h = ctx.view === 'intel' ? (ctx.it.tab === 'inj' ? 'intel/injuries' : 'intel') : VIEW_HASH[ctx.view];
+    if(h && location.hash !== '#/' + h) try{ history.replaceState(null, '', '#/' + h); }catch(e){}
+  }
+  function linkApply(){
+    const L = linkParse(location.hash);
+    if(!L || !ctx.myRoster) return false;
+    if(L.pid){ if(!ctx.players[L.pid]) return false; kbGo(function(){ ckOpenPlayer(L.pid); }); }
+    else kbGo(actById(L.id).run);
+    setTimeout(linkWrite, 0);
+    return true;
+  }
+  window.addEventListener('hashchange', function(){ linkApply(); });
+  document.addEventListener('click', function(e){
+    const b = e.target.closest && e.target.closest('[data-act]'), a = b && actById(b.getAttribute('data-act'));
+    if(a){ e.preventDefault(); kbGo(a.run); }
+  });
+
   // ---- the cheat sheet (?) ----
   const KB_HELP = [
-    ['Go to', [['L', 'Lineup'], ['P', 'Players'], ['E', 'League'], ['C', 'Compare'], ['Z', 'Sleepa Zone (again to close)'], ['H', 'Sleepa Huddle'], ['I', 'Sleepa Intel'], ['/', 'Search everything: players, pages, leagues, teams'], ['Ctrl K', 'Search too (⌘K on a Mac)'], ['R', 'Refresh scores'], ['1 – 4', 'Sections on Players and Compare']]],
+    ['Go to', ACTIONS.filter(function(a){ return a.key && a.key !== '?'; }).map(function(a){ return [a.key, a.help || a.title]; })
+      .concat([['/', 'Search everything: players, pages, leagues, teams'], ['Ctrl K', 'Search too (⌘K on a Mac)'], ['1 – 4', 'Sections on Players and Compare']])],
     ['Move and open', [['↑ ↓', 'Move the highlight'], ['Enter', 'Go deeper: open the player panel, then the full player page'], ['Space', 'Close what’s open · again to reopen it'], ['Esc', 'Back out one step']]],
     ['Start / Sit', [['→', 'Into the comparison columns'], ['← →', 'Between players'], ['Enter', 'Details, then the full player page'], ['Esc', 'Back to the list']]],
     ['Huddle', [['↑ ↓', 'Through the slots, then the players below'], ['Enter', 'Pick a slot, then Enter on a player to put them in it'], ['← →', 'Previous / next position'], ['Esc', 'Cancel the pick · leave'], ['Space / Enter', 'Flip a card on Review']]],
@@ -17561,11 +17625,8 @@
     else fn();
   }
   function kbView(v){ return function(){ if(ctx.view !== v) setView(v); window.scrollTo({ top: 0 }); }; }
-  const KB_LETTERS = {
-    l: kbView('roster'), p: kbView('fa'), e: kbView('league'), c: kbView('compare'),
-    i: function(){ ctx.it.scope = 'league'; ctx.it.origin = null; if(ctx.view === 'intel') renderIntel(); kbView('intel')(); },
-    r: function(){ refreshData({ manual: true }); },
-  };
+  const KB_LETTERS = {};
+  ACTIONS.forEach(function(a){ if(a.key && /^[A-Z]$/.test(a.key) && a.key !== 'H' && a.key !== 'Z') KB_LETTERS[a.key.toLowerCase()] = a.run; });
 
   // the highlight survives re-renders (it's kept by a stable key, then repainted)
   new MutationObserver(function(){ if(KB.key){ const items = kbItems(); if(items.length) kbPaint(items); } })
@@ -17689,29 +17750,7 @@
     go: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
     search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg>',
   };
-  const ckSec = function(view, sel){ return function(){ if(ctx.view !== view) setView(view); const b = document.querySelector(sel); if(b) b.click(); window.scrollTo({ top: 0 }); }; };
-  // [title, extra words to match, shortcut, run]
-  const CK_ACTIONS = [
-    ['Lineup', 'roster my team starters bench home', 'L', function(){ kbView('roster')(); }],
-    ['Sleepa Huddle', 'set lineup power rank cards build', 'H', function(){ openHuddle(); }],
-    ['Players', 'free agents waivers available', 'P', function(){ kbView('fa')(); }],
-    ['Waiver value', 'pickups adds drops best available', '', ckSec('fa', '[data-pl-view="value"]')],
-    ['Injuries', 'injury report hurt questionable doubtful out practice inactives news', '', function(){ injGo(); }],
-    ['Trending players', 'adds drops hot', '', ckSec('fa', '[data-pl-view="trend"]')],
-    ['League', 'standings playoff picture table', 'E', function(){ kbView('league')(); }],
-    ['This week’s matchup', 'opponent compare lineups vs versus score', '', function(){ kbView('roster')(); if(myMatchup()) openMax({ kind: 'opp' }); }],
-    ['Compare', 'vs versus', 'C', function(){ kbView('compare')(); }],
-    ['Start / Sit', 'who should i start compare sit', '', ckSec('compare', '[data-cmp-sec="ss"]')],
-    ['Trade builder', 'trades calculator offer', '', function(){ openTrade(ctx.trade && ctx.trade.team); }],
-    ['Trade Finder', 'trades suggestions find deals', '', function(){ openTrade(ctx.trade && ctx.trade.team); ctx.tradeMode = 'finder'; renderCompare(); }],
-    ['Team needs', 'scarcity positions weak strong', '', ckSec('compare', '[data-cmp-sec="needs"]')],
-    ['Lineup changes', 'diff sleeper vs plan', '', ckSec('compare', '[data-cmp-sec="lineup"]')],
-    ['Sleepa Zone', 'all leagues live scores scoreboard', 'Z', function(){ zoneOpen(); }],
-    ['Refresh scores', 'reload update live', 'R', function(){ refreshData({ manual: true }); }],
-    ['Resources', 'links tools', '', function(){ kbView('resources')(); }],
-    ['Settings', 'theme options preferences', '', function(){ kbView('settings')(); }],
-    ['Keyboard shortcuts', 'help keys cheat sheet', '?', function(){ kbHelp(true); }],
-  ];
+  const CK_ACTIONS = ACTIONS.map(function(a){ return [a.title, a.words, a.key || '', a.run]; });   // [title, extra words, shortcut, run]
   const CK = { el: null, input: null, list: null, items: [], i: 0 };
   function ckOpen(){ return !!CK.el && !CK.el.hidden; }
   // how well q matches text: 0 = no; every word must be there; a word start counts more than the middle of a word
@@ -17748,11 +17787,7 @@
         const who = isMine(pid) ? 'On your team' : isAvailable(pid) ? 'Free agent' : o !== undefined ? rosterName(o) : 'Not on a roster';
         return { title: p.position === 'DEF' ? (p.team || pid) + ' D/ST' : playerName(p), sub: [posGroup(pid), p.team || 'FA', who].join(' · '),
           ico: avatarTag(pid, 'ck-av'), pc: posColor(posGroup(pid)),
-          run: function(){
-            if(isMine(pid)){ kbView('roster')(); const i = ctx.draftStarters.indexOf(pid); openFocus(pid, i === -1 ? null : i); }
-            else if(isAvailable(pid)){ kbView('fa')(); openFreeAgent(pid); }
-            else openAnalysis(pid);
-          } };
+          run: function(){ ckOpenPlayer(pid); } };
       });
     }
     // leagues
@@ -17798,6 +17833,12 @@
     CK.list.querySelectorAll('.ck-r').forEach(function(r){ const on = Number(r.getAttribute('data-ck')) === CK.i; r.classList.toggle('on', on); r.setAttribute('aria-selected', on); });
     CK.input.setAttribute('aria-activedescendant', 'ck-o' + CK.i);
     const r = CK.list.querySelector('.ck-r.on'); if(r) r.scrollIntoView({ block: 'nearest' });
+  }
+  // a player from search or a #/player/{id} link: mine in Lineup, available in Players, anyone else on the player page
+  function ckOpenPlayer(pid){
+    if(isMine(pid)){ kbView('roster')(); const i = ctx.draftStarters.indexOf(pid); openFocus(pid, i === -1 ? null : i); }
+    else if(isAvailable(pid)){ kbView('fa')(); openFreeAgent(pid); }
+    else openAnalysis(pid);
   }
   function ckRun(i){
     const x = CK.items[i];

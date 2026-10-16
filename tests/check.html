@@ -433,6 +433,26 @@
     check('build stamps without seconds parse (2026-10-16T03:32Z)', G.dhTime('2026-10-16T03:32Z') === Date.UTC(2026, 9, 16, 3, 32), String(G.dhTime('2026-10-16T03:32Z')));
   }catch(e){ check('never-crash helpers load', false, e.message); }
 
+  // ---- 3i. One action registry: search, keys, cheat sheet and #/ links all come from ACTIONS ----
+  section('Action registry and deep links');
+  try{
+    const R = new Function('function kbView(){ return function(){}; } function ckSec(){ return function(){}; }\n' + ['const ACTIONS', 'function linkParse('].map(extract).join('\n') + '; return { ACTIONS, linkParse };')();
+    const A = R.ACTIONS, dup = function(k){ const seen = {}, d = []; A.forEach(function(x){ const v = x[k]; if(v == null) return; if(seen[v]) d.push(v); seen[v] = 1; }); return d; };
+    check('every action has an id, a title and something to run (' + A.length + ' actions)', A.every(function(x){ return x.id && x.title && typeof x.run === 'function'; }));
+    ['id', 'title', 'key', 'hash'].forEach(function(k){ const d = dup(k); check('no two actions share a ' + k, !d.length, d.join(', ')); });
+    check('shortcut keys are one letter or ?', A.every(function(x){ return !x.key || /^[A-Z?]$/.test(x.key); }));
+    const eq2 = function(h, want){ const got = R.linkParse(h); check('link ' + (h || '(empty)') + ' opens ' + JSON.stringify(want), JSON.stringify(got) === JSON.stringify(want), JSON.stringify(got)); };
+    eq2('#/intel/injuries', { id: 'injuries' });
+    eq2('#/Intel/Injuries/', { id: 'injuries' });
+    eq2('#huddle', { id: 'huddle' });
+    eq2('#/scoreboard', { id: 'scoreboard' });
+    eq2('#/settings/data', { id: 'health' });
+    eq2('#/player/4984', { pid: '4984' });
+    eq2('#/player/KC', { pid: 'KC' });
+    eq2('#/nowhere', null);
+    eq2('', null);
+  }catch(e){ check('action registry loads', false, e.message); }
+
   // ---- 4. injury statuses vs live Sleeper values ----
   section('Injury statuses: every live Sleeper value is known');
   try{
