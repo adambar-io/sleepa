@@ -3093,6 +3093,15 @@
   .inj-ft{ display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 11px; color: var(--text-3); } .inj-src{ font-weight: 700; color: var(--text-2); }
   .inj-fh{ display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; margin-top: 6px; cursor: pointer; } .ph.inj-fi{ width: 28px; height: 28px; } .inj-fh b{ font-size: 14px; } .inj-fh small{ font-size: 11.5px; color: var(--text-3); }
   .inj-fl summary{ margin-top: 6px; cursor: pointer; font-size: 12px; font-weight: 600; color: var(--accent); } .inj-fl p{ color: var(--text); }
+  .inj-chs{ display: flex; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 8px; font-size: 12.5px; color: var(--text-2); } .inj-chs b{ font-size: 16px; color: var(--text); }
+  .inj-ch, .inj-up, .inj-ret{ display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; padding: 7px 10px; border-radius: 12px; background: var(--surface-2); cursor: pointer; font-size: 13px; }
+  .inj-ch small, .inj-upn small{ font-size: 11.5px; color: var(--text-3); } .inj-ch em, .inj-ret em{ margin-left: auto; font-style: normal; font-size: 11.5px; color: var(--text-3); white-space: nowrap; } .inj-ret em{ color: var(--accent); font-weight: 700; }
+  .inj-arr{ font-weight: 800; } .inj-ch.down .inj-arr{ color: var(--danger); } .inj-ch.up .inj-arr, .inj-up .inj-arr{ color: var(--accent); }
+  .inj-op{ display: grid; gap: 5px; padding: 8px; border-radius: 14px; box-shadow: inset 0 0 0 1px var(--hair); }
+  .inj-oph{ display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; padding: 2px 4px; cursor: pointer; } .inj-oph b{ font-size: 14px; } .inj-oph small{ font-size: 11.5px; color: var(--text-3); }
+  .inj-upn{ display: flex; flex-direction: column; min-width: 0; flex: 1; } .inj-upn b{ font-size: 13.5px; }
+  .inj-tag.fa2{ background: var(--accent-soft); color: var(--accent); }
+  .inj-sub{ margin: 6px 2px 6px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
   .inx-all{ min-height: 30px; padding: 0 12px; border-radius: 999px; background: var(--surface); color: var(--text); font-size: 12.5px; font-weight: 600; }
   @media (max-width: 600px){ .inj-sched{ grid-template-columns: 1fr; } .inj-st{ display: flex; align-items: baseline; gap: 8px; } .inj-st small{ width: 62px; flex: none; } .inj-r{ grid-template-columns: 40px minmax(0, 1fr); } .inj-rr{ grid-column: 2; flex-direction: row; justify-content: space-between; } }
   /* ---- Sleepa Zone: Game sheet ---- */
@@ -16657,9 +16666,118 @@
       (step === -1 ? '<p class="am-fine">Tuesday: no reports yet. The first practice report comes out Wednesday (Tuesday for Thursday games).</p>' : '');
   }
   function injSection(title, sub, body){ return body ? '<section class="card inj-sec"><div class="inj-sh"><b>' + title + '</b>' + (sub ? '<span>' + sub + '</span>' : '') + '</div>' + body + '</section>' : ''; }
+  // ---- phase 2: what changed, opportunity watch (offense), returning soon ----
+  const INJ_SEV = { '': 0, DTD: 1, Q: 1, D: 2, O: 3, SUS: 3, NA: 3, PUP: 4, IR: 4 };
+  const INJ_OUT = { D: 1, O: 1, SUS: 1, NA: 1, PUP: 1, IR: 1 };
+  const INJ_STARTS = { QB: 1, RB: 2, WR: 3, TE: 1 };   // depth slots that matter: who moves up when one of them is out
+  try{ ctx.inj.lastSeen = Number(localStorage.getItem('rv-inj-seen')) || 0; }catch(e){ ctx.inj.lastSeen = 0; }
+  function injMarkSeen(){ zSave('rv-inj-seen', String(Date.now())); }   // the next session compares against now
+  // every league: is he mine, on another team, or a free agent? (League ownership's cache of the other leagues)
+  function injOwners(pid){
+    const out = { mine: [], fa: [], taken: [] };
+    ownLeagueList().forEach(function(L){
+      if(!L.rosters) return;
+      const r = L.rosters.find(function(x){ return (x.players || []).indexOf(pid) !== -1; }), code = amCode(L.name);
+      if(!r) out.fa.push(code);
+      else if(r.owner_id === ctx.userId || (r.co_owners || []).indexOf(ctx.userId) !== -1) out.mine.push(code);
+      else out.taken.push(code);
+    });
+    return out;
+  }
+  function injOwnChips(pid){
+    const o = injOwners(pid);
+    return (o.mine.length ? '<span class="inj-tag mine">Yours · ' + escapeHTML(o.mine.join(' ')) + '</span>' : '') +
+      (o.fa.length ? '<span class="inj-tag fa2">Waivers · ' + escapeHTML(o.fa.join(' ')) + '</span>' : '');
+  }
+  // team depth by position from the depth chart: { 'KC|WR': [pid by rank] }
+  function injDepth(){
+    const key = (ctx.nfl && ctx.nfl.depth_as_of) + ':' + (ctx.playersTs || 0);
+    if(ctx.inj.depth && ctx.inj.depth.key === key) return ctx.inj.depth.v;
+    const v = {}, np = (ctx.nfl && ctx.nfl.players) || {};
+    Object.keys(np).forEach(function(pid){
+      const p = ctx.players[pid], d = np[pid].d;
+      if(!p || !p.team || !d || !INJ_STARTS[p.position]) return;
+      const m = String(d).match(/^([A-Z]+)(\d+)$/);
+      if(!m || m[1] !== p.position) return;
+      (v[p.team + '|' + p.position] = v[p.team + '|' + p.position] || []).push({ pid: pid, rank: Number(m[2]) });
+    });
+    Object.keys(v).forEach(function(k){ v[k] = v[k].sort(function(a, b){ return a.rank - b.rank; }); });
+    ctx.inj.depth = { key: key, v: v };
+    return v;
+  }
+  function injOut(pid){ const I = injInfo(pid); return !!INJ_OUT[injNorm(I.st)] || I.srcs.some(function(x){ return INJ_OUT[injNorm(x[1])]; }); }
+  // Opportunity watch: an offensive player in a starting depth slot is out; the next healthy players at his position move up
+  function injOppData(){
+    const D = injDepth(), out = [];
+    Object.keys(D).forEach(function(k){
+      const pos = k.split('|')[1], list = D[k];
+      list.forEach(function(x){
+        if(x.rank > INJ_STARTS[pos] || !injOut(x.pid)) return;
+        const k0 = kickoff(ctx.players[x.pid].team, ctx.week);
+        if(k0 && k0 <= Date.now()) return;   // this week's game already played
+        const up = list.filter(function(y){ return y.rank > x.rank && !injOut(y.pid); }).slice(0, 2);
+        if(up.length) out.push({ pid: x.pid, rank: x.rank, pos: pos, up: up });
+      });
+    });
+    return out;
+  }
+  function injOppHTML(){
+    const sc = ctx.inj.scope, rows = injOppData().map(function(o){
+      const rel = o.up.filter(function(u){ const w = injOwners(u.pid); return w.mine.length || (sc === 'all' ? w.fa.length : w.fa.indexOf(amCode(ctx.league.name)) !== -1); });
+      return Object.assign({ rel: rel, val: Math.max.apply(null, o.up.map(function(u){ return ctx.projections[u.pid] || 0; }).concat([0])) }, o);
+    }).filter(function(o){ return sc === 'all' || o.rel.length; })
+      .sort(function(a, b){ return (b.rel.length ? 1 : 0) - (a.rel.length ? 1 : 0) || b.val - a.val; }).slice(0, 25);
+    if(!rows.length) return '<p class="am-none">' + (sc === 'all' ? 'No offensive starters are ruled out right now.' : 'No one moving up is yours or on waivers in this league right now.') + '</p>';
+    return '<div class="inj-rows">' + rows.map(function(o){
+      const p = ctx.players[o.pid];
+      return '<div class="inj-op"><div class="inj-oph"' + analyzeAttr(o.pid) + ' role="button" tabindex="0">' + photoHTML(o.pid, 'inj-fi') + '<b>' + escapeHTML(playerName(p)) + '</b><small>' + escapeHTML(o.pos + o.rank + ' · ' + p.team) + '</small>' + injuryChip(injInfo(o.pid).st) + '</div>' +
+        o.up.map(function(u){
+          const q = ctx.players[u.pid], to = u.rank > INJ_STARTS[o.pos] ? 'into the lineup' : 'bigger role';
+          return '<div class="inj-up"' + analyzeAttr(u.pid) + ' role="button" tabindex="0"><span class="inj-arr">↑</span>' + photoHTML(u.pid, 'inj-fi') + '<span class="inj-upn"><b>' + escapeHTML(playerName(q)) + '</b><small>' + escapeHTML(o.pos + u.rank + ' → ' + to + (typeof ctx.projections[u.pid] === 'number' ? ' · ' + fmtPts(ctx.projections[u.pid]) + ' proj' : '')) + '</small></span>' + injOwnChips(u.pid) + '</div>';
+        }).join('') + '</div>';
+    }).join('') + '</div><p class="am-fine">From the depth chart: when a starting QB, RB1–2, WR1–3 or TE1 is out, the next healthy players at his position. Waivers = free agent in those leagues.</p>';
+  }
+  // What changed since the last visit: status moves (up / downgrades) and new notes, for the scope's players
+  function injChangedHTML(){
+    const F = ctx.inj.feed, seen = ctx.inj.lastSeen, sc = ctx.inj.scope;
+    if(!F || !seen) return '';
+    const inScope = function(pid){ return ctx.players[pid] && (sc === 'all' ? injRelevant(pid) : ownerOf(pid) !== undefined || isMine(pid)); };
+    const items = Object.keys(F.items).map(function(k){ return F.items[k]; }).filter(function(x){ return x.t > seen && inScope(x.pid) && injIsUpdate(x); });
+    const moves = items.filter(function(x){ return x.src === 'Sleeper'; }).map(function(x){ return Object.assign({ d: (INJ_SEV[injNorm(x.to)] || 0) - (INJ_SEV[injNorm(x.from)] || 0) }, x); }).filter(function(x){ return x.d; });
+    const notes = items.filter(function(x){ return x.src === 'ESPN'; }).length, down = moves.filter(function(x){ return x.d > 0; }), up = moves.filter(function(x){ return x.d < 0; });
+    const pri = function(pid){ return isMine(pid) ? 0 : (myMatchup() && myMatchup().starters.indexOf(pid) !== -1) ? 1 : 2; };
+    const list = moves.sort(function(a, b){ return pri(a.pid) - pri(b.pid) || b.t - a.t; }).slice(0, 8);
+    const head = '<div class="inj-chs"><span><b>' + down.length + '</b> downgrade' + (down.length === 1 ? '' : 's') + '</span><span><b>' + up.length + '</b> upgrade' + (up.length === 1 ? '' : 's') + '</span><span><b>' + notes + '</b> new note' + (notes === 1 ? '' : 's') + '</span></div>';
+    return head + (list.length ? '<div class="inj-rows">' + list.map(function(x){
+      const p = ctx.players[x.pid];
+      return '<div class="inj-ch ' + (x.d > 0 ? 'down' : 'up') + '"' + analyzeAttr(x.pid) + ' role="button" tabindex="0"><span class="inj-arr">' + (x.d > 0 ? '↓' : '↑') + '</span><b>' + escapeHTML(playerName(p)) + '</b><small>' + escapeHTML((x.from || 'Healthy') + ' → ' + (x.to || 'Healthy')) + '</small>' + injOwnerTag(x.pid) + '<em>' + escapeHTML(injAgo(x.t)) + '</em></div>';
+    }).join('') + '</div>' : '') + (!items.length ? '<p class="am-none">Nothing new since ' + escapeHTML(new Date(seen).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' })) + '.</p>' : '');
+  }
+  // Returning soon: injured players with an expected return in the next three weeks (mine), and stash candidates on waivers
+  function injValue(pid){ const r = rosValue(pid); return r ? r.pts : (seasonAvgPts(pid) || 0) * 10; }
+  function injReturnHTML(){
+    const sc = ctx.inj.scope, now = Date.now(), soon = now + 21 * DAY, rows = [];
+    const back = function(pid){ const I = injInfo(pid), t = I.ret ? Date.parse(I.ret) : NaN; return !isNaN(t) && t > now - DAY && t <= soon ? t : null; };
+    if(sc === 'league' && ctx.myRoster) (ctx.myRoster.players || []).forEach(function(pid){ const t = ctx.players[pid] && back(pid); if(t) rows.push({ pid: pid, t: t, kind: 'mine' }); });
+    Object.keys(ctx.players).forEach(function(pid){
+      if(!injRelevant(pid) || (sc === 'league' && ownerOf(pid) !== undefined) || isMine(pid)) return;
+      const t = back(pid);
+      if(t && injValue(pid) > 40) rows.push({ pid: pid, t: t, kind: sc === 'league' ? 'stash' : 'all' });
+    });
+    const mine = rows.filter(function(r){ return r.kind === 'mine'; }).sort(function(a, b){ return a.t - b.t; });
+    const other = rows.filter(function(r){ return r.kind !== 'mine'; }).sort(function(a, b){ return injValue(b.pid) - injValue(a.pid); }).slice(0, 12);
+    const row = function(r){ const p = ctx.players[r.pid]; return '<div class="inj-ret"' + analyzeAttr(r.pid) + ' role="button" tabindex="0">' + photoHTML(r.pid, 'inj-fi') + '<span class="inj-upn"><b>' + escapeHTML(playerName(p)) + '</b><small>' + escapeHTML(eligLabel(r.pid) + ' · ' + p.team + ' · ' + (injInfo(r.pid).body || '')) + '</small></span>' + injuryChip(injInfo(r.pid).st) + '<em>back ' + escapeHTML(fmtDay(new Date(r.t).toISOString().slice(0, 10))) + '</em>' + (r.kind !== 'mine' ? injOwnChips(r.pid) : '') + '</div>'; };
+    if(!mine.length && !other.length) return '';
+    return (mine.length ? '<div class="inj-sub">Yours</div><div class="inj-rows">' + mine.map(row).join('') + '</div>' : '') +
+      (other.length ? '<div class="inj-sub">' + (sc === 'league' ? 'Stash candidates on waivers here' : 'Back within three weeks, most valuable first') + '</div><div class="inj-rows">' + other.map(row).join('') + '</div>' : '') +
+      '<p class="am-fine">Expected return dates from ESPN; they move.</p>';
+  }
+
   function injHTML(){
     const sc = ctx.inj.scope, seg = '<div class="wk-seg inj-scope" role="group" aria-label="Whose injuries"><button type="button" data-inj-scope="league" aria-pressed="' + (sc === 'league') + '">' + escapeHTML(ctx.league ? ctx.league.name : 'This league') + '</button><button type="button" data-inj-scope="all" aria-pressed="' + (sc === 'all') + '">All players</button></div>';
-    let h = '<div class="inj-top">' + seg + (ctx.espnTs ? '<span class="inj-asof">ESPN notes as of ' + escapeHTML(fmtWhen(ctx.espnTs)) + '</span>' : '') + '</div>' + injScheduleHTML();
+    if(!ctx.inj.seenMarked){ ctx.inj.seenMarked = true; injMarkSeen(); }   // this visit: the next one compares against it
+    let h = '<div class="inj-top">' + seg + (ctx.espnTs ? '<span class="inj-asof">ESPN notes as of ' + escapeHTML(fmtWhen(ctx.espnTs)) + '</span>' : '') + '</div>' + injScheduleHTML() +
+      injSection('What changed', 'since your last visit', injChangedHTML());
     if(sc === 'league' && ctx.myRoster){
       const act = inxProblems().filter(function(x){ return x.league.current; });
       h += injSection('Needs action', 'your starters this week', act.length ? '<div class="inj-rows">' + act.map(function(x){
@@ -16673,10 +16791,12 @@
       h += injSection('Your injured players', mine.length + ' on your roster', mine.length ? '<div class="inj-rows">' + mine.map(function(pid){ return injRowHTML(pid, '<span class="inj-tag ' + (starters.has(pid) ? 'start' : '') + '">' + (starters.has(pid) ? 'Starting' : parked.has(pid) ? 'IR / taxi' : 'Bench') + '</span>'); }).join('') + '</div>' : '<p class="am-none">Nobody on your roster is listed as injured.</p>');
       const mu = myMatchup(), opp = mu ? mu.starters.filter(function(pid){ return pid && pid !== '0' && ctx.players[pid] && injInfo(pid).hurt; }) : [];
       if(mu) h += injSection('Your opponent’s injured starters', escapeHTML(mu.name), opp.length ? '<div class="inj-rows">' + opp.map(function(pid){ return injRowHTML(pid, ''); }).join('') + '</div>' : '<p class="am-none">' + escapeHTML(mu.name) + ' has no injured starters.</p>');
+      h += injSection('Opportunity watch', 'who moves up when an offensive starter is out', injOppHTML()) + injSection('Returning soon', 'expected back within three weeks', injReturnHTML());
     } else if(sc === 'all'){
       const list = Object.keys(ctx.players).filter(function(pid){ return injRelevant(pid) && injInfo(pid).hurt && injNorm(injInfo(pid).st) !== ''; })
         .sort(function(a, b){ return (ctx.projections[b] || (rosValue(b) || {}).pts || 0) - (ctx.projections[a] || (rosValue(a) || {}).pts || 0); }).slice(0, 60);
-      h += injSection('Notable injuries', 'most valuable first', list.length ? '<div class="inj-rows">' + list.map(function(pid){ return injRowHTML(pid, injOwnerTag(pid)); }).join('') + '</div>' : '');
+      h += injSection('Notable injuries', 'most valuable first', list.length ? '<div class="inj-rows">' + list.map(function(pid){ return injRowHTML(pid, injOwnerTag(pid)); }).join('') + '</div>' : '') +
+        injSection('Opportunity watch', 'who moves up when an offensive starter is out', injOppHTML()) + injSection('Returning soon', 'expected back within three weeks', injReturnHTML());
     }
     h += injSection('Injury feed', 'new notes and status changes, newest first', injFeedHTML());
     return h;
@@ -16686,6 +16806,9 @@
     const done = function(){ injFeedMerge(); if(ctx.view === 'intel' && ctx.it.tab === 'inj') renderIntel(); };
     if(!ctx.espn && !ctx.espnFailed) loadEspn().then(done, done), changed = true;
     if(!ctx.inj.feed) injFeedLoad().then(done), changed = true;
+    if(!ctx.ros) loadRos().then(done);   // returning soon: rest-of-season value
+    const need = ownNeed();
+    if(need.length) Promise.allSettled(need.map(ownFetch)).then(done);   // waivers / yours in the other leagues
     if(!changed) injFeedMerge();
   }
   function injGo(){ ctx.it.tab = 'inj'; zSave('rv-it-tab', 'inj'); kbView('intel')(); }
