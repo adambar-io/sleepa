@@ -1007,7 +1007,7 @@
   .mx-tbl tbody tr[data-open]{ cursor: pointer; transition: background .18s var(--ease); }
   .mx-tbl tbody tr[data-open]:nth-child(even) td{ background: color-mix(in srgb, var(--text) 3.5%, transparent); }   /* zebra: easier to track a player across the wide row */
   .mx-tbl tbody tr.bye td{ background: var(--danger-soft); }
-  .mx-tbl tbody tr.fresh td{ background: var(--accent-soft); }
+  .mx-tbl tbody tr.moved td.slot{ color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }   /* starter not in your Sleeper lineup yet: accent bar + New chip, no row tint ('fresh' is the refresh button's class) */
   .mx-tbl tr.grp td{ background: var(--surface-2); font-size: 11px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--text-3); padding: 9px 18px; text-align: left; cursor: default; }
   .mx-tbl .slot{ font-size: 11.5px; font-weight: 600; color: var(--text-2); }
   .mx-tbl .proj{ font-size: 17px; font-weight: 600; letter-spacing: -.02em; }
@@ -13953,7 +13953,7 @@
     const p = ctx.players[pid];
     const bye = isOnBye(pid) ? '<span class="status-chip bye-tag">Bye</span>' : '';
     return '<div class="mx-who">' + photoBadgeHTML(pid, 'mx-av') + '<div><div class="mx-nm">' + escapeHTML(playerName(p)) + bye + injuryChip(p.injury_status) +
-      (fresh ? '<span class="status-chip new-tag">New</span>' : '') + '</div><div class="mx-mt">' + escapeHTML(p.position || '') + ' · ' + escapeHTML(p.team || 'FA') + ' ' + depthChip(pid) + '</div></div></div>';
+      (fresh ? '<span class="status-chip new-tag" title="Not in your Sleeper lineup yet">New</span>' : '') + '</div><div class="mx-mt">' + escapeHTML(p.position || '') + ' · ' + escapeHTML(p.team || 'FA') + ' ' + depthChip(pid) + '</div></div></div>';
   }
   function oppCell(pid){
     const p = ctx.players[pid], m = p && matchup(p.team, ctx.week);
@@ -13986,7 +13986,7 @@
       if(!pid || pid === '0' || !ctx.players[pid]) return '<tr><td class="l slot">' + escapeHTML(slotLabel) + '</td><td class="l dim" colspan="' + (6 + weeks.length + extra) + '">Empty</td></tr>';
       const p = ctx.players[pid], games = hist(pid) || [];
       const fresh = slotIndex != null && isNewStarter(pid);
-      const cls = (slotIndex != null && isOnBye(pid) ? 'bye ' : '') + (fresh ? 'fresh' : '');
+      const cls = (slotIndex != null && isOnBye(pid) ? 'bye ' : '') + (fresh ? 'moved' : '');
       const byWeek = {}; games.forEach(function(h){ byWeek[h.week] = h.pts; });
       const t = isIdp(pid) ? '<span title="Tackle share">' + pct(seasonShare(pid, 'k')) + ' tkl</span>'
         : SKILL_POSITIONS.indexOf(p.position) !== -1 && p.position !== 'QB' ? pct(seasonShare(pid, 't')) : '<span class="dim">—</span>';
