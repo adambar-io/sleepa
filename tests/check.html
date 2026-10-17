@@ -453,6 +453,38 @@
     eq2('', null);
   }catch(e){ check('action registry loads', false, e.message); }
 
+  // ---- 3j. Win probability chart: the week replayed from the frozen play-by-play (fixture plays, my matchup per league) ----
+  section('Win probability chart: replaying the real week 4 play by play');
+  try{
+    const fx = await (await fetch('fixtures/week4.json', { cache: 'no-cache' })).json();
+    if(!fx.plays) throw new Error('fixture has no plays: run node tools/make-fixture.js 4 2026');
+    const W = new Function(['const DEF_FROM_PLAYER', 'function calcPoints(', 'function zPtsBand(', 'function zDerive(', 'function zAddStats(', 'function normCdf(', 'function winProb(', 'function wpcLeft(', 'function wpcOffense(', 'function wpcDefStats(', 'function wpcBuild(', 'function wpcScale('].map(extract).join('\n') + '; return { calcPoints, wpcBuild, wpcScale };')();
+    const teamOf = function(id){ const p = fx.players[id]; return p ? p.team : null; };
+    const IDP = ['DL', 'LB', 'DB', 'DE', 'DT', 'CB', 'S', 'ILB', 'OLB', 'NT', 'SS', 'FS'];
+    fx.leagues.forEach(function(L){
+      const my = L.matchups.find(function(e){ return e.roster_id === L.mine; }), op = my && L.matchups.find(function(e){ return e.matchup_id === my.matchup_id && e.roster_id !== L.mine; });
+      if(!op) return;
+      const side = function(e){ return e.starters.map(function(pid, i){
+        if(!pid || pid === '0') return null;
+        const def = /^[A-Z]{2,3}$/.test(pid), pos = (fx.players[pid] || {}).position, proj = fx.proj[pid] ? W.calcPoints(fx.proj[pid], L.scoring_settings) : 0;
+        return { pid: pid, team: def ? pid : teamOf(pid), def: def, idp: IDP.indexOf(pos) !== -1, home: false, proj: proj, sd: Math.max(3, proj) * 0.55, fin: true, off: e.starters_points[i] };
+      }).filter(Boolean); };
+      const A = side(my), B = side(op), won = my.points > op.points ? 1 : 0;
+      const D = W.wpcBuild(fx.plays, [A, B], { sc: L.scoring_settings, teamOf: teamOf, oppOf: null, endP: won, endT: null });
+      const off = A.concat(B).filter(function(x){ return !x.def && !x.idp; });
+      const bad = off.filter(function(x){ return Math.abs(D.recon[x.pid] - x.off) > 0.05; }).map(function(x){ return (fx.players[x.pid] || {}).full_name + ' ' + D.recon[x.pid].toFixed(2) + ' vs ' + x.off; });
+      check(L.name + ': replayed play by play, every offensive starter and kicker ends on Sleeper’s points (' + off.length + ')', !bad.length, bad.join('; '));
+      const defs = A.concat(B).filter(function(x){ return x.def; }), dbad = defs.filter(function(x){ return Math.abs(D.recon[x.pid] - x.off) > 2.01; });
+      if(defs.length) check(L.name + ': team defenses within 2 points before the final snap (points allowed by home team score)', !dbad.length, dbad.map(function(x){ return x.pid + ' ' + D.recon[x.pid] + ' vs ' + x.off; }).join('; '));
+      const end = D.pts[D.pts.length - 1];
+      check(L.name + ': the line ends on the result (' + (won ? 'won' : 'lost') + ') with the official totals', end.p === won && Math.abs(end.a - my.points) < 0.01 && Math.abs(end.b - op.points) < 0.01, end.p + ' ' + end.a.toFixed(2) + '–' + end.b.toFixed(2));
+      check(L.name + ': probabilities stay between 0 and 1 and time only moves forward', D.pts.every(function(q, i){ return q.p >= 0 && q.p <= 1 && (!i || q.t >= D.pts[i - 1].t); }));
+      check(L.name + ': game windows found (Thu, Sun London, Sun, SNF/MNF) and up to 3 swings marked', D.segs.length >= 3 && D.segs.length <= 6 && D.swings.length <= 3 && D.swings.every(function(x){ return Math.abs(x.p1 - x.p0) >= 0.03; }), D.segs.length + ' windows, ' + D.swings.length + ' swings');
+      const X = W.wpcScale(D.segs);
+      check(L.name + ': the x axis runs 0 to 100 in time order', Math.abs(X(D.pts[0].t)) < 0.01 && Math.abs(X(end.t) - 100) < 0.01 && D.pts.every(function(q, i){ return !i || X(q.t) >= X(D.pts[i - 1].t) - 1e-9; }));
+    });
+  }catch(e){ check('win probability chart replay loads', false, e.message); }
+
   // ---- 4. injury statuses vs live Sleeper values ----
   section('Injury statuses: every live Sleeper value is known');
   try{

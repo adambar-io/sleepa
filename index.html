@@ -1017,6 +1017,29 @@
   .pf-stat .k{ font-size: 10.5px; color: var(--text-3); margin-top: 2px; text-transform: uppercase; letter-spacing: .07em; font-weight: 600; }
   .pf-grid{ display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 18px; align-items: start; }
   .pf-grid.solo{ grid-template-columns: minmax(0, 1fr); }
+  /* Win probability over the week */
+  .wpc{ padding: 14px 16px 16px; margin: 0 0 14px; }
+  .wpc-h{ display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; } .wpc-h > b:first-child{ font-size: 15px; white-space: nowrap; }
+  .wpc-h .eyebrow{ flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .wpc-now{ font-size: 18px; font-variant-numeric: tabular-nums; } .wpc-now.up{ color: var(--accent); } .wpc-now.down{ color: var(--warn); }
+  .wpc-plot{ position: relative; height: 170px; margin-left: 30px; touch-action: pan-y; cursor: crosshair; }
+  .wpc-plot svg{ position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .wpc-gl{ position: absolute; left: 0; right: 0; border-top: 1px solid var(--hair); pointer-events: none; } .wpc-gl.mid{ border-top-style: dashed; }
+  .wpc-gl span{ position: absolute; right: calc(100% + 6px); top: -8px; font-size: 10.5px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+  .wpc-gap{ position: absolute; top: 0; bottom: 0; width: 3%; background: repeating-linear-gradient(135deg, transparent 0 4px, color-mix(in srgb, var(--text) 7%, transparent) 4px 6px); pointer-events: none; }
+  .wpc-sw-dot{ position: absolute; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%; background: var(--surface); box-shadow: inset 0 0 0 2px var(--text-2); font-size: 9.5px; font-weight: 800; font-style: normal; display: grid; place-items: center; color: var(--text); pointer-events: none; }
+  .wpc-end{ position: absolute; width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; border-radius: 50%; background: var(--text); box-shadow: 0 0 0 2px var(--surface); pointer-events: none; }
+  .wpc-end.live{ background: var(--danger); animation: wpcPulse 1.6s ease-in-out infinite; } @keyframes wpcPulse{ 50%{ box-shadow: 0 0 0 2px var(--surface), 0 0 0 6px color-mix(in srgb, var(--danger) 25%, transparent); } }
+  .wpc-cur{ position: absolute; top: 0; bottom: 0; width: 0; border-left: 1px solid var(--text-3); pointer-events: none; }
+  .wpc-cdot{ position: absolute; width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; border-radius: 50%; background: var(--text); box-shadow: 0 0 0 2px var(--surface); pointer-events: none; }
+  .wpc-x{ position: relative; height: 16px; margin: 6px 0 0 30px; font-size: 10.5px; color: var(--text-3); } .wpc-x span{ position: absolute; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .wpc-sws{ list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; }
+  .wpc-sws li{ display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 8px; font-size: 12.5px; line-height: 1.4; color: var(--text-2); }
+  .wpc-sws li > i{ width: 18px; height: 18px; border-radius: 50%; box-shadow: inset 0 0 0 2px var(--text-2); font-style: normal; font-size: 10px; font-weight: 800; display: grid; place-items: center; color: var(--text); }
+  .wpc-sws b.up{ color: var(--accent); } .wpc-sws b.down{ color: var(--warn); } .wpc-sws em{ font-style: normal; color: var(--text-3); }
+  .wpc-wait{ margin: 0; font-size: 13px; color: var(--text-3); }
+  .wpc-spark{ height: 26px; margin-top: 6px; } .wpc-spark svg{ display: block; width: 100%; height: 100%; overflow: visible; } .wpc-sp-mid{ stroke: var(--hair); stroke-width: 1; stroke-dasharray: 3 3; }
+  @media (max-width: 600px){ .wpc{ padding: 12px 12px 14px; } .wpc-plot{ height: 150px; margin-left: 26px; } .wpc-x{ margin-left: 26px; } }
   /* Trends chart (player page) */
   .pc{ margin-bottom: 18px; }
   .pc-top{ display: flex; align-items: center; justify-content: space-between; gap: 8px 14px; flex-wrap: wrap; }
@@ -6874,10 +6897,7 @@
       const f = projFinal(pid);
       mean += f.v;
       if(f.state !== 'pre' && f.state !== 'in') return;
-      const frac = f.state === 'pre' ? 1 : remainingFrac(gameOf(ctx.players[pid].team)).f;
-      const own = volatility(pid), base = WP_CV[posGroup(pid)] || 0.5;
-      const cv = own ? (base + Math.max(0.3, Math.min(1, own))) / 2 : base;
-      const sd = Math.max(3, f.proj || 0) * cv;
+      const frac = f.state === 'pre' ? 1 : remainingFrac(gameOf(ctx.players[pid].team)).f, sd = wpSd(pid, f.proj);
       v += sd * sd * frac;
     });
     return { mean: mean, v: v };
@@ -6892,6 +6912,372 @@
     if(sd < 0.01) return d > 0.005 ? 1 : d < -0.005 ? 0 : 0.5;
     return normCdf(d / sd);
   }
+  // ============ Win probability over the week (chart) ============
+  // Rebuilt from Sleeper's play-by-play (the GraphQL `plays` the Zone feed reads): every play carries its wall-clock
+  // time, the game clock and each player's stats. Replaying the week in order: each starter's points are his running
+  // totals scored with the league's settings; a team defense's are its players' takeaways plus the points-allowed band,
+  // phased in as its game is played; each game's share left comes from its clock. The win probability model (wpSd,
+  // winProb) runs after every play. Games that are over snap to Sleeper's official points (stat corrections, points
+  // allowed) and the line ends on the number the bar shows. Works whether or not Sleepa was open during the games.
+  const WPC_KEY = 'wpc-feed', WPC_VER = 1, WPC_BACKFILL_GAP = 5 * 60 * 1000, WPC_POLL_GAP = 60 * 1000;
+  ctx.wpc = { feed: null, busy: null, memo: {}, uid: 0, kickTs: {} };
+  function wpSd(pid, proj){
+    const own = volatility(pid), base = WP_CV[posGroup(pid)] || 0.5;
+    const cv = own ? (base + Math.max(0.3, Math.min(1, own))) / 2 : base;
+    return Math.max(3, proj || 0) * cv;
+  }
+  // share of the game still to play when this play started (overtime counts as over, as in remainingFrac)
+  function wpcLeft(pl){
+    const q = pl.qn === 'OT' ? 5 : Number(pl.qn) || 1;
+    if(q > 4) return 0;
+    return Math.max(0, Math.min(1, ((4 - q) * 900 + (Number(pl.mm) || 0) * 60 + (Number(pl.ss) || 0)) / 3600));
+  }
+  function wpcDefStats(pl, team, teamOf){   // what a team defense did on this play, from the lines of its players (pure zDefPlayStats)
+    let out = null;
+    for(const id in pl.st){
+      if(id === team || teamOf(id) !== team) continue;
+      const st = pl.st[id];
+      for(const k in DEF_FROM_PLAYER){ if(typeof st[k] === 'number' && st[k]){ out = out || {}; out[DEF_FROM_PLAYER[k]] = (out[DEF_FROM_PLAYER[k]] || 0) + st[k]; } }
+    }
+    return out;
+  }
+  // an offensive player or kicker: the play-by-play logs his tackles (and stray forced fumbles) as defensive stats; Sleeper
+  // scores a solo tackle as a special-teams tackle and the rest not at all
+  function wpcOffense(st){
+    let has = false;
+    for(const k in st) if(k.indexOf('idp_') === 0) has = true;
+    if(!has) return st;
+    const out = {};
+    for(const k in st) if(k.indexOf('idp_') !== 0) out[k] = st[k];
+    if(st.idp_tkl_solo) out.st_tkl_solo = (out.st_tkl_solo || 0) + st.idp_tkl_solo;
+    return out;
+  }
+  // pure. plays: play records (zTrimPlay shape) in time order. sides: [A, B], each [{ pid, team, def, home, proj, sd,
+  // fin, off }] (def = a team defense, home = its team is at home, fin = his game is over, off = Sleeper's official
+  // points, idp = a defensive player). o: { sc, teamOf(pid), oppOf(team), endP, endT }.
+  // → { pts: [{ t, p, a, b, d, w, snap }], segs: [[t0, t1]…], swings: [{ t, p0, p1, d, w }], recon: { pid: points } }
+  function wpcBuild(plays, sides, o){
+    const all = sides[0].concat(sides[1]), teams = {};
+    all.forEach(function(x){ if(x.team) teams[x.team] = 1; });
+    const gT = {}, gFirst = {}, gLast = {};
+    plays.forEach(function(pl){
+      if(!pl.g) return;
+      gT[pl.g] = gT[pl.g] || {};
+      if(pl.tm){ gT[pl.g][pl.tm] = 1; const op = o.oppOf && o.oppOf(pl.tm); if(op) gT[pl.g][op] = 1; }
+      if(!(pl.g in gFirst)) gFirst[pl.g] = pl.t;
+      gLast[pl.g] = pl.t;
+    });
+    const rel = {};
+    Object.keys(gT).forEach(function(g){ for(const t in gT[g]) if(teams[t]) rel[g] = 1; });
+    const P = plays.filter(function(pl){ return rel[pl.g]; });
+    if(!P.length) return null;
+    const left = {}, cum = {}, pts = {}, by = {}, defs = {}, fin = {}, recon = {};
+    all.forEach(function(x){
+      by[x.pid] = x; cum[x.pid] = {}; pts[x.pid] = 0;
+      if(x.def && x.team) (defs[x.team] = defs[x.team] || []).push(x);
+      if(x.fin && x.team) fin[x.team] = 1;
+    });
+    const fr = function(x){ return !x.team ? 0 : x.team in left ? left[x.team] : 1; };
+    const sum = function(S){ let s = 0; S.forEach(function(x){ s += pts[x.pid]; }); return s; };
+    const now = function(){
+      const m = [0, 0], v = [0, 0];
+      sides.forEach(function(S, i){ S.forEach(function(x){ const f = fr(x); m[i] += pts[x.pid] + (x.proj || 0) * f; v[i] += (x.sd || 0) * (x.sd || 0) * f; }); });
+      return winProb({ mean: m[0], v: v[0] }, { mean: m[1], v: v[1] });
+    };
+    const out = [];
+    const push = function(t, d, w, snap){ out.push({ t: t, p: now(), a: sum(sides[0]), b: sum(sides[1]), d: d || '', w: w || '', snap: snap ? 1 : 0 }); };
+    push(P[0].t, 'Before kickoff', '', 1);
+    const last = {};
+    P.forEach(function(pl, i){ last[pl.g] = i; });
+    const score = {};   // the last score seen in each game (some plays carry none)
+    P.forEach(function(pl, i){
+      const gl = wpcLeft(pl), sc0 = score[pl.g] = score[pl.g] || {}, was = sc0.h + ':' + sc0.a;
+      if(pl.hp !== undefined && pl.hp !== null && pl.hp !== '' && !isNaN(Number(pl.hp))) sc0.h = Number(pl.hp);
+      if(pl.ap !== undefined && pl.ap !== null && pl.ap !== '' && !isNaN(Number(pl.ap))) sc0.a = Number(pl.ap);
+      for(const t in gT[pl.g]) left[t] = gl;
+      let w = '', big = 0;
+      const note = function(pid, nv, quiet){ if(!quiet && Math.abs(nv - pts[pid]) > Math.abs(big) + 1e-9){ big = nv - pts[pid]; w = pid; } pts[pid] = nv; };
+      const scored = was !== sc0.h + ':' + sc0.a;
+      for(const pid in pl.st){
+        const x = by[pid];
+        if(!x || x.def) continue;
+        zAddStats(cum[pid], x.idp ? pl.st[pid] : wpcOffense(pl.st[pid]));
+        note(pid, calcPoints(zDerive(cum[pid], null), o.sc) || 0);
+      }
+      for(const t in gT[pl.g]){
+        (defs[t] || []).forEach(function(x){
+          const ds = wpcDefStats(pl, t, o.teamOf);
+          if(ds) zAddStats(cum[x.pid], ds);
+          const opp = x.home ? sc0.a : sc0.h, base = calcPoints(zDerive(cum[x.pid], null), o.sc) || 0;
+          const band = typeof opp !== 'number' ? 0 : (calcPoints(zDerive(cum[x.pid], opp), o.sc) || 0) - base;
+          note(x.pid, base + band * (1 - gl), !ds && !scored);   // points allowed count in as the game is played, so kickoff is not a jump
+        });
+      }
+      const prev = out[out.length - 1], p = now();
+      if(Math.abs(p - prev.p) > 0.0005 || w) out.push({ t: pl.t, p: p, a: sum(sides[0]), b: sum(sides[1]), d: w ? pl.d || '' : '', w: w, snap: 0 });
+      if(i === last[pl.g]){
+        let over = false;
+        for(const t in gT[pl.g]) if(fin[t]){ left[t] = 0; over = true; }
+        if(over){
+          all.forEach(function(x){ if(x.team && gT[pl.g][x.team] && x.fin){ recon[x.pid] = pts[x.pid]; if(typeof x.off === 'number') pts[x.pid] = x.off; } });
+          push(pl.t + 1000, 'Final: official points', '', 1);
+        }
+      }
+    });
+    all.forEach(function(x){ if(!(x.pid in recon)) recon[x.pid] = pts[x.pid]; });
+    // where the game windows are (dead time between them is squeezed out of the x axis)
+    const segs = [];
+    Object.keys(rel).map(function(g){ return [gFirst[g], gLast[g]]; }).sort(function(a, b){ return a[0] - b[0]; }).forEach(function(s){
+      const l = segs[segs.length - 1];
+      if(l && s[0] - l[1] < 15 * 60 * 1000) l[1] = Math.max(l[1], s[1]); else segs.push(s.slice());
+    });
+    if(typeof o.endP === 'number'){
+      all.forEach(function(x){ if(typeof x.off === 'number') pts[x.pid] = x.off; });
+      const segEnd = segs[segs.length - 1][1], t = o.endT && o.endT - segEnd < 15 * 60 * 1000 ? Math.max(o.endT, segEnd) : segEnd + 1000;
+      segs[segs.length - 1][1] = Math.max(segEnd, t);
+      out.push({ t: t, p: o.endP, a: sum(sides[0]), b: sum(sides[1]), d: o.endT ? 'Now' : 'Latest', w: '', snap: 1 });
+    }
+    const sw = [];
+    for(let i = 1; i < out.length; i++){
+      const d = out[i].p - out[i - 1].p;
+      if(!out[i].snap && out[i].w && Math.abs(d) >= 0.03) sw.push({ t: out[i].t, p0: out[i - 1].p, p1: out[i].p, d: out[i].d, w: out[i].w, i: i });
+    }
+    sw.sort(function(a, b){ return Math.abs(b.p1 - b.p0) - Math.abs(a.p1 - a.p0); });
+    return { pts: out, segs: segs, swings: sw.slice(0, 3).sort(function(a, b){ return a.t - b.t; }), recon: recon };
+  }
+  // x position (0–100) of a time: the game windows share the width by length, with a small gap between them
+  function wpcScale(segs){
+    const GAP = segs.length > 1 ? 3 : 0, len = function(s){ return Math.max(60000, s[1] - s[0]); };
+    const tot = segs.reduce(function(a, s){ return a + len(s); }, 0), use = 100 - GAP * (segs.length - 1);
+    const starts = [];
+    let x = 0;
+    segs.forEach(function(s){ starts.push(x); x += len(s) / tot * use + GAP; });
+    const X = function(t){
+      for(let i = 0; i < segs.length; i++){
+        const s = segs[i], w = len(s) / tot * use;
+        if(t <= s[1] || i === segs.length - 1) return starts[i] + Math.max(0, Math.min(1, (t - s[0]) / len(s))) * w;
+      }
+      return 100;
+    };
+    X.starts = starts;
+    X.width = function(i){ return len(segs[i]) / tot * use; };
+    return X;
+  }
+  function wpcWhen(t){
+    const d = new Date(t), h = d.getHours(), m = d.getMinutes();
+    return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()] + ' ' + (h % 12 || 12) + (m ? ':' + String(m).padStart(2, '0') : '') + (h < 12 ? 'a' : 'p');
+  }
+
+  // ---- the plays: one week's play-by-play, kept per device for the current week ----
+  function wpcFeedNew(week){ return { ver: WPC_VER, season: ctx.season, week: week, plays: {}, keep: {}, defs: {}, gid: {}, max: {}, done: {}, gap: {}, poll: {}, bfTs: 0, v: 0 }; }
+  async function wpcFeedLoad(week){
+    const W = ctx.wpc;
+    if(W.feed && W.feed.week === week && W.feed.season === ctx.season) return W.feed;
+    let f = null;
+    try{ const c = await idbGet(WPC_KEY); if(c && c.ver === WPC_VER && c.season === ctx.season && c.week === week && c.plays) f = c; }catch(e){}
+    W.feed = f || wpcFeedNew(week);
+    return W.feed;
+  }
+  let wpcSaveT = 0;
+  function wpcFeedSave(){ const F = ctx.wpc.feed; clearTimeout(wpcSaveT); if(F && F.week === ctx.week) wpcSaveT = setTimeout(function(){ idbSet(WPC_KEY, F); }, 800); }
+  // every play is kept for its clock; stats only for the players that matter (and a team defense's players)
+  function wpcMerge(F, arr){
+    let n = 0;
+    arr.forEach(function(x){
+      if(!x || !x.play_id) return;
+      const p = zTrimPlay(x, F.keep, F.defs), q = p.q;
+      if(!p.any && !p.s){ p.st = {}; p.d = ''; }
+      if(p.g && q > (F.max[p.g] || 0)) F.max[p.g] = q;
+      if(p.g && p.tm) F.gid[p.tm] = p.g;
+      const old = F.plays[p.id];
+      if(!old || p.u > old.u){ F.plays[p.id] = p; n++; }
+    });
+    if(n){ F.v++; F.sorted = null; }
+    return n;
+  }
+  function wpcSorted(F){
+    if(!F.sorted) F.sorted = Object.keys(F.plays).map(function(k){ return F.plays[k]; }).sort(function(a, b){ return a.t - b.t || a.q - b.q; });
+    return F.sorted;
+  }
+  // bring the feed up to date for a chart: one week call when something is missing, then the newest plays of live games
+  async function wpcFetch(spec){
+    const W = ctx.wpc;
+    if(W.busy) return W.busy;
+    W.busy = (async function(){
+      const F = await wpcFeedLoad(spec.week), now = Date.now();
+      const grew = spec.all.some(function(x){ return !F.keep[x.pid]; }) || Object.keys(spec.defs).some(function(t){ return !F.defs[t]; });
+      spec.all.forEach(function(x){ F.keep[x.pid] = 1; });
+      Object.keys(spec.defs).forEach(function(t){ F.defs[t] = 1; });
+      const teams = Object.keys(spec.state), started = teams.filter(function(t){ return spec.state[t] === 'in' || spec.state[t] === 'post'; });
+      const missing = started.some(function(t){ const g = F.gid[t]; return !g || F.gap[g] || (spec.state[t] === 'post' && !F.done[g] && !F.max[g]); });
+      if((grew || missing) && now - F.bfTs > (F.bfTs ? WPC_BACKFILL_GAP : 0)){
+        const d = await zGql(zPlaysQ('week: ' + spec.week));
+        wpcMerge(F, d.plays || []);
+        F.bfTs = Date.now(); F.gap = {};
+        started.forEach(function(t){ const g = F.gid[t]; if(g){ F.poll[g] = Date.now(); if(spec.state[t] === 'post') F.done[g] = 1; } });
+        F.v++; wpcFeedSave();
+        return;
+      }
+      const gids = {};
+      started.forEach(function(t){ const g = F.gid[t]; if(g && !F.done[g] && now - (F.poll[g] || 0) > WPC_POLL_GAP) gids[g] = spec.state[t]; });
+      await Promise.all(Object.keys(gids).map(function(g){
+        const had = F.max[g] || 0;
+        return zGql(zPlaysQ('game_id: "' + g + '"')).then(function(d){
+          const arr = d.plays || [], oldest = arr.length ? Math.min.apply(null, arr.map(function(x){ return Number(x.sequence) || 0; })) : 0;
+          if(had && arr.length >= 20 && oldest > had) F.gap[g] = 1;   // more happened than one call returns: a week call next time
+          wpcMerge(F, arr);
+          F.poll[g] = Date.now();
+          if(gids[g] === 'post' && !F.gap[g]) F.done[g] = 1;
+        });
+      }));
+      wpcFeedSave();
+    })().catch(function(e){ console.warn('Win probability chart: plays unavailable', e); ctx.wpc.failTs = Date.now(); }).finally(function(){ W.busy = null; });
+    return W.busy;
+  }
+
+  // ---- what a chart shows: two lineups, scored in their league, with the win probability now ----
+  function wpcPlayer(pid, team, proj, state, off, week){
+    const p = ctx.players[pid] || {}, m = team ? matchup(team, week) : null;
+    return { pid: pid, team: team, def: p.position === 'DEF' || /^[A-Z]{2,3}$/.test(pid), idp: IDP_GROUPS.indexOf(posGroup(pid)) !== -1, home: !!(m && /^vs/.test(m.text)), proj: proj || 0, sd: wpSd(pid, proj), fin: state === 'post', off: typeof off === 'number' ? off : null, st: state };
+  }
+  function wpcSpecDone(spec){
+    spec.all = spec.A.concat(spec.B);
+    spec.defs = {}; spec.state = {};
+    spec.all.forEach(function(x){ if(x.def && x.team) spec.defs[x.team] = 1; if(x.team) spec.state[x.team] = x.st; });
+    spec.live = spec.all.some(function(x){ return x.st === 'in'; });
+    spec.started = spec.all.some(function(x){ return x.st === 'in' || x.st === 'post'; });
+    return spec;
+  }
+  function wpcSpec(key){
+    if(key === 'lu'){
+      const mu = myMatchup();
+      if(!mu || !ctx.myRoster) return null;
+      const em = (ctx.matchups || []).find(function(x){ return x.roster_id === ctx.myRoster.roster_id; }), eo = (ctx.matchups || []).find(function(x){ return x.roster_id === mu.rosterId; });
+      if(!em || !eo) return null;
+      const side = function(e){
+        return (e.starters || []).filter(function(pid){ return pid && pid !== '0' && ctx.players[pid]; }).map(function(pid){
+          const p = ctx.players[pid], team = p.team || (p.position === 'DEF' ? pid : null), g = gameOf(team);
+          return wpcPlayer(pid, team, typeof ctx.projections[pid] === 'number' ? ctx.projections[pid] : 0, g ? g.state : 'bye', (e.players_points || {})[pid], ctx.week);
+        });
+      };
+      const me = liveTeam(ctx.myRoster.roster_id), op = liveTeam(mu.rosterId);
+      const done = me && op && !(me.pre + me.inG + op.pre + op.inG);
+      const endP = done ? (Math.abs(me.pts - op.pts) < 0.005 ? 0.5 : me.pts > op.pts ? 1 : 0) : winProb(wpTeam(em.starters), wpTeam(eo.starters));
+      return wpcSpecDone({ key: key, week: ctx.week, sc: (ctx.league && ctx.league.scoring_settings) || {}, A: side(em), B: side(eo), endP: endP,
+        nameA: els.teamName.textContent || 'You', nameB: mu.name, mine: true });
+    }
+    const k = key.split('|'), L = k[0] === 'am' ? zLeague(k[1]) : null, P = L ? (amPairs(L) || []).find(function(x){ return String(x.mid) === k[2]; }) : null;
+    if(!P || !P.B) return null;
+    const side = function(S, e){ return S.rows.filter(function(r){ return !r.empty && r.pid; }).map(function(r){ return wpcPlayer(r.pid, r.team, r.proj, r.state, r.ptsOff, ctx.zone.week); }); };
+    const endP = P.final ? (P.A.pts > P.B.pts + 0.004 ? 1 : P.B.pts > P.A.pts + 0.004 ? 0 : 0.5) : P.wp;
+    return wpcSpecDone({ key: key, week: ctx.zone.week, sc: P.meta.league.scoring_settings || {}, A: side(P.A), B: side(P.B), endP: endP,
+      nameA: P.ta ? P.ta.name : 'Team A', nameB: P.tb ? P.tb.name : 'Team B', mine: P.mine });
+  }
+  function wpcData(spec){
+    const F = ctx.wpc.feed;
+    if(!F || F.week !== spec.week) return null;
+    const mk = spec.key + ':' + F.v + ':' + spec.endP.toFixed(4) + ':' + Math.floor(Date.now() / 60000);
+    const W = ctx.wpc;
+    if(W.memo[spec.key] && W.memo[spec.key].mk === mk) return W.memo[spec.key].v;
+    const teamOf = function(id){ const p = ctx.players[id]; return p && p.team; };
+    const oppOf = function(t){ const m = matchup(t, spec.week); return m && !m.bye ? String(m.text).replace(/^(@|vs)\s*/, '') : null; };
+    const v = wpcBuild(wpcSorted(F), [spec.A, spec.B], { sc: spec.sc, teamOf: teamOf, oppOf: oppOf, endP: spec.endP, endT: spec.live ? Date.now() : null });
+    W.memo[spec.key] = { mk: mk, v: v };
+    return v;
+  }
+  // fetch what a chart needs (throttled), then repaint every copy of it on screen
+  function wpcKick(key, spec){
+    const W = ctx.wpc, now = Date.now();
+    if(W.busy || now - (W.kickTs[key] || 0) < 20000 || (W.failTs && now - W.failTs < 60000)) return;
+    W.kickTs[key] = now;
+    const v0 = W.feed ? W.feed.v : -1;
+    wpcFetch(spec).then(function(){ if((W.feed ? W.feed.v : -1) !== v0 || !document.querySelector('[data-wpc-slot="' + key + '"] .wpc-plot')) wpcPaint(key); });
+  }
+  function wpcPaint(key){
+    document.querySelectorAll('[data-wpc-slot="' + CSS.escape(key) + '"]').forEach(function(el){ el.outerHTML = wpcCardHTML(key); });
+    document.querySelectorAll('[data-wpc-spark="' + CSS.escape(key) + '"]').forEach(function(el){ el.outerHTML = wpcSparkHTML(key); });
+  }
+
+  // ---- drawing ----
+  function wpcPath(D, X){ return D.pts.map(function(q, i){ return (i ? 'L' : 'M') + X(q.t).toFixed(2) + ' ' + (100 - q.p * 100).toFixed(2); }).join(' '); }
+  function wpcGrad(id){
+    return '<defs><linearGradient id="' + id + '" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="100"><stop offset=".5" style="stop-color:var(--accent)"/><stop offset=".5" style="stop-color:var(--warn)"/></linearGradient>' +
+      '<linearGradient id="' + id + 'f" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="100"><stop offset="0" style="stop-color:var(--accent);stop-opacity:.22"/><stop offset=".5" style="stop-color:var(--accent);stop-opacity:0"/><stop offset=".5" style="stop-color:var(--warn);stop-opacity:0"/><stop offset="1" style="stop-color:var(--warn);stop-opacity:.22"/></linearGradient></defs>';
+  }
+  function wpcSwingText(D, s, spec){
+    const p = ctx.players[s.w] || {}, side = spec.A.some(function(x){ return x.pid === s.w; }) ? spec.nameA : spec.nameB;
+    const d = s.d && s.d.length > 120 ? s.d.slice(0, 117) + '…' : s.d;
+    return (p.position === 'DEF' ? s.w + ' D/ST' : playerName(p)) + ' (' + side + ')' + (d ? ': ' + d : '');
+  }
+  function wpcCardHTML(key){
+    const spec = wpcSpec(key);
+    if(!spec || !spec.started) return '<div data-wpc-slot="' + escapeHTML(key) + '" hidden></div>';
+    const D = wpcData(spec);
+    if(!D || !D.pts || D.pts.length < 2){
+      wpcKick(key, spec);
+      const failed = ctx.wpc.failTs && Date.now() - ctx.wpc.failTs < 60000;
+      return '<div class="card wpc" data-wpc-slot="' + escapeHTML(key) + '"><div class="wpc-h"><b>Win probability</b><span class="eyebrow">over the week</span></div><p class="wpc-wait">' +
+        (failed ? 'Sleeper’s play-by-play isn’t available right now. Trying again shortly.' : 'Replaying the week’s plays…') + '</p></div>';
+    }
+    wpcKick(key, spec);   // throttled; fetches only what is missing (live plays, games that ended since)
+    const X = wpcScale(D.segs), id = 'wpcg' + (++ctx.wpc.uid), line = wpcPath(D, X), end = D.pts[D.pts.length - 1];
+    const area = line + ' L' + X(end.t).toFixed(2) + ' 50 L' + X(D.pts[0].t).toFixed(2) + ' 50 Z';
+    const gaps = D.segs.slice(1).map(function(s, i){ const x = X.starts[i + 1] - 3; return '<i class="wpc-gap" style="left:' + x.toFixed(2) + '%"></i>'; }).join('');
+    const pct = function(p){ return Math.round(p * 100) + '%'; };
+    const dots = D.swings.map(function(s, i){ return '<i class="wpc-sw-dot" style="left:' + X(s.t).toFixed(2) + '%;top:' + (100 - s.p1 * 100).toFixed(2) + '%">' + (i + 1) + '</i>'; }).join('') +
+      '<i class="wpc-end' + (spec.live ? ' live' : '') + '" style="left:' + X(end.t).toFixed(2) + '%;top:' + (100 - end.p * 100).toFixed(2) + '%"></i>';
+    const xl = D.segs.map(function(s, i){ return '<span style="left:' + X.starts[i].toFixed(2) + '%;max-width:' + Math.max(8, X.width(i)).toFixed(2) + '%">' + escapeHTML(wpcWhen(s[0])) + '</span>'; }).join('');
+    const sw = D.swings.length ? '<ol class="wpc-sws">' + D.swings.map(function(s, i){
+      const up = s.p1 > s.p0;
+      return '<li><i>' + (i + 1) + '</i><span><b class="' + (up ? 'up' : 'down') + '">' + pct(s.p0) + ' → ' + pct(s.p1) + '</b> <em>' + escapeHTML(wpcWhen(s.t)) + '</em><br>' + escapeHTML(wpcSwingText(D, s, spec)) + '</span></li>';
+    }).join('') + '</ol>' : '';
+    ctx.wpc.memo[key].X = X;
+    return '<div class="card wpc" data-wpc-slot="' + escapeHTML(key) + '">' +
+      '<div class="wpc-h"><b>Win probability</b><span class="eyebrow">' + escapeHTML(spec.nameA) + ' · over the week</span><b class="wpc-now ' + (end.p >= 0.5 ? 'up' : 'down') + '">' + pct(end.p) + '</b></div>' +
+      '<div class="wpc-plot" data-wpc-key="' + escapeHTML(key) + '" role="img" aria-label="' + escapeHTML(spec.nameA + ' win probability over the week, from ' + pct(D.pts[0].p) + ' before kickoff to ' + pct(end.p) + ' now') + '">' +
+        '<div class="wpc-gl" style="top:0"><span>100</span></div><div class="wpc-gl mid" style="top:50%"><span>50</span></div><div class="wpc-gl" style="top:100%"><span>0</span></div>' + gaps +
+        '<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">' + wpcGrad(id) + '<path d="' + area + '" fill="url(#' + id + 'f)" stroke="none"/>' +
+          '<path d="' + line + '" fill="none" stroke="url(#' + id + ')" stroke-width="2.2" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/></svg>' +
+        dots + '<i class="wpc-cur" hidden></i><i class="wpc-cdot" hidden></i><div class="pc-tip wpc-tip" hidden></div></div>' +
+      '<div class="wpc-x">' + xl + '</div>' + sw +
+      '<p class="pc-note">Rebuilt play by play from Sleeper’s play-by-play, scored with this league’s settings: each starter’s points so far plus his projection for the time left in his game. Games that are over use Sleeper’s official points. Hover or tap the line for any moment.</p></div>';
+  }
+  function wpcSparkHTML(key){
+    const spec = wpcSpec(key);
+    if(!spec || !spec.started) return '<div data-wpc-spark="' + escapeHTML(key) + '" hidden></div>';
+    const D = wpcData(spec);
+    if(!D || !D.pts || D.pts.length < 2){ wpcKick(key, spec); return '<div data-wpc-spark="' + escapeHTML(key) + '" hidden></div>'; }
+    wpcKick(key, spec);
+    const X = wpcScale(D.segs), id = 'wpcg' + (++ctx.wpc.uid);
+    return '<div class="wpc-spark" data-wpc-spark="' + escapeHTML(key) + '" title="Win probability over the week (open the matchup for the full chart)"><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">' + wpcGrad(id) +
+      '<line x1="0" x2="100" y1="50" y2="50" class="wpc-sp-mid" vector-effect="non-scaling-stroke"/><path d="' + wpcPath(D, X) + '" fill="none" stroke="url(#' + id + ')" stroke-width="1.6" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg></div>';
+  }
+  // hover / tap: the nearest moment on the line
+  function wpcAt(plot, clientX){
+    const key = plot.getAttribute('data-wpc-key'), m = ctx.wpc.memo[key], D = m && m.v, X = m && m.X;
+    if(!D || !X) return;
+    const r = plot.getBoundingClientRect(), fx = Math.max(0, Math.min(100, (clientX - r.left) / r.width * 100));
+    let best = 0, bd = Infinity;
+    D.pts.forEach(function(q, i){ const d = Math.abs(X(q.t) - fx); if(d < bd || (d === bd && q.w)){ bd = d; best = i; } });
+    const q = D.pts[best], spec = wpcSpec(key), x = X(q.t), y = 100 - q.p * 100;
+    const cur = plot.querySelector('.wpc-cur'), dot = plot.querySelector('.wpc-cdot'), tip = plot.querySelector('.wpc-tip');
+    cur.hidden = dot.hidden = tip.hidden = false;
+    cur.style.left = x + '%'; dot.style.left = x + '%'; dot.style.top = y + '%';
+    const who = q.w && spec ? wpcSwingText(D, { w: q.w, d: q.d }, spec) : q.d;
+    tip.innerHTML = '<div class="pc-th">' + escapeHTML(wpcWhen(q.t)) + '</div>' +
+      '<div class="pc-tr"><span>' + escapeHTML(spec ? spec.nameA : 'Win') + '</span><b>' + Math.round(q.p * 100) + '%</b></div>' +
+      '<div class="pc-tr"><span>Score</span><b>' + q.a.toFixed(2) + ' – ' + q.b.toFixed(2) + '</b></div>' + (who ? '<div class="pc-sub">' + escapeHTML(who) + '</div>' : '');
+    const px = x / 100 * r.width, tw = tip.offsetWidth;
+    tip.style.left = Math.max(0, Math.min(r.width - tw, px + (px > r.width / 2 ? -tw - 12 : 12))) + 'px';
+  }
+  function wpcHide(plot){ plot.querySelectorAll('.wpc-cur, .wpc-cdot, .wpc-tip').forEach(function(el){ el.hidden = true; }); }
+  document.addEventListener('pointermove', function(e){ const p = e.target.closest && e.target.closest('.wpc-plot'); if(p) wpcAt(p, e.clientX); });
+  document.addEventListener('pointerdown', function(e){ const p = e.target.closest && e.target.closest('.wpc-plot'); if(p) wpcAt(p, e.clientX); });
+  document.addEventListener('pointerout', function(e){
+    const p = e.target.closest && e.target.closest('.wpc-plot');
+    if(p && e.pointerType === 'mouse' && !(e.relatedTarget && p.contains(e.relatedTarget))) wpcHide(p);
+  });
+
   // The bar: built at the last shown value, then moved to the new one (renderMatchupCard), so every update slides.
   function wpBarHTML(p, live, done){
     const shown = typeof ctx.wpShown === 'number' ? ctx.wpShown : 0.5;
@@ -6976,7 +7362,7 @@
     }
     return '<button type="button" class="mu-card live" data-open-opp aria-label="This week’s matchup, live. Compare your lineup with ' + escapeHTML(mu.name) + '’s">' +
       '<div class="mu-head"><span class="eyebrow">Week ' + ctx.week + ' · ' + (done ? 'final' : on ? '<span class="live-dot"></span>live' : 'in progress') + '</span><span class="mu-link">Compare lineups ›</span></div>' +
-      '<div class="mu-row">' + side('', els.teamName.textContent || 'You', me, nowTone, ctx.myRoster.roster_id) + '<div class="mu-vs" aria-hidden="true">vs</div>' + side(' opp', mu.name, op, '', mu.rosterId) + '</div>' + wpBarHTML(wp, true, done) +
+      '<div class="mu-row">' + side('', els.teamName.textContent || 'You', me, nowTone, ctx.myRoster.roster_id) + '<div class="mu-vs" aria-hidden="true">vs</div>' + side(' opp', mu.name, op, '', mu.rosterId) + '</div>' + wpBarHTML(wp, true, done) + safeHTML('Win probability chart', function(){ return wpcSparkHTML('lu'); }) +
       '<div class="mu-foot' + tone + '">' + (done ? (Math.abs(d) < 0.005 ? 'Tied' : d > 0 ? 'You won by ' + d.toFixed(2) : 'You lost by ' + (-d).toFixed(2))
         : 'Projected to ' + (Math.abs(d) < 0.005 ? 'finish dead even' : (d > 0 ? 'win' : 'lose') + ' by ' + Math.abs(d).toFixed(2))) +
         '<span class="mu-ago" data-live-ago>Updated ' + liveAgoText() + '</span></div>' +
@@ -7079,6 +7465,7 @@
       '</div>' +
       '<div class="vs-sum' + tone + '">' + (Math.abs(d) < 0.005 ? (live ? 'Projected to finish dead even' : 'Dead even') : live ? 'Projected to ' + (d > 0 ? 'win' : 'lose') + ' by ' + Math.abs(d).toFixed(2) : 'You’re projected ' + marginText(d)) + ' · you win ' + myWins + ' of ' + ctx.rosterPositions.length + ' slots, they win ' + oppWins +
         (live ? ' <span class="mu-ago" data-live-ago>Updated ' + liveAgoText() + '</span>' : '') + '</div>' +
+      (live ? safeHTML('Win probability chart', function(){ return wpcCardHTML('lu'); }) : '') +
       (live ? '<div class="vs-legend" aria-hidden="true"><span><i class="st-post"></i>Played</span><span><i class="st-in"></i>Playing</span><span><i class="st-pre"></i>Yet to play</span></div>' : '') +
       holesCallout('You', myHoles) + holesCallout(escapeHTML(mu.name), oppHoles) +
       '<div class="vs-list">' + rows + '</div>' +
@@ -13978,7 +14365,7 @@
     return d;
   }
   function zAddStats(cum, st){
-    for(const k in st){ if(typeof st[k] === 'number') cum[k] = (cum[k] || 0) + st[k]; }
+    for(const k in st){ if(typeof st[k] === 'number') cum[k] = (cum[k] || 0) + (k === 'idp_sack_yd' ? Math.abs(st[k]) : st[k]); }   // plays log sack yards as negative; Sleeper scores them positive
     if(st.conv_cmp){   // a successful 2-point try: conv_* on the passer / receiver / runner
       if(st.conv_pass_att) cum.pass_2pt = (cum.pass_2pt || 0) + 1;
       if(st.conv_rec_att) cum.rec_2pt = (cum.rec_2pt || 0) + 1;
@@ -15245,8 +15632,7 @@
       if(r.empty) return;
       mean += r.fin || 0;
       if(r.state !== 'pre' && r.state !== 'in') return;
-      const frac = r.state === 'pre' ? 1 : remainingFrac(r.g).f, own = volatility(r.pid), base = WP_CV[posGroup(r.pid)] || 0.5;
-      const cv = own ? (base + Math.max(0.3, Math.min(1, own))) / 2 : base, sd = Math.max(3, r.proj || 0) * cv;
+      const frac = r.state === 'pre' ? 1 : remainingFrac(r.g).f, sd = wpSd(r.pid, r.proj);
       v += sd * sd * frac;
     });
     return { mean: mean, v: v };
@@ -15413,6 +15799,7 @@
         '<div class="am-dt"><b>' + escapeHTML(P.ta.name) + (P.tb ? ' vs ' + escapeHTML(P.tb.name) : '') + '</b><span>' + escapeHTML(L.name + ' · ' + amFormat(P.meta) + ' · Week ' + ctx.zone.week) + (P.live ? ' · <span class="live-dot"></span>Live · ' + P.toPlay + ' to play' : P.final ? ' · Final' : '') + '</span></div></div>' +
       '<div class="am-db' + (P.mine ? ' mine' : '') + '">' + side(P.ta, P.A, true) + '<span class="am-dvs">vs</span>' + side(P.tb, P.B, false) + '</div>' +
       (P.B ? amWpBar(P, true) : '') +
+      (P.B && P.started ? safeHTML('Win probability chart', function(){ return wpcCardHTML('am|' + L.id + '|' + P.mid); }) : '') +
       '<p class="am-sent">' + sentence + '</p>' +
       '<div class="am-dg">' + rows + stake + '</div></div>';
   }
