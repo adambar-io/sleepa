@@ -414,10 +414,20 @@
   .bye-alert{ background: var(--danger-soft); border-radius: var(--radius); color: var(--danger); padding: 12px 16px; margin: 0 0 16px; font-size: 13.5px; line-height: 1.45; }
   .bye-alert strong{ font-weight: 600; }
   /* Inactive check (Lineup) */
-  .inx{ margin: 0 0 16px; padding: 14px 16px 12px; border-radius: var(--radius); background: var(--warn-soft); box-shadow: inset 4px 0 0 var(--warn); }
-  .inx.out{ background: var(--danger-soft); box-shadow: inset 4px 0 0 var(--danger); }
+  .inx{ margin: 0 0 14px; border-radius: 14px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--hair); }
+  .inx.open{ padding: 0 16px 12px; background: color-mix(in srgb, var(--warn) 6%, var(--surface)); }
+  .inx-sum{ display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 6px 14px; border-radius: 14px; background: none; color: var(--text-2); font-size: 13.5px; text-align: left; }
+  .inx.open .inx-sum{ padding: 6px 0; }
+  .inx-sum b{ font-weight: 600; color: var(--text); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .inx-dot{ flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--warn); } .inx.out .inx-dot{ background: var(--danger); }
+  .inx-faces{ display: flex; margin-left: 2px; } .inx-face{ width: 22px; height: 22px; border-radius: 50%; object-fit: cover; background: var(--surface-2); box-shadow: 0 0 0 2px var(--surface); margin-left: -6px; flex: none; } .inx-faces .inx-face:first-child{ margin-left: 0; }
+  .inx-face.more{ display: grid; place-items: center; font-size: 10px; font-weight: 700; color: var(--text-2); }
+  .inx-more{ margin-left: auto; display: inline-flex; align-items: center; gap: 2px; font-size: 12.5px; font-weight: 600; color: var(--text-3); white-space: nowrap; } .inx-more svg{ width: 16px; height: 16px; transition: transform .2s; } .inx.open .inx-more svg{ transform: rotate(180deg); }
+  .inx-sum:hover .inx-more{ color: var(--text); } .inx-short{ display: none; }
+  .inx-body .inx-h{ justify-content: flex-start; }
+  .inx.out.open{ background: color-mix(in srgb, var(--danger) 6%, var(--surface)); }
   .inx-h{ display: flex; align-items: center; justify-content: space-between; gap: 8px 14px; flex-wrap: wrap; margin-bottom: 6px; }
-  .inx-h b{ font-size: 15px; color: var(--danger); } .inx.gtd .inx-h b{ color: var(--warn); }
+
   .inx-bell{ min-height: 32px; padding: 4px 12px; border-radius: 999px; background: var(--surface); color: var(--text); font-size: 12.5px; font-weight: 600; }
   .inx-on{ font-size: 12px; color: var(--text-3); }
   .inx-row{ display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-top: 1px solid color-mix(in srgb, var(--text) 8%, transparent); }
@@ -430,7 +440,7 @@
   .inx-chk{ font-size: 11.5px; color: var(--text-3); white-space: nowrap; }
   .inx-btn{ flex: none; align-self: center; min-height: 36px; padding: 6px 14px; border-radius: 999px; background: var(--surface); color: var(--text); font-size: 13px; font-weight: 600; }
   .inx-foot{ margin-top: 8px; font-size: 11.5px; color: var(--text-3); line-height: 1.4; }
-  @media (max-width: 600px){ .inx{ padding: 12px 12px 10px; } .inx-row{ flex-wrap: wrap; } .inx-info{ flex: 1 1 calc(100% - 52px); } .inx-btn{ margin-left: 52px; } }
+  @media (max-width: 600px){ .inx.open{ padding: 0 12px 10px; } .inx-sum{ font-size: 13px; } .inx-faces{ display: none; } .inx-long{ display: none; } .inx-short{ display: inline; } .inx-row{ flex-wrap: wrap; } .inx-info{ flex: 1 1 calc(100% - 52px); } .inx-btn{ margin-left: 52px; } }
   .sig{ display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 12px; margin-top: 4px; }
   .depth-chip{ font-size: 11px; font-weight: 600; letter-spacing: 0.02em; padding: 1px 6px; border-radius: 5px; background: var(--surface-2); color: var(--text-2); }
   .sig-item{ white-space: nowrap; font-size: 12.5px; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--text); }
@@ -16659,10 +16669,16 @@
         act + '</div>';
     }).join('');
     const canNotify = 'Notification' in window, perm = canNotify ? Notification.permission : 'denied';
-    el.innerHTML = '<div class="inx ' + (outs ? 'out' : 'gtd') + '" role="alert"><div class="inx-h"><b>' + head + '</b><button type="button" class="inx-all" data-inj-go>See all injuries ›</button>' +
+    // collapsed by default (one slim line with faces); Details opens the full list for this visit
+    const gtd = list.length - outs, short = [outs ? outs + ' starter' + (outs === 1 ? '' : 's') + ' out' : '', gtd ? gtd + ' GTD' : ''].filter(Boolean).join(' · ');
+    const open = !!ctx.inxOpen, faces = list.slice(0, 4).map(function(x){ return avatarTag(x.pid, 'inx-face'); }).join('') + (list.length > 4 ? '<span class="inx-face more">+' + (list.length - 4) + '</span>' : '');
+    el.innerHTML = '<div class="inx ' + (outs ? 'out' : 'gtd') + (open ? ' open' : '') + '" role="status">' +
+      '<button type="button" class="inx-sum" data-inx-toggle aria-expanded="' + open + '"><i class="inx-dot"></i><b class="inx-long">' + head + '</b><b class="inx-short">' + short + '</b><span class="inx-faces" aria-hidden="true">' + faces + '</span>' +
+        '<span class="inx-more">' + (open ? 'Hide' : 'Details') + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 10l4 4 4-4"/></svg></span></button>' +
+      (!open ? '</div>' : '<div class="inx-body"><div class="inx-h"><button type="button" class="inx-all" data-inj-go>See all injuries ›</button>' +
         (canNotify && perm === 'default' ? '<button type="button" class="inx-bell" data-inx-notify>Alert me if a starter is ruled out</button>' : canNotify && perm === 'granted' ? '<span class="inx-on">Alerts on while Sleepa is open</span>' : '') + '</div>' +
       rows +
-      '<div class="inx-foot">Your saved Sleeper lineups' + (multi ? ' in every league' : '') + '. Within 3 hours of kickoff each listed starter is re-checked with Sleeper every 5 minutes. Sleepa can’t change your lineup: make the swap in Sleeper.</div></div>';
+      '<div class="inx-foot">Your saved Sleeper lineups' + (multi ? ' in every league' : '') + '. Within 3 hours of kickoff each listed starter is re-checked with Sleeper every 5 minutes. Sleepa can’t change your lineup: make the swap in Sleeper.</div></div></div>');
   }
   // Re-check statuses near kickoff (watched: listed starters plus every starter kicking off within the window)
   async function inxPoll(){
@@ -16707,6 +16723,8 @@
   setInterval(function(){ inxPoll(); renderInx(); }, 60 * 1000);   // also keeps the countdowns current
   document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'visible') inxPoll(); });
   document.addEventListener('click', function(e){
+    const tg = e.target.closest && e.target.closest('#inx-slot [data-inx-toggle]');
+    if(tg){ ctx.inxOpen = !ctx.inxOpen; renderInx(); return; }
     const t = e.target.closest && e.target.closest('#inx-slot [data-inx-slot], #inx-slot [data-inx-league], #inx-slot [data-inx-open], #inx-slot [data-inx-notify]');
     if(!t) return;
     if(t.hasAttribute('data-inx-notify')){ Notification.requestPermission().then(function(){ renderInx(); }); return; }
