@@ -485,6 +485,33 @@
     });
   }catch(e){ check('win probability chart replay loads', false, e.message); }
 
+  // ---- 3k. FAAB bids: claims history → going rates → bids ----
+  section('FAAB bids: what this league pays, and what to bid');
+  try{
+    const FB = new Function('const FLEX_GROUPS = { FLEX: ["RB", "WR", "TE"], SUPER_FLEX: ["QB", "RB", "WR", "TE"] };\n' + ['const FAAB_RANKS', 'function faabClaims(', 'function faabMarket(', 'function faabBid(', 'function faabStarters('].map(extract).join('\n') + '; return { faabClaims, faabMarket, faabBid, faabStarters };')();
+    const tx = function(wk, pid, bid, status, rid, note){ const o = { type: 'waiver', leg: wk, status: status, adds: {}, settings: { waiver_bid: bid }, metadata: note ? { notes: note } : null }; o.adds[pid] = rid; return o; };
+    const LOST = 'This player was claimed by another owner.', FULL = 'Unfortunately, your roster will have too many players after this transaction.';
+    const T = [tx(4, 'A', 29, 'complete', 1), tx(4, 'B', 17, 'complete', 2), tx(4, 'B', 12, 'failed', 3, LOST), tx(4, 'B', 4, 'failed', 4, LOST), tx(4, 'C', 5, 'complete', 5),
+      tx(5, 'D', 20, 'complete', 1), tx(5, 'D', 5, 'failed', 2, LOST), tx(5, 'E', 17, 'complete', 3), tx(5, 'F', 8, 'complete', 4), tx(5, 'G', 0, 'failed', 6, FULL),
+      { type: 'free_agent', status: 'complete', leg: 5, adds: { H: 1 }, settings: {} }];
+    const C = FB.faabClaims(T), M = FB.faabMarket(C);
+    check('claims: waiver claims only (free-agent pickups skipped), won / lost / failed for roster room told apart', C.length === 10 && C.filter(function(c){ return c.won; }).length === 6 && C.filter(function(c){ return c.lost; }).length === 3, JSON.stringify(C.map(function(c){ return c.pid + c.bid + (c.won ? 'w' : c.lost ? 'l' : 'x'); })));
+    check('going rate for a week’s top add = median of each week’s highest winning bid ($29, $20 → $24.50)', M.price[0].p50 === 24.5 && M.price[1].p50 === 17 && M.price[2].p50 === 6.5, JSON.stringify(M.price.slice(0, 3)));
+    check('a place nobody bought counts $0', M.price[3].p50 === 0);
+    const B = M.sales.find(function(x){ return x.pid === 'B'; });
+    check('sales: biggest first, with how many owners bid and the runner-up bid', M.sales[0].pid === 'A' && B.bids === 3 && B.next === 12, JSON.stringify(M.sales.slice(0, 2)));
+    const bid = function(r, o){ return FB.faabBid(r, M, Object.assign({ mode: 'mid', depth: false, myLeft: 100, rivalMax: 100, min: 0 }, o)); };
+    check('Balanced bids the median; Conservative and Aggressive the 25th / 75th percentile', bid(0).bid === 25 && bid(0, { mode: 'low' }).bid === bid(0).low && bid(0, { mode: 'high' }).bid === bid(0).high && bid(0).low <= bid(0).mid && bid(0).mid <= bid(0).high, JSON.stringify(bid(0)));
+    check('someone who would only be depth for you: half', bid(0, { depth: true }).bid === 12, JSON.stringify(bid(0, { depth: true })));
+    check('never more than one dollar over the most any rival can bid', bid(0, { rivalMax: 9 }).bid === 10);
+    check('never more than you have left', bid(0, { myLeft: 7 }).bid === 7);
+    check('where adds have sold for money, $1 beats every $0 claim', bid(8).bid === 1);
+    check('in a league where nothing ever sold for money, $0', FB.faabBid(0, FB.faabMarket(FB.faabClaims([tx(3, 'Z', 0, 'complete', 1)])), { mode: 'mid', myLeft: 50, rivalMax: 50, min: 0 }).bid === 0);
+    const SL = ['QB', 'RB', 'RB', 'WR', 'WR', 'TE', 'FLEX', 'FLEX', 'K', 'DEF', 'BN', 'BN'];
+    check('the starting line per position: 12 teams, one QB, two RB + half of two FLEX', FB.faabStarters('QB', SL, 12) === 12 && FB.faabStarters('RB', SL, 12) === 36 && FB.faabStarters('TE', SL, 12) === 24 && FB.faabStarters('QB', SL.concat(['SUPER_FLEX']), 12) === 18,
+      [FB.faabStarters('QB', SL, 12), FB.faabStarters('RB', SL, 12), FB.faabStarters('TE', SL, 12)].join(','));
+  }catch(e){ check('FAAB helpers load', false, e.message); }
+
   // ---- 4. injury statuses vs live Sleeper values ----
   section('Injury statuses: every live Sleeper value is known');
   try{

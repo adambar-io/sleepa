@@ -3,7 +3,7 @@
 This file tracks what Sleeper, ESPN and FantasyPros (including Premium) do, and where Sleepa stands on each, so we can pick what to build next. Update the status when something ships or a decision is made.
 
 - Research: Oct 1 2026, from FantasyPros plan pages, ESPN 2026 feature notes and Sleeper feature guides.
-- Status last checked: Oct 16 2026.
+- Status last checked: Oct 16 2026 (win probability chart and FAAB bids shipped).
 
 **Status:** ✅ done · 🟡 partial · 📋 planned / next · ⛔ won't do (and why)
 
@@ -15,9 +15,9 @@ This file tracks what Sleeper, ESPN and FantasyPros (including Premium) do, and 
 |---|---|---|---|---|
 | Lineup optimizer | FantasyPros, ESPN | Optimal lineup with flex rule, lock after kickoff | ✅ | |
 | Live win probability | ESPN, Sleeper | Matchup tile, Zone, Scoreboard | ✅ | |
-| Win probability chart over the game | ESPN | Current number only | 📋 | Log win probability during live polling, then draw the line. Fit: medium. |
+| Win probability chart over the game | ESPN | Rebuilt play by play from Sleeper's play-by-play: matchup view, every Scoreboard matchup, Lineup sparkline, 3 biggest swings | ✅ | Works without the app open during games. Sleepa advantage: it covers every matchup in every league. |
 | Playoff odds / season simulator | FantasyPros League Analyzer | League tab says "No playoff odds" | 📋 **next** | Simulate the remaining schedule from projections and score spreads. Fit: high. |
-| FAAB bid suggestions, ordered waiver plan | FantasyPros Waiver Planner | Waiver value ranks adds, but suggests no bid | 📋 **next** | Add a "bid $X" step from value gap, budget left and how many teams need the position. Fit: high. |
+| FAAB bid suggestions, ordered waiver plan | FantasyPros Waiver Planner | Bids from what your league actually paid; Conservative / Balanced / Aggressive; rival budgets; waiver plan with running total | ✅ | Priced from your own league's claim history, not a generic chart. |
 | Strength of schedule (rest of season, playoff weeks, by position) | FantasyPros | Defense-vs-position per game in Intel; trade value can double playoff weeks | 🟡 | A per-position rest-of-season and playoff schedule grid. Fit: high. |
 | Pre-kickoff inactive-starter alert | FantasyPros Auto-Swap, Sleeper / ESPN push | Inactive check card on Lineup, Injuries "Needs action" | ✅ | Sleepa can't swap the player itself (no write API). |
 | Injury downgrade alerts | Sleeper, ESPN push | Lineup bell plus browser alerts while a Sleepa tab is open | 🟡 | True push needs an installable app (PWA) and a push server. |
@@ -56,12 +56,10 @@ This file tracks what Sleeper, ESPN and FantasyPros (including Premium) do, and 
 ## Suggested order
 
 1. Playoff odds (season simulator)
-2. FAAB bid suggestions
-3. Rest-of-season and playoff strength of schedule
-4. Last-season stats on the player page
-5. Weekly to-do strip
-6. Win probability chart
-7. PWA
+2. Rest-of-season and playoff strength of schedule
+3. Last-season stats on the player page
+4. Weekly to-do strip
+5. PWA
 
 ## Sources
 

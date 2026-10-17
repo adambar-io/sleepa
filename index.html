@@ -718,6 +718,21 @@
   .set-card .quiet-btn{ margin-top: 12px; }
   .quiet-btn{ background: var(--surface-2); color: var(--text); }
   .set-data{ font-size: 13.5px; color: var(--text-2); line-height: 1.6; }
+  .faab{ margin: 4px 0 18px; padding: 14px; border-radius: 14px; background: var(--surface-2); }
+  .faab-h{ display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; } .faab-h .ad-h{ margin: 0; }
+  .faab-mode button{ padding: 5px 11px; min-height: 30px; font-size: 12px; }
+  .faab-b{ display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--text-2); } .faab-b b{ color: var(--text); font-variant-numeric: tabular-nums; } .faab-b small{ color: var(--text-3); }
+  .faab-mk{ margin: 8px 0 12px; font-size: 12.5px; line-height: 1.45; color: var(--text-2); }
+  .faab-plan{ display: grid; gap: 6px; } .faab-ph{ font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); margin-bottom: 2px; }
+  .faab-r{ display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 9px 10px; border-radius: 12px; background: var(--surface); }
+  .faab-r.over{ box-shadow: inset 3px 0 0 var(--warn); }
+  .faab-n{ width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 11.5px; font-weight: 800; background: var(--surface-3); color: var(--text); }
+  .faab-m{ min-width: 0; display: flex; flex-direction: column; gap: 2px; } .faab-who{ font-size: 13.5px; font-weight: 600; } .faab-who small{ font-weight: 500; color: var(--text-3); }
+  .faab-drop{ font-weight: 500; font-size: 12.5px; color: var(--text-3); } .faab-why{ font-size: 11.5px; color: var(--text-3); line-height: 1.4; }
+  .faab-bid{ font-size: 19px; font-variant-numeric: tabular-nums; color: var(--accent); }
+  .faab-tot{ margin-top: 4px; font-size: 12.5px; color: var(--text-2); } .faab-tot.over{ color: var(--warn); }
+  .faab-foot{ margin: 10px 0 0; font-size: 11.5px; line-height: 1.45; color: var(--text-3); }
+  .faab-chip{ display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; }
   .oops-lk{ display: inline; min-height: 0; padding: 0; background: none; color: var(--accent); font: inherit; font-weight: 600; cursor: pointer; }
   .oops{ padding: 12px 14px; border-radius: 12px; background: var(--warn-soft); color: var(--text-2); font-size: 13px; line-height: 1.45; } .oops b{ color: var(--text); }
   .dh{ display: grid; gap: 8px; margin-bottom: 12px; }
@@ -11343,6 +11358,173 @@
   document.addEventListener('keydown', function(e){
     if((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('as-row')){ e.preventDefault(); e.target.click(); }
   });
+  // ============ FAAB bids (Waiver value, FAAB leagues only) ============
+  // What adds actually cost in THIS league: Sleeper's transactions list every processed waiver claim with its bid, won
+  // or lost ("claimed by another owner"). Each week's winning bids, highest first, give the going rate for that week's
+  // #1 add, #2 add, … (25th / 50th / 75th percentile over the recent weeks). An available player's place in that order
+  // comes from his rest-of-season points over what's freely available at his position. The bid = the rate for his place
+  // (Conservative / Balanced / Aggressive), halved when he'd only be depth for you, never more than one dollar over the
+  // most any rival can bid, never more than you have. Sleepa can't place bids; you enter them in Sleeper.
+  const FAAB_RANKS = 10, FAAB_RECENT = 4, FAAB_TTL = 6 * 3600 * 1000, FAAB_PLAN = 5;
+  ctx.faab = null;
+  try{ ctx.faabMode = ['low', 'mid', 'high'].indexOf(localStorage.getItem('rv-faab-mode')) !== -1 ? localStorage.getItem('rv-faab-mode') : 'mid'; }catch(e){ ctx.faabMode = 'mid'; }
+  function faabOn(){ return !!(ctx.league && ctx.league.settings && ctx.league.settings.waiver_type === 2); }
+  function faabBudget(){ return Number((ctx.league.settings || {}).waiver_budget) || 100; }
+  function faabLeft(r){ return Math.max(0, faabBudget() - (Number(((r || {}).settings || {}).waiver_budget_used) || 0)); }
+  // pure: Sleeper transactions → claims [{ wk, pid, bid, won, rid, lost (another owner got him) }]
+  function faabClaims(txs){
+    const out = [];
+    (txs || []).forEach(function(x){
+      if(!x || x.type !== 'waiver' || !x.adds) return;
+      const pid = Object.keys(x.adds)[0];
+      if(!pid) return;
+      const note = String((x.metadata && x.metadata.notes) || '');
+      out.push({ wk: Number(x.leg) || 0, pid: pid, bid: Number((x.settings || {}).waiver_bid) || 0, won: x.status === 'complete', rid: x.adds[pid], lost: x.status === 'failed' && /claimed by another/i.test(note) });
+    });
+    return out;
+  }
+  // pure: the league's market. price[r] = { p25, p50, p75 } of the (r+1)-th highest winning bid of a week, over the most
+  // recent FAAB_RECENT weeks that had any (weeks with fewer winning claims count $0 at that place). Plus every winning
+  // claim with how many owners bid on the same player that week.
+  function faabMarket(claims){
+    const won = claims.filter(function(c){ return c.won; }), byWk = {};
+    won.forEach(function(c){ (byWk[c.wk] = byWk[c.wk] || []).push(c.bid); });
+    const wks = Object.keys(byWk).map(Number).sort(function(a, b){ return b - a; }).slice(0, FAAB_RECENT);
+    const pct = function(arr, q){ const a = arr.slice().sort(function(x, y){ return x - y; }); if(!a.length) return 0; const i = (a.length - 1) * q, lo = Math.floor(i), hi = Math.ceil(i); return a[lo] + (a[hi] - a[lo]) * (i - lo); };
+    const price = [];
+    for(let r = 0; r < FAAB_RANKS; r++){
+      const at = wks.map(function(w){ const b = byWk[w].slice().sort(function(x, y){ return y - x; }); return b[r] || 0; });
+      price.push({ p25: pct(at, 0.25), p50: pct(at, 0.5), p75: pct(at, 0.75) });
+    }
+    const sales = won.map(function(c){
+      const rivals = claims.filter(function(x){ return x.lost && x.wk === c.wk && x.pid === c.pid; });
+      return { wk: c.wk, pid: c.pid, bid: c.bid, bids: rivals.length + 1, next: rivals.reduce(function(m, x){ return Math.max(m, x.bid); }, 0) };
+    }).sort(function(a, b){ return b.bid - a.bid || b.wk - a.wk; });
+    const paid = won.filter(function(c){ return c.bid > 0; }).length;
+    return { weeks: wks.length, price: price, sales: sales, paid: paid, claims: won.length };
+  }
+  // pure: a bid for the add at place r (0 = the best available). o: { mode: low | mid | high, depth, myLeft, rivalMax, min }
+  // → { bid, low, mid, high } in whole dollars
+  function faabBid(r, M, o){
+    const p = M.price[Math.min(r, M.price.length - 1)] || { p25: 0, p50: 0, p75: 0 };
+    const fit = function(x){
+      let v = Math.round(x * (o.depth ? 0.5 : 1));
+      if(v <= 0 && M.paid) v = 1;                                  // a dollar beats every $0 claim
+      v = Math.max(o.min || 0, v);
+      if(typeof o.rivalMax === 'number') v = Math.min(v, o.rivalMax + 1);   // nobody can outbid this
+      return Math.max(0, Math.min(v, o.myLeft));
+    };
+    const low = fit(p.p25), mid = fit(p.p50), high = fit(p.p75);
+    return { bid: o.mode === 'low' ? low : o.mode === 'high' ? high : mid, low: low, mid: mid, high: high };
+  }
+  // the league's claims this season (one call per week so far), cached for a few hours per league
+  async function faabLoad(force){
+    const lid = ctx.league && ctx.league.league_id;
+    if(!lid) return null;
+    const F = ctx.faab;
+    if(!force && F && F.lid === lid && Date.now() - F.ts < FAAB_TTL) return F;
+    if(F && F.lid === lid && F.loading) return F.loading;
+    const st = { lid: lid, ts: 0, claims: null, loading: null };
+    st.loading = Promise.all(Array.from({ length: Math.max(1, ctx.week) }, function(_, i){ return fetchJSON(API + '/league/' + lid + '/transactions/' + (i + 1)).catch(function(){ return []; }); }))
+      .then(function(weeks){ st.claims = faabClaims([].concat.apply([], weeks)); st.ts = Date.now(); st.loading = null; return st; })
+      .catch(function(e){ console.warn('FAAB history unavailable', e); st.failed = true; st.loading = null; return st; });
+    ctx.faab = st;
+    return st.loading;
+  }
+  // available players in the order owners would want them: rest-of-season points over the weakest player the league
+  // starts at his position (teams × the lineup spots the position can fill, a flex spot counting half). A backup QB in a
+  // one-QB league sits below that line and ranks low; a starting-caliber RB sits above it and ranks high.
+  function faabStarters(pos, slots, teams){
+    let n = 0;
+    (slots || []).forEach(function(sl){ const g = FLEX_GROUPS[sl]; if(!g){ if(sl === pos) n += 1; } else if(g.indexOf(pos) !== -1) n += 0.5; });
+    return Math.max(1, Math.round(n * teams));
+  }
+  function faabOrder(){
+    const pos = leaguePositions(), out = [], teams = (ctx.lastRosters || []).length || 10;
+    const val = function(pid){ const v = rosValue(pid); return v ? v.pts : (ctx.projections[pid] || 0); };
+    const rostered = [];
+    (ctx.lastRosters || []).forEach(function(r){ (r.players || []).forEach(function(pid){ if(ctx.players[pid]) rostered.push(pid); }); });
+    pos.forEach(function(g){
+      const fa = (ctx.freeAgents[g] || []).filter(function(pid){ return ctx.players[pid] && posGroup(pid) === g; });
+      const all = rostered.filter(function(pid){ return posGroup(pid) === g; }).concat(fa).map(val).sort(function(a, b){ return b - a; });
+      const line = all[Math.min(all.length - 1, faabStarters(g, ctx.rosterPositions, teams) - 1)] || 0;
+      fa.forEach(function(pid){ out.push({ pid: pid, vor: val(pid) - line }); });
+    });
+    out.sort(function(a, b){ return b.vor - a.vor; });
+    const at = {};
+    out.forEach(function(x, k){ at[x.pid] = k; });
+    return at;
+  }
+  // everything the FAAB card and the bid chips need, for the current Waiver value
+  function faabState(V){
+    if(!faabOn() || !ctx.faab || !ctx.faab.claims) return null;
+    const M = faabMarket(ctx.faab.claims), me = ctx.myRoster;
+    const rivals = (ctx.lastRosters || []).filter(function(r){ return r.roster_id !== me.roster_id; });
+    let rivalMax = 0, rivalWho = null, sum = 0;
+    rivals.forEach(function(r){ const l = faabLeft(r); sum += l; if(l > rivalMax){ rivalMax = l; rivalWho = r.roster_id; } });
+    const myLeft = faabLeft(me), order = faabOrder(), min = Number((ctx.league.settings || {}).waiver_bid_min) || 0;
+    const bidFor = function(pid, gain){
+      const r = order[pid];
+      if(r === undefined) return null;
+      return Object.assign({ rank: r }, faabBid(r, M, { mode: ctx.faabMode, depth: !(gain >= WV_MIN), myLeft: myLeft, rivalMax: rivalMax, min: min }));
+    };
+    return { M: M, myLeft: myLeft, avgLeft: rivals.length ? sum / rivals.length : 0, rivalMax: rivalMax, rivalWho: rivalWho, bidFor: bidFor, budget: faabBudget() };
+  }
+  function faabCardHTML(V){
+    if(!faabOn()) return '';
+    if(!ctx.faab || ctx.faab.lid !== ctx.league.league_id || (!ctx.faab.claims && !ctx.faab.failed)){
+      faabLoad().then(function(){ if(ctx.view === 'fa' && ctx.pl.view === 'value') renderWaiverValue(); });
+      return '<div class="faab"><div class="eyebrow ad-h">FAAB bids</div><div class="ad-none">Reading this season’s waiver claims…</div></div>';
+    }
+    if(!ctx.ros && !ctx.faab.rosAsked){ ctx.faab.rosAsked = true; loadRos().then(function(){ if(ctx.view === 'fa' && ctx.pl.view === 'value') renderWaiverValue(); }); }   // rest-of-season points order the wire
+    if(ctx.faab.failed) return '<div class="faab"><div class="eyebrow ad-h">FAAB bids</div><div class="ad-none">This league’s waiver history isn’t available right now.</div></div>';
+    const S = faabState(V), M = S.M, $ = function(v){ return '$' + Math.round(v); };
+    const seg = '<div class="seg faab-mode" role="group" aria-label="How hard to bid">' + [['low', 'Conservative'], ['mid', 'Balanced'], ['high', 'Aggressive']].map(function(m){ return '<button type="button" data-faab-mode="' + m[0] + '" aria-pressed="' + (ctx.faabMode === m[0]) + '">' + m[1] + '</button>'; }).join('') + '</div>';
+    const name = function(pid){ const p = ctx.players[pid]; return p ? (p.position === 'DEF' ? pid + ' D/ST' : playerName(p)) : pid; };
+    const market = M.claims
+      ? 'Going rate lately (last ' + M.weeks + ' week' + (M.weeks === 1 ? '' : 's') + ' with claims): a week’s top add ' + $(M.price[0].p50) + ', 2nd ' + $(M.price[1].p50) + ', 3rd ' + $(M.price[2].p50) + '. ' +
+        (M.sales.length && M.sales[0].bid ? 'Biggest this season: ' + escapeHTML(name(M.sales[0].pid)) + ' ' + $(M.sales[0].bid) + ' (wk ' + M.sales[0].wk + (M.sales[0].bids > 1 ? ', ' + M.sales[0].bids + ' bids' : '') + ').' : 'Every claim so far went for $0.')
+      : 'No waiver claims yet this season, so there’s no going rate: bids start from $' + (M.paid ? 1 : 0) + '.';
+    // the plan: a bid is a rest-of-season decision, so it uses rest-of-season value whichever time frame is showing; the best
+    // swap at each position, in order of what it adds to your lineup, each with its bid
+    const VR = ctx.ros ? waiverValue('ros') : V;
+    const swaps = leaguePositions().map(function(g){ return VR.swapFor(VR.adds.filter(function(a){ return posGroup(a.pid) === g; }), ctx.wvSame)[0] || null; })
+      .filter(Boolean).sort(function(a, b){ return b.net - a.net; }).slice(0, FAAB_PLAN);
+    let run = 0;
+    const plan = swaps.map(function(x, i){
+      const a = VR.adds.find(function(y){ return y.pid === x.add; }), b = S.bidFor(x.add, a ? a.gain : 0);
+      if(!b) return '';
+      run += b.bid;
+      const p = ctx.players[x.add] || {}, pos = posGroup(x.add), recent = M.sales.filter(function(s){ return s.bid > 0 && posGroup(s.pid) === pos; }).slice(0, 3);
+      return '<div class="faab-r' + (run > S.myLeft ? ' over' : '') + '"><span class="faab-n">' + (i + 1) + '</span>' +
+        '<span class="faab-m"><span class="faab-who"><button type="button" class="wv-link" data-wv-open="' + escapeHTML(x.add) + '">' + escapeHTML(name(x.add)) + '</button> <small>' + escapeHTML(pos + ' · ' + (p.team || 'FA')) + '</small>' +
+          (x.drop ? ' <span class="faab-drop">drop <button type="button" class="wv-link" data-wv-open="' + escapeHTML(x.drop) + '">' + escapeHTML(name(x.drop)) + '</button></span>' : ' <span class="faab-drop">open spot</span>') + '</span>' +
+          '<small class="faab-why">+' + x.net.toFixed(2) + ' to your lineup' + (VR.mode === 'ros' ? ' rest of season' : ' this week') + ' · about the #' + (b.rank + 1) + ' add on the wire' + (b.low !== b.high ? ' · range ' + $(b.low) + '–' + $(b.high) : '') +
+            (recent.length ? ' · recent ' + escapeHTML(pos) + ' prices ' + recent.map(function(s){ return $(s.bid) + ' ' + escapeHTML(lastName(s.pid)); }).join(', ') : '') + '</small></span>' +
+        '<b class="faab-bid">' + $(b.bid) + '</b></div>';
+    }).join('');
+    const rival = S.rivalWho ? rosterName(S.rivalWho) : '';
+    return '<div class="faab">' +
+      '<div class="faab-h"><div class="eyebrow ad-h">FAAB bids</div>' + seg + '</div>' +
+      '<div class="faab-b"><span><b>' + $(S.myLeft) + '</b> left of ' + $(S.budget) + '</span><span>League average left <b>' + $(S.avgLeft) + '</b></span><span>Most a rival can bid <b>' + $(S.rivalMax) + '</b>' + (rival ? ' <small>(' + escapeHTML(rival) + ')</small>' : '') + '</span></div>' +
+      '<p class="faab-mk">' + market + '</p>' +
+      (plan ? '<div class="faab-plan"><div class="faab-ph">Waiver plan · claims in priority order</div>' + plan +
+        '<div class="faab-tot' + (run > S.myLeft ? ' over' : '') + '">If every claim wins: <b>' + $(run) + '</b> of your ' + $(S.myLeft) + (run > S.myLeft ? '. That’s more than you have: Sleeper skips a claim you can’t afford, so put the one you want most first.' : '.') + '</div></div>'
+        : '<div class="ad-none">No add improves your best lineup ' + (VR.mode === 'ros' ? 'over the rest of the season' : 'this week') + ', so there’s nothing worth bidding on.</div>') +
+      '<p class="faab-foot">Suggestions only: enter claims and bids in Sleeper. Bids come from what this league actually paid for a week’s best adds lately; halved for someone who’d only be depth for you; never more than one dollar over the most any rival can bid.</p></div>';
+  }
+  function faabChip(S, pid, gain){
+    const b = S && S.bidFor(pid, gain);
+    return b ? '<span class="faab-chip" title="Suggested FAAB bid (range $' + b.low + '–$' + b.high + ')">$' + b.bid + '</span>' : '';
+  }
+  document.addEventListener('click', function(e){
+    const m = e.target.closest && e.target.closest('[data-faab-mode]');
+    if(!m) return;
+    ctx.faabMode = m.getAttribute('data-faab-mode');
+    try{ localStorage.setItem('rv-faab-mode', ctx.faabMode); }catch(err){}
+    renderWaiverValue();
+  });
+
   function renderWaiverValue(){
     const el = document.getElementById('wv');
     if(!el) return;
@@ -11359,6 +11541,7 @@
       return;
     }
     const V = waiverValue(ctx.wvMode), pos = ctx.pl.pos, name = function(pid){ return escapeHTML(playerName(ctx.players[pid])); };
+    const FS = faabOn() ? safeRun('FAAB bids', function(){ return faabState(V); }) : null;
     // By position: one list ranked by lineup gain is all D/STs (one starts every week and is the easiest slot to upgrade),
     // so each position gets its own top adds, and Best swaps keeps the single best swap per position.
     const posList = leaguePositions().filter(function(x){ return !pos.length || pos.indexOf(x) !== -1; });
@@ -11376,9 +11559,9 @@
     const dropRows = V.drops.slice(0, 8).map(function(d){ return wvRowHTML(d.pid, d.cost, 'drop', V.mode === 'ros' ? fmtPts(d.pts) + ' proj' : d.starts ? 'starting' : d.pts > 0 ? fmtPts(d.pts) + ' proj, bench' : 'no points this week'); }).join('');
     const posBlocks = groups.map(function(g){
       const rows = g.cands.map(function(a){
-        if(g0(a)) return wvRowHTML(a.pid, a.gain, 'add', fmtPts(a.pts) + ' proj');
+        if(g0(a)) return wvRowHTML(a.pid, a.gain, 'add', fmtPts(a.pts) + ' proj' + faabChip(FS, a.pid, a.gain));
         const d = g.weak ? a.pts - g.weak.pts : null;
-        return wvRowHTML(a.pid, a.pts, 'depth', d === null ? 'depth' : d > 0.05 ? 'depth · ' + fmtPts(d) + ' more than ' + name(g.weak.pid) : 'depth · below your ' + escapeHTML(g.pos) + 's');
+        return wvRowHTML(a.pid, a.pts, 'depth', (d === null ? 'depth' : d > 0.05 ? 'depth · ' + fmtPts(d) + ' more than ' + name(g.weak.pid) : 'depth · below your ' + escapeHTML(g.pos) + 's') + faabChip(FS, a.pid, 0));
       }).join('');
       return '<div class="wv-pos"><div class="wv-ph"><b>' + escapeHTML(g.pos) + '</b><span>' + (g.weak ? 'Your weakest: ' + name(g.weak.pid) + ' · ' + fmtPts(g.weak.pts) : 'None on your roster') + '</span></div>' +
         (rows || '<div class="ad-none">Nobody available projects points.</div>') + '</div>';
@@ -11391,6 +11574,7 @@
     el.innerHTML = '<div class="section-title">Waiver value · ' + span + posTxt + ' <span style="opacity:0.7;">— points added to your best lineup</span></div>' + seg +
       '<div class="card ad-card wv-card">' +
         '<div class="wv-base">Your best lineup projects <b>' + fmtPts(V.base) + '</b> ' + when + (V.open ? ' · <b>' + V.open + '</b> open roster spot' + (V.open === 1 ? '' : 's') : '') + '.</div>' +
+        safeHTML('FAAB bids', function(){ return faabCardHTML(V); }) +
         '<div class="wv-swh"><div class="eyebrow ad-h">Best swaps</div><div class="seg wv-same" role="group" aria-label="Who to drop"><button type="button" data-wv-same="same" aria-pressed="' + ctx.wvSame + '" title="Drop someone at the same position (keeps your depth)">Same position</button><button type="button" data-wv-same="any" aria-pressed="' + !ctx.wvSame + '" title="Drop whoever costs your best lineup the least">Any position</button></div></div>' +
         (swapRows || '<div class="ad-none">No ' + (ctx.wvSame && !V.open ? 'same-position ' : '') + 'swap improves your best lineup ' + when + (pos.length ? ' at ' + escapeHTML(pos.join('/')) : '') + '.</div>') +
         '<div class="wv-cols"><div class="eyebrow ad-h">Top adds by position · marginal value, or depth</div><div class="wv-grid">' + posBlocks + '</div></div>' +
@@ -17758,6 +17942,7 @@
     { id: 'huddle', title: 'Sleepa Huddle', words: 'set lineup power rank cards build', key: 'H', hash: 'huddle', run: function(){ openHuddle(); } },
     { id: 'players', title: 'Players', words: 'free agents waivers available', key: 'P', hash: 'players', run: kbView('fa') },
     { id: 'waivers', title: 'Waiver value', words: 'pickups adds drops best available', hash: 'players/waivers', run: ckSec('fa', '[data-pl-view="value"]') },
+    { id: 'faab', title: 'FAAB bids', words: 'waiver bid budget claims plan auction', hash: 'players/faab', run: function(){ ckSec('fa', '[data-pl-view="value"]')(); setTimeout(function(){ const el = document.querySelector('.faab'); if(el) el.scrollIntoView({ block: 'start' }); }, 300); } },
     { id: 'trending', title: 'Trending players', words: 'adds drops hot', hash: 'players/trending', run: ckSec('fa', '[data-pl-view="trend"]') },
     { id: 'league', title: 'League', words: 'standings playoff picture table', key: 'E', hash: 'league', run: kbView('league') },
     { id: 'matchup', title: 'This week’s matchup', words: 'opponent compare lineups vs versus score', hash: 'matchup', run: function(){ kbView('roster')(); if(myMatchup()) openMax({ kind: 'opp' }); } },

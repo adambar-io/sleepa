@@ -54,6 +54,35 @@ A single-file local web app for viewing a Sleeper fantasy football roster with c
   - **To add a page or action:** add one entry to `ACTIONS`. Search, the key, help and the link all follow.
   - tests/check.html 3i checks unique ids, keys and hashes, plus the link parsing.
 - **Parity scorecard:** PARITY.md compares Sleeper / ESPN / FantasyPros features with Sleepa's status and gives a suggested build order. Update it when something ships.
+- **Win probability over the week (Oct 16 2026; owner approved):** a chart in This week's matchup (`wpcCardHTML('lu')`), in every Scoreboard matchup (`'am|lid|mid'`), and a sparkline under the Lineup bar (`wpcSparkHTML`).
+  - **Rebuilt, not recorded:** Sleeper's GraphQL `plays` gives each play's wall-clock `time`, game clock (`quarter_name`, `time_remaining_*`) and per-player stats. `wpcBuild(plays, [A, B], o)` (pure) replays them in time order:
+    - each starter's points are his running totals in the league's scoring (`zAddStats` + `zDerive`)
+    - each game's share left comes from its clock (`wpcLeft`)
+    - `winProb` runs after every play, with `wpSd`, the same per-player sd as the bar and Scoreboard
+  - **Team defenses:** takeaways come from their players' lines (`wpcDefStats`). The points-allowed band phases in as the game is played (no kickoff jump), using the last known score (some plays carry none).
+  - **Fixes from the replay:**
+    - Offensive players and kickers drop `idp_*` stats; a solo tackle counts as `st_tkl_solo`, as Sleeper does (`wpcOffense`).
+    - `zAddStats` now counts sack yards positive. This also fixes Zone live points.
+  - **Snapping to official:** at each game's last play, finished players snap to Sleeper's official points (corrections, D/ST, passes defended, which are not in the plays). The line ends on the number the bar shows.
+  - **Swings:** the 3 biggest (at least 3%), credited to the player whose points moved most; a D/ST only on its own takeaways or score changes.
+  - **X axis:** game windows (`wpcScale`); dead time is squeezed out.
+  - **Feed:** `ctx.wpc.feed` is kept in IndexedDB `wpc-feed` for the current week.
+    - One `plays(week)` call when something is missing (a new player to keep, a started game with no plays, a gap), at most every 5 min.
+    - Otherwise `plays(game_id)` newest-20 per live game, every 60 s.
+    - Every play's clock is kept; stats only for the charted players and their D/STs' players.
+    - `wpcKick` throttles to 20 s per chart and repaints when the feed changes.
+  - **Checks:** verified on frozen week 4 (tests/check.html 3j, fixture now carries the plays). Every offensive starter and kicker in The League and Last Minute League replays to Sleeper's exact points; D/STs within 1; BATTLEBALL IDPs short only by passes defended.
+- **FAAB bids (Oct 16 2026; owner approved), Waiver value, FAAB leagues only (`settings.waiver_type === 2`):**
+  - **League history:** `faabLoad` reads this season's transactions (one call per week, 6 h cache) into claims (`faabClaims`: won / lost to another owner / failed for roster room).
+  - **Going rate:** `faabMarket` takes each week's winning bids, highest first; the price for a week's #1, #2, … add is the 25th / 50th / 75th percentile over the last 4 weeks with claims. Every sale also records how many owners bid and the runner-up.
+  - **Wire order:** `faabOrder` ranks available players by rest-of-season points over the league's starting line at their position (`faabStarters`: teams × dedicated slots + half of each flex that takes the position).
+  - **Bid:** `faabBid` takes Conservative / Balanced / Aggressive (`ctx.faabMode`, localStorage `rv-faab-mode`) as p25 / p50 / p75. It is halved for someone who would only be depth for you, $1 beats $0 claims where adds have sold for money, capped at the most any rival can bid + $1 and at your budget.
+  - **Card (`faabCardHTML`):**
+    - your budget, the league average left, and the most a rival can bid (and who)
+    - the going rate and the biggest sale
+    - the waiver plan: the best rest-of-season swap per position, in order of lineup gain, each with its bid, range and recent prices at that position, plus a running total against your budget
+  - **Chips and search:** bid chips on Top adds by position. Search / `#/players/faab` opens it.
+  - **Checks:** tests/check.html 3k.
 - **Negative air-yards share** (`airPct`): nflverse values go below zero (down to -39%) when targets are mostly behind the line; shown as "<0%" with an explanatory tooltip in the waiver rows, player page game log, full-screen waivers and head-to-head. **Head-to-head across positions**: a stat only one player records shows "—" (not 0), so it is neither colored nor counted in "Better in N"; same-position comparisons still treat an unrecorded counting stat as 0
 - **Failure handling**: `fetchLeagueBundle` uses `allSettled` and names the part that failed (league settings / rosters / league members / current NFL week); `setError(msg, retry)` adds a **Try again** button that re-runs the step. User lookup separates "no such user" (Sleeper returns null) from "couldn't reach Sleeper". A first-visit player-list failure (players.json and Sleeper both down) says so. Failed projections no longer pass silently as a 0.0 total: the Updated line shows "Projections didn't load · tap to retry" (`ctx.projFailed`). The season comes from Sleeper `state/nfl` (month-based guess only as a fallback). No silent `catch(e){}` left. Each case was tested by failing that request in the test harness (`?fail=user|rosters|users|league|state|players|projections`)
 - **Slot eligibility** (`fantasyPositions`, `canFill`, `eligibleSlotIndexes`, `posInGroup`): uses Sleeper's `fantasy_positions`, falling back to `position`. Needed for IDP leagues: positions are DE/DT/CB/S but slots are DL/LB/DB, so before this a DE or CB could never fill a DL/DB slot; 184 players on teams have two fantasy positions (e.g. LB+DL), none of them QB/RB/WR/TE (live data, Sept 2026). Used by the optimizer, swap panel, empty-slot panel, player page and the waiver FLEX comparison
