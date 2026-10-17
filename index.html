@@ -318,6 +318,8 @@
   .mx-tbl th.gh{ text-align: center; border-bottom: 2px solid; }
   .mx-tbl th.gh.wk{ color: var(--accent); border-color: var(--accent); }
   .mx-tbl th.gh.ros{ color: #8f9bff; border-color: #8f9bff; }
+  .mx-tbl th.gh.fm, .mx-tbl th.gh.log{ color: var(--text-3); border-color: var(--hair); }
+  .mx-tbl td .rng{ font-size: 10.5px; margin-top: 2px; }
   .mx-tbl .rk-w{ background: color-mix(in srgb, var(--accent) 5%, transparent); }
   .mx-tbl .rk-r{ background: color-mix(in srgb, #7c8cff 6%, transparent); }
   .mx-tbl .g0{ box-shadow: inset 1px 0 0 var(--hair); }
@@ -1658,6 +1660,7 @@
   .mx-views{ max-width: 100%; overflow-x: auto; scrollbar-width: none; } .mx-views button{ white-space: nowrap; flex: none; }
   .mx-tools{ display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 0 0 10px; }
   .mx-tools .pos-filter{ margin: 0; }
+  .mx-tools.mx-src{ justify-content: flex-start; } .mx-src .seg button{ font-size: 12.5px; min-height: 30px; }
   .mx-count{ font-size: 13px; color: var(--text-3); }
   .mx-active{ margin: 0 0 10px; }
   .mx-body .fa-more, #max-body .fa-more{ margin: 12px auto 20px; display: block; }
@@ -13346,8 +13349,17 @@
     sel.value = ms.value; sel.dispatchEvent(new Event('change'));
     const y = maxPanel.scrollTop; maxBody.innerHTML = maxWaiversHTML(); maxPanel.scrollTop = y;
   });
+  // Lineup full view: source ranks as one spread column or one column per source (remembered on this device)
+  try{ ctx.mxEachSource = localStorage.getItem('rv-mx-src') === '1'; }catch(e){ ctx.mxEachSource = false; }
   maxBody.addEventListener('click', function(e){
     const shown = maxStack[maxStack.length - 1];
+    const src = shown && shown.kind === 'roster' && e.target.closest('[data-mx-src]');
+    if(src){
+      ctx.mxEachSource = src.getAttribute('data-mx-src') === '1';
+      try{ localStorage.setItem('rv-mx-src', ctx.mxEachSource ? '1' : '0'); }catch(err){}
+      const y = maxPanel.scrollTop; maxBody.innerHTML = maxRosterHTML(); maxPanel.scrollTop = y;
+      return;
+    }
     if(shown && shown.kind === 'fa'){
       const refresh = function(){ const y = maxPanel.scrollTop; maxBody.innerHTML = maxWaiversHTML(); maxPanel.scrollTop = y; renderPlayers(); renderAddDrop(); };
       const pc = e.target.closest('[data-pl-pos]');
@@ -13976,37 +13988,75 @@
   }
   function completedWeeks(){ const w = []; for(let i = 1; i < ctx.week; i++) w.push(i); return w; }
 
+  // Lineup full view, ordered by the questions you ask when setting a lineup: start him? (points, consensus rank, tier)
+  // how sure? (form and role) what's he worth beyond this week? (rest of season) then the raw game log, newest first.
+  // Source ranks collapse to one spread column ("WR4–14", each source on hover) unless "Each source" is on.
+  function rankSpreadCell(pid, list, cls){
+    const got = list.filter(function(x){ return x[1]; });
+    if(!got.length) return '<td class="' + cls + '"><span class="dim">—</span></td>';
+    const ns = got.map(function(x){ return x[1]; }), lo = Math.min.apply(null, ns), hi = Math.max.apply(null, ns);
+    const tip = got.map(function(x){ return x[0] + ' ' + rkTxt(pid, x[1]); }).join(' · ');
+    return '<td class="' + cls + ' muted" title="' + escapeHTML(tip) + '">' + (lo === hi ? rkTxt(pid, lo) : rkTxt(pid, lo) + '–' + hi) + '</td>';
+  }
   function maxRosterHTML(){
-    const weeks = completedWeeks(), started = weekStarted(), extra = 11;   // 10 rank columns + L3
-    const plainTh = function(label, key, cls){ return '<th class="' + (cls || '') + '">' + label + '</th>'; };
-    const head = '<thead>' + rankGroupHead(3, 3 + weeks.length + 3) + '<tr><th class="l">Slot</th><th class="l">Player</th><th class="l">Opp</th>' + rankHeadCells(plainTh) + '<th>Snap by week</th><th' + (isIdpLeague() ? ' title="Target share for offense, tackle share for defenders"' : '') + '>' + (isIdpLeague() ? 'Tgt / Tkl share' : 'Tgt share') + '</th><th' + (started ? ' title="Actual points once their game has started, otherwise the projection"' : '') + '>' + (started ? 'Wk ' + ctx.week + ' pts' : 'Proj') + '</th>' +
-      weeks.map(function(w){ return '<th>Wk ' + w + '</th>'; }).join('') +
-      '<th title="Average of the last 3 games">L3</th><th>Avg</th><th>Total</th></tr></thead>';
+    const weeks = completedWeeks().reverse(), started = weekStarted(), each = !!ctx.mxEachSource;
+    const th = function(label, cls, title){ return '<th class="' + (cls || '') + '"' + (title ? ' title="' + escapeHTML(title) + '"' : '') + '>' + label + '</th>'; };
+    const nWk = each ? 6 : 4, nForm = 4, nRos = each ? 5 : 3, nCols = 3 + nWk + nForm + nRos + weeks.length + 1;
+    const head = '<thead><tr class="grp-h"><th colspan="3"></th>' +
+      '<th colspan="' + nWk + '" class="gh wk">This week · wk ' + ctx.week + '</th>' +
+      '<th colspan="' + nForm + '" class="gh fm">Form &amp; role</th>' +
+      '<th colspan="' + nRos + '" class="gh ros">Rest of season · ' + rosSpan() + '</th>' +
+      '<th colspan="' + (weeks.length + 1) + '" class="gh log">Game log</th></tr>' +
+      '<tr>' + th('Slot', 'l') + th('Player', 'l') + th('Opp', 'l') +
+      th(started ? 'Wk ' + ctx.week + ' pts' : 'Proj', 'rk-w g0', started ? 'Actual points once their game has started, otherwise the projection' : 'Projection, with the typical-week range under it') +
+      th('Cons.', 'rk-w', 'Consensus rank: average of the sources, re-ranked') +
+      (each ? th('FP', 'rk-w') + th('Sleeper', 'rk-w') + th('ESPN', 'rk-w') : th('Sources', 'rk-w', 'Best to worst rank across FantasyPros, Sleeper and ESPN. Hover a cell for each one')) +
+      th('Tier', 'rk-w', 'Boris Chen tier') +
+      th('L3', 'g0', 'Average of the last 3 games') + th('Avg') + th('Snap by week') +
+      th(isIdpLeague() ? 'Tgt / Tkl share' : 'Tgt share', '', isIdpLeague() ? 'Target share for offense, tackle share for defenders' : '') +
+      th('Cons.', 'rk-r g0', 'Consensus rest-of-season rank') +
+      (each ? th('FP', 'rk-r') + th('Sleeper', 'rk-r') + th('ESPN', 'rk-r') : th('Sources', 'rk-r', 'Best to worst rest-of-season rank across FantasyPros, Sleeper and ESPN. Hover a cell for each one')) +
+      th('FCalc', 'rk-r', 'FantasyCalc trade-value rank') +
+      weeks.map(function(w, i){ return th('Wk ' + w, i === 0 ? 'g0' : ''); }).join('') + th('Total', weeks.length ? '' : 'g0') + '</tr></thead>';
     function row(pid, slotLabel, slotIndex, i){
-      if(!pid || pid === '0' || !ctx.players[pid]) return '<tr><td class="l slot">' + escapeHTML(slotLabel) + '</td><td class="l dim" colspan="' + (6 + weeks.length + extra) + '">Empty</td></tr>';
-      const p = ctx.players[pid], games = hist(pid) || [];
+      if(!pid || pid === '0' || !ctx.players[pid]) return '<tr><td class="l slot">' + escapeHTML(slotLabel) + '</td><td class="l dim" colspan="' + (nCols - 1) + '">Empty</td></tr>';
+      const p = ctx.players[pid], games = hist(pid) || [], r = ranksOf(pid), tier = tierOf(pid);
       const fresh = slotIndex != null && isNewStarter(pid);
       const cls = (slotIndex != null && isOnBye(pid) ? 'bye ' : '') + (fresh ? 'moved' : '');
       const byWeek = {}; games.forEach(function(h){ byWeek[h.week] = h.pts; });
+      const rk = function(n, c){ return '<td class="' + c + '">' + (n ? rkTxt(pid, n) : '<span class="dim">—</span>') + '</td>'; };
       const t = isIdp(pid) ? '<span title="Tackle share">' + pct(seasonShare(pid, 'k')) + ' tkl</span>'
         : SKILL_POSITIONS.indexOf(p.position) !== -1 && p.position !== 'QB' ? pct(seasonShare(pid, 't')) : '<span class="dim">—</span>';
+      const pts = (function(){
+        const wa = weekActual(pid);
+        if(wa === null) return '<td class="rk-w g0"><span class="proj">' + fmtPts(ctx.projections[pid]) + '</span>' + rangeCellHTML(pid) + '</td>';
+        const g = gameOf(p.team), fin = g && g.state === 'post';
+        return '<td class="rk-w g0' + (fin ? '' : ' act-live') + '" title="' + (fin ? 'Final' : 'Live') + ' actual points"><span class="proj">' + fmtPts(wa) + '</span><div class="th-sub">' + (fin ? 'final' : 'live') + '</div></td>';
+      })();
       return '<tr style="--i:' + i + '" data-open="' + escapeHTML(pid) + '" class="' + cls + '"><td class="l slot">' + escapeHTML(slotLabel) + '</td><td class="l">' + mxWho(pid, fresh) + '</td>' +
-        '<td class="l">' + oppCell(pid) + '</td>' + rankCells(pid) + '<td>' + snapByWeek(pid) + '</td><td class="muted">' + t + '</td>' +
-        (function(){ const wa = weekActual(pid); if(wa === null) return '<td><span class="proj">' + fmtPts(ctx.projections[pid]) + '</span></td>';
-          const g = gameOf(p.team), fin = g && g.state === 'post'; return '<td class="' + (fin ? '' : 'act-live') + '" title="' + (fin ? 'Final' : 'Live') + ' actual points"><b>' + fmtPts(wa) + '</b><div class="th-sub">' + (fin ? 'final' : 'live') + '</div></td>'; })() +
-        weeks.map(function(w){
-          if(byWeek[w] != null) return '<td class="muted">' + fmtPts(byWeek[w]) + '</td>';
-          const m = matchup(p.team, w); return '<td>' + (m && m.bye ? '<span class="wk-bye">BYE</span>' : '<span class="dim">—</span>') + '</td>';
+        '<td class="l">' + oppCell(pid) + '</td>' +
+        pts + rk(r.w.cons, 'rk-w cons') +
+        (each ? rk(r.w.fp, 'rk-w') + rk(r.w.sl, 'rk-w') + rk(r.w.es, 'rk-w') : rankSpreadCell(pid, [['FP', r.w.fp], ['Sleeper', r.w.sl], ['ESPN', r.w.es]], 'rk-w')) +
+        '<td class="rk-w">' + (tier ? 'T' + tier : '<span class="dim">—</span>') + '</td>' +
+        '<td class="g0">' + fmtPts(last3Avg(pid)) + '</td><td class="muted">' + fmtPts(seasonAvgPts(pid)) + '</td><td>' + snapByWeek(pid) + '</td><td class="muted">' + t + '</td>' +
+        rk(r.r.cons, 'rk-r g0 cons') +
+        (each ? rk(r.r.fp, 'rk-r') + rk(r.r.sl, 'rk-r') + rk(r.r.es, 'rk-r') : rankSpreadCell(pid, [['FP', r.r.fp], ['Sleeper', r.r.sl], ['ESPN', r.r.es]], 'rk-r')) +
+        rk(r.r.fc, 'rk-r') +
+        weeks.map(function(w, j){
+          const c = j === 0 ? ' g0' : '';
+          if(byWeek[w] != null) return '<td class="muted' + c + '">' + fmtPts(byWeek[w]) + '</td>';
+          const m = matchup(p.team, w); return '<td class="' + c + '">' + (m && m.bye ? '<span class="wk-bye">BYE</span>' : '<span class="dim">—</span>') + '</td>';
         }).join('') +
-
-        '<td class="muted">' + fmtPts(last3Avg(pid)) + '</td><td class="muted">' + fmtPts(seasonAvgPts(pid)) + '</td><td class="muted">' + fmtPts(seasonTotalPts(pid)) + '</td></tr>';
+        '<td class="muted' + (weeks.length ? '' : ' g0') + '">' + fmtPts(seasonTotalPts(pid)) + '</td></tr>';
     }
     const starterSet = new Set(ctx.draftStarters);
     const bench = (ctx.myRoster.players || []).filter(function(pid){ return !starterSet.has(pid); });
     return byeCallouts(ctx.draftStarters) +
+      '<div class="mx-tools mx-src"><span class="mx-count">Source ranks</span><div class="seg" role="group" aria-label="Source ranks">' +
+        '<button type="button" data-mx-src="0" aria-pressed="' + !each + '">Spread</button><button type="button" data-mx-src="1" aria-pressed="' + each + '">Each source</button></div></div>' +
       '<div class="mx-scroll"><table class="mx-tbl">' + head + '<tbody class="stagger">' +
       ctx.rosterPositions.map(function(slot, i){ return row(ctx.draftStarters[i], slot, i, i); }).join('') +
-      '<tr class="grp"><td colspan="' + (8 + weeks.length + extra) + '">Bench</td></tr>' +
+      '<tr class="grp"><td colspan="' + nCols + '">Bench</td></tr>' +
       bench.map(function(pid, i){ return row(pid, (ctx.players[pid] && ctx.players[pid].position) || 'BN', null, ctx.rosterPositions.length + i); }).join('') +
       '</tbody></table></div>';
   }
