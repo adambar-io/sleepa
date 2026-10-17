@@ -39,6 +39,21 @@ A single-file local web app for viewing a Sleeper fantasy football roster with c
     - Colors: green current; amber past `warnH` or with an issue (stats behind the last finished week, `stale` parts carried forward, missing fields); red past `badH` or failed; grey for lazy sources not loaded yet, or idle (live scoring when no games are on).
     - It also shows the errors logged this session.
   - **Build guard:** build_nflverse.py `shape_problems(out, slim)` exits 1 before writing anything if required keys are missing, there are < 300 nflverse players, < 32 teams in sched / kick, or < 2,000 Sleeper players. The Action fails and the site keeps the last good files.
+- **Action registry and deep links (Oct 16 2026):** `ACTIONS` (just above the keyboard cheat sheet) is the single list of places and actions.
+  - Each entry has: `id`, `title`, `words` (extra search words), `key` (shortcut letter or `?`), `help` (cheat-sheet text if different), `hash` (deep link) and `run`.
+  - Built from it:
+    - universal search (`CK_ACTIONS`)
+    - keyboard letters (`KB_LETTERS`; H and Z keep their own handling: Huddle only outside it, Z toggles)
+    - the cheat sheet's "Go to" group
+    - `data-act="id"` buttons (e.g. the crash note's Data health link)
+    - `#/` deep links
+  - **Links:**
+    - `linkParse(hash)` returns `{ id }`, `{ pid }` (for `#/player/{id}`) or null. The old `#huddle` still works.
+    - `linkApply` runs once at startup (`ctx.linked`) and on `hashchange`.
+    - `linkWrite` keeps the address bar on the current page via `replaceState`, from `setView` and `renderIntel`. Overlays opened by a link (player page, Zone, Scoreboard) settle the bar back to the page underneath.
+  - **To add a page or action:** add one entry to `ACTIONS`. Search, the key, help and the link all follow.
+  - tests/check.html 3i checks unique ids, keys and hashes, plus the link parsing.
+- **Parity scorecard:** PARITY.md compares Sleeper / ESPN / FantasyPros features with Sleepa's status and gives a suggested build order. Update it when something ships.
 - **Negative air-yards share** (`airPct`): nflverse values go below zero (down to -39%) when targets are mostly behind the line; shown as "<0%" with an explanatory tooltip in the waiver rows, player page game log, full-screen waivers and head-to-head. **Head-to-head across positions**: a stat only one player records shows "—" (not 0), so it is neither colored nor counted in "Better in N"; same-position comparisons still treat an unrecorded counting stat as 0
 - **Failure handling**: `fetchLeagueBundle` uses `allSettled` and names the part that failed (league settings / rosters / league members / current NFL week); `setError(msg, retry)` adds a **Try again** button that re-runs the step. User lookup separates "no such user" (Sleeper returns null) from "couldn't reach Sleeper". A first-visit player-list failure (players.json and Sleeper both down) says so. Failed projections no longer pass silently as a 0.0 total: the Updated line shows "Projections didn't load · tap to retry" (`ctx.projFailed`). The season comes from Sleeper `state/nfl` (month-based guess only as a fallback). No silent `catch(e){}` left. Each case was tested by failing that request in the test harness (`?fail=user|rosters|users|league|state|players|projections`)
 - **Slot eligibility** (`fantasyPositions`, `canFill`, `eligibleSlotIndexes`, `posInGroup`): uses Sleeper's `fantasy_positions`, falling back to `position`. Needed for IDP leagues: positions are DE/DT/CB/S but slots are DL/LB/DB, so before this a DE or CB could never fill a DL/DB slot; 184 players on teams have two fantasy positions (e.g. LB+DL), none of them QB/RB/WR/TE (live data, Sept 2026). Used by the optimizer, swap panel, empty-slot panel, player page and the waiver FLEX comparison
