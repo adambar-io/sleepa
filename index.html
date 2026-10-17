@@ -198,6 +198,11 @@
   .slot-row{ display: flex; align-items: center; gap: 12px; padding: 10px 14px; position: relative; cursor: pointer; transition: background .18s var(--ease); }
   .slot-row + .slot-row::before{ content:''; position:absolute; top:0; left: 108px; right: 14px; height: 1px; background: var(--hair); }
   .slot-row:active{ background: var(--surface-2); }
+  :where(#starters-list, #bench-list, #fa-list) .slot-row:nth-child(even){ background: color-mix(in srgb, var(--text) 3.5%, transparent); }   /* zebra: easier to track a player across the row */
+  /* team badge: NFL logo in a team-color ring on the avatar's corner (the name never gives up width for it) */
+  .av-w{ position: relative; flex: none; display: inline-flex; }
+  .tm-badge{ position: absolute; right: -4px; bottom: -3px; width: 22px; height: 22px; border-radius: 50%; background: var(--surface); box-shadow: inset 0 0 0 1.5px var(--tc), 0 1px 3px rgba(0, 0, 0, .25); display: grid; place-items: center; overflow: hidden; pointer-events: none; }
+  .tm-badge img{ width: 15px; height: 15px; object-fit: contain; padding: 0 !important; }
   .slot-row.static{ cursor: default; }
   .slot-row.static:active{ background: none; }
   .slot-row.swapped{ background: var(--accent-soft); }
@@ -1011,11 +1016,6 @@
   .mx-tbl .wk-bye{ color: var(--danger); font-size: 12px; font-weight: 600; }
   .mx-who{ display: flex; align-items: center; gap: 12px; }
   .mx-av{ width: 40px; height: 40px; border-radius: 50%; object-fit: cover; object-position: center 15%; flex-shrink: 0; }
-  /* team badge: NFL logo in a team-color ring on the avatar's corner (the name column never gives up width for it) */
-  .mx-avw{ position: relative; flex: none; display: inline-flex; }
-  .mx-tb{ position: absolute; right: -5px; bottom: -4px; width: 20px; height: 20px; border-radius: 50%; background: var(--surface); box-shadow: 0 0 0 1.5px var(--surface), inset 0 0 0 2px var(--tc); display: grid; place-items: center; overflow: hidden; }
-  .mx-tb img{ width: 13px; height: 13px; object-fit: contain; }
-  .mx-tbl tbody tr:nth-child(even) .mx-tb{ background: var(--surface-2); box-shadow: 0 0 0 1.5px var(--surface-2), inset 0 0 0 2px var(--tc); }
   .mx-nm{ font-weight: 600; font-size: 14.5px; display: flex; align-items: center; gap: 6px; }
   .mx-mt{ font-size: 12.5px; color: var(--text-2); margin-top: 2px; }
 
@@ -8139,6 +8139,13 @@
     return '<span class="ph ' + (cls || '') + (p.position === 'DEF' ? ' def' : '') + '" style="--team:' + teamColor(p.team) + '"' + (attrs || '') + '>' +
       '<img src="' + escapeHTML(playerImageUrl(pid)) + '" alt="" loading="lazy" draggable="false" onerror="this.style.visibility=\'hidden\'"></span>';
   }
+  // The photo with the player's NFL team logo on its corner (list rows); team defenses already are the logo.
+  function photoBadgeHTML(pid, cls, attrs){
+    const p = ctx.players[pid] || {};
+    if(!p.team || p.position === 'DEF') return photoHTML(pid, cls, attrs);
+    return '<span class="av-w">' + photoHTML(pid, cls, attrs) + '<span class="tm-badge" style="--tc:' + teamColor(p.team) + '"><img src="https://sleepercdn.com/images/team_logos/nfl/' +
+      encodeURIComponent(String(p.team).toLowerCase()) + '.png" alt="" loading="lazy" draggable="false" onerror="this.remove()"></span></span>';
+  }
   function analyzeName(pid, name){ return '<span class="an-link"' + analyzeAttr(pid) + '>' + escapeHTML(name) + '</span>'; }
 
   // Team defenses are keyed by team abbreviation and have no headshot, so use Sleeper's team logo instead.
@@ -9118,7 +9125,7 @@
       '<div class="slot-row' + (isNewHere ? ' swapped' : '') + (byeStarter ? ' bye-start' : '') + '" ' +
         (ro ? 'data-open="' + escapeHTML(playerId) + '"' : 'data-player-id="' + escapeHTML(playerId) + '" data-slot-index="' + (slotIndex !== undefined ? slotIndex : '') + '"') + '>' +
         '<div class="slot-tag" style="color:' + color + '; border-color:' + color + ';" title="' + escapeHTML(slotLabel || pos) + '">' + escapeHTML(slotShort(slotLabel || pos)) + '</div>' +
-        photoHTML(playerId, 'avatar', ro ? '' : analyzeAttr(playerId)) +
+        photoBadgeHTML(playerId, 'avatar', ro ? '' : analyzeAttr(playerId)) +
         '<div class="player-info">' +
           '<div class="player-name">' + (ro ? '<span class="pn">' + escapeHTML(name) + '</span>' : analyzeName(playerId, name)) + byeChip + statusChip + newChip + ecrChipHTML(playerId) + '</div>' +
           '<div class="player-meta"><span class="m-pos">' + escapeHTML(eligLabel(playerId)) + '</span><span class="m-rk">' + (ecrChipHTML(playerId) || escapeHTML(eligLabel(playerId))) + '</span>' + (eligLabel(playerId).indexOf('/') !== -1 ? '<span class="m-elig" title="Eligible at ' + escapeHTML(eligLabel(playerId)) + '">+' + escapeHTML(eligLabel(playerId).split('/').slice(1).join('/')) + '</span>' : '') + ' · ' + escapeHTML(team) + '<span class="m-opp">' + matchupHTML(p.team) + ' ' + dvpChipHTML(playerId) + '</span><span class="m-opp-c">' + oppCompactHTML(playerId) + '</span> ' + depthChipHTML(playerId) + itChipHTML(p.team) + rcBadgeHTML(playerId) + '</div>' +
@@ -12280,7 +12287,7 @@
     const tc = ctx.pl.view === 'trend' ? trendCount(pid) : null;
     return '<div class="slot-row' + (ctx.pl.view === 'all' ? ' grp-' + plGroup(pid) : '') + '" data-fa-id="' + escapeHTML(pid) + '">' +
         '<div class="slot-tag" style="color:' + color + '; border-color:' + color + ';">' + escapeHTML(posGroup(pid)) + '</div>' +
-        photoHTML(pid, 'avatar', analyzeAttr(pid)) +
+        photoBadgeHTML(pid, 'avatar', analyzeAttr(pid)) +
         '<div class="player-info">' +
           '<div class="player-name">' + analyzeName(pid, playerName(p)) + injuryChip(p.injury_status) + '</div>' +
           '<div class="player-meta">' + escapeHTML(eligLabel(pid)) + ' · ' + escapeHTML(p.team || 'FA') +
@@ -13945,9 +13952,7 @@
   function mxWho(pid, fresh){
     const p = ctx.players[pid];
     const bye = isOnBye(pid) ? '<span class="status-chip bye-tag">Bye</span>' : '';
-    const tb = p.team && p.position !== 'DEF' ? '<span class="mx-tb" style="--tc:' + teamColor(p.team) + '"><img src="https://sleepercdn.com/images/team_logos/nfl/' +
-      encodeURIComponent(String(p.team).toLowerCase()) + '.png" alt="" loading="lazy" draggable="false" onerror="this.remove()"></span>' : '';
-    return '<div class="mx-who"><span class="mx-avw">' + avatarTag(pid, 'mx-av') + tb + '</span><div><div class="mx-nm">' + escapeHTML(playerName(p)) + bye + injuryChip(p.injury_status) +
+    return '<div class="mx-who">' + photoBadgeHTML(pid, 'mx-av') + '<div><div class="mx-nm">' + escapeHTML(playerName(p)) + bye + injuryChip(p.injury_status) +
       (fresh ? '<span class="status-chip new-tag">New</span>' : '') + '</div><div class="mx-mt">' + escapeHTML(p.position || '') + ' · ' + escapeHTML(p.team || 'FA') + ' ' + depthChip(pid) + '</div></div></div>';
   }
   function oppCell(pid){
