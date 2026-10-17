@@ -176,10 +176,10 @@ Sleepa handles no passwords or payment details, only public Sleeper data, and it
 
 **Phase 1 (install + service worker)**
 - **A bad deploy is stickier:** an installed service worker keeps serving what it cached.
-  - Mitigations: network-first HTML (online always loads the newest page), a tiny , and a kill switch (a release whose worker unregisters itself and clears caches).
+  - Mitigations: network-first HTML (online always loads the newest page), a tiny `sw.js`, and a kill switch (a release whose worker unregisters itself and clears caches).
   - Check on every deploy: open the installed app online and confirm the version in Data health.
 - **Repo access = control of every installed copy.** GitHub two-factor login on the owner account is required.
-- **Shared origin:** every GitHub Pages project of  shares , so its localStorage / IndexedDB is readable by any page published there. Today that is low-sensitivity (username, saved plans, notes, cached public data). A custom domain isolates it (see decision 1).
+- **Shared origin:** every GitHub Pages project of `adambar-io` shares `adambar-io.github.io`, so its localStorage / IndexedDB is readable by any page published there. Today that is low-sensitivity (username, saved plans, notes, cached public data). A custom domain isolates it (see decision 1).
 - **On-device data:** cached rosters, injuries and plays are public data. The exposure is limited to someone with the unlocked phone.
 
 **Phase 2 (push server)**
@@ -188,7 +188,7 @@ Sleepa handles no passwords or payment details, only public Sleeper data, and it
 - **The VAPID private key** is a Cloudflare secret only, never in the repo. If it leaked, someone could send fake Sleepa notifications. Notifications only deep-link inside Sleepa, and rotating the key (and re-subscribing) is documented.
 - **Cloudflare account:** two-factor login required.
 - **Dependencies:** pin exact versions of the web-push library; keep the Worker small and reviewed.
-- **Data minimization:** store only the push endpoint + keys, the Sleeper user id, league ids, prefs, time zone and last-seen statuses.  and turning alerts off delete the row.
+- **Data minimization:** store only the push endpoint + keys, the Sleeper user id, league ids, prefs, time zone and last-seen statuses. `/unsubscribe` and turning alerts off delete the row.
 
 ## Suggested order
 
