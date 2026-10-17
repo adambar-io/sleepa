@@ -1000,8 +1000,9 @@
   .mx-tbl th:first-child, .mx-tbl td:first-child{ padding-left: 18px; }
   .mx-tbl th:last-child, .mx-tbl td:last-child{ padding-right: 18px; }
   .mx-tbl tbody tr[data-open]{ cursor: pointer; transition: background .18s var(--ease); }
-  .mx-tbl tr.bye td{ background: var(--danger-soft); }
-  .mx-tbl tr.fresh td{ background: var(--accent-soft); }
+  .mx-tbl tbody tr[data-open]:nth-child(even) td{ background: color-mix(in srgb, var(--text) 3.5%, transparent); }   /* zebra: easier to track a player across the wide row */
+  .mx-tbl tbody tr.bye td{ background: var(--danger-soft); }
+  .mx-tbl tbody tr.fresh td{ background: var(--accent-soft); }
   .mx-tbl tr.grp td{ background: var(--surface-2); font-size: 11px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--text-3); padding: 9px 18px; text-align: left; cursor: default; }
   .mx-tbl .slot{ font-size: 11.5px; font-weight: 600; color: var(--text-2); }
   .mx-tbl .proj{ font-size: 17px; font-weight: 600; letter-spacing: -.02em; }
@@ -1010,6 +1011,11 @@
   .mx-tbl .wk-bye{ color: var(--danger); font-size: 12px; font-weight: 600; }
   .mx-who{ display: flex; align-items: center; gap: 12px; }
   .mx-av{ width: 40px; height: 40px; border-radius: 50%; object-fit: cover; object-position: center 15%; flex-shrink: 0; }
+  /* team badge: NFL logo in a team-color ring on the avatar's corner (the name column never gives up width for it) */
+  .mx-avw{ position: relative; flex: none; display: inline-flex; }
+  .mx-tb{ position: absolute; right: -5px; bottom: -4px; width: 20px; height: 20px; border-radius: 50%; background: var(--surface); box-shadow: 0 0 0 1.5px var(--surface), inset 0 0 0 2px var(--tc); display: grid; place-items: center; overflow: hidden; }
+  .mx-tb img{ width: 13px; height: 13px; object-fit: contain; }
+  .mx-tbl tbody tr:nth-child(even) .mx-tb{ background: var(--surface-2); box-shadow: 0 0 0 1.5px var(--surface-2), inset 0 0 0 2px var(--tc); }
   .mx-nm{ font-weight: 600; font-size: 14.5px; display: flex; align-items: center; gap: 6px; }
   .mx-mt{ font-size: 12.5px; color: var(--text-2); margin-top: 2px; }
 
@@ -5325,10 +5331,13 @@
   // 1. Locked players (their team has kicked off) stay exactly where Sleeper has them; everyone else can move.
   // 2. Dedicated slots (QB, RB, WR, TE, K, DEF, IDP) get the highest-projected eligible player at that position.
   // 3. Flex slots are filled last from whoever is left, most restrictive flex first (fewest eligible positions).
-  //    PPR preference: a WR takes a flex spot unless an RB projects at least RB_OVER_WR more than the best WR,
-  //    or a TE at least TE_OVER_WR_RB more than the best WR or RB. Positions outside RB/WR/TE that a flex allows
-  //    (QB in SUPER_FLEX, IDP) compete on projection alone.
-  const FLEX_PREFERENCE = { RB_OVER_WR: 1.0, TE_OVER_WR_RB: 1.5 }; // points; adjust here
+  //    Flex pick: each RB/WR/TE is compared on his projection adjusted for how projections held up by position
+  //    (FLEX_CAL, fit on 2020-2025 Sleeper projections vs actual points: high projections underdeliver, WR and TE
+  //    more than RB). Candidates within FLEX_TIE adjusted points are separated by risk: an underdog takes the higher
+  //    ceiling, a favorite (or unknown matchup) the higher floor, and a TE whose recent targets are low (touchdown
+  //    dependent) loses the tie. Positions outside RB/WR/TE that a flex allows (QB in SUPER_FLEX, IDP) use projection.
+  const FLEX_CAL = { RB: [0.53, -0.049], WR: [0.23, -0.054], TE: [1.11, -0.138] }; // adjusted = proj + a + b * proj
+  const FLEX_TIE = 0.5, TE_LOW_TGT = 4, WP_UNDERDOG = 0.45, WP_FAVORITE = 0.55;    // points; targets per game (last 3); win probability
   // Not startable: any status marked out in INJURY_STATUS (Questionable is fine), on bye, or no projection.
 
   function kickoff(team, week){
@@ -5340,21 +5349,47 @@
   function isLocked(pid){ const p = ctx.players[pid]; const t = p && kickoff(p.team, ctx.week); return !!t && t <= Date.now(); }
   function isFlexSlot(label){ return !!FLEX_GROUPS[label] && FLEX_GROUPS[label].length > 1; }
 
-  // One flex slot. cands: [{ pid, pos, proj }] already limited to the slot's positions and still available.
-  // Returns { pick, over }: over is a higher-projected candidate the WR/RB preference passed over (for the note).
-  function pickFlex(cands){
-    const best = {};
-    cands.forEach(function(c){ if(!best[c.pos] || c.proj > best[c.pos].proj) best[c.pos] = c; });
-    const wr = best.WR, rb = best.RB, te = best.TE;
-    let pick = null;
-    if(wr || rb) pick = rb && (!wr || rb.proj >= wr.proj + FLEX_PREFERENCE.RB_OVER_WR - 1e-9) ? rb : wr;
-    if(te){
-      const bar = Math.max(wr ? wr.proj : -Infinity, rb ? rb.proj : -Infinity);
-      if(!pick || te.proj >= bar + FLEX_PREFERENCE.TE_OVER_WR_RB - 1e-9) pick = te;
+  // One flex slot. cands: [{ pid, pos, proj, floor?, ceil?, lowVol? }] already limited to the slot's positions and still
+  // available. opts.underdog: true / false / null (unknown). Returns { pick, over, why }: over is a higher-projected
+  // candidate that wasn't picked (for the note); why is 'tie-ceiling' | 'tie-floor' | 'tie-role' when risk decided it.
+  function flexAdj(c){ const k = FLEX_CAL[c.pos]; return k ? c.proj + k[0] + k[1] * c.proj : c.proj; }
+  function pickFlex(cands, opts){
+    cands = cands.map(function(c){ return Object.assign({}, c, { adj: flexAdj(c) }); });
+    const top = cands.reduce(function(m, c){ return !m || c.adj > m.adj ? c : m; }, null);
+    let pick = top, why = null;
+    if(top){
+      let tie = cands.filter(function(c){ return c.adj >= top.adj - FLEX_TIE - 1e-9; });
+      if(tie.length > 1){
+        const under = opts && opts.underdog;
+        if(under !== true && tie.some(function(c){ return !c.lowVol; }) && tie.some(function(c){ return c.lowVol; })){
+          tie = tie.filter(function(c){ return !c.lowVol; }); why = 'tie-role';
+        }
+        const key = under === true ? 'ceil' : 'floor';
+        if(tie.length > 1 && (under === true || under === false) && tie.every(function(c){ return typeof c[key] === 'number'; })){
+          pick = tie.reduce(function(m, c){ return c[key] > m[key] ? c : m; }); why = under ? 'tie-ceiling' : 'tie-floor';
+        }else pick = tie.reduce(function(m, c){ return c.adj > m.adj ? c : m; });
+        if(pick === top) why = null;
+      }
     }
-    cands.forEach(function(c){ if(['WR', 'RB', 'TE'].indexOf(c.pos) === -1 && (!pick || c.proj > pick.proj)) pick = c; });
-    const top = cands.reduce(function(m, c){ return !m || c.proj > m.proj ? c : m; }, null);
-    return { pick: pick, over: top && pick && top !== pick && top.proj > pick.proj ? top : null };
+    const hi = cands.reduce(function(m, c){ return !m || c.proj > m.proj ? c : m; }, null);
+    return { pick: pick, over: hi && pick && hi !== pick && hi.proj > pick.proj ? hi : null, why: why };
+  }
+  // Risk inputs for one flex candidate: typical bad / good week, and whether a TE's last 3 games had few targets.
+  function flexRisk(pid){
+    const r = weekRange(pid), out = {};
+    if(r && r.ok){ out.floor = r.floor; out.ceil = r.ceil; }
+    if(ctx.players[pid] && ctx.players[pid].position === 'TE'){
+      const h = (hist(pid) || []).slice(-3);
+      if(h.length >= 2) out.lowVol = h.reduce(function(a, w){ return a + ((w.raw && w.raw.rec_tgt) || 0); }, 0) / h.length < TE_LOW_TGT;
+    }
+    return out;
+  }
+  // Am I the underdog this week? From the matchup win probability of my Sleeper lineup; null without a matchup.
+  function flexUnderdog(){
+    const mu = myMatchup();
+    if(!mu) return null;
+    const wp = winProb(wpTeam(ctx.originalStarters), wpTeam(mu.starters));
+    return wp < WP_UNDERDOG ? true : wp > WP_FAVORITE ? false : null;
   }
 
   // The lineup rules, shared by Optimal Lineup and the trade helper: dedicated slots get the best player at their
@@ -5408,7 +5443,7 @@
     idx.forEach(function(i, r){ const c = a[r]; if(c < players.length && w[r][c] > NO / 2) res[i] = players[c]; });
     return res;
   }
-  function fillLineup(slots, out, pool, projOf, keep, locked){
+  function fillLineup(slots, out, pool, projOf, keep, locked, flexOpts){
     const used = new Set();
     const inKeep = function(pid){ return keep ? keep.indexOf(pid) !== -1 : false; };
     const byProj = function(x, y){ return projOf(y) - projOf(x) || inKeep(y) - inKeep(x); };
@@ -5429,11 +5464,11 @@
       .forEach(function(i){
         const group = FLEX_GROUPS[slots[i]];
         const cands = pool.filter(function(pid){ return !used.has(pid) && canFill(pid, slots[i]); }).sort(byProj)
-          .map(function(pid){ return { pid: pid, pos: posInGroup(pid, group), proj: projOf(pid) }; });
-        const r = pickFlex(cands);
+          .map(function(pid){ return Object.assign({ pid: pid, pos: posInGroup(pid, group), proj: projOf(pid) }, flexOpts ? flexRisk(pid) : {}); });
+        const r = pickFlex(cands, flexOpts);
         if(!r.pick) return;
         out[i] = r.pick.pid; used.add(r.pick.pid);
-        if(r.over) notes.push({ slot: slots[i], pick: r.pick, over: r.over });
+        if(r.over) notes.push({ slot: slots[i], pick: r.pick, over: r.over, why: r.why });
       });
     // same no-churn rule across flex slots of the same kind (two FLEX slots)
     const flexByLabel = {};
@@ -5462,7 +5497,7 @@
       const p = ctx.players[pid], st = effectiveStatus(pid);
       return p && !parked.has(pid) && !isLocked(pid) && !isOnBye(pid) && !cantPlay(st) && typeof ctx.projections[pid] === 'number';
     });
-    const notes = fillLineup(slots, out, pool, function(pid){ return ctx.projections[pid]; }, ctx.draftStarters, locked);
+    const notes = fillLineup(slots, out, pool, function(pid){ return ctx.projections[pid]; }, ctx.draftStarters, locked, { underdog: flexUnderdog() });
     // Late-game flex: same starters, same total. Put the latest kickoff in each flex slot, so if a late player is
     // ruled out the flex can still be swapped for anyone eligible. Only swaps between a flex and a dedicated slot where
     // both players fit both slots; never touches a locked player.
@@ -5805,9 +5840,13 @@
   function optWhyHTML(res){
     const nm = function(pid){ return escapeHTML(playerName(ctx.players[pid])); };
     const li = res.notes.map(function(n){
-      const margin = n.over.pos === 'TE' ? FLEX_PREFERENCE.TE_OVER_WR_RB : FLEX_PREFERENCE.RB_OVER_WR;
-      return escapeHTML(n.slot) + ': chose ' + n.pick.pos + ' ' + nm(n.pick.pid) + ' over ' + n.over.pos + ' ' + nm(n.over.pid) + ', ' +
-        (n.over.proj - n.pick.proj).toFixed(2) + '-pt difference (' + n.over.pos + 's need +' + margin.toFixed(2) + ').';
+      const adj = function(c){ return c.adj.toFixed(1); };
+      const why = n.why === 'tie-ceiling' ? 'a near tie, so the higher ceiling since you’re the underdog'
+        : n.why === 'tie-floor' ? 'a near tie, so the higher floor since you’re not the underdog'
+        : n.why === 'tie-role' ? 'a near tie, but ' + nm(n.over.pid) + ' has seen few targets lately'
+        : 'projections run high for ' + n.over.pos + 's at this level';
+      return escapeHTML(n.slot) + ': chose ' + n.pick.pos + ' ' + nm(n.pick.pid) + ' (' + n.pick.proj.toFixed(1) + ') over ' + n.over.pos + ' ' + nm(n.over.pid) + ' (' + n.over.proj.toFixed(1) + '). ' +
+        'Adjusted for how projections hold up, ' + adj(n.pick) + ' vs ' + adj(n.over) + ': ' + why + '.';
     });
     teInFlex(res.starters).forEach(function(i){
       li.push('<span class="warn-txt">Heads-up: ' + nm(res.starters[i]) + ' (TE) is in your ' + escapeHTML(ctx.rosterPositions[i]) + '.</span>');
@@ -13906,7 +13945,9 @@
   function mxWho(pid, fresh){
     const p = ctx.players[pid];
     const bye = isOnBye(pid) ? '<span class="status-chip bye-tag">Bye</span>' : '';
-    return '<div class="mx-who">' + avatarTag(pid, 'mx-av') + '<div><div class="mx-nm">' + escapeHTML(playerName(p)) + bye + injuryChip(p.injury_status) +
+    const tb = p.team && p.position !== 'DEF' ? '<span class="mx-tb" style="--tc:' + teamColor(p.team) + '"><img src="https://sleepercdn.com/images/team_logos/nfl/' +
+      encodeURIComponent(String(p.team).toLowerCase()) + '.png" alt="" loading="lazy" draggable="false" onerror="this.remove()"></span>' : '';
+    return '<div class="mx-who"><span class="mx-avw">' + avatarTag(pid, 'mx-av') + tb + '</span><div><div class="mx-nm">' + escapeHTML(playerName(p)) + bye + injuryChip(p.injury_status) +
       (fresh ? '<span class="status-chip new-tag">New</span>' : '') + '</div><div class="mx-mt">' + escapeHTML(p.position || '') + ' · ' + escapeHTML(p.team || 'FA') + ' ' + depthChip(pid) + '</div></div></div>';
   }
   function oppCell(pid){

@@ -53,10 +53,10 @@
     }
     throw new Error('unterminated: ' + startToken);
   }
-  const code = ['const FLEX_PREFERENCE', 'const LOWER_IS_BETTER', 'const NEUTRAL_STAT', 'const INJURY_STATUS',
-    'function calcPoints(', 'function pickFlex(', 'function statDirection(', 'function h2hCompare(', 'function statusInfo(', 'function cantPlay(', 'function pct(']
+  const code = ['const FLEX_CAL', 'const FLEX_TIE', 'const LOWER_IS_BETTER', 'const NEUTRAL_STAT', 'const INJURY_STATUS',
+    'function calcPoints(', 'function flexAdj(', 'function pickFlex(', 'function statDirection(', 'function h2hCompare(', 'function statusInfo(', 'function cantPlay(', 'function pct(']
     .map(extract).join('\n');
-  const f = new Function(code + '; return { FLEX_PREFERENCE, calcPoints, pickFlex, statDirection, h2hCompare, statusInfo, cantPlay, pct };')();
+  const f = new Function(code + '; return { FLEX_CAL, calcPoints, pickFlex, statDirection, h2hCompare, statusInfo, cantPlay, pct };')();
 
   // ---- 1. scoring math vs Sleeper's own pts_ppr (live) ----
   section('Scoring: calcPoints reproduces Sleeper pts_ppr (default PPR scoring, last completed week)');
@@ -78,20 +78,29 @@
   }catch(e){ check('live Sleeper stats reachable', false, e.message); }
 
   // ---- 2. FLEX preference ----
-  section('Optimizer FLEX rule (RB +' + f.FLEX_PREFERENCE.RB_OVER_WR + ', TE +' + f.FLEX_PREFERENCE.TE_OVER_WR_RB + ')');
-  const c = function(pos, proj){ return { pid: pos + proj, pos: pos, proj: proj }; };
-  const run = function(cands){ const r = f.pickFlex(cands); return (r.pick ? r.pick.pid : 'none') + (r.over ? ' over ' + r.over.pid : ''); };
-  const R = f.FLEX_PREFERENCE.RB_OVER_WR, T = f.FLEX_PREFERENCE.TE_OVER_WR_RB;
+  section('Optimizer FLEX rule (projection adjusted by position; near ties by risk)');
+  const c = function(pos, proj, x){ return Object.assign({ pid: pos + proj, pos: pos, proj: proj }, x || {}); };
+  const run = function(cands, o){ const r = f.pickFlex(cands, o); return (r.pick ? r.pick.pid : 'none') + (r.over ? ' over ' + r.over.pid : '') + (r.why ? ' [' + r.why + ']' : ''); };
   [
-    ['close RB loses to WR', [c('WR', 11.3), c('RB', 11.3 + R - 0.4)], 'WR11.3 over RB' + (11.3 + R - 0.4)],
-    ['RB exactly at the margin wins', [c('WR', 11.3), c('RB', 11.3 + R)], 'RB' + (11.3 + R)],
-    ['TE short of margin loses', [c('WR', 10), c('RB', 10.5), c('TE', 10.5 + T - 0.2)], 'WR10 over TE' + (10.5 + T - 0.2)],
-    ['TE at the margin wins', [c('WR', 11), c('RB', 11.4), c('TE', 11.4 + T)], 'TE' + (11.4 + T)],
-    ['no WR: RB vs TE', [c('RB', 10), c('TE', 11)], 'RB10 over TE11'],
+    ['TE and WR with equal projection: no TE penalty (WR first on ties)', [c('WR', 11), c('TE', 11)], 'WR11'],
+    ['TE a clear step ahead of a WR wins', [c('WR', 10), c('TE', 11.5)], 'TE11.5'],
+    ['RB beats an equal TE (RB projections hold up better)', [c('TE', 11), c('RB', 11)], 'RB11'],
+    ['TE 0.3 over an RB is still behind', [c('RB', 11), c('TE', 11.3)], 'RB11 over TE11.3'],
+    ['TE 2 over an RB wins', [c('RB', 11), c('TE', 13)], 'TE13'],
+    ['higher RB projection wins', [c('WR', 10), c('RB', 11)], 'RB11'],
+    ['underdog takes the higher ceiling in a near tie', [c('WR', 11, { floor: 6, ceil: 17 }), c('TE', 11.4, { floor: 8, ceil: 14 })], 'WR11 over TE11.4 [tie-ceiling]'],
+    ['favorite takes the higher floor in a near tie', [c('WR', 11, { floor: 9, ceil: 13 }), c('TE', 11.4, { floor: 6, ceil: 17 })], 'WR11 over TE11.4 [tie-floor]'],
+    ['unknown matchup: no floor/ceiling tiebreak', [c('WR', 11, { floor: 6, ceil: 17 }), c('TE', 11.4, { floor: 8, ceil: 14 })], 'TE11.4'],
+    ['low-target TE loses a near tie', [c('TE', 11.4, { lowVol: true }), c('WR', 11)], 'WR11 over TE11.4 [tie-role]'],
+    ['low-target TE still wins when clearly ahead', [c('TE', 14, { lowVol: true }), c('WR', 11)], 'TE14'],
+    ['tiebreak ignored when a floor is missing', [c('WR', 11), c('TE', 11.4, { floor: 8, ceil: 14 })], 'TE11.4'],
     ['SUPER_FLEX QB on projection', [c('WR', 12), c('QB', 20)], 'QB20'],
     ['only a TE', [c('TE', 8)], 'TE8'],
     ['nobody available', [], 'none'],
-  ].forEach(function(t){ const got = run(t[1]); check(t[0], got === t[2], 'got ' + got + ', want ' + t[2]); });
+  ].forEach(function(t, i){
+    const o = i === 6 ? { underdog: true } : i === 7 ? { underdog: false } : i === 8 ? { underdog: null } : undefined;
+    const got = run(t[1], o); check(t[0], got === t[2], 'got ' + got + ', want ' + t[2]);
+  });
 
   // ---- 3. head-to-head directions and ties ----
   section('Head-to-head: better / worse / tie');
