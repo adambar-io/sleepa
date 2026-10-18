@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sleepa Round 8 Animations</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&amp;family=Nunito:wght@400;600;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0d0f14}
+a{color:#2dd4bf}a:hover{color:#a7f3d0}
+.m *{transform-box:view-box}
+.breathe{transform-origin:100px 248px;animation:breathe 3s ease-in-out infinite}
+.blink{transform-origin:100px 121px;animation:blink 4s infinite}
+.sway{transform-origin:123px 90px;animation:sway 3s ease-in-out infinite}
+.snap{transform-origin:123px 90px;animation:snap 3s ease-out infinite}
+.glowin{animation:glowin 3s infinite}
+.aura{transform-origin:100px 130px;animation:aura 1.2s ease-in-out infinite}
+.auraup{transform-origin:100px 130px;animation:auraup 3s ease-out infinite}
+.gold{transform-origin:100px 130px;animation:gold .9s ease-in-out infinite}
+.shake{animation:shake .25s linear infinite}
+.flash{animation:flash 1.4s infinite}
+.flash2{animation:flash 1.1s .5s infinite}
+.rise{animation:rise 2.2s ease-in infinite}
+.rise2{animation:rise 2.2s .8s ease-in infinite}
+.rise3{animation:rise 2.2s 1.5s ease-in infinite}
+.shrug{animation:shrug 2.4s ease-in-out infinite}
+.bob{transform-origin:100px 184px;animation:bob 2.4s ease-in-out infinite}
+.drip{animation:drip 2.4s ease-in infinite}
+.sag{animation:sag 3s ease-in-out infinite}
+.flicker{animation:flicker 2s infinite}
+.batt{animation:batt 1s steps(1) infinite}
+.deflate{transform-origin:100px 248px;animation:deflate 4s ease-in-out infinite}
+.appear{animation:appear 4s infinite}
+.wave{transform-origin:92px 196px;animation:wave .8s ease-in-out infinite}
+.pfft{animation:pfft 4s infinite}
+@keyframes breathe{0%,100%{transform:scale(1,1)}50%{transform:scale(1.03,.97)}}
+@keyframes blink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+@keyframes sway{0%,100%{transform:rotate(0deg)}50%{transform:rotate(10deg)}}
+@keyframes snap{0%,25%{transform:rotate(58deg)}33%{transform:rotate(-8deg)}38%,90%{transform:rotate(0deg)}100%{transform:rotate(58deg)}}
+@keyframes glowin{0%,28%{opacity:0}36%,90%{opacity:1}100%{opacity:0}}
+@keyframes auraup{0%,28%{transform:scale(.3);opacity:0}38%{transform:scale(1.1);opacity:.9}50%,90%{transform:scale(1);opacity:.7}100%{transform:scale(.3);opacity:0}}
+@keyframes aura{0%,100%{transform:scale(.95);opacity:.55}50%{transform:scale(1.07);opacity:.95}}
+@keyframes gold{0%,100%{transform:scale(.9);opacity:.3}50%{transform:scale(1.05);opacity:.75}}
+@keyframes shake{0%,100%{transform:translate(0,0)}25%{transform:translate(-2px,1px)}50%{transform:translate(2px,-1px)}75%{transform:translate(-1px,-2px)}}
+@keyframes flash{0%,40%,100%{opacity:0}45%,55%{opacity:1}}
+@keyframes rise{0%{transform:translateY(0);opacity:0}20%{opacity:1}100%{transform:translateY(-140px);opacity:0}}
+@keyframes shrug{0%,60%,100%{transform:translateY(0)}20%,40%{transform:translateY(-14px)}}
+@keyframes bob{0%,60%,100%{transform:translateY(0) rotate(0deg)}20%,40%{transform:translateY(-5px) rotate(-5deg)}}
+@keyframes drip{0%{transform:translateY(0);opacity:0}20%{opacity:1}100%{transform:translateY(34px);opacity:0}}
+@keyframes sag{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+@keyframes flicker{0%,100%{opacity:.5}10%{opacity:.1}12%{opacity:.6}50%{opacity:.25}52%{opacity:.7}}
+@keyframes batt{0%{opacity:1}50%{opacity:0}}
+@keyframes deflate{0%,15%{transform:scale(1,1)}50%,85%{transform:scale(1.55,.2)}100%{transform:scale(1,1)}}
+@keyframes appear{0%,50%{opacity:0}58%,85%{opacity:1}92%,100%{opacity:0}}
+@keyframes wave{0%,100%{transform:rotate(-10deg)}50%{transform:rotate(14deg)}}
+@keyframes pfft{0%,30%{opacity:0;transform:translate(0,0)}45%{opacity:1}75%,100%{opacity:0;transform:translate(30px,-24px)}}
+@media (prefers-reduced-motion: reduce){.m *{animation:none !important}}
+</style>
+
+<div style="width: 1760px; height: 1100px; box-sizing: border-box; padding: 56px 64px; background: #0d0f14; font-family: Nunito, sans-serif; color: #eef0f3; display: flex; flex-direction: column; gap: 24px">
+<svg aria-hidden="true" width="0" height="0" style="position: absolute"><defs><filter id="glow" filterUnits="userSpaceOnUse" x="-80" y="-80" width="500" height="500"><feGaussianBlur stdDeviation="5"></feGaussianBlur></filter><filter id="bigglow" filterUnits="userSpaceOnUse" x="-80" y="-80" width="500" height="500"><feGaussianBlur stdDeviation="10"></feGaussianBlur></filter></defs></svg>
+<div style="display: flex; align-items: flex-end; justify-content: space-between">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="font-family: Poppins, sans-serif; font-weight: 700; font-size: 40px; letter-spacing: -1.5px; line-height: 1.1">Motion tests</div>
+<div style="font-size: 17px; color: #a3acbd">Looping sketches of each stage. Top row powers up, bottom row powers down</div>
+</div>
+<div style="font-weight: 800; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: #2dd4bf">Round 8 · animated</div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 18px; flex-grow: 1">
+
+<div style="background: #161a23; border: 1px solid #262b38; border-radius: 20px; padding: 12px 12px 16px; display: flex; flex-direction: column; gap: 10px">
+<div style="flex-grow: 1; background: #1c2130; border-radius: 14px; display: flex; align-items: center; justify-content: center">
+<svg class="m" viewBox="-20 -30 240 300" width="300" height="340" role="img" aria-label="Base: breathing gently, blinking, floppy ear swaying"><ellipse cx="100" cy="252" rx="46" ry="6" fill="#000000" opacity="0.3"></ellipse><g class="breathe"><ellipse cx="86" cy="240" rx="14" ry="8" fill="#454c5e"></ellipse><ellipse cx="114" cy="240" rx="14" ry="8" fill="#454c5e"></ellipse><rect x="70" y="168" width="60" height="70" rx="28" fill="#2a2f3d"></rect><circle cx="62" cy="212" r="10" fill="#353b4b"></circle><circle cx="138" cy="212" r="10" fill="#353b4b"></circle><g transform="rotate(-10 77 90)"><rect x="64" y="10" width="26" height="80" rx="13" fill="#2a2f3d"></rect><rect x="71" y="22" width="12" height="50" rx="6" fill="#454c5e"></rect></g><g class="sway"><g transform="rotate(62 123 90)"><rect x="110" y="10" width="26" height="80" rx="13" fill="#2a2f3d"></rect><rect x="117" y="22" width="12" height="50" rx="6" fill="#454c5e"></rect></g></g><circle cx="100" cy="122" r="62" fill="#2a2f3d"></circle><rect x="50" y="100" width="100" height="42" rx="21" fill="#0d0f14" stroke="#454c5e" stroke-width="2"></rect><g class="blink"><g filter="url(#glow)" fill="#2dd4bf"><circle cx="79" cy="121" r="12"></circle><circle cx="121" cy="121" r="12"></circle></g><g fill="#a7f3d0"><circle cx="79" cy="121" r="9"></circle><circle cx="121" cy="121" r="9"></circle></g><g fill="#ffffff"><circle cx="83" cy="117" r="3.5"></circle><circle cx="125" cy="117" r="3.5"></circle></g></g><path d="M90 158 Q100 166 110 158" fill="none" stroke="#5b6377" stroke-width="3.5" stroke-linecap="round"></path></g></svg>
+</div>
+<div style="padding: 0 4px"><div style="font-weight: 800; font-size: 17px">Up 1 · Base idle</div><div style="font-size: 13px; color: #a3acbd">Breathes, blinks, floppy ear sways. 3 s loop</div></div>
+</div>
+
+<div style="background: #161a23; border: 1px solid #262b38; border-radius: 20px; padding: 12px 12px 16px; display: flex; flex-direction: column; gap: 10px">
+<div style="flex-grow: 1; background: #1c2130; border-radius: 14px; display: flex; align-items: center; justify-content: center; overflow: hidden">
+<svg class="m" viewBox="-20 -30 240 300" width="300" height="340" role="img" aria-label="Powered up: the floppy ear snaps upright, ears light up, teal aura bursts out and pulses, body trembles"><g class="auraup"><path class="aura" d="M100 -6 L114 36 L142 10 L140 56 L174 42 L158 92 L190 98 L164 134 L192 168 L158 176 L172 220 L132 212 L100 236 L68 212 L28 220 L42 176 L8 168 L36 134 L10 98 L42 92 L26 42 L60 56 L58 10 L86 36Z" fill="#2dd4bf" opacity="0.6" filter="url(#bigglow)"></path></g><path class="flash" d="M14 60 L26 76 L18 80 L32 100" fill="none" stroke="#a7f3d0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path><path class="flash2" d="M186 120 L174 136 L184 140 L170 160" fill="none" stroke="#a7f3d0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path><g class="shake"><ellipse cx="86" cy="240" rx="14" ry="8" fill="#454c5e"></ellipse><ellipse cx="114" cy="240" rx="14" ry="8" fill="#454c5e"></ellipse><rect x="70" y="168" width="60" height="70" rx="28" fill="#2a2f3d"></rect><circle cx="60" cy="214" r="11" fill="#353b4b"></circle><circle cx="140" cy="214" r="11" fill="#353b4b"></circle><g transform="rotate(-4 77 90)"><rect x="64" y="4" width="26" height="86" rx="13" fill="#2a2f3d"></rect><rect x="71" y="16" width="12" height="56" rx="6" fill="#454c5e"></rect><rect class="glowin" x="71" y="16" width="12" height="56" rx="6" fill="#a7f3d0"></rect></g><g class="snap"><g transform="rotate(4 123 90)"><rect x="110" y="4" width="26" height="86" rx="13" fill="#2a2f3d"></rect><rect x="117" y="16" width="12" height="56" rx="6" fill="#454c5e"></rect><rect class="glowin" x="117" y="16" width="12" height="56" rx="6" fill="#a7f3d0"></rect></g></g><circle cx="100" cy="122" r="62" fill="#2a2f3d"></circle><rect x="50" y="100" width="100" height="42" rx="21" fill="#0d0f14" stroke="#2dd4bf" stroke-width="2"></rect><g filter="url(#glow)" fill="#2dd4bf"><ellipse cx="79" cy="123" rx="13" ry="9"></ellipse><ellipse cx="121" cy="123" rx="13" ry="9"></ellipse></g><g fill="#ffffff"><ellipse cx="79" cy="123" rx="9" ry="6"></ellipse><ellipse cx="121" cy="123" rx="9" ry="6"></ellipse></g><path d="M58 106 L96 120 L96 102 L58 102Z" fill="#0d0f14"></path><path d="M142 106 L104 120 L104 102 L142 102Z" fill="#0d0f14"></path><path d="M86 156 Q100 168 114 156 L110 162 Q100 170 90 162Z" fill="#0d0f14"></path></g></svg>
+</div>
+<div style="padding: 0 4px"><div style="font-weight: 800; font-size: 17px">Up 2 · Powered up</div><div style="font-size: 13px; color: #a3acbd">Ear snaps up, ears ignite, aura bursts out. 3 s loop</div></div>
+</div>
+
+<div style="background: #161a23; border: 1px solid #262b38; border-radius: 20px; padding: 12px 12px 16px; display: flex; flex-direction: column; gap: 10px">
+<div style="flex-grow: 1; background: #1c2130; border-radius: 14px; display: flex; align-items: center; justify-content: center; overflow: hidden">
+<svg class="m" viewBox="-20 -30 240 300" width="300" height="340" role="img" aria-label="Max power: teal and gold auras pulsing, lightning flashing, rocks floating upward, whole body shaking"><path class="aura" d="M100 -30 L120 24 L158 -16 L152 46 L200 22 L178 84 L222 88 L186 130 L226 174 L178 184 L200 240 L142 226 L100 262 L58 226 L0 240 L22 184 L-26 174 L14 130 L-22 88 L22 84 L0 22 L48 46 L42 -16 L80 24Z" fill="#2dd4bf" opacity="0.5" filter="url(#bigglow)"></path><path class="gold" d="M100 0 L114 40 L140 16 L138 60 L170 48 L154 96 L184 102 L160 136 L186 168 L154 176 L166 216 L130 208 L100 230 L70 208 L34 216 L46 176 L14 168 L40 136 L16 102 L46 96 L30 48 L62 60 L60 16 L86 40Z" fill="#fde68a" opacity="0.5"></path><path class="flash" d="M6 40 L22 62 L10 66 L28 94" fill="none" stroke="#fde68a" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"></path><path class="flash2" d="M196 60 L180 82 L192 86 L176 112" fill="none" stroke="#a7f3d0" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"></path><path class="rise" d="M8 232 L22 226 L26 238 L12 242Z" fill="#454c5e"></path><path class="rise2" d="M180 240 L194 236 L196 248 L182 250Z" fill="#454c5e"></path><path class="rise3" d="M40 246 L50 242 L52 252Z" fill="#454c5e"></path><g class="shake"><ellipse cx="86" cy="240" rx="14" ry="8" fill="#454c5e"></ellipse><ellipse cx="114" cy="240" rx="14" ry="8" fill="#454c5e"></ellipse><rect x="70" y="168" width="60" height="70" rx="28" fill="#2a2f3d"></rect><path class="flicker" d="M84 182 L96 200 L88 206 L104 228" fill="none" stroke="#2dd4bf" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="58" cy="212" r="12" fill="#353b4b"></circle><circle cx="142" cy="212" r="12" fill="#353b4b"></circle><g transform="rotate(-2 77 90)"><rect x="64" y="-2" width="26" height="92" rx="13" fill="#2a2f3d"></rect><rect x="71" y="10" width="12" height="62" rx="6" fill="#fde68a" filter="url(#glow)"></rect><rect x="71" y="10" width="12" height="62" rx="6" fill="#fffbeb"></rect></g><g transform="rotate(2 123 90)"><rect x="110" y="-2" width="26" height="92" rx="13" fill="#2a2f3d"></rect><rect x="117" y="10" width="12" height="62" rx="6" fill="#fde68a" filter="url(#glow)"></rect><rect x="117" y="10" width="12" height="62" rx="6" fill="#fffbeb"></rect></g><circle cx="100" cy="122" r="62" fill="#2a2f3d"></circle><rect x="50" y="100" width="100" height="42" rx="21" fill="#0d0f14" stroke="#fde68a" stroke-width="2.5"></rect><g filter="url(#bigglow)" fill="#fde68a"><ellipse cx="79" cy="123" rx="14" ry="10"></ellipse><ellipse cx="121" cy="123" rx="14" ry="10"></ellipse></g><g fill="#ffffff"><ellipse cx="79" cy="123" rx="10" ry="6.5"></ellipse><ellipse cx="121" cy="123" rx="10" ry="6.5"></ellipse></g><path d="M58 104 L96 120 L96 102 L58 102Z" fill="#0d0f14"></path><path d="M142 104 L104 120 L104 102 L142 102Z" fill="#0d0f14"></path><path d="M80 154 Q100 176 120 154 Z" fill="#0d0f14"></path></g></svg>
+</div>
+<div style="padding: 0 4px"><div style="font-weight: 800; font-size: 17px">Up 3 · Max power</div><div style="font-size: 13px; color: #a3acbd">Gold surges, lightning, rocks float, nonstop shake</div></div>
+</div>
+
+<div style="background: #161a23; border: 1px solid #262b38; border-radius: 20px; padding: 12px 12px 16px; display: flex; flex-direction: column; gap: 10px">
+<div style="flex-grow: 1; background: #1c2130; border-radius: 14px; display: flex; align-items: center; justify-content: center">
+<svg class="m" viewBox="-20 -30 240 300" width="300" height="340" role="img" aria-label="Welp: shrugging arms up and down, head bobbing with a tilt, sweat drop sliding"><ellipse cx="100" cy="252" rx="46" ry="6" fill="#000000" opacity="0.3"></ellipse><ellipse cx="86" cy="240" rx="14" ry="8" fill="#454c5e"></ellipse><ellipse cx="114" cy="240" rx="14" ry="8" fill="#454c5e"></ellipse><rect x="70" y="170" width="60" height="68" rx="28" fill="#2a2f3d"></rect><g class="shrug"><path d="M72 192 Q50 186 40 166" fill="none" stroke="#2a2f3d" stroke-width="16" stroke-linecap="round"></path><path d="M128 192 Q150 186 160 166" fill="none" stroke="#2a2f3d" stroke-width="16" stroke-linecap="round"></path><circle cx="38" cy="162" r="10" fill="#353b4b"></circle><circle cx="162" cy="162" r="10" fill="#353b4b"></circle></g><g class="bob"><g transform="rotate(-70 77 90)"><rect x="64" y="10" width="26" height="80" rx="13" fill="#2a2f3d"></rect><rect x="71" y="22" width="12" height="50" rx="6" fill="#454c5e"></rect></g><g transform="rotate(70 123 90)"><rect x="110" y="10" width="26" height="80" rx="13" fill="#2a2f3d"></rect><rect x="117" y="22" width="12" height="50" rx="6" fill="#454c5e"></rect></g><circle cx="100" cy="124" r="62" fill="#2a2f3d"></circle><rect x="50" y="102" width="100" height="42" rx="21" fill="#0d0f14" stroke="#454c5e" stroke-width="2"></rect><g filter="url(#glow)" fill="#2dd4bf"><ellipse cx="79" cy="126" rx="11" ry="6"></ellipse><ellipse cx="121" cy="126" rx="11" ry="6"></ellipse></g><g fill="#a7f3d0"><ellipse cx="79" cy="126" rx="8" ry="4"></ellipse><ellipse cx="121" cy="126" rx="8" ry="4"></ellipse></g><path d="M64 120 L94 120 L94 108 L64 108Z" fill="#0d0f14"></path><path d="M106 120 L136 120 L136 108 L106 108Z" fill="#0d0f14"></path><path d="M90 162 Q100 158 110 162" fill="none" stroke="#5b6377" stroke-width="3.5" stroke-linecap="round"></path><path class="drip" d="M150 70 C144 80 144 88 150 90 C156 88 156 80 150 70Z" fill="#7dd3fc"></path></g><text x="100" y="-6" text-anchor="middle" font-family="Poppins, sans-serif" font-weight="700" font-size="26" fill="#a3acbd">welp.</text></svg>
+</div>
+<div style="padding: 0 4px"><div style="font-weight: 800; font-size: 17px">Down 1 · Welp</div><div style="font-size: 13px; color: #a3acbd">Double shrug, head tilt, sweat drop slides. 2.4 s loop</div></div>
+</div>
+
+<div style="background: #161a23; border: 1px solid #262b38; border-radius: 20px; padding: 12px 12px 16px; display: flex; flex-direction: column; gap: 10px">
+<div style="flex-grow: 1; background: #1c2130; border-radius: 14px; display: flex; align-items: center; justify-content: center">
+<svg class="m" viewBox="-20 -30 240 300" width="300" height="340" role="img" aria-label="Low battery: slowly sagging, eye glow flickering, last red battery bar blinking"><g transform="translate(66 -22)"><rect x="0" y="0" width="58" height="28" rx="6" fill="none" stroke="#a3acbd" stroke-width="3"></rect><rect x="58" y="9" width="6" height="10" rx="2" fill="#a3acbd"></rect><rect class="batt" x="5" y="5" width="10" height="18" rx="2" fill="#f87171"></rect></g><ellipse cx="100" cy="252" rx="54" ry="6" fill="#000000" opacity="0.3"></ellipse><ellipse cx="80" cy="242" rx="16" ry="7" fill="#454c5e"></ellipse><ellipse cx="120" cy="242" rx="16" ry="7" fill="#454c5e"></ellipse><rect x="64" y="190" width="72" height="52" rx="26" fill="#2a2f3d"></rect><circle cx="62" cy="236" r="10" fill="#353b4b"></circle><circle cx="138" cy="236" r="10" fill="#353b4b"></circle><g class="sag"><g transform="translate(0 30)"><g transform="rotate(-150 77 90)"><rect x="64" y="10" width="26" height="80" rx="13" fill="#2a2f3d"></rect><rect x="71" y="22" width="12" height="50" rx="6" fill="#454c5e"></rect></g><g transform="rotate(150 123 90)"><rect x="110" y="10" width="26" height="80" rx="13" fill="#2a2f3d"></rect><rect x="117" y="22" width="12" height="50" rx="6" fill="#454c5e"></rect></g><circle cx="100" cy="122" r="62" fill="#2a2f3d"></circle><rect x="50" y="100" width="100" height="42" rx="21" fill="#0d0f14" stroke="#454c5e" stroke-width="2"></rect><g class="flicker" fill="#2dd4bf"><rect x="68" y="122" width="22" height="5" rx="2.5"></rect><rect x="110" y="122" width="22" height="5" rx="2.5"></rect></g><path d="M92 162 L108 162" stroke="#5b6377" stroke-width="3.5" stroke-linecap="round"></path></g></g></svg>
+</div>
+<div style="padding: 0 4px"><div style="font-weight: 800; font-size: 17px">Down 2 · Low battery</div><div style="font-size: 13px; color: #a3acbd">Head sags, eyes flicker, last bar blinks. 3 s loop</div></div>
+</div>
+
+<div style="background: #161a23; border: 1px solid #262b38; border-radius: 20px; padding: 12px 12px 16px; display: flex; flex-direction: column; gap: 10px">
+<div style="flex-grow: 1; background: #1c2130; border-radius: 14px; display: flex; align-items: center; justify-content: center">
+<svg class="m" viewBox="-20 -30 240 300" width="300" height="340" role="img" aria-label="Puddle: he deflates from standing into a flat pancake, a pfft puffs out, then a tiny white flag pops up and waves"><text class="pfft" x="140" y="150" font-family="Poppins, sans-serif" font-weight="700" font-size="20" fill="#a3acbd">pfft</text><ellipse cx="100" cy="252" rx="60" ry="6" fill="#000000" opacity="0.3"></ellipse><g class="deflate"><ellipse cx="86" cy="240" rx="14" ry="8" fill="#454c5e"></ellipse><ellipse cx="114" cy="240" rx="14" ry="8" fill="#454c5e"></ellipse><rect x="70" y="168" width="60" height="70" rx="28" fill="#2a2f3d"></rect><circle cx="62" cy="212" r="10" fill="#353b4b"></circle><circle cx="138" cy="212" r="10" fill="#353b4b"></circle><g transform="rotate(-60 77 90)"><rect x="64" y="10" width="26" height="80" rx="13" fill="#2a2f3d"></rect><rect x="71" y="22" width="12" height="50" rx="6" fill="#454c5e"></rect></g><g transform="rotate(70 123 90)"><rect x="110" y="10" width="26" height="80" rx="13" fill="#2a2f3d"></rect><rect x="117" y="22" width="12" height="50" rx="6" fill="#454c5e"></rect></g><circle cx="100" cy="122" r="62" fill="#2a2f3d"></circle><rect x="50" y="100" width="100" height="42" rx="21" fill="#0d0f14" stroke="#454c5e" stroke-width="2"></rect><g fill="#2dd4bf" opacity="0.7"><ellipse cx="79" cy="122" rx="11" ry="5"></ellipse><ellipse cx="121" cy="122" rx="11" ry="5"></ellipse></g><ellipse cx="100" cy="162" rx="6" ry="7" fill="#0d0f14"></ellipse></g><g class="appear"><g class="wave"><path d="M92 150 L92 238" stroke="#a3acbd" stroke-width="3" stroke-linecap="round"></path><path d="M92 152 Q112 146 122 158 Q110 166 92 170Z" fill="#eef0f3"></path></g></g></svg>
+</div>
+<div style="padding: 0 4px"><div style="font-weight: 800; font-size: 17px">Down 3 · Puddle</div><div style="font-size: 13px; color: #a3acbd">Deflates flat, “pfft”, white flag pops up and waves. 4 s loop</div></div>
+</div>
+
+</div>
+</div>
+
+
+</body>
+</html>

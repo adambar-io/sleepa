@@ -72,6 +72,10 @@ A single-file local web app for viewing a Sleeper fantasy football roster with c
     - Every play's clock is kept; stats only for the charted players and their D/STs' players.
     - `wpcKick` throttles to 20 s per chart and repaints when the feed changes.
   - **Checks:** verified on frozen week 4 (tests/check.html 3j, fixture now carries the plays). Every offensive starter and kicker in The League and Last Minute League replays to Sleeper's exact points; D/STs within 1; BATTLEBALL IDPs short only by passes defended.
+- **Mascot by win probability (Oct 18 2026; owner design, mascot/sleepa-round8-animations.html):** six looping SVG poses picked by `mascotStage(p)`: <10% Puddle, 10–25 Low battery, 25–40 Welp, 40–60 Even (neutral), 60–85 Powered up, 85+ Max power (a decided game = 0 / 1).
+  - `mascotHTML(key, p, size, caption)`: lg on This week's matchup (`.vs-mc`, between the teams on desktop, its own row above them on phones), sm on Zone cards (`[data-mc-slot]` in `.zn-mid`, repainted only when the pose changes) and the Scoreboard matchup page, xs beside the win bar on my Scoreboard rows. `luWinProb()` = the Lineup bar's number.
+  - Plays a few loops when it first appears or changes pose (per key, `ctx.mascot`), then rests: `mascotSettle()` pauses every animation at the pose's `rest` second with the Web Animations API (a negative CSS delay on paused animations shows frame 0 in Chrome). Reduced motion: always resting. Classes and keyframes are prefixed `mc-` (the app already uses .shake etc.).
+  - Matchup view team names now wrap instead of truncating (names first).
 - **FAAB bids (Oct 16 2026; owner approved), Waiver value, FAAB leagues only (`settings.waiver_type === 2`):**
   - **League history:** `faabLoad` reads this season's transactions (one call per week, 6 h cache) into claims (`faabClaims`: won / lost to another owner / failed for roster room).
   - **Going rate:** `faabMarket` takes each week's winning bids, highest first; the price for a week's #1, #2, … add is the 25th / 50th / 75th percentile over the last 4 weeks with claims. Every sale also records how many owners bid and the runner-up.

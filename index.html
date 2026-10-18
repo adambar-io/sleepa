@@ -1052,6 +1052,60 @@
   .pf-stat .k{ font-size: 10.5px; color: var(--text-3); margin-top: 2px; text-transform: uppercase; letter-spacing: .07em; font-weight: 600; }
   .pf-grid{ display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 18px; align-items: start; }
   .pf-grid.solo{ grid-template-columns: minmax(0, 1fr); }
+  /* The mascot (mascot/sleepa-round8-animations.html) */
+  .mc{ display: inline-flex; flex-direction: column; align-items: center; gap: 2px; flex: none; }
+  .mc svg{ display: block; overflow: visible; } .mc svg *{ transform-box: view-box; }
+  .mc-lg svg{ width: 112px; height: 140px; } .mc-sm svg{ width: 44px; height: 55px; } .mc-xs svg{ width: 24px; height: 30px; }
+  .mc small{ font-size: 10.5px; font-weight: 700; color: var(--text-3); white-space: nowrap; letter-spacing: .02em; }
+  .vs-head{ grid-template-areas: "me mc op" "me mid op"; } .vs-head > .vs-team.me{ grid-area: me; } .vs-head > .vs-team.opp{ grid-area: op; } .vs-head > .vs-mid{ grid-area: mid; } .vs-mc{ grid-area: mc; justify-self: center; } .vs-mc:empty{ display: none; } .zn-mid.has-mc .zn-vs{ font-size: 11px; }
+  .am-dvs{ display: inline-flex; flex-direction: column; align-items: center; gap: 2px; }
+  .am-wpm{ grid-area: wp; display: flex; align-items: center; gap: 6px; min-width: 0; } .am-wpm .am-wp{ flex: 1; min-width: 0; }
+  @media (max-width: 600px){ .mc-lg svg{ width: 72px; height: 90px; } .vs-head{ grid-template-areas: "mc mc mc" "me mid op"; } }
+  .mc-breathe{transform-origin:100px 248px;animation:mc-breathe 3s ease-in-out infinite}
+  .mc-blink{transform-origin:100px 121px;animation:mc-blink 4s infinite}
+  .mc-sway{transform-origin:123px 90px;animation:mc-sway 3s ease-in-out infinite}
+  .mc-snap{transform-origin:123px 90px;animation:mc-snap 3s ease-out infinite}
+  .mc-glowin{animation:mc-glowin 3s infinite}
+  .mc-aura{transform-origin:100px 130px;animation:mc-aura 1.2s ease-in-out infinite}
+  .mc-auraup{transform-origin:100px 130px;animation:mc-auraup 3s ease-out infinite}
+  .mc-gold{transform-origin:100px 130px;animation:mc-gold .9s ease-in-out infinite}
+  .mc-shake{animation:mc-shake .25s linear infinite}
+  .mc-flash{animation:mc-flash 1.4s infinite}
+  .mc-flash2{animation:mc-flash 1.1s .5s infinite}
+  .mc-rise{animation:mc-rise 2.2s ease-in infinite}
+  .mc-rise2{animation:mc-rise 2.2s .8s ease-in infinite}
+  .mc-rise3{animation:mc-rise 2.2s 1.5s ease-in infinite}
+  .mc-shrug{animation:mc-shrug 2.4s ease-in-out infinite}
+  .mc-bob{transform-origin:100px 184px;animation:mc-bob 2.4s ease-in-out infinite}
+  .mc-drip{animation:mc-drip 2.4s ease-in infinite}
+  .mc-sag{animation:mc-sag 3s ease-in-out infinite}
+  .mc-flicker{animation:mc-flicker 2s infinite}
+  .mc-batt{animation:mc-batt 1s steps(1) infinite}
+  .mc-deflate{transform-origin:100px 248px;animation:mc-deflate 4s ease-in-out infinite}
+  .mc-appear{animation:mc-appear 4s infinite}
+  .mc-wave{transform-origin:92px 196px;animation:mc-wave .8s ease-in-out infinite}
+  .mc-pfft{animation:mc-pfft 4s infinite}
+  @keyframes mc-breathe{0%,100%{transform:scale(1,1)}50%{transform:scale(1.03,.97)}}
+  @keyframes mc-blink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+  @keyframes mc-sway{0%,100%{transform:rotate(0deg)}50%{transform:rotate(10deg)}}
+  @keyframes mc-snap{0%,25%{transform:rotate(58deg)}33%{transform:rotate(-8deg)}38%,90%{transform:rotate(0deg)}100%{transform:rotate(58deg)}}
+  @keyframes mc-glowin{0%,28%{opacity:0}36%,90%{opacity:1}100%{opacity:0}}
+  @keyframes mc-auraup{0%,28%{transform:scale(.3);opacity:0}38%{transform:scale(1.1);opacity:.9}50%,90%{transform:scale(1);opacity:.7}100%{transform:scale(.3);opacity:0}}
+  @keyframes mc-aura{0%,100%{transform:scale(.95);opacity:.55}50%{transform:scale(1.07);opacity:.95}}
+  @keyframes mc-gold{0%,100%{transform:scale(.9);opacity:.3}50%{transform:scale(1.05);opacity:.75}}
+  @keyframes mc-shake{0%,100%{transform:translate(0,0)}25%{transform:translate(-2px,1px)}50%{transform:translate(2px,-1px)}75%{transform:translate(-1px,-2px)}}
+  @keyframes mc-flash{0%,40%,100%{opacity:0}45%,55%{opacity:1}}
+  @keyframes mc-rise{0%{transform:translateY(0);opacity:0}20%{opacity:1}100%{transform:translateY(-140px);opacity:0}}
+  @keyframes mc-shrug{0%,60%,100%{transform:translateY(0)}20%,40%{transform:translateY(-14px)}}
+  @keyframes mc-bob{0%,60%,100%{transform:translateY(0) rotate(0deg)}20%,40%{transform:translateY(-5px) rotate(-5deg)}}
+  @keyframes mc-drip{0%{transform:translateY(0);opacity:0}20%{opacity:1}100%{transform:translateY(34px);opacity:0}}
+  @keyframes mc-sag{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+  @keyframes mc-flicker{0%,100%{opacity:.5}10%{opacity:.1}12%{opacity:.6}50%{opacity:.25}52%{opacity:.7}}
+  @keyframes mc-batt{0%{opacity:1}50%{opacity:0}}
+  @keyframes mc-deflate{0%,15%{transform:scale(1,1)}50%,85%{transform:scale(1.55,.2)}100%{transform:scale(1,1)}}
+  @keyframes mc-appear{0%,50%{opacity:0}58%,85%{opacity:1}92%,100%{opacity:0}}
+  @keyframes mc-wave{0%,100%{transform:rotate(-10deg)}50%{transform:rotate(14deg)}}
+  @keyframes mc-pfft{0%,30%{opacity:0;transform:translate(0,0)}45%{opacity:1}75%,100%{opacity:0;transform:translate(30px,-24px)}}
   /* Win probability over the week */
   .wpc{ padding: 14px 16px 16px; margin: 0 0 14px; }
   .wpc-h{ display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; } .wpc-h > b:first-child{ font-size: 15px; white-space: nowrap; }
@@ -7488,6 +7542,72 @@
     if(b && myMatchup()) openMax({ kind: 'opp' }, b);
   });
 
+  // ============ The mascot: how your matchup is going ============
+  // Six looping poses (mascot/sleepa-round8-animations.html, owner's design) chosen by your win probability:
+  // under 10% Puddle · 10–25 Low battery · 25–40 Welp · 40–60 Base (neutral) · 60–85 Powered up · 85+ Max power. A
+  // decided game counts as 0 or 1. Each pose plays a few loops when it first appears (or changes), then rests on a good
+  // frame (rest = the second the pose freezes at: every animation in it is paused at that time with the Web Animations
+  // API, so a re-render lands on the same frame). Reduced motion: always resting.
+  const MASCOT = [
+    { id: 'puddle', below: 0.10, name: 'Puddle', rest: 10.8 },
+    { id: 'battery', below: 0.25, name: 'Low battery', rest: 6.2 },
+    { id: 'welp', below: 0.40, name: 'Welp', rest: 5.0 },
+    { id: 'base', below: 0.60, name: 'Even', rest: 7.0 },
+    { id: 'power', below: 0.85, name: 'Powered up', rest: 7.8 },
+    { id: 'max', below: 2, name: 'Max power', rest: 6.0 },
+  ];
+  const MASCOT_SVG = {
+    base: '<defs><filter id="mcglow" filterUnits="userSpaceOnUse" x="-80" y="-80" width="500" height="500"><feGaussianBlur stdDeviation="5"/></filter><filter id="mcbigglow" filterUnits="userSpaceOnUse" x="-80" y="-80" width="500" height="500"><feGaussianBlur stdDeviation="10"/></filter></defs><ellipse cx="100" cy="252" rx="46" ry="6" fill="#000000" opacity="0.3"/><g class="mc-breathe"><ellipse cx="86" cy="240" rx="14" ry="8" fill="#454c5e"/><ellipse cx="114" cy="240" rx="14" ry="8" fill="#454c5e"/><rect x="70" y="168" width="60" height="70" rx="28" fill="#2a2f3d"/><circle cx="62" cy="212" r="10" fill="#353b4b"/><circle cx="138" cy="212" r="10" fill="#353b4b"/><g transform="rotate(-10 77 90)"><rect x="64" y="10" width="26" height="80" rx="13" fill="#2a2f3d"/><rect x="71" y="22" width="12" height="50" rx="6" fill="#454c5e"/></g><g class="mc-sway"><g transform="rotate(62 123 90)"><rect x="110" y="10" width="26" height="80" rx="13" fill="#2a2f3d"/><rect x="117" y="22" width="12" height="50" rx="6" fill="#454c5e"/></g></g><circle cx="100" cy="122" r="62" fill="#2a2f3d"/><rect x="50" y="100" width="100" height="42" rx="21" fill="#0d0f14" stroke="#454c5e" stroke-width="2"/><g class="mc-blink"><g filter="url(#mcglow)" fill="#2dd4bf"><circle cx="79" cy="121" r="12"/><circle cx="121" cy="121" r="12"/></g><g fill="#a7f3d0"><circle cx="79" cy="121" r="9"/><circle cx="121" cy="121" r="9"/></g><g fill="#ffffff"><circle cx="83" cy="117" r="3.5"/><circle cx="125" cy="117" r="3.5"/></g></g><path d="M90 158 Q100 166 110 158" fill="none" stroke="#5b6377" stroke-width="3.5" stroke-linecap="round"/></g>',
+    power: '<defs><filter id="mcglow" filterUnits="userSpaceOnUse" x="-80" y="-80" width="500" height="500"><feGaussianBlur stdDeviation="5"/></filter><filter id="mcbigglow" filterUnits="userSpaceOnUse" x="-80" y="-80" width="500" height="500"><feGaussianBlur stdDeviation="10"/></filter></defs><g class="mc-auraup"><path class="mc-aura" d="M100 -6 L114 36 L142 10 L140 56 L174 42 L158 92 L190 98 L164 134 L192 168 L158 176 L172 220 L132 212 L100 236 L68 212 L28 220 L42 176 L8 168 L36 134 L10 98 L42 92 L26 42 L60 56 L58 10 L86 36Z" fill="#2dd4bf" opacity="0.6" filter="url(#mcbigglow)"/></g><path class="mc-flash" d="M14 60 L26 76 L18 80 L32 100" fill="none" stroke="#a7f3d0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path class="mc-flash2" d="M186 120 L174 136 L184 140 L170 160" fill="none" stroke="#a7f3d0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><g class="mc-shake"><ellipse cx="86" cy="240" rx="14" ry="8" fill="#454c5e"/><ellipse cx="114" cy="240" rx="14" ry="8" fill="#454c5e"/><rect x="70" y="168" width="60" height="70" rx="28" fill="#2a2f3d"/><circle cx="60" cy="214" r="11" fill="#353b4b"/><circle cx="140" cy="214" r="11" fill="#353b4b"/><g transform="rotate(-4 77 90)"><rect x="64" y="4" width="26" height="86" rx="13" fill="#2a2f3d"/><rect x="71" y="16" width="12" height="56" rx="6" fill="#454c5e"/><rect class="mc-glowin" x="71" y="16" width="12" height="56" rx="6" fill="#a7f3d0"/></g><g class="mc-snap"><g transform="rotate(4 123 90)"><rect x="110" y="4" width="26" height="86" rx="13" fill="#2a2f3d"/><rect x="117" y="16" width="12" height="56" rx="6" fill="#454c5e"/><rect class="mc-glowin" x="117" y="16" width="12" height="56" rx="6" fill="#a7f3d0"/></g></g><circle cx="100" cy="122" r="62" fill="#2a2f3d"/><rect x="50" y="100" width="100" height="42" rx="21" fill="#0d0f14" stroke="#2dd4bf" stroke-width="2"/><g filter="url(#mcglow)" fill="#2dd4bf"><ellipse cx="79" cy="123" rx="13" ry="9"/><ellipse cx="121" cy="123" rx="13" ry="9"/></g><g fill="#ffffff"><ellipse cx="79" cy="123" rx="9" ry="6"/><ellipse cx="121" cy="123" rx="9" ry="6"/></g><path d="M58 106 L96 120 L96 102 L58 102Z" fill="#0d0f14"/><path d="M142 106 L104 120 L104 102 L142 102Z" fill="#0d0f14"/><path d="M86 156 Q100 168 114 156 L110 162 Q100 170 90 162Z" fill="#0d0f14"/></g>',
+    max: '<defs><filter id="mcglow" filterUnits="userSpaceOnUse" x="-80" y="-80" width="500" height="500"><feGaussianBlur stdDeviation="5"/></filter><filter id="mcbigglow" filterUnits="userSpaceOnUse" x="-80" y="-80" width="500" height="500"><feGaussianBlur stdDeviation="10"/></filter></defs><path class="mc-aura" d="M100 -30 L120 24 L158 -16 L152 46 L200 22 L178 84 L222 88 L186 130 L226 174 L178 184 L200 240 L142 226 L100 262 L58 226 L0 240 L22 184 L-26 174 L14 130 L-22 88 L22 84 L0 22 L48 46 L42 -16 L80 24Z" fill="#2dd4bf" opacity="0.5" filter="url(#mcbigglow)"/><path class="mc-gold" d="M100 0 L114 40 L140 16 L138 60 L170 48 L154 96 L184 102 L160 136 L186 168 L154 176 L166 216 L130 208 L100 230 L70 208 L34 216 L46 176 L14 168 L40 136 L16 102 L46 96 L30 48 L62 60 L60 16 L86 40Z" fill="#fde68a" opacity="0.5"/><path class="mc-flash" d="M6 40 L22 62 L10 66 L28 94" fill="none" stroke="#fde68a" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path class="mc-flash2" d="M196 60 L180 82 L192 86 L176 112" fill="none" stroke="#a7f3d0" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path class="mc-rise" d="M8 232 L22 226 L26 238 L12 242Z" fill="#454c5e"/><path class="mc-rise2" d="M180 240 L194 236 L196 248 L182 250Z" fill="#454c5e"/><path class="mc-rise3" d="M40 246 L50 242 L52 252Z" fill="#454c5e"/><g class="mc-shake"><ellipse cx="86" cy="240" rx="14" ry="8" fill="#454c5e"/><ellipse cx="114" cy="240" rx="14" ry="8" fill="#454c5e"/><rect x="70" y="168" width="60" height="70" rx="28" fill="#2a2f3d"/><path class="mc-flicker" d="M84 182 L96 200 L88 206 L104 228" fill="none" stroke="#2dd4bf" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="58" cy="212" r="12" fill="#353b4b"/><circle cx="142" cy="212" r="12" fill="#353b4b"/><g transform="rotate(-2 77 90)"><rect x="64" y="-2" width="26" height="92" rx="13" fill="#2a2f3d"/><rect x="71" y="10" width="12" height="62" rx="6" fill="#fde68a" filter="url(#mcglow)"/><rect x="71" y="10" width="12" height="62" rx="6" fill="#fffbeb"/></g><g transform="rotate(2 123 90)"><rect x="110" y="-2" width="26" height="92" rx="13" fill="#2a2f3d"/><rect x="117" y="10" width="12" height="62" rx="6" fill="#fde68a" filter="url(#mcglow)"/><rect x="117" y="10" width="12" height="62" rx="6" fill="#fffbeb"/></g><circle cx="100" cy="122" r="62" fill="#2a2f3d"/><rect x="50" y="100" width="100" height="42" rx="21" fill="#0d0f14" stroke="#fde68a" stroke-width="2.5"/><g filter="url(#mcbigglow)" fill="#fde68a"><ellipse cx="79" cy="123" rx="14" ry="10"/><ellipse cx="121" cy="123" rx="14" ry="10"/></g><g fill="#ffffff"><ellipse cx="79" cy="123" rx="10" ry="6.5"/><ellipse cx="121" cy="123" rx="10" ry="6.5"/></g><path d="M58 104 L96 120 L96 102 L58 102Z" fill="#0d0f14"/><path d="M142 104 L104 120 L104 102 L142 102Z" fill="#0d0f14"/><path d="M80 154 Q100 176 120 154 Z" fill="#0d0f14"/></g>',
+    welp: '<defs><filter id="mcglow" filterUnits="userSpaceOnUse" x="-80" y="-80" width="500" height="500"><feGaussianBlur stdDeviation="5"/></filter><filter id="mcbigglow" filterUnits="userSpaceOnUse" x="-80" y="-80" width="500" height="500"><feGaussianBlur stdDeviation="10"/></filter></defs><ellipse cx="100" cy="252" rx="46" ry="6" fill="#000000" opacity="0.3"/><ellipse cx="86" cy="240" rx="14" ry="8" fill="#454c5e"/><ellipse cx="114" cy="240" rx="14" ry="8" fill="#454c5e"/><rect x="70" y="170" width="60" height="68" rx="28" fill="#2a2f3d"/><g class="mc-shrug"><path d="M72 192 Q50 186 40 166" fill="none" stroke="#2a2f3d" stroke-width="16" stroke-linecap="round"/><path d="M128 192 Q150 186 160 166" fill="none" stroke="#2a2f3d" stroke-width="16" stroke-linecap="round"/><circle cx="38" cy="162" r="10" fill="#353b4b"/><circle cx="162" cy="162" r="10" fill="#353b4b"/></g><g class="mc-bob"><g transform="rotate(-70 77 90)"><rect x="64" y="10" width="26" height="80" rx="13" fill="#2a2f3d"/><rect x="71" y="22" width="12" height="50" rx="6" fill="#454c5e"/></g><g transform="rotate(70 123 90)"><rect x="110" y="10" width="26" height="80" rx="13" fill="#2a2f3d"/><rect x="117" y="22" width="12" height="50" rx="6" fill="#454c5e"/></g><circle cx="100" cy="124" r="62" fill="#2a2f3d"/><rect x="50" y="102" width="100" height="42" rx="21" fill="#0d0f14" stroke="#454c5e" stroke-width="2"/><g filter="url(#mcglow)" fill="#2dd4bf"><ellipse cx="79" cy="126" rx="11" ry="6"/><ellipse cx="121" cy="126" rx="11" ry="6"/></g><g fill="#a7f3d0"><ellipse cx="79" cy="126" rx="8" ry="4"/><ellipse cx="121" cy="126" rx="8" ry="4"/></g><path d="M64 120 L94 120 L94 108 L64 108Z" fill="#0d0f14"/><path d="M106 120 L136 120 L136 108 L106 108Z" fill="#0d0f14"/><path d="M90 162 Q100 158 110 162" fill="none" stroke="#5b6377" stroke-width="3.5" stroke-linecap="round"/><path class="mc-drip" d="M150 70 C144 80 144 88 150 90 C156 88 156 80 150 70Z" fill="#7dd3fc"/></g><text x="100" y="-6" text-anchor="middle" font-family="inherit" font-weight="700" font-size="26" fill="#a3acbd">welp.</text>',
+    battery: '<defs><filter id="mcglow" filterUnits="userSpaceOnUse" x="-80" y="-80" width="500" height="500"><feGaussianBlur stdDeviation="5"/></filter><filter id="mcbigglow" filterUnits="userSpaceOnUse" x="-80" y="-80" width="500" height="500"><feGaussianBlur stdDeviation="10"/></filter></defs><g transform="translate(66 -22)"><rect x="0" y="0" width="58" height="28" rx="6" fill="none" stroke="#a3acbd" stroke-width="3"/><rect x="58" y="9" width="6" height="10" rx="2" fill="#a3acbd"/><rect class="mc-batt" x="5" y="5" width="10" height="18" rx="2" fill="#f87171"/></g><ellipse cx="100" cy="252" rx="54" ry="6" fill="#000000" opacity="0.3"/><ellipse cx="80" cy="242" rx="16" ry="7" fill="#454c5e"/><ellipse cx="120" cy="242" rx="16" ry="7" fill="#454c5e"/><rect x="64" y="190" width="72" height="52" rx="26" fill="#2a2f3d"/><circle cx="62" cy="236" r="10" fill="#353b4b"/><circle cx="138" cy="236" r="10" fill="#353b4b"/><g class="mc-sag"><g transform="translate(0 30)"><g transform="rotate(-150 77 90)"><rect x="64" y="10" width="26" height="80" rx="13" fill="#2a2f3d"/><rect x="71" y="22" width="12" height="50" rx="6" fill="#454c5e"/></g><g transform="rotate(150 123 90)"><rect x="110" y="10" width="26" height="80" rx="13" fill="#2a2f3d"/><rect x="117" y="22" width="12" height="50" rx="6" fill="#454c5e"/></g><circle cx="100" cy="122" r="62" fill="#2a2f3d"/><rect x="50" y="100" width="100" height="42" rx="21" fill="#0d0f14" stroke="#454c5e" stroke-width="2"/><g class="mc-flicker" fill="#2dd4bf"><rect x="68" y="122" width="22" height="5" rx="2.5"/><rect x="110" y="122" width="22" height="5" rx="2.5"/></g><path d="M92 162 L108 162" stroke="#5b6377" stroke-width="3.5" stroke-linecap="round"/></g></g>',
+    puddle: '<defs><filter id="mcglow" filterUnits="userSpaceOnUse" x="-80" y="-80" width="500" height="500"><feGaussianBlur stdDeviation="5"/></filter><filter id="mcbigglow" filterUnits="userSpaceOnUse" x="-80" y="-80" width="500" height="500"><feGaussianBlur stdDeviation="10"/></filter></defs><text class="mc-pfft" x="140" y="150" font-family="inherit" font-weight="700" font-size="20" fill="#a3acbd">pfft</text><ellipse cx="100" cy="252" rx="60" ry="6" fill="#000000" opacity="0.3"/><g class="mc-deflate"><ellipse cx="86" cy="240" rx="14" ry="8" fill="#454c5e"/><ellipse cx="114" cy="240" rx="14" ry="8" fill="#454c5e"/><rect x="70" y="168" width="60" height="70" rx="28" fill="#2a2f3d"/><circle cx="62" cy="212" r="10" fill="#353b4b"/><circle cx="138" cy="212" r="10" fill="#353b4b"/><g transform="rotate(-60 77 90)"><rect x="64" y="10" width="26" height="80" rx="13" fill="#2a2f3d"/><rect x="71" y="22" width="12" height="50" rx="6" fill="#454c5e"/></g><g transform="rotate(70 123 90)"><rect x="110" y="10" width="26" height="80" rx="13" fill="#2a2f3d"/><rect x="117" y="22" width="12" height="50" rx="6" fill="#454c5e"/></g><circle cx="100" cy="122" r="62" fill="#2a2f3d"/><rect x="50" y="100" width="100" height="42" rx="21" fill="#0d0f14" stroke="#454c5e" stroke-width="2"/><g fill="#2dd4bf" opacity="0.7"><ellipse cx="79" cy="122" rx="11" ry="5"/><ellipse cx="121" cy="122" rx="11" ry="5"/></g><ellipse cx="100" cy="162" rx="6" ry="7" fill="#0d0f14"/></g><g class="mc-appear"><g class="mc-wave"><path d="M92 150 L92 238" stroke="#a3acbd" stroke-width="3" stroke-linecap="round"/><path d="M92 152 Q112 146 122 158 Q110 166 92 170Z" fill="#eef0f3"/></g></g>'
+  };
+  ctx.mascot = {};
+  function mascotStage(p){ return MASCOT.find(function(m){ return p < m.below; }) || MASCOT[MASCOT.length - 1]; }
+  // key: one per spot on screen (its pose timing survives re-renders); size: lg (matchup view), sm (Zone card,
+  // Scoreboard matchup), xs (Scoreboard row)
+  function mascotHTML(key, p, size, caption){
+    if(typeof p !== 'number' || isNaN(p)) return '';
+    const m = mascotStage(p), now = Date.now(), old = ctx.mascot[key];
+    const st = old && old.id === m.id ? old : (ctx.mascot[key] = { id: m.id, t0: now });
+    const rest = reduceMotion.matches || now - st.t0 >= m.rest * 1000;
+    if(!rest && !st.timer) st.timer = setTimeout(function(){
+      st.timer = null;
+      document.querySelectorAll('[data-mc="' + CSS.escape(key) + '"]').forEach(function(el){ if(el.getAttribute('data-mc-id') === st.id) el.classList.add('mc-rest'); });
+      mascotSettle();
+    }, m.rest * 1000 - (now - st.t0));
+    if(rest) setTimeout(mascotSettle, 0);
+    const pct = Math.round(p * 100) + '%';
+    return '<span class="mc mc-' + size + (rest ? ' mc-rest' : '') + '" data-mc="' + escapeHTML(key) + '" data-mc-id="' + m.id + '" role="img" aria-label="Sleepa: ' + m.name + ', ' + pct + ' to win" title="' + m.name + ' · ' + pct + ' to win">' +
+      '<svg viewBox="-20 -30 240 300" aria-hidden="true">' + MASCOT_SVG[m.id] + '</svg>' + (caption ? '<small>' + m.name + ' · ' + pct + '</small>' : '') + '</span>';
+  }
+  // pause every animation of a resting mascot at its rest second (once per element)
+  function mascotSettle(){
+    document.querySelectorAll('.mc.mc-rest:not([data-mc-done])').forEach(function(el){
+      const m = MASCOT.find(function(x){ return x.id === el.getAttribute('data-mc-id'); });
+      if(!m || !el.getAnimations) return;
+      el.setAttribute('data-mc-done', '');
+      el.getAnimations({ subtree: true }).forEach(function(a){ try{ a.pause(); a.currentTime = m.rest * 1000; }catch(e){} });
+    });
+  }
+  // my win probability in this league right now (the same number the Lineup bar shows)
+  function luWinProb(){
+    const mu = myMatchup();
+    if(!mu || !ctx.myRoster) return null;
+    if(weekStarted()){
+      const me = liveTeam(ctx.myRoster.roster_id), op = liveTeam(mu.rosterId);
+      const em = (ctx.matchups || []).find(function(x){ return x.roster_id === ctx.myRoster.roster_id; });
+      if(me && op && em){
+        if(!(me.pre + me.inG + op.pre + op.inG)) return Math.abs(me.pts - op.pts) < 0.005 ? 0.5 : me.pts > op.pts ? 1 : 0;
+        return winProb(wpTeam(em.starters), wpTeam(mu.starters));
+      }
+    }
+    const dirty = JSON.stringify(ctx.draftStarters) !== JSON.stringify(ctx.originalStarters);
+    return winProb(wpTeam(dirty ? ctx.draftStarters : ctx.originalStarters), wpTeam(mu.starters));
+  }
+
   // Matchup view: my lineup and my opponent's, slot by slot, side by side. Mine is my plan (it matches Sleeper when
   // I haven't changed anything). The side projecting more in a slot is green, the other red; holes on either side
   // (empty slot, bye, not startable) are called out.
@@ -7551,7 +7671,7 @@
     };
     const tone = Math.abs(d) < 0.005 ? '' : d > 0 ? ' up' : ' down';
     return '<div class="vs-view">' +
-      '<div class="vs-head">' +
+      '<div class="vs-head"><div class="vs-mc">' + safeHTML('Mascot', function(){ return mascotHTML('lu', luWinProb(), 'lg', true); }) + '</div>' +
         (live
           ? '<div class="vs-team me"><div class="vs-tn">' + teamAvHTML(ctx.myRoster.roster_id, 'mu-av') + '<span>' + escapeHTML(els.teamName.textContent || 'You') + '</span></div><div class="vs-tp num">' + live.me.pts.toFixed(2) + '</div>' +
               '<div class="vs-ts">Proj.&nbsp;final&nbsp;<b>' + live.me.fin.toFixed(2) + '</b> · ' + playsLeftText(live.me) + '</div></div>' +
@@ -7559,7 +7679,7 @@
             '<div class="vs-team opp"><div class="vs-tn">' + teamAvHTML(mu.rosterId, 'mu-av') + '<span>' + escapeHTML(mu.name) + '</span></div><div class="vs-tp num">' + live.op.pts.toFixed(2) + '</div><div class="vs-ts">Proj.&nbsp;final&nbsp;<b>' + live.op.fin.toFixed(2) + '</b> · ' + playsLeftText(live.op) + '</div></div>'
           : '<div class="vs-team me"><div class="vs-tn">' + teamAvHTML(ctx.myRoster.roster_id, 'mu-av') + '<span>' + escapeHTML(els.teamName.textContent || 'You') + '</span></div><div class="vs-tp num' + tone + '">' + myTotal.toFixed(2) + '</div>' +
               '<div class="vs-ts">' + (dirty ? 'Your plan · Sleeper ' + sumProj(ctx.originalStarters).toFixed(2) : 'Your Sleeper lineup') + '</div></div>' +
-            '<div class="vs-mid"><span>vs</span><small>Wk ' + ctx.week + '</small></div>' +
+            '<div class="vs-mid">' + '<span>vs</span><small>Wk ' + ctx.week + '</small></div>' +
             '<div class="vs-team opp"><div class="vs-tn">' + teamAvHTML(mu.rosterId, 'mu-av') + '<span>' + escapeHTML(mu.name) + '</span></div><div class="vs-tp num">' + oppTotal.toFixed(2) + '</div><div class="vs-ts">Their Sleeper lineup</div></div>') +
       '</div>' +
       '<div class="vs-sum' + tone + '">' + (Math.abs(d) < 0.005 ? (live ? 'Projected to finish dead even' : 'Dead even') : live ? 'Projected to ' + (d > 0 ? 'win' : 'lose') + ' by ' + Math.abs(d).toFixed(2) : 'You’re projected ' + marginText(d)) + ' · you win ' + myWins + ' of ' + ctx.rosterPositions.length + ' slots, they win ' + oppWins +
@@ -15441,7 +15561,7 @@
           '<div class="zn-lg-t"><b>' + escapeHTML(L.name) + '</b><span data-st></span></div><span class="zn-rzc" data-rzc hidden></span></div>' +
         '<div class="zn-board">' +
           '<div class="zn-side me"><div class="zn-team" data-tm="me"></div><div class="zn-num" data-n="me">—</div><div class="zn-cap" data-c="me"></div><div class="zn-sub" data-s="me"></div></div>' +
-          '<div class="zn-mid"><span class="zn-vs">vs</span><span class="zn-lc" aria-hidden="true">Lead change</span></div>' +
+          '<div class="zn-mid"><span data-mc-slot></span><span class="zn-vs">vs</span><span class="zn-lc" aria-hidden="true">Lead change</span></div>' +
           '<div class="zn-side them"><div class="zn-team" data-tm="opp"></div><div class="zn-num" data-n="opp">—</div><div class="zn-cap" data-c="opp"></div><div class="zn-sub" data-s="opp"></div></div>' +
         '</div>' +
         '<div class="zt-bar zn-sbar" data-bar hidden><span></span></div>' +
@@ -15558,6 +15678,12 @@
     pj.innerHTML = !a ? '' : a.kind === 'proj' ? '<span class="zt-lbl">PROJ</span> before kickoff' + (M.my.pre ? ' · ' + M.my.pre + ' to play' : '')
       : M.allFinal ? (M.opp ? (lead === 1 ? 'Won' : lead === -1 ? 'Lost' : 'Tied') : 'Final')
       : '<span class="zt-lbl">PROJ</span> ' + fmtPts(M.my.fin) + (M.opp ? ' – ' + fmtPts(M.opp.fin) : '') + (M.my.est || (M.opp && M.opp.est) ? ' est' : '') + ' · ' + M.my.pre + ' yet to play';
+    const mcs = card.querySelector('[data-mc-slot]');
+    if(mcs){
+      const mp = M.kind === 'ok' && M.my && M.opp ? (M.allFinal ? (M.my.pts > M.opp.pts + 0.004 ? 1 : M.opp.pts > M.my.pts + 0.004 ? 0 : 0.5) : winProb(amWpTeam(M.my), amWpTeam(M.opp))) : null;
+      const mid = mp === null ? '' : mascotStage(mp).id;
+      if(mcs._h !== mid){ mcs._h = mid; mcs.innerHTML = mp === null ? '' : safeHTML('Mascot', function(){ return mascotHTML('zn|' + L.id, mp, 'sm'); }); mcs.parentNode.classList.toggle('has-mc', !!mid); }
+    }
     const lch = zLcHTML(M);
     [card, tile].forEach(function(el){ const lc = el.querySelector('[data-lc]'); if(lc._h !== lch){ lc.innerHTML = lch; lc._h = lch; } });
     [[card, false], [tile, true]].forEach(function(x){ const el = x[0].querySelector('[data-ir]'), h = safeHTML('IR', function(){ return zIrHTML(M, x[1]); }); if(el._h !== h){ el.innerHTML = h; el._h = h; } });
@@ -16201,8 +16327,9 @@
     const lead = P.B && P.started ? (P.A.pts > P.B.pts + 0.004 ? 1 : P.B.pts > P.A.pts + 0.004 ? -1 : 0) : 0;
     return '<button type="button" class="am-mu' + (P.mine ? ' mine' : '') + (P.live ? ' live' : '') + (P.final ? ' final' : '') + '" data-am-mu="' + escapeHTML(P.L.id) + '|' + P.mid + '">' +
       amWhen(P) + '<span class="am-ts">' + amSideHTML(P.ta, P.A, P, lead === 1, P.mine) + (P.B ? amSideHTML(P.tb, P.B, P, lead === -1, false) : '<span class="am-t"><span class="am-tn dim">No opponent</span></span>') + '</span>' +
-      amWpBar(P) + '</button>';
+      (P.mine && P.B ? '<span class="am-wpm">' + safeHTML('Mascot', function(){ return mascotHTML('amr|' + P.L.id + '|' + P.mid, amPa(P), 'xs'); }) + amWpBar(P) + '</span>' : amWpBar(P)) + '</button>';
   }
+  function amPa(P){ return P.final ? (P.A.pts > P.B.pts + 0.004 ? 1 : P.B.pts > P.A.pts + 0.004 ? 0 : 0.5) : P.wp; }
   function amBoardHTML(){
     const ls = amLeagues(), sel = amSel();
     if(!ls.length) return '<div class="am-empty">' + (ctx.zone.leagues.length ? 'Loading your leagues…' : 'No leagues.') + '</div>';
@@ -16286,7 +16413,7 @@
     return '<div class="am-drill">' +
       '<div class="am-dh"><button type="button" class="pr-exit am-back" data-am-back>' + ICO.back + '<span>Scoreboard</span></button>' +
         '<div class="am-dt"><b>' + escapeHTML(P.ta.name) + (P.tb ? ' vs ' + escapeHTML(P.tb.name) : '') + '</b><span>' + escapeHTML(L.name + ' · ' + amFormat(P.meta) + ' · Week ' + ctx.zone.week) + (P.live ? ' · <span class="live-dot"></span>Live · ' + P.toPlay + ' to play' : P.final ? ' · Final' : '') + '</span></div></div>' +
-      '<div class="am-db' + (P.mine ? ' mine' : '') + '">' + side(P.ta, P.A, true) + '<span class="am-dvs">vs</span>' + side(P.tb, P.B, false) + '</div>' +
+      '<div class="am-db' + (P.mine ? ' mine' : '') + '">' + side(P.ta, P.A, true) + '<span class="am-dvs">' + (P.mine && P.B ? safeHTML('Mascot', function(){ return mascotHTML('amd|' + L.id + '|' + P.mid, amPa(P), 'sm'); }) : '') + 'vs</span>' + side(P.tb, P.B, false) + '</div>' +
       (P.B ? amWpBar(P, true) : '') +
       (P.B && P.started ? safeHTML('Win probability chart', function(){ return wpcCardHTML('am|' + L.id + '|' + P.mid); }) : '') +
       '<p class="am-sent">' + sentence + '</p>' +
