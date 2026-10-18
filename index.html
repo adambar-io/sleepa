@@ -199,10 +199,14 @@
   .slot-row + .slot-row::before{ content:''; position:absolute; top:0; left: 108px; right: 14px; height: 1px; background: var(--hair); }
   .slot-row:active{ background: var(--surface-2); }
   :where(#starters-list, #bench-list, #fa-list) .slot-row:nth-child(even){ background: color-mix(in srgb, var(--text) 3.5%, transparent); }   /* zebra: easier to track a player across the row */
-  /* team badge: NFL logo in a team-color ring on the avatar's corner (the name never gives up width for it) */
+  /* team marks (avatar badge, game logos): the NFL logo on a deep team-color disc, the same in both themes so every
+     logo reads the same way; a faint halo keeps dark logos (LV, NO, PIT) visible on it */
+  .tm-badge, .it-tm{ background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--tc) 62%, #2a2a30), color-mix(in srgb, var(--tc) 30%, #0e0e11) 78%); }
+  .tm-logo{ filter: drop-shadow(0 0 .6px rgba(255, 255, 255, .6)) drop-shadow(0 1px 1.5px rgba(0, 0, 0, .55)); }
+  /* the badge sits on the avatar's corner (the name never gives up width for it), cut out of the photo by a surface ring */
   .av-w{ position: relative; flex: none; display: inline-flex; }
-  .tm-badge{ position: absolute; right: -4px; bottom: -3px; width: 22px; height: 22px; border-radius: 50%; background: #F4F2EC; box-shadow: inset 0 0 0 1.5px var(--tc), 0 1px 3px rgba(0, 0, 0, .25); display: grid; place-items: center; overflow: hidden; pointer-events: none; }
-  .tm-badge img{ width: 15px; height: 15px; object-fit: contain; padding: 0 !important; }
+  .tm-badge{ position: absolute; right: -5px; bottom: -4px; width: 24px; height: 24px; border-radius: 50%; box-shadow: 0 0 0 2px var(--surface), 0 1px 3px rgba(0, 0, 0, .3); display: grid; place-items: center; pointer-events: none; }
+  .tm-badge img{ width: 19px; height: 19px; object-fit: contain; padding: 0 !important; }
   .slot-row.static{ cursor: default; }
   .slot-row.static:active{ background: none; }
   .slot-row.swapped{ background: var(--accent-soft); }
@@ -1782,13 +1786,13 @@
   .it-note{ margin: 8px 0 0; font-size: 12.5px; color: var(--warn); }
   .it-attr{ margin: 8px 0 0; font-size: 10.5px; color: var(--text-3); } .it-attr a{ color: inherit; }
   /* team mark: Sleeper logo inside a team-color ring; abbreviation shows if the logo fails */
-  .it-tm{ position: relative; display: inline-grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 50%; background: var(--surface-2); box-shadow: inset 0 0 0 2.5px var(--tc); overflow: hidden; }
-  .it-tm b{ font-size: 11px; font-weight: 800; letter-spacing: .02em; color: var(--text); }
+  .it-tm{ position: relative; display: inline-grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 50%; box-shadow: 0 1px 3px rgba(0, 0, 0, .25); overflow: hidden; }
+  .it-tm b{ font-size: 11px; font-weight: 800; letter-spacing: .02em; color: #fff; }
   .it-tm:has(img) b, .it-cph:has(img) b{ visibility: hidden; }   /* the abbreviation / initials are only the fallback: logos with transparent areas would show them through */
-  .it-tm img{ position: absolute; inset: 5px; width: calc(100% - 10px); height: calc(100% - 10px); object-fit: contain; padding: 0 !important; }
-  .it-tm.sm{ width: 30px; height: 30px; } .it-tm.sm b{ font-size: 8.5px; } .it-tm.sm img{ inset: 4px; width: calc(100% - 8px); height: calc(100% - 8px); }
-  .it-tm.lg{ width: 60px; height: 60px; } .it-tm.lg b{ font-size: 15px; } .it-tm.lg img{ inset: 8px; width: calc(100% - 16px); height: calc(100% - 16px); }
-  .it-pair{ display: inline-flex; flex: none; } .it-pair .it-tm + .it-tm{ margin-left: -8px; }
+  .it-tm img{ position: absolute; inset: 4px; width: calc(100% - 8px); height: calc(100% - 8px); object-fit: contain; padding: 0 !important; }
+  .it-tm.sm{ width: 30px; height: 30px; } .it-tm.sm b{ font-size: 8.5px; } .it-tm.sm img{ inset: 3px; width: calc(100% - 6px); height: calc(100% - 6px); }
+  .it-tm.lg{ width: 60px; height: 60px; } .it-tm.lg b{ font-size: 15px; } .it-tm.lg img{ inset: 6px; width: calc(100% - 12px); height: calc(100% - 12px); }
+  .it-pair{ display: inline-flex; flex: none; } .it-pair .it-tm + .it-tm{ margin-left: -8px; box-shadow: 0 0 0 2px var(--surface), 0 1px 3px rgba(0, 0, 0, .25); }
   /* flags: the status-chip recipe (warn = weather / roof, neutral = everything else) */
   .it-flag{ display: inline-block; font-size: 10.5px; font-weight: 700; padding: 2px 6px; border-radius: 5px; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; }
   .it-flag.warn{ background: var(--warn-soft); color: var(--warn); } .it-flag.neutral{ background: var(--surface-2); color: var(--text-2); }
@@ -8348,7 +8352,7 @@
   function photoBadgeHTML(pid, cls, attrs){
     const p = ctx.players[pid] || {};
     if(!p.team || p.position === 'DEF') return photoHTML(pid, cls, attrs);
-    return '<span class="av-w">' + photoHTML(pid, cls, attrs) + '<span class="tm-badge" style="--tc:' + teamColor(p.team) + '"><img src="https://sleepercdn.com/images/team_logos/nfl/' +
+    return '<span class="av-w">' + photoHTML(pid, cls, attrs) + '<span class="tm-badge" style="--tc:' + teamColor(p.team) + '"><img class="tm-logo" src="https://sleepercdn.com/images/team_logos/nfl/' +
       encodeURIComponent(String(p.team).toLowerCase()) + '.png" alt="" loading="lazy" draggable="false" onerror="this.remove()"></span></span>';
   }
   function analyzeName(pid, name){ return '<span class="an-link"' + analyzeAttr(pid) + '>' + escapeHTML(name) + '</span>'; }
@@ -17486,7 +17490,7 @@
 
   // ---- small pieces ----
   function itLogo(team, cls){
-    return '<span class="it-tm ' + (cls || '') + '" style="--tc:' + teamColor(team) + '"><b>' + escapeHTML(team) + '</b><img src="https://sleepercdn.com/images/team_logos/nfl/' +
+    return '<span class="it-tm ' + (cls || '') + '" style="--tc:' + teamColor(team) + '"><b>' + escapeHTML(team) + '</b><img class="tm-logo" src="https://sleepercdn.com/images/team_logos/nfl/' +
       encodeURIComponent(String(team).toLowerCase()) + '.png" alt="" loading="lazy" onerror="this.remove()"></span>';
   }
   function itTime(ms){ return new Date(ms).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(/\s?([AP])M$/i, function(m, a){ return a.toLowerCase(); }); }
