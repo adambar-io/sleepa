@@ -9264,7 +9264,7 @@
     const room = function(){
       const r = next();
       if(r.open) return 'You have an open roster spot, so no drop is needed.';
-      if(r.sub) return 'Put ' + nm(r.sub) + ' (' + escapeHTML(stx(r.sub)) + ') on IR in his place, so no drop is needed.';
+      if(r.sub) return 'Activating him opens his IR spot: move ' + nm(r.sub) + ' (' + escapeHTML(stx(r.sub)) + ') into it, a straight swap, so no drop is needed.';
       return r.drop ? 'Your roster is full: the cheapest drop is ' + nm(r.drop) + ' (' + fmtPts(r.drop.val) + ' rest-of-season pts).' : 'Your roster is full: you’ll need to drop someone.';
     };
     const card = function(tone, html){ return '<div class="ir-act ir-' + tone + '">' + html + '</div>'; };   // ir- prefix: plain "note" etc. are styled elsewhere
@@ -15222,12 +15222,12 @@
     const nm = function(e){ return '<b>' + escapeHTML(zLcName(e.pid)) + '</b>'; };
     const stx = function(e){ const i = statusInfo(e.st); return escapeHTML(i ? i.label : e.st || 'healthy'); };
     const next = irRoom(P);
-    const room = function(){ const r = next(); return r.open ? 'roster spot open' : r.sub ? 'put ' + nm(r.sub) + ' on IR in his place' : r.drop ? 'drop ' + nm(r.drop) : 'drop someone'; };
+    const room = function(){ const r = next(); return r.open ? 'roster spot open' : r.sub ? 'swap: ' + nm(r.sub) + ' takes his IR spot' : r.drop ? 'drop ' + nm(r.drop) : 'drop someone'; };
     const out = [];
     P.mustActivate.forEach(function(e){ out.push({ t: 'bad', h: 'Activate ' + nm(e) + ' (' + stx(e) + ': not IR-eligible here, so adds are blocked) · ' + room() }); });
     P.moveIn.forEach(function(e){ out.push({ t: 'go', h: 'Move ' + nm(e) + ' (' + stx(e) + ') to IR' + (P.bestAdd ? ' · then add ' + nm(P.bestAdd) : '') }); });
     P.returning.forEach(function(e){ out.push({ t: 'soon', h: nm(e) + ' back ' + escapeHTML(fmtDay(new Date(e.ret).toISOString().slice(0, 10))) + ' · ' + room() }); });
-    if(P.waitlist.length) out.push({ t: 'note', h: 'IR full: ' + P.waitlist.map(nm).join(', ') + ' stay' + (P.waitlist.length === 1 ? 's' : '') + ' on the bench' });
+    if(P.waitlist.length) out.push({ t: 'note', h: 'IR full: ' + P.waitlist.map(nm).join(', ') + ' stay' + (P.waitlist.length === 1 ? 's' : '') + ' on the bench until a spot opens' });
     if(P.cantIR.length) out.push({ t: 'note', h: P.cantIR.map(function(e){ return nm(e) + ' (' + stx(e) + ')'; }).join(', ') + ' can’t go on IR here' });
     return out;
   }
