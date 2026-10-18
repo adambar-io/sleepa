@@ -9488,7 +9488,7 @@
         ts.map(function(s){ const pid = lineup[s.i]; return '<em class="' + (prIsEmpty(pid) ? 'empty' : bad(pid) ? 'bad' : 'set') + '"></em>'; }).join('') + '</i></span>';
     }).join('');
     const status = draft ? '<b class="warn">Draft in progress</b> · ' + set + ' of ' + slots.length + ' set'
-      : !st.saved ? 'Build week ' + ctx.week + ' position by position'
+      : !st.saved ? 'Starts from your Sleeper lineup · go position by position'
       : set === slots.length ? '<b class="ok">Saved</b> · all ' + slots.length + ' set' : '<b class="ok">Saved</b> · ' + (slots.length - set) + ' empty';
     return '<button type="button" class="hd-card" data-huddle aria-label="Open ' + HUDDLE_NAME + ': set your week ' + ctx.week + ' lineup position by position">' +
       '<span class="hd-ico">' + HUDDLE_ICON + '</span>' +
@@ -9518,7 +9518,8 @@
   }
   function prInitWork(){
     const st = prStore(), n = ctx.draftStarters.length;
-    const fresh = st.saved ? ctx.draftStarters.slice() : prCleared(ctx.draftStarters);
+    // a fresh Huddle starts from the lineup set in Sleeper (Clear empties it); once saved here, from the saved lineup
+    const fresh = st.saved ? ctx.draftStarters.slice() : (ctx.originalStarters || ctx.draftStarters).slice();
     const resume = Array.isArray(st.work) && st.work.length === n;
     ctx.prWork = prSanitize(resume ? st.work : fresh);
     ctx.prBase = prSanitize(resume && Array.isArray(st.base) && st.base.length === n ? st.base : fresh);
