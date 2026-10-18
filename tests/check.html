@@ -351,6 +351,22 @@
     eq('gap = league ROS rank − FantasyPros ROS rank', g.map(function(x){ return x.pid + ':' + x.gap; }), ['a:15', 'b:7', 'c:-2', 'd:-9']);
     eq('levels: 12+ underrated (big), 6+ experts higher, −6 or less projection higher', g.map(function(x){ return x.level; }), ['big', 'yes', 'none', 'over']);
   }
+  // ---- 3h. Injured reserve: eligibility, must-activate, open spots, returns ----
+  section('Injured reserve: who can go on IR, who must come off, open spots and returns');
+  {
+    const I = new Function(['const IR_ALLOW', 'const IR_DAYS', 'const IR_SOON', 'function irEligibleStatus(', 'function irPlan('].map(extract).join('\n') + '; return { irEligibleStatus, irPlan };')();
+    const set = { reserve_allow_out: 1, reserve_allow_doubtful: 1, reserve_allow_na: 0 }, now = Date.UTC(2026, 9, 17), day = 864e5;
+    check('IR and PUP always qualify; Out / Doubtful only where the league allows; Questionable never', [I.irEligibleStatus('IR', {}), I.irEligibleStatus('PUP', {}), I.irEligibleStatus('Out', set), I.irEligibleStatus('Out', {}), I.irEligibleStatus('NA', set), I.irEligibleStatus('Questionable', set)].join() === 'true,true,true,false,false,false');
+    const P = I.irPlan({ slots: 3, size: 4, settings: set, now: now,
+      ir: [{ pid: 'healed', st: '' }, { pid: 'back', st: 'Out', ret: now + 3 * day }],
+      active: [{ pid: 'long', st: 'Out', ret: now + 30 * day, val: 50 }, { pid: 'short', st: 'Doubtful', ret: null, val: 60 }, { pid: 'na', st: 'NA', val: 40 },
+        { pid: 'cheap', st: '', val: 10, starter: false }, { pid: 'star', st: '', val: 5, starter: true }],
+      fa: [{ pid: 'fa1', val: 30 }, { pid: 'fa2', val: 80 }] });
+    check('a healthy player on IR must be activated; one back in 3 days is "coming back"', P.mustActivate.map(function(e){ return e.pid; }).join() === 'healed' && P.returning.map(function(e){ return e.pid; }).join() === 'back');
+    check('one open spot (3 slots, 2 used): the player out longest goes in, the other eligible one waits', P.open === 1 && P.moveIn.map(function(e){ return e.pid; }).join() === 'long' && P.waitlist.map(function(e){ return e.pid; }).join() === 'short');
+    check('a status the league doesn’t allow is flagged, not suggested', P.cantIR.map(function(e){ return e.pid; }).join() === 'na');
+    check('cheapest drop = the healthy bench player worth least (starters never); best pickup = most rest-of-season points', P.cheapestDrop.pid === 'cheap' && P.bestAdd.pid === 'fa2');
+  }
   // ---- 3g. Sleepa Zone: live points from plays Sleeper hasn't scored yet ----
   section('Sleepa Zone: live points from the play feed (ahead of Sleeper’s league numbers)');
   {

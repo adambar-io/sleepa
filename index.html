@@ -1847,6 +1847,18 @@
   /* lineup rows: only where there is room (desktop table, detailed cards); the phone one-line meta keeps the opponent */
   .player-meta .it-chip{ display: none; } html.cards-detailed .player-meta .it-chip{ display: inline-flex; }
   @container list (min-width: 600px){ .player-meta .it-chip{ display: inline-flex; } }
+  /* Injured reserve (Lineup) */
+  .ir-section .section-title{ display: flex; align-items: baseline; gap: 8px; }
+  .ir-cnt{ font-size: 13px; font-weight: 600; color: var(--text-3); }
+  .ir-acts{ display: grid; gap: 8px; margin: 0 0 12px; }
+  .ir-act{ padding: 10px 14px; border-radius: 12px; font-size: 13.5px; line-height: 1.45; color: var(--text-2); background: var(--surface); box-shadow: var(--shadow), inset 3px 0 0 var(--hair); }
+  .ir-act b{ color: var(--text); font-weight: 650; }
+  .ir-act.ir-bad{ box-shadow: var(--shadow), inset 3px 0 0 var(--danger); background: color-mix(in srgb, var(--danger) 7%, var(--surface)); }
+  .ir-act.ir-go{ box-shadow: var(--shadow), inset 3px 0 0 var(--accent); }
+  .ir-act.ir-soon{ box-shadow: var(--shadow), inset 3px 0 0 var(--warn); }
+  .ir-act.ir-ok{ color: var(--text-3); }
+  .ir-list{ background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 16px; }
+  .ir-taxi{ margin-top: 18px; }
   /* Roster check (Lineup) */
   .rc{ margin: 0 0 12px; overflow: hidden; container-type: inline-size; container-name: rc; }
   .rc-mob{ display: none; font-size: 11.5px; color: var(--text-3); font-variant-numeric: tabular-nums; margin: 2px 0 0 38px; }
@@ -4149,6 +4161,7 @@
             <div class="list-head"><div class="h-slot"></div><div class="h-info">Player</div><div class="h-col h-opp">Opp</div><div class="h-col h-snap">Snap</div><div class="h-stat h-pts">Proj</div><div class="h-stat h-last">Last</div><div class="h-col h-l3" title="Average of the last 3 games">L3</div><div class="h-col h-avg">Avg</div></div>
             <div id="bench-list"></div>
           </div>
+          <div class="bench-section ir-section" id="ir-section" hidden></div>
           <div class="bye-plan" id="bye-plan" hidden></div>
         </section>
 
@@ -9145,6 +9158,98 @@
       '</div>';
   }
 
+  // ============ Injured reserve (Lineup): who's on IR, who must come off, who could go on, who's coming back ============
+  // Sleeper's rules: a player can sit on IR only while his Sleeper status is IR (or PUP), or one the league allows
+  // (settings.reserve_allow_out / _doubtful / _sus / _na / _dnr / _cov); reserve_slots = how many. A player on IR whose
+  // status no longer qualifies blocks the team's adds and waiver claims until he's activated. Swapping two hurt players
+  // gains nothing (same roster count), so the advice is: use open IR spots, activate anyone ineligible, and plan each
+  // return (slide a hurt active player into his IR spot, or know the cheapest drop). Return dates: ESPN (they move);
+  // without one, a typical absence per status.
+  const IR_ALLOW = { Out: 'reserve_allow_out', Doubtful: 'reserve_allow_doubtful', Sus: 'reserve_allow_sus', NA: 'reserve_allow_na', DNR: 'reserve_allow_dnr', COV: 'reserve_allow_cov' };
+  const IR_DAYS = { IR: 60, PUP: 45, Sus: 28, NA: 28, DNR: 28, COV: 10, Out: 7, Doubtful: 3 };
+  const IR_SOON = 8;   // days: "coming back" when ESPN's return date is this close
+  function irEligibleStatus(st, settings){ return st === 'IR' || st === 'PUP' || !!(IR_ALLOW[st] && settings && settings[IR_ALLOW[st]]); }
+  function irAllowedText(settings){
+    const names = { Out: 'Out', Doubtful: 'Doubtful', Sus: 'Suspended', NA: 'Not active', DNR: 'Did not report', COV: 'COVID' };
+    return ['IR'].concat(Object.keys(IR_ALLOW).filter(function(k){ return settings && settings[IR_ALLOW[k]]; }).map(function(k){ return names[k]; })).join(', ');
+  }
+  // pure: x = { slots, size, settings, now, ir: [{ pid, st, ret }], active: [{ pid, st, ret, val, starter }], fa: [{ pid, val }] }
+  function irPlan(x){
+    const away = function(e){ return e.ret ? Math.max(0, (e.ret - x.now) / 864e5) : (IR_DAYS[e.st] || 0); };
+    const P = { used: x.ir.length, slots: x.slots, open: Math.max(0, x.slots - x.ir.length), mustActivate: [], returning: [], moveIn: [], waitlist: [], cantIR: [] };
+    x.ir.forEach(function(e){
+      if(!irEligibleStatus(e.st, x.settings)) P.mustActivate.push(e);
+      else if(e.ret && away(e) <= IR_SOON) P.returning.push(e);
+    });
+    const hurt = x.active.filter(function(e){ return e.st && e.st !== 'Questionable'; });
+    const elig = hurt.filter(function(e){ return irEligibleStatus(e.st, x.settings); }).sort(function(a, b){ return away(b) - away(a); });
+    P.cantIR = hurt.filter(function(e){ return !irEligibleStatus(e.st, x.settings); });
+    P.moveIn = elig.slice(0, P.open);
+    P.waitlist = elig.slice(P.open);
+    // making room for a player coming off IR: a hurt active player can take his IR spot (no drop); otherwise the
+    // healthy bench player worth least the rest of the way, unless the roster has an open spot
+    const healthyBench = x.active.filter(function(e){ return !e.starter && !(e.st && e.st !== 'Questionable'); }).sort(function(a, b){ return (a.val || 0) - (b.val || 0); });
+    P.drops = healthyBench;   // cheapest first: each return in turn takes the next one
+    P.cheapestDrop = healthyBench[0] || null;
+    P.rosterOpen = Math.max(0, x.size - x.active.length);
+    P.bestAdd = x.fa.slice().sort(function(a, b){ return (b.val || 0) - (a.val || 0); })[0] || null;
+    P.away = away;
+    return P;
+  }
+  function irData(){
+    if(!ctx.myRoster || !ctx.league) return null;
+    const settings = ctx.league.settings || {}, slots = settings.reserve_slots || 0, reserve = (ctx.myRoster.reserve || []).filter(function(pid){ return ctx.players[pid]; });
+    if(!slots && !reserve.length) return null;
+    // rest-of-season points in this league's scoring; without a projection, his season average × the weeks left (same units)
+    const left = Math.max(1, ((ctx.ros && ctx.ros.through_week) || 17) - ctx.week + 1);
+    const val = function(pid){ const r = typeof rosValue === 'function' ? rosValue(pid) : null; return r ? r.pts : (seasonAvgPts(pid) || 0) * left; };
+    const ret = function(pid){ const en = espnEntry(pid), t = en && en.ret ? Date.parse(/^\d{4}-\d{2}-\d{2}$/.test(en.ret) ? en.ret + 'T12:00:00Z' : en.ret) : NaN; return isNaN(t) ? null : t; };
+    const st = function(pid){ const v = ctx.players[pid] && ctx.players[pid].injury_status; return v && v !== 'Healthy' ? v : ''; };
+    const parked = new Set([].concat(ctx.myRoster.reserve || [], ctx.myRoster.taxi || [])), starters = new Set((ctx.myRoster.starters || []).filter(function(x){ return x && x !== '0'; }));
+    const active = (ctx.myRoster.players || []).filter(function(pid){ return ctx.players[pid] && !parked.has(pid); })
+      .map(function(pid){ return { pid: pid, st: st(pid), ret: ret(pid), val: val(pid), starter: starters.has(pid) }; });
+    const fa = [];
+    Object.keys(ctx.freeAgents || {}).forEach(function(pos){ (ctx.freeAgents[pos] || []).slice(0, 12).forEach(function(pid){ if(ctx.players[pid] && !st(pid)) fa.push({ pid: pid, val: val(pid) }); }); });
+    return irPlan({ slots: slots, size: rosterSize(), settings: settings, now: Date.now(), ir: reserve.map(function(pid){ return { pid: pid, st: st(pid), ret: ret(pid) }; }), active: active, fa: fa });
+  }
+  function irActionCount(){ const P = irData(); return P ? P.mustActivate.length + P.moveIn.length + P.returning.length : 0; }
+  function renderIR(){
+    const el = document.getElementById('ir-section');
+    if(!el) return;
+    const P = irData(), taxi = ((ctx.myRoster && ctx.myRoster.taxi) || []).filter(function(pid){ return ctx.players[pid]; });
+    if(!P && !taxi.length){ el.hidden = true; el.innerHTML = ''; return; }
+    el.hidden = false;
+    const settings = (ctx.league && ctx.league.settings) || {};
+    const nm = function(e){ return '<b>' + escapeHTML(playerName(ctx.players[e.pid])) + '</b>'; };
+    const stx = function(e){ const i = statusInfo(e.st); return i ? i.label : e.st || 'healthy'; };
+    const back = function(e){ return e.ret ? 'back ' + fmtDay(new Date(e.ret).toISOString().slice(0, 10)) : 'no return date'; };
+    // how to make room for each player coming off IR, in turn: open roster spots first, then a hurt active player who
+    // can take his IR spot, then the cheapest healthy bench player (a different one for each return)
+    let openLeft = P.rosterOpen, subs = P.waitlist.concat(P.moveIn), drops = P.drops.slice();
+    const room = function(){
+      if(openLeft > 0){ openLeft--; return 'You have an open roster spot, so no drop is needed.'; }
+      const sub = subs.shift();
+      if(sub) return 'Put ' + nm(sub) + ' (' + escapeHTML(stx(sub)) + ') on IR in his place, so no drop is needed.';
+      const d = drops.shift();
+      return d ? 'Your roster is full: the cheapest drop is ' + nm(d) + ' (' + fmtPts(d.val) + ' rest-of-season pts).' : 'Your roster is full: you’ll need to drop someone.';
+    };
+    const card = function(tone, html){ return '<div class="ir-act ir-' + tone + '">' + html + '</div>'; };   // ir- prefix: plain "note" etc. are styled elsewhere
+    let acts = '';
+    if(P){
+      P.mustActivate.forEach(function(e){ acts += card('bad', 'Activate ' + nm(e) + ': ' + escapeHTML(stx(e)) + ' isn’t IR-eligible in this league. Until he’s off IR, Sleeper won’t process your adds or waiver claims. ' + room(e)); });
+      P.moveIn.forEach(function(e){ acts += card('go', 'Open IR spot: move ' + nm(e) + ' (' + escapeHTML(stx(e)) + ', ' + back(e) + ') to IR to free a bench spot.' + (P.bestAdd ? ' Best pickup for it: ' + nm(P.bestAdd) + ' (' + fmtPts(P.bestAdd.val) + ' rest-of-season pts).' : '')); });
+      P.returning.forEach(function(e){ acts += card('soon', nm(e) + ' looks close (' + back(e) + '). When you activate him: ' + room(e)); });
+      if(P.waitlist.length) acts += card('note', 'IR is full: ' + P.waitlist.map(nm).join(', ') + (P.waitlist.length > 1 ? ' are' : ' is') + ' hurt and IR-eligible, so ' + (P.waitlist.length > 1 ? 'they take' : 'he takes') + ' a bench spot until an IR spot opens.');
+      if(P.cantIR.length) acts += card('note', P.cantIR.map(function(e){ return nm(e) + ' (' + escapeHTML(stx(e)) + ')'; }).join(', ') + ' can’t go on IR in this league (allowed: ' + escapeHTML(irAllowedText(settings)) + ').');
+      if(!acts) acts = card('ok', 'Nothing to do: every IR player still qualifies and nobody on your active roster needs a spot.');
+    }
+    const rows = P ? (ctx.myRoster.reserve || []).filter(function(pid){ return ctx.players[pid]; }).map(function(pid){ return playerRow(pid, 'IR', undefined); }).join('') : '';
+    el.innerHTML = (P ? '<div class="section-title">Injured reserve <span class="ir-cnt">' + P.used + ' of ' + P.slots + ' spot' + (P.slots === 1 ? '' : 's') + ' used</span></div>' +
+        '<div class="ir-acts">' + acts + '</div>' + (rows ? '<div class="ir-list">' + rows + '</div>' : '<div class="empty-state">Nobody on IR. Allowed here: ' + escapeHTML(irAllowedText(settings)) + '.</div>') : '') +
+      (taxi.length ? '<div class="section-title ir-taxi">Taxi squad</div><div class="ir-list">' + taxi.map(function(pid){ return playerRow(pid, 'TX', undefined); }).join('') + '</div>' : '');
+    el.querySelectorAll('.slot-row[data-player-id]').forEach(function(row){ row.addEventListener('click', function(){ openFocus(row.getAttribute('data-player-id'), null); }); });
+  }
+
   function renderAll(){
     const started = weekStarted();
     document.querySelectorAll('.h-pts').forEach(function(el){ el.textContent = started ? 'Pts' : 'Proj'; el.title = started ? 'Actual points once their game has started (projection underneath), otherwise the projection' : 'Projected points this week'; });
@@ -9154,13 +9259,15 @@
 
     const allIds = ctx.myRoster.players || [];
     const starterSet = new Set(ctx.draftStarters.filter(function(x){ return x && x !== '0'; }));
-    const benchIds = allIds.filter(function(pid){ return !starterSet.has(pid); });
+    const parkedIds = new Set([].concat(ctx.myRoster.reserve || [], ctx.myRoster.taxi || []));   // IR / taxi: their own section below
+    const benchIds = allIds.filter(function(pid){ return !starterSet.has(pid) && !parkedIds.has(pid); });
     let benchHTML = '';
     benchIds.forEach(function(pid){
       const pos = (ctx.players[pid] && ctx.players[pid].position) || '';
       benchHTML += playerRow(pid, pos, undefined);
     });
     els.benchList.innerHTML = benchHTML || '<div class="empty-state">Bench is empty.</div>';
+    renderIR();
 
     // Lineup problems: starters on a bye, starters ruled out (game not started) and empty starting slots. None score.
     const byeStarters = ctx.draftStarters.filter(function(pid){ return pid && pid !== '0' && isOnBye(pid); });
@@ -16904,8 +17011,9 @@
   function rosterCheckHTML(){
     const d = rcData(), rc = ctx.rc;
     const up = d ? d.waiver.filter(rcIsUpgrade).length : 0, under = d ? d.gaps.filter(function(g){ return g.level === 'yes' || g.level === 'big'; }).length : 0;
-    const summary = !d ? 'loading…' :
-      (up ? up + ' waiver upgrade' + (up > 1 ? 's' : '') : 'no waiver upgrades') + ' · ' + (d.fpFresh ? (under ? under + ' FantasyPros gap' + (under > 1 ? 's' : '') : 'no FantasyPros gaps') : 'FantasyPros ranks unavailable');
+    const irN = irActionCount();
+    const summary = (irN ? irN + ' IR move' + (irN > 1 ? 's' : '') + ' · ' : '') + (!d ? 'loading…' :
+      (up ? up + ' waiver upgrade' + (up > 1 ? 's' : '') : 'no waiver upgrades') + ' · ' + (d.fpFresh ? (under ? under + ' FantasyPros gap' + (under > 1 ? 's' : '') : 'no FantasyPros gaps') : 'FantasyPros ranks unavailable'));
     if(!rc.open) return '<button type="button" class="rc-line" data-rc-toggle aria-expanded="false">Roster check <span>· ' + escapeHTML(summary) + '</span> ›</button>';
     let html = '<div class="card rc open"><button type="button" class="rc-h" data-rc-toggle aria-expanded="true"><span><span class="eyebrow">Roster check · rest of season</span><b>' + escapeHTML(summary) + '</b></span><span class="rc-chev" aria-hidden="true">▾</span></button>';
     if(rc.open && d){
