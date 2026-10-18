@@ -366,6 +366,10 @@
     check('one open spot (3 slots, 2 used): the player out longest goes in, the other eligible one waits', P.open === 1 && P.moveIn.map(function(e){ return e.pid; }).join() === 'long' && P.waitlist.map(function(e){ return e.pid; }).join() === 'short');
     check('a status the league doesn’t allow is flagged, not suggested', P.cantIR.map(function(e){ return e.pid; }).join() === 'na');
     check('cheapest drop = the healthy bench player worth least (starters never); best pickup = most rest-of-season points', P.cheapestDrop.pid === 'cheap' && P.bestAdd.pid === 'fa2');
+    const R = new Function(extract('function irRoom(') + '; return irRoom;')();
+    const next = R({ rosterOpen: 1, waitlist: [{ pid: 'w' }], moveIn: [], drops: [{ pid: 'd1' }, { pid: 'd2' }] });
+    const seq = [next(), next(), next(), next(), next()].map(function(r){ return r.open ? 'open' : r.sub ? 'sub:' + r.sub.pid : r.drop ? 'drop:' + r.drop.pid : 'none'; }).join();
+    check('room for each return, in turn: open spot, then a hurt player takes the IR spot, then a different drop each time', seq === 'open,sub:w,drop:d1,drop:d2,none', seq);
   }
   // ---- 3g. Sleepa Zone: live points from plays Sleeper hasn't scored yet ----
   section('Sleepa Zone: live points from the play feed (ahead of Sleeper’s league numbers)');

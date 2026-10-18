@@ -3444,10 +3444,10 @@
   .zn-board{ display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: start; gap: 8px; margin: 22px 0 14px; }
   .zn-side{ min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
   .zn-side.them{ align-items: flex-end; text-align: right; }
-  .zn-team{ display: flex; align-items: center; gap: 7px; min-width: 0; max-width: 100%; font-size: 13px; color: var(--text-2); font-weight: 600; }
-  .zn-side.them .zn-team{ flex-direction: row-reverse; }
-  .zn-team span{ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .zn-team .t-av{ width: 26px; height: 26px; } .zn-team .t-av b{ font-size: 9.5px; }
+  .zn-team{ display: flex; flex-direction: column; align-items: flex-start; gap: 7px; min-width: 0; max-width: 100%; font-size: 15px; line-height: 1.2; color: var(--text); font-weight: 650; }
+  .zn-side.them .zn-team{ align-items: flex-end; }
+  .zn-team span{ display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; min-height: 2.4em; }   /* full name, up to 2 lines; both sides keep 2 lines so the scores line up */
+  .zn-team .t-av{ width: 56px; height: 56px; } .zn-team .t-av b{ font-size: 18px; }
   .t-av.zav-xs{ width: 20px; height: 20px; } .t-av.zav-xs b{ font-size: 8px; }
   .zt-side small{ display: inline-flex !important; align-items: center; gap: 6px; }
   .zt-side small span{ min-width: 0; overflow: hidden; text-overflow: ellipsis; }
@@ -3456,8 +3456,8 @@
   .zn-num{ font-size: clamp(30px, 10cqw, 46px); font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; font-variant-numeric: tabular-nums; color: var(--text-2); margin-top: 4px; transition: color .4s; }
   .zn-side.lead .zn-num{ color: var(--text); }
   .zn-num.proj{ font-weight: 600; color: var(--text-3); }
-  .zn-cap{ font-size: 11px; color: var(--text-3); font-variant-numeric: tabular-nums; letter-spacing: .02em; }
-  .zn-sub{ font-size: 12px; color: var(--text-2); }
+  .zn-cap{ font-size: 13.5px; font-weight: 600; color: var(--text-2); font-variant-numeric: tabular-nums; }
+  .zn-sub{ font-size: 13px; color: var(--text-2); }
   .zn-sub:empty, .zn-cap:empty{ display: none; }
   .zn-mid{ display: flex; flex-direction: column; align-items: center; gap: 6px; padding-top: 30px; }
   .zn-vs{ font-size: 12px; color: var(--text-3); font-weight: 600; }
@@ -3715,6 +3715,20 @@
   .zlc-bad{ color: var(--danger); font-weight: 600; }
   .zlc-mv{ margin-top: 2px; color: var(--text-2); }
   .zlc-mv b{ color: var(--text); font-weight: 650; }
+  .zir-tag{ display: inline-block; margin-right: 6px; padding: 0 5px; border-radius: 5px; font-size: 10px; font-weight: 800; letter-spacing: .04em; vertical-align: 1px; background: var(--surface-3); color: var(--text-2); }
+  .zir.fix .zir-tag{ background: var(--warn); color: var(--bg); }
+  .zir-l{ margin: 3px 0 0; padding: 0; list-style: none; }
+  .zir-l li{ position: relative; margin-top: 2px; padding-left: 12px; color: var(--text-2); }
+  .zir-l li::before{ content: ''; position: absolute; left: 2px; top: .55em; width: 5px; height: 5px; border-radius: 50%; background: var(--text-3); }
+  .zir-l li.zir-bad::before{ background: var(--danger); } .zir-l li.zir-go::before{ background: var(--accent); } .zir-l li.zir-soon::before{ background: var(--warn); }
+  .zir-l b{ color: var(--text); font-weight: 650; }
+  .am-ir + .am-ir{ margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .am-irh{ display: flex; justify-content: space-between; gap: 8px; font-size: 13px; }
+  .am-irh span{ color: var(--text-3); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .am-ir .zir-l{ font-size: 12.5px; line-height: 1.4; }
+  .am-irok{ margin: 3px 0 0; font-size: 12.5px; color: var(--accent); }
+  .am-ir .am-rows{ margin-top: 6px; }
+  .am-ir{ flex-shrink: 0; padding-right: 4px; }   /* the tile body scrolls; blocks keep their height */
   .zn-lcsum{ font-size: inherit; padding: 0; background: none; font-weight: 600; }
   .zn-lcsum.fix{ color: var(--warn); text-decoration: underline; text-underline-offset: 2px; }
   .zn-lcsum.ok{ color: var(--accent); }
@@ -9196,21 +9210,41 @@
     P.away = away;
     return P;
   }
+  function irStatus(pid){ const v = ctx.players[pid] && ctx.players[pid].injury_status; return v && v !== 'Healthy' ? v : ''; }
+  function irReturn(pid){ const en = espnEntry(pid), t = en && en.ret ? Date.parse(/^\d{4}-\d{2}-\d{2}$/.test(en.ret) ? en.ret + 'T12:00:00Z' : en.ret) : NaN; return isNaN(t) ? null : t; }
+  function irWeeksLeft(){ return Math.max(1, ((ctx.ros && ctx.ros.through_week) || 17) - ctx.week + 1); }
+  // one roster's plan: o = { roster, settings, size, val(pid), fa: [pid] }. The Lineup page passes the loaded league,
+  // Sleepa Zone each of my leagues (zIrPlan).
+  function irBuild(o){
+    const settings = o.settings || {}, slots = settings.reserve_slots || 0, r = o.roster || {}, reserve = (r.reserve || []).filter(function(pid){ return ctx.players[pid]; });
+    if(!slots && !reserve.length) return null;
+    const parked = new Set([].concat(r.reserve || [], r.taxi || [])), starters = new Set((r.starters || []).filter(function(x){ return x && x !== '0'; }));
+    const active = (r.players || []).filter(function(pid){ return ctx.players[pid] && !parked.has(pid); })
+      .map(function(pid){ return { pid: pid, st: irStatus(pid), ret: irReturn(pid), val: o.val(pid), starter: starters.has(pid) }; });
+    const fa = (o.fa || []).filter(function(pid){ return ctx.players[pid] && !irStatus(pid); }).map(function(pid){ return { pid: pid, val: o.val(pid) }; });
+    return irPlan({ slots: slots, size: o.size, settings: settings, now: Date.now(), ir: reserve.map(function(pid){ return { pid: pid, st: irStatus(pid), ret: irReturn(pid) }; }), active: active, fa: fa });
+  }
   function irData(){
     if(!ctx.myRoster || !ctx.league) return null;
-    const settings = ctx.league.settings || {}, slots = settings.reserve_slots || 0, reserve = (ctx.myRoster.reserve || []).filter(function(pid){ return ctx.players[pid]; });
-    if(!slots && !reserve.length) return null;
     // rest-of-season points in this league's scoring; without a projection, his season average × the weeks left (same units)
-    const left = Math.max(1, ((ctx.ros && ctx.ros.through_week) || 17) - ctx.week + 1);
+    const left = irWeeksLeft();
     const val = function(pid){ const r = typeof rosValue === 'function' ? rosValue(pid) : null; return r ? r.pts : (seasonAvgPts(pid) || 0) * left; };
-    const ret = function(pid){ const en = espnEntry(pid), t = en && en.ret ? Date.parse(/^\d{4}-\d{2}-\d{2}$/.test(en.ret) ? en.ret + 'T12:00:00Z' : en.ret) : NaN; return isNaN(t) ? null : t; };
-    const st = function(pid){ const v = ctx.players[pid] && ctx.players[pid].injury_status; return v && v !== 'Healthy' ? v : ''; };
-    const parked = new Set([].concat(ctx.myRoster.reserve || [], ctx.myRoster.taxi || [])), starters = new Set((ctx.myRoster.starters || []).filter(function(x){ return x && x !== '0'; }));
-    const active = (ctx.myRoster.players || []).filter(function(pid){ return ctx.players[pid] && !parked.has(pid); })
-      .map(function(pid){ return { pid: pid, st: st(pid), ret: ret(pid), val: val(pid), starter: starters.has(pid) }; });
     const fa = [];
-    Object.keys(ctx.freeAgents || {}).forEach(function(pos){ (ctx.freeAgents[pos] || []).slice(0, 12).forEach(function(pid){ if(ctx.players[pid] && !st(pid)) fa.push({ pid: pid, val: val(pid) }); }); });
-    return irPlan({ slots: slots, size: rosterSize(), settings: settings, now: Date.now(), ir: reserve.map(function(pid){ return { pid: pid, st: st(pid), ret: ret(pid) }; }), active: active, fa: fa });
+    Object.keys(ctx.freeAgents || {}).forEach(function(pos){ (ctx.freeAgents[pos] || []).slice(0, 12).forEach(function(pid){ fa.push(pid); }); });
+    return irBuild({ roster: ctx.myRoster, settings: ctx.league.settings, size: rosterSize(), val: val, fa: fa });
+  }
+  // pure: making room for each player coming off IR, in turn: an open roster spot first, then a hurt active player who
+  // can take his IR spot, then the cheapest healthy bench player (a different one each time). { open } | { sub } | { drop } | {}
+  function irRoom(P){
+    let openLeft = P.rosterOpen;
+    const subs = P.waitlist.concat(P.moveIn), drops = P.drops.slice();
+    return function(){
+      if(openLeft > 0){ openLeft--; return { open: true }; }
+      const sub = subs.shift();
+      if(sub) return { sub: sub };
+      const d = drops.shift();
+      return d ? { drop: d } : {};
+    };
   }
   function irActionCount(){ const P = irData(); return P ? P.mustActivate.length + P.moveIn.length + P.returning.length : 0; }
   function renderIR(){
@@ -9223,15 +9257,12 @@
     const nm = function(e){ return '<b>' + escapeHTML(playerName(ctx.players[e.pid])) + '</b>'; };
     const stx = function(e){ const i = statusInfo(e.st); return i ? i.label : e.st || 'healthy'; };
     const back = function(e){ return e.ret ? 'back ' + fmtDay(new Date(e.ret).toISOString().slice(0, 10)) : 'no return date'; };
-    // how to make room for each player coming off IR, in turn: open roster spots first, then a hurt active player who
-    // can take his IR spot, then the cheapest healthy bench player (a different one for each return)
-    let openLeft = P.rosterOpen, subs = P.waitlist.concat(P.moveIn), drops = P.drops.slice();
+    const next = P ? irRoom(P) : null;
     const room = function(){
-      if(openLeft > 0){ openLeft--; return 'You have an open roster spot, so no drop is needed.'; }
-      const sub = subs.shift();
-      if(sub) return 'Put ' + nm(sub) + ' (' + escapeHTML(stx(sub)) + ') on IR in his place, so no drop is needed.';
-      const d = drops.shift();
-      return d ? 'Your roster is full: the cheapest drop is ' + nm(d) + ' (' + fmtPts(d.val) + ' rest-of-season pts).' : 'Your roster is full: you’ll need to drop someone.';
+      const r = next();
+      if(r.open) return 'You have an open roster spot, so no drop is needed.';
+      if(r.sub) return 'Put ' + nm(r.sub) + ' (' + escapeHTML(stx(r.sub)) + ') on IR in his place, so no drop is needed.';
+      return r.drop ? 'Your roster is full: the cheapest drop is ' + nm(r.drop) + ' (' + fmtPts(r.drop.val) + ' rest-of-season pts).' : 'Your roster is full: you’ll need to drop someone.';
     };
     const card = function(tone, html){ return '<div class="ir-act ir-' + tone + '">' + html + '</div>'; };   // ir- prefix: plain "note" etc. are styled elsewhere
     let acts = '';
@@ -15156,6 +15187,57 @@
     return '<div class="zlc fix"><div class="zlc-h"><span class="zlc-ic" aria-hidden="true">!</span>' + (c.gap >= LC_MIN ? '<b>' + fmtPts(c.gap) + '</b> below your best lineup' : 'Check your lineup') +
       (bits.length ? ' · ' + bits.join(' · ') : '') + '</div>' + moves + '</div>';
   }
+  // ---- IR, every league: the Lineup page's plan (irBuild) with each league's roster, settings and scoring ----
+  // Values: rest-of-season points (ros.json) in that league's scoring, else season average × weeks left. Best pickup:
+  // the healthy unrostered player with the most rest-of-season points at a position the league uses.
+  function zIrPlan(L){
+    const z = ctx.zone, meta = z.meta[L.id];
+    if(!meta || !meta.roster || !meta.league) return null;
+    if(!ctx.ros && !z.rosAsked){ z.rosAsked = true; loadRos().then(function(){ if(ctx.zone.built) zoneRender(false); }); }
+    const key = [meta.ts, ctx.rosTs || 0, Math.floor(Date.now() / 300000)].join(':');
+    if(L._ir && L._ir.key === key) return L._ir.v;
+    const sc = meta.league.scoring_settings || {}, left = irWeeksLeft(), memo = {};
+    const val = function(pid){
+      if(!(pid in memo)){ const r = ctx.ros && ctx.ros.players && ctx.ros.players[pid]; memo[pid] = r ? projPoints(r.s, pid, sc) || 0 : (seasonAvgPts(pid) || 0) * left; }
+      return memo[pid];
+    };
+    const taken = {}, pos = {};
+    meta.rosters.forEach(function(r){ (r.players || []).forEach(function(pid){ taken[pid] = 1; }); });
+    meta.slots.forEach(function(sl){ (FLEX_GROUPS[sl] || [sl]).forEach(function(x){ pos[x] = 1; }); });
+    const fa = ctx.ros && ctx.ros.players ? Object.keys(ctx.ros.players).filter(function(pid){
+      const p = ctx.players[pid];
+      return p && p.team && !taken[pid] && !irStatus(pid) && fantasyPositions(pid).some(function(x){ return pos[x]; });
+    }).sort(function(a, b){ return val(b) - val(a); }).slice(0, 5) : [];
+    const size = (meta.league.roster_positions || []).filter(function(sl){ return sl !== 'IR' && sl !== 'TAXI'; }).length;
+    const v = irBuild({ roster: meta.roster, settings: meta.league.settings, size: size, val: val, fa: fa });
+    L._ir = { key: key, v: v };
+    return v;
+  }
+  function zIrMoves(P){ return P ? P.mustActivate.length + P.moveIn.length + P.returning.length : 0; }
+  // the plan as short lines: { t: bad | go | soon | note, h }
+  function zIrActs(P){
+    const nm = function(e){ return '<b>' + escapeHTML(zLcName(e.pid)) + '</b>'; };
+    const stx = function(e){ const i = statusInfo(e.st); return escapeHTML(i ? i.label : e.st || 'healthy'); };
+    const next = irRoom(P);
+    const room = function(){ const r = next(); return r.open ? 'roster spot open' : r.sub ? 'put ' + nm(r.sub) + ' on IR in his place' : r.drop ? 'drop ' + nm(r.drop) : 'drop someone'; };
+    const out = [];
+    P.mustActivate.forEach(function(e){ out.push({ t: 'bad', h: 'Activate ' + nm(e) + ' (' + stx(e) + ': not IR-eligible here, so adds are blocked) · ' + room() }); });
+    P.moveIn.forEach(function(e){ out.push({ t: 'go', h: 'Move ' + nm(e) + ' (' + stx(e) + ') to IR' + (P.bestAdd ? ' · then add ' + nm(P.bestAdd) : '') }); });
+    P.returning.forEach(function(e){ out.push({ t: 'soon', h: nm(e) + ' back ' + escapeHTML(fmtDay(new Date(e.ret).toISOString().slice(0, 10))) + ' · ' + room() }); });
+    if(P.waitlist.length) out.push({ t: 'note', h: 'IR full: ' + P.waitlist.map(nm).join(', ') + ' stay' + (P.waitlist.length === 1 ? 's' : '') + ' on the bench' });
+    if(P.cantIR.length) out.push({ t: 'note', h: P.cantIR.map(function(e){ return nm(e) + ' (' + stx(e) + ')'; }).join(', ') + ' can’t go on IR here' });
+    return out;
+  }
+  function zIrListHTML(acts){ return '<ul class="zir-l">' + acts.map(function(a){ return '<li class="zir-' + a.t + '">' + a.h + '</li>'; }).join('') + '</ul>'; }
+  // card: the plan, or a quiet "nothing to do"; grid tile (short): only when there's a move to make
+  function zIrHTML(M, short){
+    const P = M.kind === 'ok' || M.kind === 'loading' ? zIrPlan(M.L) : null;
+    if(!P) return '';
+    const n = zIrMoves(P), acts = zIrActs(P).filter(function(a){ return !short || a.t !== 'note'; });
+    const used = P.used + ' of ' + P.slots + ' used';
+    if(!n && (short || !acts.length)) return short ? '' : '<div class="zlc zir ok"><span class="zlc-ic" aria-hidden="true">✓</span>IR set<span class="zlc-d"> · ' + used + '</span></div>';
+    return '<div class="zlc zir' + (n ? ' fix' : '') + '"><div class="zlc-h"><span class="zir-tag">IR</span>' + (n ? '<b>' + n + '</b> move' + (n === 1 ? '' : 's') : 'Nothing to move') + '<span class="zlc-d"> · ' + used + '</span></div>' + zIrListHTML(acts) + '</div>';
+  }
   // Phase 2 hook: +1 when the player is my starter in this league, -1 when he's my opponent's starter, 0 otherwise.
   function zImpact(M, pid){
     const has = function(s){ return !!(s && s.rows.some(function(r){ return r.pid === pid; })); };
@@ -15300,7 +15382,7 @@
   function zNums(M, s){
     if(!s) return null;
     if(!M.started) return { v: s.proj, kind: 'proj', cap: s.hasProj ? 'PROJ' : 'PROJ · not out yet', sub: '' };
-    return { v: s.pts, kind: 'act', cap: (s.pend ? 'Live plays ' + (s.pend > 0 ? '+' : '−') + Math.abs(s.pend).toFixed(2) + (s.allFinal ? '' : ' · ') : '') + (s.allFinal ? '' : 'Proj final ' + fmtPts(s.fin) + (s.est ? ' · est' : '')),
+    return { v: s.pts, kind: 'act', cap: (s.pend ? 'Live plays ' + (s.pend > 0 ? '+' : '−') + Math.abs(s.pend).toFixed(2) + (s.allFinal ? '' : ' · ') : '') + (s.allFinal ? '' : 'Proj final ' + fmtPts(s.fin) + (s.est ? ' · est' : '')),   // non-breaking: wraps only between parts
       sub: s.allFinal ? '' : (s.pre ? s.pre + ' yet to play' : 'All playing or done') };
   }
 
@@ -15360,7 +15442,7 @@
         '</div>' +
         '<div class="zt-bar zn-sbar" data-bar hidden><span></span></div>' +
         '<div class="zn-note" data-note hidden></div>' +
-        '<div data-lc></div>' +
+        '<div data-lc></div><div data-ir></div>' +
         '<details class="zn-starters" open><summary><span>Starters</span>' + CHEV + '</summary><div data-rows></div></details>' +
         '<details class="zn-starters zn-bench"><summary><span>Bench</span>' + CHEV + '</summary><div data-bench></div></details>' +
       '</div>';
@@ -15371,7 +15453,7 @@
         '<div class="zt-score"><span class="zt-side"><small data-tm="me"></small><b data-n="me">—</b></span><span class="zt-dash">–</span><span class="zt-side them"><small data-tm="opp"></small><b data-n="opp">—</b></span></div>' +
         '<div class="zt-bar" data-bar hidden><span></span></div>' +
         '<div class="zt-proj" data-proj></div>' +
-        '<div data-lc></div>' +
+        '<div data-lc></div><div data-ir></div>' +
         '<div class="zt-detail"><div data-compact></div><div class="zt-full" data-full></div></div>';
       tiles.appendChild(L.tile);
       L.dot = document.createElement('button');
@@ -15413,6 +15495,8 @@
     if(checks.length) sub.innerHTML += ' · ' + (fix.length
       ? '<button type="button" class="zn-lcsum fix" data-zn-lcgo="' + escapeHTML(fix[0].M.L.id) + '" title="Go to ' + escapeHTML(fix[0].M.L.name) + '">' + fix.length + ' lineup' + (fix.length === 1 ? '' : 's') + ' to fix</button>'
       : '<span class="zn-lcsum ok">Lineups set ✓</span>');
+    const irs = models.filter(function(M){ return M.kind === 'ok' && zIrMoves(zIrPlan(M.L)); });
+    if(irs.length){ const n = irs.reduce(function(a, M){ return a + zIrMoves(zIrPlan(M.L)); }, 0); sub.innerHTML += ' · <button type="button" class="zn-lcsum fix" data-zn-lcgo="' + escapeHTML(irs[0].L.id) + '" title="Go to ' + escapeHTML(irs[0].L.name) + '">' + n + ' IR move' + (n === 1 ? '' : 's') + '</button>'; }
     document.getElementById('zn-wk-l').textContent = 'Wk ' + z.week;
     zoneRenderBar();
     if(z.am.open) amRender();
@@ -15472,6 +15556,7 @@
       : '<span class="zt-lbl">PROJ</span> ' + fmtPts(M.my.fin) + (M.opp ? ' – ' + fmtPts(M.opp.fin) : '') + (M.my.est || (M.opp && M.opp.est) ? ' est' : '') + ' · ' + M.my.pre + ' yet to play';
     const lch = zLcHTML(M);
     [card, tile].forEach(function(el){ const lc = el.querySelector('[data-lc]'); if(lc._h !== lch){ lc.innerHTML = lch; lc._h = lch; } });
+    [[card, false], [tile, true]].forEach(function(x){ const el = x[0].querySelector('[data-ir]'), h = safeHTML('IR', function(){ return zIrHTML(M, x[1]); }); if(el._h !== h){ el.innerHTML = h; el._h = h; } });
     const rows = card.querySelector('[data-rows]'), rh = M.kind === 'ok' ? zRowsHTML(M) : '';
     if(rows._h !== rh){ rows.innerHTML = rh; rows._h = rh; }
     const bench = card.querySelector('[data-bench]'), bh = M.kind === 'ok' ? zBenchHTML(M) : '';
@@ -15994,14 +16079,15 @@
   const AM_TILES = [
     { id: 'root', title: 'Rooting guide', eyebrow: 'Games to watch' },
     { id: 'expo', title: 'My exposure', eyebrow: 'Your players, every league' },
+    { id: 'ir', title: 'IR & roster spots', eyebrow: 'Every league' },
     { id: 'wav', title: 'Waiver radar', eyebrow: 'Free agents who just scored' },
     { id: 'top', title: 'Top scorers', eyebrow: 'Starters, every matchup' },
     { id: 'plays', title: 'Biggest plays', eyebrow: 'Highest-scoring this week' },
     { id: 'ou', title: 'Over / under performers', eyebrow: 'Actual vs projection' },
     { id: 'hs', title: 'League high score', eyebrow: 'Median leagues' },
   ];
-  const AM_TILE_CAP = 6, AM_WAV_MIN = 8, AM_EXPO_MAX = 40;
-  ctx.zone.am = { open: false, lid: null, mid: null, tilesOpen: false, on: { root: true, expo: true, wav: true, top: true, plays: true, ou: true, hs: false }, expo: 'mine', game: null, posf: { top: 'All', plays: 'All' } };
+  const AM_TILE_CAP = 7, AM_WAV_MIN = 8, AM_EXPO_MAX = 40;
+  ctx.zone.am = { open: false, lid: null, mid: null, tilesOpen: false, on: { root: true, expo: true, ir: true, wav: true, top: true, plays: true, ou: true, hs: false }, expo: 'mine', game: null, posf: { top: 'All', plays: 'All' } };
   try{
     const s = JSON.parse(localStorage.getItem('rv-am') || 'null');
     if(s){ if(s.on) Object.keys(ctx.zone.am.on).forEach(function(k){ if(typeof s.on[k] === 'boolean') ctx.zone.am.on[k] = s.on[k]; }); if(/^(mine|against|both)$/.test(s.expo)) ctx.zone.am.expo = s.expo; if(s.lid) ctx.zone.am.lid = s.lid; if(s.posf) Object.keys(ctx.zone.am.posf).forEach(function(k){ if(typeof s.posf[k] === 'string') ctx.zone.am.posf[k] = s.posf[k]; }); }
@@ -16313,6 +16399,23 @@
         '<span class="am-xc">' + chips + '</span><span class="am-xk">×' + n + '</span></div>';
     }).join('') + '</div>';
   }
+  // IR in every league: the moves (zIrActs) and who's on IR, with status and ESPN's return date
+  function amIrHTML(){
+    const z = ctx.zone;
+    const blocks = amLeagues().map(function(L){
+      const P = zIrPlan(L);
+      if(!P) return '';
+      const acts = zIrActs(P), ir = (z.meta[L.id].roster.reserve || []).filter(function(pid){ return ctx.players[pid]; });
+      return '<div class="am-ir"><div class="am-irh"><b>' + escapeHTML(L.name) + '</b><span>' + P.used + ' of ' + P.slots + ' IR</span></div>' +
+        (acts.length ? zIrListHTML(acts) : '<p class="am-irok">✓ Nothing to do</p>') +
+        (ir.length ? '<div class="am-rows">' + ir.map(function(pid){
+          const p = ctx.players[pid], i = statusInfo(irStatus(pid)), r = irReturn(pid);
+          return '<div class="am-xr" data-am-pl="' + escapeHTML(pid) + '" role="button" tabindex="0">' + photoHTML(pid, 'am-xi') + '<span class="am-xn"><b>' + escapeHTML(p.position === 'DEF' ? (p.team || pid) + ' D/ST' : playerName(p)) + '</b><small>' + escapeHTML((p.position || '') + ' · ' + (p.team || 'FA')) + '</small></span>' +
+            '<span class="am-xc"><span class="am-lp' + (i ? '' : ' mine') + '">' + escapeHTML(i ? i.label : 'Healthy') + '</span>' + (r ? '<span class="am-lp">back ' + escapeHTML(fmtDay(new Date(r).toISOString().slice(0, 10))) + '</span>' : '') + '</span></div>';
+        }).join('') + '</div>' : '');
+    }).join('');
+    return blocks || '<p class="am-none">None of your leagues has IR spots.</p>';
+  }
   function amWaiverHTML(){
     const z = ctx.zone, stats = z.stats && z.statsWeek === z.week ? z.stats : null;
     if(!stats) return '<p class="am-none">Loading this week’s stats…</p>';
@@ -16500,7 +16603,7 @@
   function amTilesHTML(){
     const a = ctx.zone.am, on = AM_TILES.filter(function(t){ return a.on[t.id]; });
     const bar = '<div class="am-tbar"><span>Tiles · ' + on.length + ' of ' + AM_TILE_CAP + '</span>' + AM_TILES.map(function(t){ const full = !a.on[t.id] && on.length >= AM_TILE_CAP; return '<button type="button" class="am-tt' + (full ? ' full' : '') + '" data-am-tile="' + t.id + '" aria-pressed="' + !!a.on[t.id] + '"' + (full ? ' title="' + AM_TILE_CAP + ' tiles max: turn one off first"' : '') + '>' + (a.on[t.id] ? '✓ ' : '+ ') + escapeHTML(t.title) + '</button>'; }).join('') + '</div>';
-    const AM_BODY = { root: amRootHTML, expo: amExpoHTML, wav: amWaiverHTML, top: amTopHTML, plays: amPlaysHTML, ou: amOuHTML, hs: amHsHTML };
+    const AM_BODY = { root: amRootHTML, expo: amExpoHTML, ir: amIrHTML, wav: amWaiverHTML, top: amTopHTML, plays: amPlaysHTML, ou: amOuHTML, hs: amHsHTML };
     const body = function(t){ return safeHTML(t.title, AM_BODY[t.id]); };   // one tile failing never takes the board down
     const tiles = on.map(function(t){ return '<section class="am-tile" data-tid="' + t.id + '"><div class="am-th"><small>' + escapeHTML(t.eyebrow) + '</small><b>' + escapeHTML(t.title) + '</b></div><div class="am-tb">' + body(t) + '</div></section>'; }).join('') +
       (on.length < AM_TILE_CAP && on.length < AM_TILES.length ? '<div class="am-tile am-open">Open slot<br><small>Turn on a tile above</small></div>' : '');
@@ -16749,6 +16852,9 @@
       'Photos turns player pictures on or off in both the cards and the grid. In the condensed grid each photo has a thin ring in the player’s position color, and the better score in each slot is the brighter one. The thin bar under each score shows your share of the two totals (projected before kickoff).',
       'The live feed column folds into a slim rail (the arrows at its top) so the leagues get the room; click the rail to open it again.',
       'Each player has their own tile with a stripe in their position’s color, and slots are numbered (WR1, WR2, FLEX1) so you can spot your WR1 or tight end at a glance.'] },
+    { t: 'Injured reserve, every league', b: [
+      'Under the lineup check, each league shows its IR plan: how many IR spots you’re using, anyone who has to come off IR (a healthy player there blocks your adds in Sleeper), an open spot to use, and players about to return (ESPN’s return date) with what to do when they do: an open roster spot, a hurt player who can take the IR spot, or the cheapest drop (fewest rest-of-season points in that league’s scoring).',
+      'It uses each league’s own IR rules (which statuses are allowed) and roster size. The header counts IR moves across all your leagues. The Scoreboard’s “IR & roster spots” tile puts every league’s plan and IR players in one place.'] },
     { t: 'Lead change', b: [
       'When a refresh flips who’s ahead in a league, that card’s border glows softly for a moment and a small “Lead change” label fades in and out. Only actual scores count, not projections.'] },
     { t: 'Refresh and update timing', b: [
