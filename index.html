@@ -24,7 +24,8 @@
   // Apply the saved theme before first paint so there is no flash of the wrong one.
   (function(){ try{ var t = localStorage.getItem('rv-theme'); if(t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t); }catch(e){ console.warn('Theme preference unavailable', e); } })();
   (function(){ try{ if(localStorage.getItem('rv-cards') === 'detailed') document.documentElement.classList.add('cards-detailed'); }catch(e){ console.warn('Card preference unavailable', e); } })();
-  (function(){ try{ if(localStorage.getItem('rv-pl-rows') === 'compact') document.documentElement.classList.add('pl-compact'); }catch(e){} })();
+  (function(){ try{ if(localStorage.getItem('rv-cards') !== 'detailed') document.documentElement.classList.add('pl-compact'); }catch(e){} })();
+  (function(){ try{ const v = localStorage.getItem('rv-nav'); if(v === 'icons' || v === 'bar') document.documentElement.classList.add('nav-' + v); }catch(e){} })();
 </script>
 <style>
   /* ============ design tokens ============
@@ -198,7 +199,6 @@
   .slot-row{ display: flex; align-items: center; gap: 12px; padding: 10px 14px; position: relative; cursor: pointer; transition: background .18s var(--ease); }
   .slot-row + .slot-row::before{ content:''; position:absolute; top:0; left: 108px; right: 14px; height: 1px; background: var(--hair); }
   .slot-row:active{ background: var(--surface-2); }
-  :where(#starters-list, #bench-list, #fa-list) .slot-row:nth-child(even){ background: color-mix(in srgb, var(--text) 3.5%, transparent); }   /* zebra: easier to track a player across the row */
   /* team marks (avatar badge, game logos): the NFL logo on a deep team-color disc, the same in both themes so every
      logo reads the same way; a faint halo keeps dark logos (LV, NO, PIT) visible on it */
   .tm-badge, .it-tm{ background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--tc) 62%, #2a2a30), color-mix(in srgb, var(--tc) 30%, #0e0e11) 78%); }
@@ -4120,6 +4120,139 @@
   .cd-act button:disabled{ opacity: .4; }
   @container pr (max-width: 600px){ .cd-deckw{ --cdw: min(300px, 64cqw); } }
   @media (prefers-reduced-motion: reduce){ .cd-in, .cd-deck > .cd{ transition: none !important; } .cd-deck.deal > .cd{ animation: none !important; } }
+
+  /* ---- Cleaner layout (Oct 2026): grouped sidebar with Icons / Bottom bar options, Simple / Detailed lists, matchup
+     difficulty in five shades, weather icons, position tints instead of zebra rows, player panel opens on pick ---- */
+
+  /* quieter sidebar footer: theme and data details live in Settings */
+  .side-foot .data-status, .side-foot .theme-seg{ display: none; }
+  .side-tools{ display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+  .side-collapse{ display: grid; place-items: center; width: 34px; height: 34px; min-height: 0; padding: 0; border-radius: 10px; background: none; color: var(--text-3); }
+  .side-collapse:hover{ background: var(--surface-2); color: var(--text); }
+  .side-collapse svg{ width: 18px; height: 18px; }
+
+  /* sidebar sections */
+  .nav-sec{ display: block; padding: 16px 10px 5px; font-size: 11px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--text-3); }
+  .nav-thumb + .nav-sec{ padding-top: 2px; }
+
+  /* Settings › Appearance: navigation style */
+  .nav-set-sub{ margin-top: 16px; }
+  .nav-seg{ display: inline-flex; background: var(--surface-2); border-radius: 999px; padding: 3px; gap: 2px; }
+  .nav-seg button{ background: none; color: var(--text-2); padding: 6px 12px; font-size: 12.5px; font-weight: 500; min-height: 30px; border-radius: 999px; }
+  .nav-seg button[aria-pressed="true"]{ background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.14); }
+
+  @media (max-width: 1023px){ .tab-btn[data-view="compare"]{ display: none; } }   /* phones: five tabs; Compare via the matchup card and search */
+  @media (min-width: 1024px){
+    /* the sidebar scrolls on its own when it is taller than the window (laptops), without moving the page */
+    .side{ overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+    /* short windows: tighter sidebar so everything usually fits without scrolling */
+    @media (max-height: 820px){
+      .side{ gap: 12px; padding-top: 16px; padding-bottom: 14px; }
+      .nav-sec{ padding-top: 10px; padding-bottom: 3px; }
+      .nav-btn{ padding-top: 7px; padding-bottom: 7px; }
+      .side-search{ margin-bottom: 0; }
+    }
+    /* icons only: a 76px rail, labels as tooltips, section labels become short rules */
+    html.nav-icons .shell{ grid-template-columns: 76px minmax(0, 1fr); }
+    html.nav-icons .side{ padding: 20px 0; align-items: center; gap: 14px; }
+    html.nav-icons .side :is(.wordmark, .side-search > span, .side-search kbd, .zn-entry > span, .zn-entry > small, .league-txt, .league-chev, .nav-btn > span:not(.nav-badge), .nav-btn kbd){ display: none; }
+    html.nav-icons .brand{ padding: 4px 0; }
+    html.nav-icons :is(.side-search, .side-zone, .league-card, .nav-btn){ width: 44px; height: 44px; padding: 0; margin: 0; justify-content: center; }
+    html.nav-icons .league-card{ display: flex; align-items: center; }
+    html.nav-icons .nav{ width: 44px; }
+    html.nav-icons .nav-sec{ width: 28px; height: 1px; margin: 9px auto; padding: 0; background: var(--hair); font-size: 0; }
+    html.nav-icons .nav-thumb + .nav-sec{ display: none; }
+    html.nav-icons .nav-btn .nav-badge{ top: 3px; right: 3px; transform: none; }
+    html.nav-icons .league-menu{ width: 280px; }
+    html.nav-icons .side-tools{ justify-content: center; }
+    html.nav-icons .side-collapse svg{ transform: scaleX(-1); }
+
+    /* floating bar at the bottom, as on phones */
+    html.nav-bar .shell{ display: block; }
+    html.nav-bar .side{ display: none; }
+    html.nav-bar .tabbar{ display: flex; max-width: 620px; }
+    html.nav-bar .main{ position: relative; max-width: 1640px; margin: 0 auto; padding-bottom: 120px; }
+    html.nav-bar .m-brand{ display: flex; }
+    html.nav-bar .ph-search{ position: absolute; z-index: 5; top: 24px; right: 36px; display: grid; place-items: center; width: 40px; height: 40px; border: 0;
+      border-radius: 50%; background: var(--surface-2); color: var(--text); cursor: pointer; }
+    html.nav-bar .ph-search svg{ width: 19px; height: 19px; }
+  }
+
+  /* page header: one line each, no squeezed wrapping on phones */
+  .page-head > div:first-child{ min-width: 0; flex: 1; }
+  #page-eyebrow, .page-sub, .fresh{ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .page-sub{ font-size: 15px; }
+  .fresh{ margin-top: 2px; }
+  .top-actions button.is-hidden{ display: none; }   /* hidden buttons were still taking ~170px and squeezing the title on phones */
+
+  /* lineup: content first. Matchup is a compact summary, Huddle a slim row, no hint text */
+  .st-hint{ display: none; }
+  .mu-card{ padding: 16px 18px; }
+  .t-av.mu-av{ width: 44px; height: 44px; }
+  @media (min-width: 900px){ .t-av.mu-av{ width: 52px; height: 52px; } .mu-card .mu-pts{ font-size: 34px; } }
+  .mu-name span{ min-height: 0; -webkit-line-clamp: 1; }
+  .mu-sub{ font-size: 12.5px; color: var(--text-3); }
+  .mu-foot{ border-top: 0; padding-top: 0; margin-top: 8px; }
+  .hd-card{ padding: 10px 12px 10px 10px; background: var(--surface); box-shadow: var(--shadow); gap: 12px; }
+  .hd-card:hover{ box-shadow: var(--shadow), inset 0 0 0 1px var(--hair); }
+  .hd-ico{ width: 36px; height: 36px; border-radius: 10px; }
+  .hd-ico svg{ width: 20px; height: 20px; }
+  .hd-name{ font-size: 15px; }
+  .hd-go{ padding: 8px 14px; font-size: 13.5px; }
+  @media (max-width: 480px){
+    .hd-card{ grid-template-columns: auto minmax(0, 1fr) auto; }
+    .hd-go{ grid-column: auto; min-height: 36px; }
+  }
+
+  /* player panel (wide screens): closed until you pick a player, then slides in */
+  @media (min-width: 1200px) and (prefers-reduced-motion: no-preference){
+    .panes:not(.closed):not(.solo) .pane-detail{ animation: paneSlideIn .32s var(--ease); }
+  }
+  @keyframes paneSlideIn{ from{ opacity: 0; transform: translateX(28px); } }
+
+  /* rows: instead of zebra stripes, each lineup row carries a faint tint of its position color, so position groups read
+     apart in both themes (a tint layered over the row, so state colors like swapped / bye still show). Hairlines a bit
+     stronger in dark. */
+  :where(#starters-list, #bench-list) :where(.slot-row[style*="--pc"]){ background-image: linear-gradient(color-mix(in srgb, var(--pc) 5%, transparent), color-mix(in srgb, var(--pc) 5%, transparent)); }
+  :root[data-theme="dark"] :where(#starters-list, #bench-list) :where(.slot-row[style*="--pc"]){ background-image: linear-gradient(color-mix(in srgb, var(--pc) 9%, transparent), color-mix(in srgb, var(--pc) 9%, transparent)); }
+  :root[data-theme="dark"] .slot-row + .slot-row::before{ background: color-mix(in srgb, var(--text) 12%, transparent); }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]) :where(#starters-list, #bench-list) :where(.slot-row[style*="--pc"]){ background-image: linear-gradient(color-mix(in srgb, var(--pc) 9%, transparent), color-mix(in srgb, var(--pc) 9%, transparent)); }
+    :root:not([data-theme="light"]) .slot-row + .slot-row::before{ background: color-mix(in srgb, var(--text) 12%, transparent); }
+  }
+
+  /* Detail level, Simple (html:not(.cards-detailed) / html.pl-compact; Settings › Detail level or the switch on each list):
+     one meta line per player with the opponent colored by difficulty; ranks, ENV, matchup-rank chips, ranges and snaps
+     move to Detailed and the player page */
+  html:not(.cards-detailed) .hd-chips, html:not(.cards-detailed) .hd-status, html:not(.cards-detailed) .mu-sub{ display: none; }
+  html:not(.cards-detailed) :is(#starters-list, #bench-list) .slot-row :is(.it-chip, .dvp-chip, .depth-chip, .rng){ display: none; }
+  html:not(.cards-detailed) :is(#starters-list, #bench-list) .slot-row .col-snap, html:not(.cards-detailed) #roster-view .list-head .h-snap{ display: none !important; }
+  html.pl-compact #fa-list .slot-row :is(.it-chip, .dvp-chip, .depth-chip, .rng, .player-name .ecr-chip){ display: none; }
+  html.pl-compact #fa-list .slot-row :is(.col-snap, .col-tgt), html.pl-compact #fa-view .list-head :is(.h-snap, .h-tgt){ display: none !important; }
+  .slot-row .opp:is(.mt-easy, .mt-good, .mt-mid, .mt-tough, .mt-hard){ font-weight: 650; }
+
+  /* matchup difficulty in five steps: the in-between shades are mixes of their neighbors, so they follow both themes */
+  :root{ --mt-good-c: color-mix(in srgb, var(--accent) 55%, var(--warn)); --mt-tough-c: color-mix(in srgb, var(--warn) 45%, var(--danger)); }
+  .opp.mt-good{ color: var(--mt-good-c); font-weight: 600; } .opp.mt-tough{ color: var(--mt-tough-c); font-weight: 600; }
+  .dvp-chip.good{ background: color-mix(in srgb, var(--mt-good-c) 14%, transparent); color: var(--mt-good-c); }
+  .dvp-chip.tough{ background: color-mix(in srgb, var(--mt-tough-c) 14%, transparent); color: var(--mt-tough-c); }
+
+  /* game-day weather icon next to the opponent (dome indoors); the forecast is in its tooltip */
+  .wx-ic{ display: inline-flex; vertical-align: -2px; margin-left: 4px; color: var(--text-2); }
+  .wx-ic:empty{ display: none; }
+  .wx-ic svg{ width: 14px; height: 14px; }
+  .col-opp .wx-ic svg{ width: 13px; height: 13px; }
+
+  .pl-density{ display: none !important; }   /* replaced by the Simple / Detailed switch */
+  .density-seg{ margin-left: auto; align-self: center; }
+  .section-title .density-seg + .xbtn{ margin-left: 0; }
+  .section-title .density-seg button{ padding: 5px 10px; min-height: 28px; font-size: 12.5px; }
+  .lu-bar .wk-seg button{ white-space: nowrap; }
+  @media (max-width: 480px){
+    .lu-bar{ flex-wrap: nowrap; gap: 6px; }
+    .lu-bar .wk-seg button{ padding: 6px 6px; font-size: 12px; }
+    .hd-wk{ display: none; }
+  }
 </style>
 </head>
 <body>
@@ -4183,12 +4316,15 @@
     </div>
     <nav class="nav" id="side-nav" aria-label="Sections">
       <span class="nav-thumb"></span>
+      <span class="nav-sec" aria-hidden="true">Your team</span>
       <button class="nav-btn" data-view="roster"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><span>Lineup</span><span class="nav-badge" data-bye-badge hidden></span></button>
       <button class="nav-btn nav-huddle" data-huddle title="Sleepa Huddle (H)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="7" r="2.6"/><circle cx="5.5" cy="10" r="2.2"/><circle cx="18.5" cy="10" r="2.2"/><path d="M7.5 20a4.5 4.5 0 0 1 9 0M2.5 18.5a3.3 3.3 0 0 1 5-2.8M21.5 18.5a3.3 3.3 0 0 0-5-2.8"/></svg><span>Huddle</span><kbd>H</kbd></button>
-      <button class="nav-btn" data-view="fa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg><span>Players</span></button>
       <button class="nav-btn" data-view="league"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0V4zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8.5 20h7M10 17h4"/></svg><span>League</span></button>
+      <span class="nav-sec" aria-hidden="true">Research</span>
+      <button class="nav-btn" data-view="fa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg><span>Players</span></button>
       <button class="nav-btn" data-view="compare"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v16M7 4l-3 3M7 4l3 3M17 20V4M17 20l-3-3M17 20l3-3"/></svg><span>Compare</span></button>
       <button class="nav-btn" data-view="intel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"/></svg><span>Intel</span></button>
+      <span class="nav-sec" aria-hidden="true">More</span>
       <button class="nav-btn" data-view="resources"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h10a4 4 0 0 1 4 4v12H9a4 4 0 0 1-4-4V4z"/><path d="M9 20a4 4 0 0 1 0-8h10M9 8h6"/></svg><span>Resources</span></button>
       <button class="nav-btn" data-view="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><span>Settings</span></button>
     </nav>
@@ -4333,8 +4469,8 @@
         <section class="view" id="settings-view" style="display:none;">
           <div class="settings">
             <div class="card set-card set-res"><h3>Resources</h3><p class="set-sub">News, rankings, injury reports and tools from around the web.</p><button type="button" class="quiet-btn" data-goto-view="resources">Open Resources ›</button></div>
-            <div class="card set-card"><h3>Appearance</h3><p class="set-sub">Auto follows your device's light or dark setting.</p><div class="theme-seg" role="group" aria-label="Theme"><button type="button" data-theme-opt="system">Auto</button><button type="button" data-theme-opt="light">Light</button><button type="button" data-theme-opt="dark">Dark</button></div></div>
-            <div class="card set-card"><h3>Lineup cards</h3><p class="set-sub">Compact shows what you need to set a lineup: projection, last game, opponent colored by matchup (green easy, amber average, red tough), injury or bye flags, and an arrow when snap share jumped or dropped. Tap a player for season stats, snaps, depth chart and the full matchup ranking. Detailed puts all of it on the card.</p><div class="cards-seg" role="group" aria-label="Lineup cards"><button type="button" data-cards-opt="compact">Compact</button><button type="button" data-cards-opt="detailed">Detailed</button></div></div>
+            <div class="card set-card"><h3>Appearance</h3><p class="set-sub">Auto follows your device's light or dark setting.</p><div class="theme-seg" role="group" aria-label="Theme"><button type="button" data-theme-opt="system">Auto</button><button type="button" data-theme-opt="light">Light</button><button type="button" data-theme-opt="dark">Dark</button></div><p class="set-sub nav-set-sub">Navigation on wide screens: the full sidebar, icons only, or a floating bar at the bottom like on phones.</p><div class="nav-seg" role="group" aria-label="Navigation"><button type="button" data-nav-opt="sidebar">Sidebar</button><button type="button" data-nav-opt="icons">Icons</button><button type="button" data-nav-opt="bar">Bottom bar</button></div></div>
+            <div class="card set-card"><h3>Detail level</h3><p class="set-sub">For Lineup and Players. Simple shows what you need to decide: projection, last game, the opponent colored by how tough the matchup is (five shades from green, easy, through amber to red, tough: points that defense allows to the position), a weather icon for the game (a dome indoors), and injury or bye flags. Detailed adds ranks, game environment, projection ranges, snaps and season stats. Tap any player for everything.</p><div class="cards-seg" role="group" aria-label="Detail level"><button type="button" data-cards-opt="compact">Simple</button><button type="button" data-cards-opt="detailed">Detailed</button></div></div>
             <div class="card set-card"><h3>Your leagues</h3><p class="set-sub">Tap a league to switch to it.</p><div class="league-list" data-league-list></div></div>
             <div class="card set-card"><h3 data-zone-name>Sleepa Zone</h3><p class="set-sub">Every league at once: your team against each opponent, with live scores while games are on.</p><div class="zn-set-btns"><button type="button" class="quiet-btn" data-zone-open>Open <span data-zone-name>Sleepa Zone</span></button><button type="button" class="quiet-btn" data-zone-guide>How <span data-zone-name>Sleepa Zone</span> reads the game</button></div></div>
             <div class="card set-card"><h3>Current team</h3>
@@ -4587,26 +4723,20 @@
     v = v === 'detailed' ? 'detailed' : 'compact';
     try{ localStorage.setItem('rv-cards', v); }catch(e){ console.warn('Could not save card preference', e); }
     document.documentElement.classList.toggle('cards-detailed', v === 'detailed');
+    document.documentElement.classList.toggle('pl-compact', v === 'compact');   // one Simple / Detailed choice for Lineup and Players
     document.querySelectorAll('.cards-seg button').forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-cards-opt') === v ? 'true' : 'false'); });
+    document.querySelectorAll('[data-pl-rows]').forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-pl-rows') === v ? 'true' : 'false'); });
   }
   document.addEventListener('click', function(e){
     const b = e.target.closest && e.target.closest('.cards-seg button');
     if(b) applyCards(b.getAttribute('data-cards-opt'));
   });
   (function(){ let v = 'compact'; try{ v = localStorage.getItem('rv-cards') || 'compact'; }catch(e){} applyCards(v); })();
-  // Players tab rows on phones: compact (name, position · team · opponent, projection / last) or detailed (default).
-  // Remembered on this device, like the lineup card style.
-  function applyPlRows(v, save){
-    v = v === 'compact' ? 'compact' : 'detailed';
-    if(save){ try{ localStorage.setItem('rv-pl-rows', v); }catch(e){ console.warn('Could not save row style', e); } }
-    document.documentElement.classList.toggle('pl-compact', v === 'compact');
-    document.querySelectorAll('[data-pl-rows]').forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-pl-rows') === v ? 'true' : 'false'); });
-  }
+  // Players rows follow the same Simple / Detailed choice (the row-style buttons on Players set it too).
   document.addEventListener('click', function(e){
     const b = e.target.closest && e.target.closest('[data-pl-rows]');
-    if(b) applyPlRows(b.getAttribute('data-pl-rows'), true);
+    if(b) applyCards(b.getAttribute('data-pl-rows'));
   });
-  (function(){ let v = 'detailed'; try{ v = localStorage.getItem('rv-pl-rows') || 'detailed'; }catch(e){} applyPlRows(v); })();
   document.addEventListener('click', function(e){
     const b = e.target.closest && e.target.closest('.theme-seg button');
     if(!b) return;
@@ -6079,7 +6209,9 @@
   function focusVisible(){ return paneMode() ? !els.panes.classList.contains('solo') && !ctx.paneClosed : els.overlay.classList.contains('open'); }
   // Wide screens: the player panel can be closed (× on it, clicking the selected player again, Esc). Closed, the list
   // takes the full width and nothing opens it by itself (refreshes, switching tabs); picking a player opens it again.
-  ctx.paneClosed = false;
+  // It starts closed: the list gets the full width until you pick someone.
+  ctx.paneClosed = true;
+  els.panes.classList.add('closed');
   function closePane(){
     if(!paneMode()) return;
     ctx.paneClosed = true;
@@ -8375,11 +8507,12 @@
     const g = games[String(week)];
     return g ? { text: g, bye: false } : { text: 'BYE', bye: true };
   }
-  function matchupHTML(team){
+  function matchupHTML(team, pid){
     const live = gameStatusHTML(team);
     if(live) return ' · ' + live;
     const m = matchup(team, ctx.week);
     if(!m) return ' · <span class="opp">—</span>';
+    if(!m.bye && pid) return ' · ' + oppToneHTML(pid, m.text);
     return ' · <span class="opp' + (m.bye ? ' bye' : '') + '">' + escapeHTML(m.text) + '</span>';
   }
   function isOnBye(pid){ const p = ctx.players[pid]; const m = p && matchup(p.team, ctx.week); return !!(m && m.bye); }
@@ -8473,12 +8606,69 @@
       const m = matchup(p.team, ctx.week);
       if(!m) out = '<span class="opp">—</span>';
       else if(m.bye) out = '<span class="opp bye">BYE</span>';
-      else {
-        const i = dvpInfo(pid);
-        out = '<span class="opp' + (i ? ' mt-' + i.tone : '') + '"' + (i ? ' title="' + escapeHTML(dvpSentence(i)) + '"' : '') + '>' + escapeHTML(m.text) + '</span>';
-      }
+      else out = oppToneHTML(pid, m.text);
     }
     return ' · ' + out + snapFlagHTML(pid);
+  }
+  // Matchup difficulty for a player this week, in five steps (green, light green, amber, orange, red): where the defense
+  // ranks in points allowed to his position, in league scoring (dvpInfo; rank 1 allows the most). Weather is not part
+  // of it: it shows on its own as an icon (wxIconHTML).
+  const OPP_STEPS = ['easy', 'good', 'mid', 'tough', 'hard'];
+  const OPP_WORDS = { easy: 'Easy matchup', good: 'Good matchup', mid: 'Average matchup', tough: 'Tough matchup', hard: 'Hard matchup' };
+  function oppTone(pid){
+    const i = dvpInfo(pid);
+    if(!i) return null;
+    const f = i.of > 1 ? (i.rank - 1) / (i.of - 1) : 0.5;   // 0 = allows the most, 1 = the fewest
+    const tone = OPP_STEPS[Math.min(OPP_STEPS.length - 1, Math.floor(f * OPP_STEPS.length))];
+    return { tone: tone, why: OPP_WORDS[tone] + ': ' + dvpSentence(i) };
+  }
+  function oppToneHTML(pid, text){
+    const t = oppTone(pid), p = ctx.players[pid];
+    return '<span class="opp' + (t ? ' mt-' + t.tone : '') + '"' + (t ? ' title="' + escapeHTML(t.why) + '"' : '') + '>' + escapeHTML(text) + '</span>' + wxIconHTML(p && p.team);
+  }
+
+  // Game-day weather as a small icon next to the opponent (as Sleeper does): sun / moon, partly cloudy, clouds, wind,
+  // rain, storm, snow, or a dome indoors. Forecasts come through the Intel cache (IT_WX, Open-Meteo, asked for once per
+  // game); wxPaint fills the icons in when one lands. No icon beyond the forecast horizon or once the game is over.
+  const WX_SVG = {
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>',
+    moon: '<path d="M19.5 14.5A7.5 7.5 0 1 1 9.5 4.5a6 6 0 0 0 10 10z"/>',
+    partly: '<path d="M8 3.5v1.5M3.5 8H5M4.8 4.8l1 1M11.2 4.8l-1 1"/><path d="M5.6 10.4A3 3 0 1 1 10.6 7"/><path d="M8.5 20h8a3.5 3.5 0 0 0 .4-7 5 5 0 0 0-9.6 1.2A2.9 2.9 0 0 0 8.5 20z"/>',
+    cloud: '<path d="M7 19h10a4 4 0 0 0 .5-8 6 6 0 0 0-11.4 1.4A3.3 3.3 0 0 0 7 19z"/>',
+    wind: '<path d="M3 9h10.5a2.5 2.5 0 1 0-2.5-2.5M3 13h15a2.5 2.5 0 1 1-2.5 2.5M3 17h7"/>',
+    rain: '<path d="M7 14h10a3.5 3.5 0 0 0 .4-7 5 5 0 0 0-9.6 1.2A2.9 2.9 0 0 0 7 14z"/><path d="M8 17l-1 3M12 17l-1 3M16 17l-1 3"/>',
+    storm: '<path d="M7 14h10a3.5 3.5 0 0 0 .4-7 5 5 0 0 0-9.6 1.2A2.9 2.9 0 0 0 7 14z"/><path d="M12.5 15l-2 3.5h3l-2 3.5"/>',
+    snow: '<path d="M7 14h10a3.5 3.5 0 0 0 .4-7 5 5 0 0 0-9.6 1.2A2.9 2.9 0 0 0 7 14z"/><path d="M8 18h.01M12 17h.01M16 18h.01M10 21h.01M14 21h.01"/>',
+    dome: '<path d="M3 18.5h18M5 18.5a7 7 0 0 1 14 0M12 11.5v7M8.6 12.5c-.6 1.6-.9 3.6-.9 6M15.4 12.5c.6 1.6.9 3.6.9 6"/>'
+  };
+  function wxKind(g){
+    const c = IT_WX[g.id], roof = INTEL.venues ? intelRoofOf(g) : null;
+    if(!c) itWantWeather([g], true);
+    if(roof === 'indoor' || (c && c.st === 'skip' && c.why === 'indoor')) return { k: 'dome', t: 'Indoors (dome)' };
+    if(!c || c.st !== 'ok') return null;
+    const w = c.w, T = INTEL_TUNE, hrs = w.hourly && w.hourly.length ? w.hourly : [w];
+    const any = function(f){ return hrs.some(function(h){ return typeof h.code === 'number' && f(h.code); }); };
+    const k = any(function(x){ return x >= 95; }) ? 'storm'
+      : w.snow ? 'snow'
+      : any(function(x){ return (x >= 51 && x <= 67) || (x >= 80 && x <= 82); }) || (typeof w.mm === 'number' && w.mm >= T.RAIN_MM) ? 'rain'
+      : typeof w.wind === 'number' && w.wind >= T.WIND_HIGH ? 'wind'
+      : w.code >= 3 ? 'cloud' : w.code >= 1 ? 'partly' : w.night ? 'moon' : 'sun';
+    const words = { storm: 'Storms', snow: 'Snow', rain: 'Rain', wind: 'Windy', cloud: intelSky(w.code) || 'Cloudy', partly: 'Partly cloudy', sun: 'Sunny', moon: 'Clear' };
+    const t = [words[k], typeof w.temp === 'number' ? Math.round(w.temp) + '°' : '',
+      typeof w.wind === 'number' ? 'wind ' + Math.round(w.wind) + ' mph' : '', roof === 'tbd' ? 'retractable roof' : ''].filter(Boolean).join(' · ');
+    return { k: k, t: t };
+  }
+  function wxInner(g){
+    const x = wxKind(g);
+    return x ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="' + escapeHTML(x.t) + '"><title>' + escapeHTML(x.t) + '</title>' + WX_SVG[x.k] + '</svg>' : '';
+  }
+  function wxIconHTML(team){
+    const g = team ? intelGameFor(team) : null;
+    return g ? '<span class="wx-ic" data-wx-g="' + escapeHTML(g.id) + '">' + wxInner(g) + '</span>' : '';
+  }
+  function wxPaint(gid){
+    const g = intelGames().find(function(x){ return x.id === gid; });
+    if(g) document.querySelectorAll('.wx-ic[data-wx-g="' + CSS.escape(gid) + '"]').forEach(function(el){ el.innerHTML = wxInner(g); });
   }
   function snapFlagHTML(pid){
     const tr = hasSnaps(pid) ? snapTrend(pid) : null;
@@ -8493,10 +8683,11 @@
     return '<span class="depth-chip" title="Depth chart">' + escapeHTML((e && e.d) || '—') + '</span>';
   }
   // Table-mode cells (desktop): opponent on its own, snap % with trend arrow.
-  function oppOnly(team){
+  function oppOnly(team, pid){
     const live = gameStatusHTML(team, true);   // narrow table column: state + score
     if(live) return live;
     const m = matchup(team, ctx.week);
+    if(m && !m.bye && pid) return oppToneHTML(pid, m.text);
     return m ? '<span class="opp' + (m.bye ? ' bye' : '') + '">' + escapeHTML(m.text) + '</span>' : '<span class="opp">—</span>';
   }
   function snapCell(pid){
@@ -9332,17 +9523,17 @@
     const byeChip = byeStarter ? '<span class="status-chip bye-tag">Bye</span>' : '';
 
     return '' +
-      '<div class="slot-row' + (isNewHere ? ' swapped' : '') + (byeStarter ? ' bye-start' : '') + '" ' +
+      '<div class="slot-row' + (isNewHere ? ' swapped' : '') + (byeStarter ? ' bye-start' : '') + '" style="--pc:' + color + '" ' +
         (ro ? 'data-open="' + escapeHTML(playerId) + '"' : 'data-player-id="' + escapeHTML(playerId) + '" data-slot-index="' + (slotIndex !== undefined ? slotIndex : '') + '"') + '>' +
         '<div class="slot-tag" style="color:' + color + '; border-color:' + color + ';" title="' + escapeHTML(slotLabel || pos) + '">' + escapeHTML(slotShort(slotLabel || pos)) + '</div>' +
         photoBadgeHTML(playerId, 'avatar', ro ? '' : analyzeAttr(playerId)) +
         '<div class="player-info">' +
           '<div class="player-name">' + (ro ? '<span class="pn">' + escapeHTML(name) + '</span>' : analyzeName(playerId, name)) + byeChip + statusChip + newChip + ecrChipHTML(playerId) + '</div>' +
-          '<div class="player-meta"><span class="m-pos">' + escapeHTML(eligLabel(playerId)) + '</span><span class="m-rk">' + (ecrChipHTML(playerId) || escapeHTML(eligLabel(playerId))) + '</span>' + (eligLabel(playerId).indexOf('/') !== -1 ? '<span class="m-elig" title="Eligible at ' + escapeHTML(eligLabel(playerId)) + '">+' + escapeHTML(eligLabel(playerId).split('/').slice(1).join('/')) + '</span>' : '') + ' · ' + escapeHTML(team) + '<span class="m-opp">' + matchupHTML(p.team) + ' ' + dvpChipHTML(playerId) + '</span><span class="m-opp-c">' + oppCompactHTML(playerId) + '</span> ' + depthChipHTML(playerId) + itChipHTML(p.team) + rcBadgeHTML(playerId) + '</div>' +
+          '<div class="player-meta"><span class="m-pos">' + escapeHTML(eligLabel(playerId)) + '</span><span class="m-rk">' + (ecrChipHTML(playerId) || escapeHTML(eligLabel(playerId))) + '</span>' + (eligLabel(playerId).indexOf('/') !== -1 ? '<span class="m-elig" title="Eligible at ' + escapeHTML(eligLabel(playerId)) + '">+' + escapeHTML(eligLabel(playerId).split('/').slice(1).join('/')) + '</span>' : '') + ' · ' + escapeHTML(team) + '<span class="m-opp">' + matchupHTML(p.team, playerId) + ' ' + dvpChipHTML(playerId) + '</span><span class="m-opp-c">' + oppCompactHTML(playerId) + '</span> ' + depthChipHTML(playerId) + itChipHTML(p.team) + rcBadgeHTML(playerId) + '</div>' +
           (keyStats ? '<div class="key-stats">' + keyStats + '</div>' : '') +
           signalsHTML(playerId, false) +
         '</div>' +
-        '<div class="col col-opp">' + oppOnly(p.team) + (gameStatusHTML(p.team, true) ? '' : dvpChipHTML(playerId, true)) + '</div>' +
+        '<div class="col col-opp">' + oppOnly(p.team, playerId) + (gameStatusHTML(p.team, true) ? '' : dvpChipHTML(playerId, true)) + '</div>' +
         '<div class="col col-snap">' + snapCell(playerId) + '</div>' +
         pointsColsHTML(playerId) +
         '<div class="col col-l3">' + fmtPts(last3Avg(playerId)) + '</div>' +
@@ -12665,14 +12856,14 @@
           '<div class="player-meta">' + escapeHTML(eligLabel(pid)) + ' · ' + escapeHTML(p.team || 'FA') +
             (tc != null ? ' · <span class="tr-count ' + ctx.pl.trendKind + '">' + (ctx.pl.trendKind === 'add' ? '+' : '−') + fmtCount(tc) + '</span>' : '') +
             (ctx.pl.view === 'trend' && ctx.pl.trendKind === 'rise' ? risingHTML(pid) : '') +
-            '<span class="m-opp">' + matchupHTML(p.team) + ' ' + dvpChipHTML(pid) + '</span> ' + depthChipHTML(pid) + '</div>' +
+            '<span class="m-opp">' + matchupHTML(p.team, pid) + ' ' + dvpChipHTML(pid) + '</span> ' + depthChipHTML(pid) + '</div>' +
           (function(){ const k = plFormStats(pid) + keyStatsLine(pid, p.position); return k ? '<div class="key-stats">' + k + '</div>' : ''; })() +
           who + signalsHTML(pid, true) +
         '</div>' +
         pointsColsHTML(pid) + plFormCols(pid) + plXfpCols(pid) +
         '<div class="col col-snap">' + snapCell(pid) + '</div>' +
         '<div class="col col-tgt">' + (isIdp(pid) ? '<span title="Tackle share">' + pct(seasonShare(pid, 'k')) + '</span>' : SKILL_POSITIONS.indexOf(p.position) !== -1 && p.position !== 'QB' ? pct(seasonShare(pid, 't')) : '—') + '</div>' +
-        '<div class="col col-opp">' + oppOnly(p.team) + (gameStatusHTML(p.team, true) ? '' : dvpChipHTML(pid, true)) + '</div>' +
+        '<div class="col col-opp">' + oppOnly(p.team, pid) + (gameStatusHTML(p.team, true) ? '' : dvpChipHTML(pid, true)) + '</div>' +
         '<div class="col col-vs">' + who.replace('class="fa-vs"', 'class="fa-vs-inline"') + '</div>' +
         '<div class="row-vs">' + vsBtn(pid) + '</div>' +
       '</div>';
@@ -13865,7 +14056,7 @@
   function dvpChipHTML(pid, short){
     const i = dvpInfo(pid);
     if(!i) return '';
-    return '<span class="dvp-chip ' + (i.early ? 'early' : i.tone) + '" title="' + escapeHTML(dvpSentence(i)) + '">' + dvpLabel(i, short) + (i.early && !short ? ' · ' + i.g + ' gm' + (i.g > 1 ? 's' : '') : '') + '</span>';
+    return '<span class="dvp-chip ' + (i.early ? 'early' : oppTone(pid).tone) + '" title="' + escapeHTML(dvpSentence(i)) + '">' + dvpLabel(i, short) + (i.early && !short ? ' · ' + i.g + ' gm' + (i.g > 1 ? 's' : '') : '') + '</span>';
   }
 
   // ---- Start / Sit (Compare): pick 2–4 players (VS buttons anywhere, search, or your roster) ----
@@ -17532,6 +17723,7 @@
         intelWeather(g).then(function(r){
           IT_WX[g.id] = r.w ? { st: 'ok', w: r.w, ts: r.ts || Date.now() } : r.skip ? { st: 'skip', why: r.skip, ts: Date.now() } : { st: 'err', why: r.err, ts: Date.now() };
           itPatchChips(g.id);
+          wxPaint(g.id);
           if(!chipsOnly){ clearTimeout(itWxTimer); itWxTimer = setTimeout(itRerender, 120); }
         });
       });
@@ -19021,5 +19213,50 @@
 })();
 </script>
 
+<script>
+/* Detail level switches on Lineup and Players, sidebar collapse, navigation style (Settings › Appearance) */
+(function(){
+  const root = document.documentElement;
+  // Simple / Detailed switch on Lineup and Players: buttons for the app's Detail level setting (.cards-seg: the app's
+  // own click handler saves and applies it everywhere)
+  function densitySeg(){
+    const seg = document.createElement('div');
+    seg.className = 'wk-seg cards-seg density-seg'; seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', 'Detail level');
+    const d = root.classList.contains('cards-detailed');
+    seg.innerHTML = '<button type="button" data-cards-opt="compact" aria-pressed="' + !d + '">Simple</button><button type="button" data-cards-opt="detailed" aria-pressed="' + d + '">Detailed</button>';
+    return seg;
+  }
+  const bar = document.querySelector('#roster-view .lu-bar');
+  if(bar) bar.appendChild(densitySeg());
+  const plHead = document.querySelector('#fa-view .section-title');
+  if(plHead) plHead.insertBefore(densitySeg(), plHead.querySelector('.xbtn'));
+
+  // labels as tooltips for the icon rail
+  document.querySelectorAll('#side-nav .nav-btn').forEach(function(b){ if(!b.title){ const s = b.querySelector('span'); if(s) b.title = s.textContent; } });
+
+  // Navigation on wide screens: sidebar | icons | bar (localStorage rv-nav; applied before first paint in <head>)
+  const NAV = ['sidebar', 'icons', 'bar'];
+  function applyNav(v, save){
+    v = NAV.indexOf(v) !== -1 ? v : 'sidebar';
+    root.classList.toggle('nav-icons', v === 'icons');
+    root.classList.toggle('nav-bar', v === 'bar');
+    document.querySelectorAll('[data-nav-opt]').forEach(function(b){ b.setAttribute('aria-pressed', String(b.getAttribute('data-nav-opt') === v)); });
+    const c = document.querySelector('.side-collapse');
+    if(c){ c.title = v === 'icons' ? 'Show the full sidebar' : 'Collapse to icons'; c.setAttribute('aria-label', c.title); }
+    if(save){ try { localStorage.setItem('rv-nav', v); } catch(e){ console.warn('Could not save navigation style', e); } }
+    window.dispatchEvent(new Event('resize'));   // re-place the nav highlight
+  }
+  function navNow(){ return root.classList.contains('nav-icons') ? 'icons' : root.classList.contains('nav-bar') ? 'bar' : 'sidebar'; }
+  const foot = document.querySelector('.side-foot');
+  if(foot){
+    const f = document.createElement('div'); f.className = 'side-tools';
+    f.innerHTML = '<button type="button" class="side-collapse"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><path d="M9.5 4.5v15M16 10l-2 2 2 2"/></svg></button>';
+    f.querySelector('.side-collapse').addEventListener('click', function(){ applyNav(navNow() === 'icons' ? 'sidebar' : 'icons', true); });
+    foot.appendChild(f);
+  }
+  document.addEventListener('click', function(e){ const b = e.target.closest && e.target.closest('[data-nav-opt]'); if(b) applyNav(b.getAttribute('data-nav-opt'), true); });
+  applyNav(navNow());
+})();
+</script>
 </body>
 </html>

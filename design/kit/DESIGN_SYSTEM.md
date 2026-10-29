@@ -108,7 +108,9 @@ Inline SVG only (no icon font, no images): `viewBox="0 0 24 24"`, `fill="none"`,
   calc(16px + env(safe-area-inset-right)) calc(110px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left))`.
 - **Bottom tab bar (phone)**: floating pill, 64px tall, 12px from the edges (+ safe areas), max 560px wide, blurred
   translucent surface. Primary actions live in the bottom half (thumb reach); sticky footers sit above it.
-- **Desktop ≥1024px**: sidebar 248px + main (`.shell` grid); the tab bar is replaced by the sidebar. Lineup / Players
+- **Desktop ≥1024px**: sidebar 248px + main (`.shell` grid); the tab bar is replaced by the sidebar. Settings ›
+  Appearance can make it a 76px icon rail (`html.nav-icons`) or the floating bottom bar (`html.nav-bar`). The player
+  panel opens only when a player is picked. Lineup / Players
   have a list + side panel; League / Compare / Settings are single column (`.panes.solo`).
 - **Targets**: 44px minimum for anything tappable on phones (tab buttons 64 tall, buttons min-height 36-44, rows ≥56).
 - **Container queries** decide density (not just viewport): list table mode at ≥600px (`list` container), more
@@ -139,7 +141,11 @@ Class names are the app's; the kit shows each one live.
 - `.tabbar` > `.tab-thumb` (sliding `--surface-3` pill) + `.tab-btn` (icon 22 + label 10.5/600; `aria-current="page"`
   = `--text`; `.nav-badge` count bubble).
 - Desktop `aside.side`: `.brand`, `.side-search` (Search + `/` kbd), `.side-zone` (Sleepa Zone entry), league card,
-  `.nav` with `.nav-btn` and a sliding `.nav-thumb`, `.theme-seg` (Auto / Light / Dark), `.data-status`.
+  `.nav` with `.nav-sec` group labels (Your team / Research / More), `.nav-btn` and a sliding `.nav-thumb`; `.side-tools`
+  (collapse to icons). Theme and data status live in Settings.
+- Matchup difficulty: the opponent text in five steps `.opp.mt-easy / mt-good / mt-mid / mt-tough / mt-hard` (green,
+  green-amber mix, amber, amber-red mix, red), followed by a `.wx-ic` weather icon (14px, `--text-2`; dome indoors).
+- Lists: no zebra; lineup rows carry a 5% (dark 9%) tint of their position color (`--pc`).
 
 ### Chips and pills
 - Status: `.status-chip.st-warn` (Questionable), `.st-doubt`, `.st-out` (Out / IR / PUP / Sus), `.new-tag`,
