@@ -1,3 +1,10 @@
 audio/
 __pycache__/
 audit-dashboard/
+# local-only: tool config, research notes, scratch output, decks
+.claude/
+reports/
+research_notes/
+srv.out
+*.pptx
+claude-code-deck.html
