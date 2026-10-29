@@ -2380,6 +2380,7 @@
   .wv-sw-pos{ min-width: 34px; font-size: 11px; font-weight: 800; letter-spacing: .04em; color: var(--text-3); }
   .wv-num.depth b{ color: var(--text-2); }
   .wv-num{ text-align: right; flex-shrink: 0; line-height: 1.15; }
+  .wv-num.keep b{ color: var(--text-2); font-size: 13px; }
   .wv-num b{ display: block; font-size: 14px; font-variant-numeric: tabular-nums; }
   .wv-num span{ font-size: 10.5px; color: var(--text-3); }
   .wv-num.add b{ color: var(--accent); } .wv-num.drop b{ color: var(--danger); } .wv-num.drop.zero b{ color: var(--text-2); }
@@ -6369,7 +6370,7 @@
       sb.setAttribute('role', 'button'); sb.setAttribute('tabindex', '0'); sb.setAttribute('aria-label', 'sleepa: back to your lineup');
       renderFreshness();
       pruneStatsCache(ctx.season);
-      loadEspn().then(function(){ if(loadId === ctx.loadId){ refreshFocus(); if(maxOpen()) renderMax(0); renderStatus(); } });
+      loadEspn().then(function(){ if(loadId === ctx.loadId){ plReset(); refreshFocus(); if(maxOpen()) renderMax(0); renderStatus(); } });
       refreshData({ topUp: true }); // anything that came from a stale cache is re-fetched in the background
       // If the app-open transition is still playing, replay the row + total entrance once it lands so you actually see it.
       if(ctx.deferEntrance) ctx.afterVt = function(){
@@ -11144,12 +11145,38 @@
     return ctx.ros || null;
   }
   let rosMemo = {};
-  // { pts, weeks } in this league's scoring, or null when the player has no projection left this season.
+  // { pts, weeks } in this league's scoring, or null when the player has no projection left this season. est: an
+  // injured player Sleeper stopped projecting, valued from his return (rosReturnEst).
   function rosValue(pid){
     if(!ctx.ros || !ctx.ros.players) return null;
+    if(rosMemo._e !== ctx.espnTs) rosMemo = { _e: ctx.espnTs };   // return dates arrive after the first render
     if(pid in rosMemo) return rosMemo[pid];
     const r = ctx.ros.players[pid];
-    return (rosMemo[pid] = r ? { pts: projPoints(r.s, pid, ctx.league.scoring_settings || {}) || 0, weeks: r.w } : null);
+    if(r && r.w) return (rosMemo[pid] = { pts: projPoints(r.s, pid, ctx.league.scoring_settings || {}) || 0, weeks: r.w });
+    const e = rosReturnEst(pid);
+    return (rosMemo[pid] = e ? { pts: e.per * e.k.length, weeks: e.k.length, est: true, back: e.from } : null);
+  }
+  // The NFL week a moment falls in: weeks run Wednesday to Tuesday, so the current one ends this coming Tuesday night.
+  function weekOfTime(t){
+    const end = new Date(); end.setHours(23, 59, 59, 999); end.setDate(end.getDate() + (2 - end.getDay() + 7) % 7);
+    const cur = ctx.sleeperWeek || ctx.week;
+    return t <= end.getTime() ? cur : cur + Math.ceil((t - end.getTime()) / (7 * 864e5));
+  }
+  // Sleeper stops projecting some injured players altogether (no row in ros.json), which would make a star who is back
+  // in three weeks look worthless the rest of the way, and the first player to cut. When he is ruled out and has played
+  // this season: back in the week of ESPN's return date (or after the usual time out for his status, IR_DAYS), then his
+  // season average in each week his team plays. Season-ending (back after the last fantasy week): null, worth nothing.
+  // { from, per, k: [weeks] } | null
+  function rosReturnEst(pid){
+    const p = ctx.players[pid];
+    if(!p || !p.team || !ctx.ros || !cantPlay(effectiveStatus(pid))) return null;
+    const h = hist(pid), avg = h && h.length >= 2 ? seasonAvgPts(pid) : null;
+    if(!(avg > 0)) return null;
+    const st = irStatus(pid), ret = irReturn(pid) || (IR_DAYS[st] ? Date.now() + IR_DAYS[st] * 864e5 : null);
+    if(!ret) return null;
+    const from = Math.max(ctx.week + 1, weekOfTime(ret)), to = ctx.ros.through_week || 17, k = [];
+    for(let w = from; w <= to; w++){ const g = matchup(p.team, w); if(!(g && g.bye)) k.push(w); }
+    return k.length ? { from: from, per: avg, k: k } : null;
   }
   // ============ Expected points (xFP) ============
   // xfp.json (GitHub Action, from ffverse/ffopportunity): each player-week as the catches, yards, TDs and first downs his
@@ -11432,7 +11459,7 @@
     const item = function(pid, mine){
       const p = ctx.players[pid], v = rosValue(pid), tr = recentTrend(pid), r = weekRange(pid), bye = isOnBye(pid);
       const bits = [];
-      bits.push(v ? '<b>' + v.pts.toFixed(2) + '</b> pts rest of season · ' + v.weeks + ' wk' + (v.weeks === 1 ? '' : 's') : '<b>—</b> no projection left');
+      bits.push(v ? '<b>' + v.pts.toFixed(2) + '</b> pts rest of season · ' + v.weeks + ' wk' + (v.weeks === 1 ? '' : 's') + (v.est ? ' (back wk ' + v.back + ', est.)' : '') : '<b>—</b> no projection left');
       if(tr) bits.push('last 3: ' + tr.last3.toFixed(2) + ' <span class="trend ' + tr.dir + '">' + { up: '↑', down: '↓', flat: '→' }[tr.dir] + '</span> vs ' + tr.avg.toFixed(2) + ' avg');
       else if(hist(pid)) bits.push((hist(pid).length || 0) + ' game' + (hist(pid).length === 1 ? '' : 's') + ' played');
       if(r && r.ok) bits.push('range ' + Math.round(r.floor) + '–' + Math.round(r.ceil) + (r.early ? ' (early)' : ''));
@@ -11472,7 +11499,7 @@
   const lineupPtsMemo = { raw: null, ros: null, sc: null, w: {} };
   function lineupPts(pid, week, sc){
     const raw = ctx.projRaw || null, ros = ctx.ros || null;
-    if(lineupPtsMemo.raw !== raw || lineupPtsMemo.ros !== ros || lineupPtsMemo.sc !== sc){ lineupPtsMemo.raw = raw; lineupPtsMemo.ros = ros; lineupPtsMemo.sc = sc; lineupPtsMemo.w = {}; }
+    if(lineupPtsMemo.raw !== raw || lineupPtsMemo.ros !== ros || lineupPtsMemo.sc !== sc || lineupPtsMemo.e !== ctx.espnTs){ lineupPtsMemo.raw = raw; lineupPtsMemo.ros = ros; lineupPtsMemo.sc = sc; lineupPtsMemo.e = ctx.espnTs; lineupPtsMemo.w = {}; }
     const m = lineupPtsMemo.w[week] || (lineupPtsMemo.w[week] = {});
     if(pid in m) return m[pid];
     const p = ctx.players[pid];
@@ -11485,6 +11512,9 @@
       if(r && r.w){
         const g = matchup(p.team, week), plays = r.k ? r.k.indexOf(week) !== -1 : !(g && g.bye);
         if(plays){ const x = projPoints(r.s, pid, sc); v = typeof x === 'number' && x > 0 ? x / r.w : 0; }
+      }else if(ros){
+        const e = rosReturnEst(pid);   // hurt, no Sleeper projection: his season average from the week he is back
+        if(e && e.k.indexOf(week) !== -1) v = e.per;
       }
     }
     return (m[pid] = v);
@@ -11547,7 +11577,7 @@
   const WV_POS_N = 3;    // top available players shown per position
   const WV_MIN = 0.5;    // lineup gains below this read as depth (same noise line as trades)
   function waiverValue(mode){
-    const key = 'wv_' + (mode === 'ros' && ctx.ros ? 'ros' : 'week');
+    const key = 'wv_' + (mode === 'ros' && ctx.ros ? 'ros' : ctx.ros ? 'week+' : 'week');
     if(plMemo[key]) return plMemo[key];
     const weeks = waiverWeeks(mode), sc = (ctx.league && ctx.league.scoring_settings) || {};
     const fa = new Set();
@@ -11568,6 +11598,21 @@
       const cost = weeks.reduce(function(a, w){ return a + (base[w].starts.has(pid) ? base[w].tot - BL(without(active, pid), w).total : 0); }, 0);
       return { pid: pid, cost: cost, pts: ptsOf(pid), starts: base[ctx.week] && base[ctx.week].starts.has(pid) };
     }).sort(function(a, b){ return a.cost - b.cost || a.pts - b.pts; });
+    // This week only, a player who cannot play (bye, injury) costs nothing to drop, so the one-week view would cut a starter
+    // who is back next week. Held: anyone in my best lineup in at least half the later weeks he plays (two or more). He is
+    // never offered as a drop here, and the drop list says why. Rest of season already counts those weeks.
+    if(key === 'wv_week+'){
+      const later = waiverWeeks('ros').filter(function(w){ return w > ctx.week; }).map(function(w){
+        const b = BL(active, w);
+        return { w: w, starts: new Set(b.slots.map(function(x){ return x.pid; }).filter(Boolean)) };
+      });
+      drops.forEach(function(d){
+        let plays = 0, starts = 0, first = null;
+        later.forEach(function(x){ if(P(d.pid, x.w) > 0){ plays++; if(x.starts.has(d.pid)){ starts++; if(first === null) first = x.w; } } });
+        if(starts >= 2 && starts * 2 >= plays) d.hold = { why: isOnBye(d.pid) ? 'bye' : cantPlay(effectiveStatus(d.pid)) ? 'hurt' : '', back: first, starts: starts, of: later.length };
+      });
+      drops.sort(function(a, b){ return (a.hold ? 1 : 0) - (b.hold ? 1 : 0); });
+    }
     [].concat.apply([], leaguePositions().map(function(pos){ return ctx.freeAgents[pos] || []; })).forEach(function(pid){ fa.add(pid); });
     const adds = [], pool = [];
     fa.forEach(function(pid){
@@ -11583,7 +11628,7 @@
     const swapMemo = {};
     // samePos: only drop someone who shares a position with the add (keeps your depth: a backup QB isn't traded for an RB)
     const shares = function(a, b){ const fa2 = fantasyPositions(a); return fantasyPositions(b).some(function(x){ return fa2.indexOf(x) !== -1; }); };
-    return (plMemo[key] = { mode: key === 'wv_ros' ? 'ros' : 'week', weeks: weeks, base: baseTot, adds: adds, pool: pool, drops: drops, open: open,
+    return (plMemo[key] = { mode: key === 'wv_ros' ? 'ros' : 'week', held: drops.filter(function(d){ return d.hold; }).length, weeks: weeks, base: baseTot, adds: adds, pool: pool, drops: drops, open: open,
       // my weakest active player at a position (least projected points over the weeks): what a depth add has to beat
       weakest: function(pos){ let w = null; active.forEach(function(pid){ if(posGroup(pid) !== pos) return; const p = ptsOf(pid); if(!w || p < w.pts) w = { pid: pid, pts: p }; }); return w; },
       swapFor: function(list, samePos){
@@ -11593,7 +11638,7 @@
         if(swapMemo[mk]) return swapMemo[mk];
         let best = null;
         drops.forEach(function(d){
-          if(samePos && !shares(a.pid, d.pid)) return;
+          if(d.hold || (samePos && !shares(a.pid, d.pid))) return;
           const rest = without(active, d.pid).concat([a.pid]);
           const net = weeks.reduce(function(s, w){ return s + (P(a.pid, w) > base[w].floor || base[w].starts.has(d.pid) ? BL(rest, w).total - base[w].tot : 0); }, 0);
           if(!best || net > best.net + 1e-9) best = { add: a.pid, drop: d.pid, net: net };
@@ -11604,11 +11649,11 @@
   }
   function wvRowHTML(pid, val, kind, extra){
     const p = ctx.players[pid];
-    const valTxt = kind === 'add' ? '+' + val.toFixed(2) : kind === 'depth' ? fmtPts(val) : val < 0.005 ? '0.00' : '−' + val.toFixed(2);
+    const valTxt = kind === 'add' ? '+' + val.toFixed(2) : kind === 'depth' ? fmtPts(val) : kind === 'keep' ? 'Keep' : val < 0.005 ? '0.00' : '−' + val.toFixed(2);
     return '<div class="ad-item wv-item" data-wv-open="' + escapeHTML(pid) + '" role="button" tabindex="0">' +
       avatarTag(pid, 'ad-av') + '<div class="ad-info"><div class="ad-name">' + escapeHTML(playerName(p)) + ' ' + injuryChip(p.injury_status) + '</div>' +
       '<div class="ad-meta">' + escapeHTML(eligLabel(pid)) + ' · ' + escapeHTML(p.team || 'FA') + (extra ? ' · ' + extra : '') + '</div></div>' +
-      '<div class="wv-num ' + kind + (kind === 'drop' && val < 0.005 ? ' zero' : '') + '"><b>' + valTxt + '</b><span>' + (kind === 'add' ? 'adds' : kind === 'depth' ? 'proj' : 'costs') + '</span></div></div>';
+      '<div class="wv-num ' + kind + (kind === 'drop' && val < 0.005 ? ' zero' : '') + '"><b>' + valTxt + '</b><span>' + (kind === 'add' ? 'adds' : kind === 'depth' ? 'proj' : kind === 'keep' ? 'starter' : 'costs') + '</span></div></div>';
   }
   try{ ctx.wvMode = localStorage.getItem('rv-wv-mode') === 'ros' ? 'ros' : 'week'; }catch(e){ ctx.wvMode = 'week'; }
   try{ ctx.wvSame = localStorage.getItem('rv-wv-same') !== 'any'; }catch(e){ ctx.wvSame = true; }   /* swaps within the same position by default */
@@ -11933,7 +11978,11 @@
     const posTxt = pos.length ? ' · ' + pos.join('/') : '';
     const span = V.mode === 'ros' ? 'weeks ' + V.weeks[0] + '–' + V.weeks[V.weeks.length - 1] : 'week ' + ctx.week;
     const when = V.mode === 'ros' ? 'over the rest of the season' : 'this week';
-    const dropRows = V.drops.slice(0, 8).map(function(d){ return wvRowHTML(d.pid, d.cost, 'drop', V.mode === 'ros' ? fmtPts(d.pts) + ' proj' : d.starts ? 'starting' : d.pts > 0 ? fmtPts(d.pts) + ' proj, bench' : 'no points this week'); }).join('');
+    const holdTxt = function(h){ return (h.why === 'bye' ? 'on bye' : h.why === 'hurt' ? 'out this week' : 'on your bench this week') + ' · starts for you ' + h.starts + ' of the next ' + h.of + ' weeks' + (h.back && h.back > ctx.week + 1 ? ', from wk ' + h.back : ''); };
+    const dropRows = V.drops.filter(function(d){ return !d.hold; }).slice(0, 8).concat(V.drops.filter(function(d){ return d.hold && !d.starts; })).map(function(d){
+      if(d.hold) return wvRowHTML(d.pid, 0, 'keep', holdTxt(d.hold));
+      return wvRowHTML(d.pid, d.cost, 'drop', V.mode === 'ros' ? fmtPts(d.pts) + ' proj' + (rosValue(d.pid) && rosValue(d.pid).est ? ' (back wk ' + rosValue(d.pid).back + ', est.)' : '') : d.starts ? 'starting' : d.pts > 0 ? fmtPts(d.pts) + ' proj, bench' : 'no points this week');
+    }).join('');
     const posBlocks = groups.map(function(g){
       const rows = g.cands.map(function(a){
         if(g0(a)) return wvRowHTML(a.pid, a.gain, 'add', fmtPts(a.pts) + ' proj' + faabChip(FS, a.pid, a.gain));
@@ -11957,7 +12006,9 @@
         '<div class="wv-cols"><div class="eyebrow ad-h">Top adds by position · marginal value, or depth</div><div class="wv-grid">' + posBlocks + '</div></div>' +
         '<div class="wv-cols"><div class="eyebrow ad-h">Cheapest drops · drop cost</div><div class="wv-drops">' + (dropRows || '<div class="ad-none">No droppable players.</div>') + '</div></div>' +
         '<div class="ad-foot">Best swaps = the best one per position. Marginal value = your best lineup with the player minus without (a depth player would not start for you, so his projection shows instead); drop cost = your best lineup minus your best lineup without him; a swap’s net is the exact change with both moves' + (V.mode === 'ros' ? ', each summed over ' + span : '') + '. ' +
-          'Best lineup = most restrictive slots filled first, from Sleeper’s projections in your league’s scoring' + (V.mode === 'ros' ? ' (this week’s real projections, then each player’s average projected week in the weeks he’s projected to play)' : '') + '; byes and ruled-out players count as zero, and so does a free agent whose game has already started this week. ' +
+          'Best lineup = most restrictive slots filled first, from Sleeper’s projections in your league’s scoring' + (V.mode === 'ros' ? ' (this week’s real projections, then each player’s average projected week in the weeks he’s projected to play)' : '') + '; byes and ruled-out players count as zero, and so does a free agent whose game has already started this week' +
+          (V.mode === 'ros' ? ' (an injured player Sleeper stopped projecting counts his season average from his expected return)' : '') + '. ' +
+          (V.held ? 'This week only: anyone who starts for you in most later weeks (on bye, or back from injury soon) is marked Keep and never offered as a drop. ' : '') +
           'IR / taxi players aren’t counted or offered as drops. Waivers may not clear in time to start an add this week.</div>' +
       '</div>';
   }
