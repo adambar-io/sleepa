@@ -24,7 +24,8 @@
   // Apply the saved theme before first paint so there is no flash of the wrong one.
   (function(){ try{ var t = localStorage.getItem('rv-theme'); if(t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t); }catch(e){ console.warn('Theme preference unavailable', e); } })();
   (function(){ try{ if(localStorage.getItem('rv-cards') === 'detailed') document.documentElement.classList.add('cards-detailed'); }catch(e){ console.warn('Card preference unavailable', e); } })();
-  (function(){ try{ if(localStorage.getItem('rv-pl-rows') === 'compact') document.documentElement.classList.add('pl-compact'); }catch(e){} })();
+  (function(){ try{ if(localStorage.getItem('rv-cards') !== 'detailed') document.documentElement.classList.add('pl-compact'); }catch(e){} })();
+  (function(){ try{ const v = localStorage.getItem('rv-nav'); if(v === 'icons' || v === 'bar') document.documentElement.classList.add('nav-' + v); }catch(e){} })();
 </script>
 <style>
   /* ============ design tokens ============
@@ -198,7 +199,7 @@
   .slot-row{ display: flex; align-items: center; gap: 12px; padding: 10px 14px; position: relative; cursor: pointer; transition: background .18s var(--ease); }
   .slot-row + .slot-row::before{ content:''; position:absolute; top:0; left: 108px; right: 14px; height: 1px; background: var(--hair); }
   .slot-row:active{ background: var(--surface-2); }
-  :where(#starters-list, #bench-list, #fa-list) .slot-row:nth-child(even){ background: color-mix(in srgb, var(--text) 3.5%, transparent); }   /* zebra: easier to track a player across the row */
+  /* (preview: the zebra stripes are replaced by a position tint, see Sleepa Next) */
   /* team marks (avatar badge, game logos): the NFL logo on a deep team-color disc, the same in both themes so every
      logo reads the same way; a faint halo keeps dark logos (LV, NO, PIT) visible on it */
   .tm-badge, .it-tm{ background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--tc) 62%, #2a2a30), color-mix(in srgb, var(--tc) 30%, #0e0e11) 78%); }
@@ -2380,6 +2381,7 @@
   .wv-sw-pos{ min-width: 34px; font-size: 11px; font-weight: 800; letter-spacing: .04em; color: var(--text-3); }
   .wv-num.depth b{ color: var(--text-2); }
   .wv-num{ text-align: right; flex-shrink: 0; line-height: 1.15; }
+  .wv-num.keep b{ color: var(--text-2); font-size: 13px; }
   .wv-num b{ display: block; font-size: 14px; font-variant-numeric: tabular-nums; }
   .wv-num span{ font-size: 10.5px; color: var(--text-3); }
   .wv-num.add b{ color: var(--accent); } .wv-num.drop b{ color: var(--danger); } .wv-num.drop.zero b{ color: var(--text-2); }
@@ -4117,22 +4119,67 @@
   .cd-act{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: min(100%, 420px); }
   .cd-act button{ min-height: 44px; border-radius: 14px; background: var(--surface-2); color: var(--text); font-weight: 700; font-size: 14px; }
   .cd-act button:disabled{ opacity: .4; }
-  @container pr (max-width: 600px){ .cd-deckw{ --cdw: min(300px, 64cqw); } }
-  @media (prefers-reduced-motion: reduce){ .cd-in, .cd-deck > .cd{ transition: none !important; } .cd-deck.deal > .cd{ animation: none !important; } }
-
   /* ==== Sleepa Next: redesign preview (next.html only; index.html is untouched) ====
-     Everything for the preview lives in this block and the v2 script at the end of <body>, so it is easy to compare,
-     port to index.html piece by piece, or delete. Idea: Simple by default, Detailed one tap away (html.v2-full). */
+     Styles for the preview. The few code changes (opponent tone, one Detail level, panel starts closed, grouped nav,
+     navigation style) are in the app script and markup; the v2 script at the end of <body> adds the preview's controls. */
 
-  /* chrome: quieter sidebar, data details live in Settings › Data health */
+  /* chrome: quieter sidebar footer (theme and data details live in Settings) */
   .side-foot .data-status, .side-foot .theme-seg{ display: none; }
   .v2-pill{ display: inline-flex; align-items: center; margin-left: 8px; padding: 3px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 700;
-    letter-spacing: .04em; text-transform: uppercase; color: var(--accent); background: var(--accent-soft); vertical-align: middle; text-decoration: none; }
+    letter-spacing: .04em; text-transform: uppercase; color: var(--accent); background: var(--accent-soft); vertical-align: middle; }
+  .v2-foot{ display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .v2-back{ font-size: 12.5px; color: var(--text-3); padding: 0 6px; text-decoration: none; }
   .v2-back:hover{ color: var(--text); }
+  .v2-collapse{ display: grid; place-items: center; width: 34px; height: 34px; min-height: 0; padding: 0; border-radius: 10px; background: none; color: var(--text-3); }
+  .v2-collapse:hover{ background: var(--surface-2); color: var(--text); }
+  .v2-collapse svg{ width: 18px; height: 18px; }
 
-  /* phone tab bar: five tabs (Compare stays reachable from the matchup card and search) */
-  .tab-btn[data-view="compare"]{ display: none; }
+  /* sidebar sections */
+  .nav-sec{ display: block; padding: 16px 10px 5px; font-size: 11px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--text-3); }
+  .nav-thumb + .nav-sec{ padding-top: 2px; }
+
+  /* Settings › Appearance: navigation style */
+  .nav-set-sub{ margin-top: 16px; }
+  .nav-seg{ display: inline-flex; background: var(--surface-2); border-radius: 999px; padding: 3px; gap: 2px; }
+  .nav-seg button{ background: none; color: var(--text-2); padding: 6px 12px; font-size: 12.5px; font-weight: 500; min-height: 30px; border-radius: 999px; }
+  .nav-seg button[aria-pressed="true"]{ background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.14); }
+
+  @media (max-width: 1023px){ .tab-btn[data-view="compare"]{ display: none; } }   /* phones: five tabs; Compare via the matchup card and search */
+  @media (min-width: 1024px){
+    /* the sidebar scrolls on its own when it is taller than the window (laptops), without moving the page */
+    .side{ overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+    /* short windows: tighter sidebar so everything usually fits without scrolling */
+    @media (max-height: 820px){
+      .side{ gap: 12px; padding-top: 16px; padding-bottom: 14px; }
+      .nav-sec{ padding-top: 10px; padding-bottom: 3px; }
+      .nav-btn{ padding-top: 7px; padding-bottom: 7px; }
+      .side-search{ margin-bottom: 0; }
+    }
+    /* icons only: a 76px rail, labels as tooltips, section labels become short rules */
+    html.nav-icons .shell{ grid-template-columns: 76px minmax(0, 1fr); }
+    html.nav-icons .side{ padding: 20px 0; align-items: center; gap: 14px; }
+    html.nav-icons .side :is(.wordmark, .v2-pill, .side-search > span, .side-search kbd, .zn-entry > span, .zn-entry > small, .league-txt, .league-chev, .nav-btn > span:not(.nav-badge), .nav-btn kbd, .v2-back){ display: none; }
+    html.nav-icons .brand{ padding: 4px 0; }
+    html.nav-icons :is(.side-search, .side-zone, .league-card, .nav-btn){ width: 44px; height: 44px; padding: 0; margin: 0; justify-content: center; }
+    html.nav-icons .league-card{ display: flex; align-items: center; }
+    html.nav-icons .nav{ width: 44px; }
+    html.nav-icons .nav-sec{ width: 28px; height: 1px; margin: 9px auto; padding: 0; background: var(--hair); font-size: 0; }
+    html.nav-icons .nav-thumb + .nav-sec{ display: none; }
+    html.nav-icons .nav-btn .nav-badge{ top: 3px; right: 3px; transform: none; }
+    html.nav-icons .league-menu{ width: 280px; }
+    html.nav-icons .v2-foot{ justify-content: center; }
+    html.nav-icons .v2-collapse svg{ transform: scaleX(-1); }
+
+    /* floating bar at the bottom, as on phones */
+    html.nav-bar .shell{ display: block; }
+    html.nav-bar .side{ display: none; }
+    html.nav-bar .tabbar{ display: flex; max-width: 620px; }
+    html.nav-bar .main{ position: relative; max-width: 1640px; margin: 0 auto; padding-bottom: 120px; }
+    html.nav-bar .m-brand{ display: flex; }
+    html.nav-bar .ph-search{ position: absolute; z-index: 5; top: 24px; right: 36px; display: grid; place-items: center; width: 40px; height: 40px; border: 0;
+      border-radius: 50%; background: var(--surface-2); color: var(--text); cursor: pointer; }
+    html.nav-bar .ph-search svg{ width: 19px; height: 19px; }
+  }
 
   /* page header: one line each, no squeezed wrapping on phones */
   .page-head > div:first-child{ min-width: 0; flex: 1; }
@@ -4160,16 +4207,49 @@
     .hd-go{ grid-column: auto; min-height: 36px; }
   }
 
-  /* rows: no zebra, hairlines only (iOS grouped list) */
-  :where(#starters-list, #bench-list, #fa-list) .slot-row:nth-child(even){ background: none; }
+  /* player panel (wide screens): closed until you pick a player, then slides in */
+  @media (min-width: 1200px) and (prefers-reduced-motion: no-preference){
+    .panes:not(.closed):not(.solo) .pane-detail{ animation: v2PaneIn .32s var(--ease); }
+  }
+  @keyframes v2PaneIn{ from{ opacity: 0; transform: translateX(28px); } }
 
-  /* Simple (default): one meta line per player; ranks, ENV, matchup ranks, ranges and snap move to the player page */
-  html:not(.v2-full) .hd-chips, html:not(.v2-full) .hd-status, html:not(.v2-full) .mu-sub{ display: none; }
-  html:not(.v2-full) .slot-row :is(.ecr-chip, .it-chip, .dvp-chip, .depth-chip, .rng){ display: none; }
-  html:not(.v2-full) .slot-row .col-snap, html:not(.v2-full) .list-head .h-snap{ display: none !important; }
-  html:not(.v2-full) .slot-row{ padding-top: 12px; padding-bottom: 12px; }
+  /* rows: instead of zebra stripes, each lineup row carries a faint tint of its position color, so position groups read
+     apart in both themes (a tint layered over the row, so state colors like swapped / bye still show). Hairlines a bit
+     stronger in dark. */
+  :where(#starters-list, #bench-list) :where(.slot-row[style*="--pc"]){ background-image: linear-gradient(color-mix(in srgb, var(--pc) 5%, transparent), color-mix(in srgb, var(--pc) 5%, transparent)); }
+  :root[data-theme="dark"] :where(#starters-list, #bench-list) :where(.slot-row[style*="--pc"]){ background-image: linear-gradient(color-mix(in srgb, var(--pc) 9%, transparent), color-mix(in srgb, var(--pc) 9%, transparent)); }
+  :root[data-theme="dark"] .slot-row + .slot-row::before{ background: color-mix(in srgb, var(--text) 12%, transparent); }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]) :where(#starters-list, #bench-list) :where(.slot-row[style*="--pc"]){ background-image: linear-gradient(color-mix(in srgb, var(--pc) 9%, transparent), color-mix(in srgb, var(--pc) 9%, transparent)); }
+    :root:not([data-theme="light"]) .slot-row + .slot-row::before{ background: color-mix(in srgb, var(--text) 12%, transparent); }
+  }
 
-  .v2-density{ margin-left: auto; }
+  /* Detail level, Simple (html:not(.cards-detailed) / html.pl-compact; Settings › Detail level or the switch on each list):
+     one meta line per player with the opponent colored by difficulty; ranks, ENV, matchup-rank chips, ranges and snaps
+     move to Detailed and the player page */
+  html:not(.cards-detailed) .hd-chips, html:not(.cards-detailed) .hd-status, html:not(.cards-detailed) .mu-sub{ display: none; }
+  html:not(.cards-detailed) :is(#starters-list, #bench-list) .slot-row :is(.it-chip, .dvp-chip, .depth-chip, .rng){ display: none; }
+  html:not(.cards-detailed) :is(#starters-list, #bench-list) .slot-row .col-snap, html:not(.cards-detailed) #roster-view .list-head .h-snap{ display: none !important; }
+  html.pl-compact #fa-list .slot-row :is(.it-chip, .dvp-chip, .depth-chip, .rng, .player-name .ecr-chip){ display: none; }
+  html.pl-compact #fa-list .slot-row :is(.col-snap, .col-tgt), html.pl-compact #fa-view .list-head :is(.h-snap, .h-tgt){ display: none !important; }
+  .slot-row .opp:is(.mt-easy, .mt-good, .mt-mid, .mt-tough, .mt-hard){ font-weight: 650; }
+
+  /* matchup difficulty in five steps: the in-between shades are mixes of their neighbors, so they follow both themes */
+  :root{ --mt-good-c: color-mix(in srgb, var(--accent) 55%, var(--warn)); --mt-tough-c: color-mix(in srgb, var(--warn) 45%, var(--danger)); }
+  .opp.mt-good{ color: var(--mt-good-c); font-weight: 600; } .opp.mt-tough{ color: var(--mt-tough-c); font-weight: 600; }
+  .dvp-chip.good{ background: color-mix(in srgb, var(--mt-good-c) 14%, transparent); color: var(--mt-good-c); }
+  .dvp-chip.tough{ background: color-mix(in srgb, var(--mt-tough-c) 14%, transparent); color: var(--mt-tough-c); }
+
+  /* game-day weather icon next to the opponent (dome indoors); the forecast is in its tooltip */
+  .wx-ic{ display: inline-flex; vertical-align: -2px; margin-left: 4px; color: var(--text-2); }
+  .wx-ic:empty{ display: none; }
+  .wx-ic svg{ width: 14px; height: 14px; }
+  .col-opp .wx-ic svg{ width: 13px; height: 13px; }
+
+  .pl-density{ display: none !important; }   /* replaced by the Simple / Detailed switch */
+  .v2-density{ margin-left: auto; align-self: center; }
+  .section-title .v2-density + .xbtn{ margin-left: 0; }
+  .section-title .v2-density button{ padding: 5px 10px; min-height: 28px; font-size: 12.5px; }
   .lu-bar .wk-seg button{ white-space: nowrap; }
   @media (max-width: 480px){
     .lu-bar{ flex-wrap: nowrap; gap: 6px; }
@@ -4239,12 +4319,15 @@
     </div>
     <nav class="nav" id="side-nav" aria-label="Sections">
       <span class="nav-thumb"></span>
+      <span class="nav-sec" aria-hidden="true">Your team</span>
       <button class="nav-btn" data-view="roster"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><span>Lineup</span><span class="nav-badge" data-bye-badge hidden></span></button>
       <button class="nav-btn nav-huddle" data-huddle title="Sleepa Huddle (H)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="7" r="2.6"/><circle cx="5.5" cy="10" r="2.2"/><circle cx="18.5" cy="10" r="2.2"/><path d="M7.5 20a4.5 4.5 0 0 1 9 0M2.5 18.5a3.3 3.3 0 0 1 5-2.8M21.5 18.5a3.3 3.3 0 0 0-5-2.8"/></svg><span>Huddle</span><kbd>H</kbd></button>
-      <button class="nav-btn" data-view="fa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg><span>Players</span></button>
       <button class="nav-btn" data-view="league"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0V4zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8.5 20h7M10 17h4"/></svg><span>League</span></button>
+      <span class="nav-sec" aria-hidden="true">Research</span>
+      <button class="nav-btn" data-view="fa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg><span>Players</span></button>
       <button class="nav-btn" data-view="compare"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v16M7 4l-3 3M7 4l3 3M17 20V4M17 20l-3-3M17 20l3-3"/></svg><span>Compare</span></button>
       <button class="nav-btn" data-view="intel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"/></svg><span>Intel</span></button>
+      <span class="nav-sec" aria-hidden="true">More</span>
       <button class="nav-btn" data-view="resources"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h10a4 4 0 0 1 4 4v12H9a4 4 0 0 1-4-4V4z"/><path d="M9 20a4 4 0 0 1 0-8h10M9 8h6"/></svg><span>Resources</span></button>
       <button class="nav-btn" data-view="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><span>Settings</span></button>
     </nav>
@@ -4389,8 +4472,8 @@
         <section class="view" id="settings-view" style="display:none;">
           <div class="settings">
             <div class="card set-card set-res"><h3>Resources</h3><p class="set-sub">News, rankings, injury reports and tools from around the web.</p><button type="button" class="quiet-btn" data-goto-view="resources">Open Resources ›</button></div>
-            <div class="card set-card"><h3>Appearance</h3><p class="set-sub">Auto follows your device's light or dark setting.</p><div class="theme-seg" role="group" aria-label="Theme"><button type="button" data-theme-opt="system">Auto</button><button type="button" data-theme-opt="light">Light</button><button type="button" data-theme-opt="dark">Dark</button></div></div>
-            <div class="card set-card"><h3>Lineup cards</h3><p class="set-sub">Compact shows what you need to set a lineup: projection, last game, opponent colored by matchup (green easy, amber average, red tough), injury or bye flags, and an arrow when snap share jumped or dropped. Tap a player for season stats, snaps, depth chart and the full matchup ranking. Detailed puts all of it on the card.</p><div class="cards-seg" role="group" aria-label="Lineup cards"><button type="button" data-cards-opt="compact">Compact</button><button type="button" data-cards-opt="detailed">Detailed</button></div></div>
+            <div class="card set-card"><h3>Appearance</h3><p class="set-sub">Auto follows your device's light or dark setting.</p><div class="theme-seg" role="group" aria-label="Theme"><button type="button" data-theme-opt="system">Auto</button><button type="button" data-theme-opt="light">Light</button><button type="button" data-theme-opt="dark">Dark</button></div><p class="set-sub nav-set-sub">Navigation on wide screens: the full sidebar, icons only, or a floating bar at the bottom like on phones.</p><div class="nav-seg" role="group" aria-label="Navigation"><button type="button" data-nav-opt="sidebar">Sidebar</button><button type="button" data-nav-opt="icons">Icons</button><button type="button" data-nav-opt="bar">Bottom bar</button></div></div>
+            <div class="card set-card"><h3>Detail level</h3><p class="set-sub">For Lineup and Players. Simple shows what you need to decide: projection, last game, the opponent colored by how tough the matchup is (five shades from green, easy, through amber to red, tough: points that defense allows to the position), a weather icon for the game (a dome indoors), and injury or bye flags. Detailed adds ranks, game environment, projection ranges, snaps and season stats. Tap any player for everything.</p><div class="cards-seg" role="group" aria-label="Detail level"><button type="button" data-cards-opt="compact">Simple</button><button type="button" data-cards-opt="detailed">Detailed</button></div></div>
             <div class="card set-card"><h3>Your leagues</h3><p class="set-sub">Tap a league to switch to it.</p><div class="league-list" data-league-list></div></div>
             <div class="card set-card"><h3 data-zone-name>Sleepa Zone</h3><p class="set-sub">Every league at once: your team against each opponent, with live scores while games are on.</p><div class="zn-set-btns"><button type="button" class="quiet-btn" data-zone-open>Open <span data-zone-name>Sleepa Zone</span></button><button type="button" class="quiet-btn" data-zone-guide>How <span data-zone-name>Sleepa Zone</span> reads the game</button></div></div>
             <div class="card set-card"><h3>Current team</h3>
@@ -4643,26 +4726,20 @@
     v = v === 'detailed' ? 'detailed' : 'compact';
     try{ localStorage.setItem('rv-cards', v); }catch(e){ console.warn('Could not save card preference', e); }
     document.documentElement.classList.toggle('cards-detailed', v === 'detailed');
+    document.documentElement.classList.toggle('pl-compact', v === 'compact');   // one Simple / Detailed choice for Lineup and Players
     document.querySelectorAll('.cards-seg button').forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-cards-opt') === v ? 'true' : 'false'); });
+    document.querySelectorAll('[data-pl-rows]').forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-pl-rows') === v ? 'true' : 'false'); });
   }
   document.addEventListener('click', function(e){
     const b = e.target.closest && e.target.closest('.cards-seg button');
     if(b) applyCards(b.getAttribute('data-cards-opt'));
   });
   (function(){ let v = 'compact'; try{ v = localStorage.getItem('rv-cards') || 'compact'; }catch(e){} applyCards(v); })();
-  // Players tab rows on phones: compact (name, position · team · opponent, projection / last) or detailed (default).
-  // Remembered on this device, like the lineup card style.
-  function applyPlRows(v, save){
-    v = v === 'compact' ? 'compact' : 'detailed';
-    if(save){ try{ localStorage.setItem('rv-pl-rows', v); }catch(e){ console.warn('Could not save row style', e); } }
-    document.documentElement.classList.toggle('pl-compact', v === 'compact');
-    document.querySelectorAll('[data-pl-rows]').forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-pl-rows') === v ? 'true' : 'false'); });
-  }
+  // Players rows follow the same Simple / Detailed choice (the row-style buttons on Players set it too).
   document.addEventListener('click', function(e){
     const b = e.target.closest && e.target.closest('[data-pl-rows]');
-    if(b) applyPlRows(b.getAttribute('data-pl-rows'), true);
+    if(b) applyCards(b.getAttribute('data-pl-rows'));
   });
-  (function(){ let v = 'detailed'; try{ v = localStorage.getItem('rv-pl-rows') || 'detailed'; }catch(e){} applyPlRows(v); })();
   document.addEventListener('click', function(e){
     const b = e.target.closest && e.target.closest('.theme-seg button');
     if(!b) return;
@@ -6135,7 +6212,9 @@
   function focusVisible(){ return paneMode() ? !els.panes.classList.contains('solo') && !ctx.paneClosed : els.overlay.classList.contains('open'); }
   // Wide screens: the player panel can be closed (× on it, clicking the selected player again, Esc). Closed, the list
   // takes the full width and nothing opens it by itself (refreshes, switching tabs); picking a player opens it again.
-  ctx.paneClosed = false;
+  // It starts closed: the list gets the full width until you pick someone.
+  ctx.paneClosed = true;
+  els.panes.classList.add('closed');
   function closePane(){
     if(!paneMode()) return;
     ctx.paneClosed = true;
@@ -6426,7 +6505,7 @@
       sb.setAttribute('role', 'button'); sb.setAttribute('tabindex', '0'); sb.setAttribute('aria-label', 'sleepa: back to your lineup');
       renderFreshness();
       pruneStatsCache(ctx.season);
-      loadEspn().then(function(){ if(loadId === ctx.loadId){ refreshFocus(); if(maxOpen()) renderMax(0); renderStatus(); } });
+      loadEspn().then(function(){ if(loadId === ctx.loadId){ plReset(); refreshFocus(); if(maxOpen()) renderMax(0); renderStatus(); } });
       refreshData({ topUp: true }); // anything that came from a stale cache is re-fetched in the background
       // If the app-open transition is still playing, replay the row + total entrance once it lands so you actually see it.
       if(ctx.deferEntrance) ctx.afterVt = function(){
@@ -8431,11 +8510,12 @@
     const g = games[String(week)];
     return g ? { text: g, bye: false } : { text: 'BYE', bye: true };
   }
-  function matchupHTML(team){
+  function matchupHTML(team, pid){
     const live = gameStatusHTML(team);
     if(live) return ' · ' + live;
     const m = matchup(team, ctx.week);
     if(!m) return ' · <span class="opp">—</span>';
+    if(!m.bye && pid) return ' · ' + oppToneHTML(pid, m.text);
     return ' · <span class="opp' + (m.bye ? ' bye' : '') + '">' + escapeHTML(m.text) + '</span>';
   }
   function isOnBye(pid){ const p = ctx.players[pid]; const m = p && matchup(p.team, ctx.week); return !!(m && m.bye); }
@@ -8529,12 +8609,69 @@
       const m = matchup(p.team, ctx.week);
       if(!m) out = '<span class="opp">—</span>';
       else if(m.bye) out = '<span class="opp bye">BYE</span>';
-      else {
-        const i = dvpInfo(pid);
-        out = '<span class="opp' + (i ? ' mt-' + i.tone : '') + '"' + (i ? ' title="' + escapeHTML(dvpSentence(i)) + '"' : '') + '>' + escapeHTML(m.text) + '</span>';
-      }
+      else out = oppToneHTML(pid, m.text);
     }
     return ' · ' + out + snapFlagHTML(pid);
+  }
+  // Matchup difficulty for a player this week, in five steps (green, light green, amber, orange, red): where the defense
+  // ranks in points allowed to his position, in league scoring (dvpInfo; rank 1 allows the most). Weather is not part
+  // of it: it shows on its own as an icon (wxIconHTML).
+  const OPP_STEPS = ['easy', 'good', 'mid', 'tough', 'hard'];
+  const OPP_WORDS = { easy: 'Easy matchup', good: 'Good matchup', mid: 'Average matchup', tough: 'Tough matchup', hard: 'Hard matchup' };
+  function oppTone(pid){
+    const i = dvpInfo(pid);
+    if(!i) return null;
+    const f = i.of > 1 ? (i.rank - 1) / (i.of - 1) : 0.5;   // 0 = allows the most, 1 = the fewest
+    const tone = OPP_STEPS[Math.min(OPP_STEPS.length - 1, Math.floor(f * OPP_STEPS.length))];
+    return { tone: tone, why: OPP_WORDS[tone] + ': ' + dvpSentence(i) };
+  }
+  function oppToneHTML(pid, text){
+    const t = oppTone(pid), p = ctx.players[pid];
+    return '<span class="opp' + (t ? ' mt-' + t.tone : '') + '"' + (t ? ' title="' + escapeHTML(t.why) + '"' : '') + '>' + escapeHTML(text) + '</span>' + wxIconHTML(p && p.team);
+  }
+
+  // Game-day weather as a small icon next to the opponent (as Sleeper does): sun / moon, partly cloudy, clouds, wind,
+  // rain, storm, snow, or a dome indoors. Forecasts come through the Intel cache (IT_WX, Open-Meteo, asked for once per
+  // game); wxPaint fills the icons in when one lands. No icon beyond the forecast horizon or once the game is over.
+  const WX_SVG = {
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>',
+    moon: '<path d="M19.5 14.5A7.5 7.5 0 1 1 9.5 4.5a6 6 0 0 0 10 10z"/>',
+    partly: '<path d="M8 3.5v1.5M3.5 8H5M4.8 4.8l1 1M11.2 4.8l-1 1"/><path d="M5.6 10.4A3 3 0 1 1 10.6 7"/><path d="M8.5 20h8a3.5 3.5 0 0 0 .4-7 5 5 0 0 0-9.6 1.2A2.9 2.9 0 0 0 8.5 20z"/>',
+    cloud: '<path d="M7 19h10a4 4 0 0 0 .5-8 6 6 0 0 0-11.4 1.4A3.3 3.3 0 0 0 7 19z"/>',
+    wind: '<path d="M3 9h10.5a2.5 2.5 0 1 0-2.5-2.5M3 13h15a2.5 2.5 0 1 1-2.5 2.5M3 17h7"/>',
+    rain: '<path d="M7 14h10a3.5 3.5 0 0 0 .4-7 5 5 0 0 0-9.6 1.2A2.9 2.9 0 0 0 7 14z"/><path d="M8 17l-1 3M12 17l-1 3M16 17l-1 3"/>',
+    storm: '<path d="M7 14h10a3.5 3.5 0 0 0 .4-7 5 5 0 0 0-9.6 1.2A2.9 2.9 0 0 0 7 14z"/><path d="M12.5 15l-2 3.5h3l-2 3.5"/>',
+    snow: '<path d="M7 14h10a3.5 3.5 0 0 0 .4-7 5 5 0 0 0-9.6 1.2A2.9 2.9 0 0 0 7 14z"/><path d="M8 18h.01M12 17h.01M16 18h.01M10 21h.01M14 21h.01"/>',
+    dome: '<path d="M3 18.5h18M5 18.5a7 7 0 0 1 14 0M12 11.5v7M8.6 12.5c-.6 1.6-.9 3.6-.9 6M15.4 12.5c.6 1.6.9 3.6.9 6"/>'
+  };
+  function wxKind(g){
+    const c = IT_WX[g.id], roof = INTEL.venues ? intelRoofOf(g) : null;
+    if(!c) itWantWeather([g], true);
+    if(roof === 'indoor' || (c && c.st === 'skip' && c.why === 'indoor')) return { k: 'dome', t: 'Indoors (dome)' };
+    if(!c || c.st !== 'ok') return null;
+    const w = c.w, T = INTEL_TUNE, hrs = w.hourly && w.hourly.length ? w.hourly : [w];
+    const any = function(f){ return hrs.some(function(h){ return typeof h.code === 'number' && f(h.code); }); };
+    const k = any(function(x){ return x >= 95; }) ? 'storm'
+      : w.snow ? 'snow'
+      : any(function(x){ return (x >= 51 && x <= 67) || (x >= 80 && x <= 82); }) || (typeof w.mm === 'number' && w.mm >= T.RAIN_MM) ? 'rain'
+      : typeof w.wind === 'number' && w.wind >= T.WIND_HIGH ? 'wind'
+      : w.code >= 3 ? 'cloud' : w.code >= 1 ? 'partly' : w.night ? 'moon' : 'sun';
+    const words = { storm: 'Storms', snow: 'Snow', rain: 'Rain', wind: 'Windy', cloud: intelSky(w.code) || 'Cloudy', partly: 'Partly cloudy', sun: 'Sunny', moon: 'Clear' };
+    const t = [words[k], typeof w.temp === 'number' ? Math.round(w.temp) + '°' : '',
+      typeof w.wind === 'number' ? 'wind ' + Math.round(w.wind) + ' mph' : '', roof === 'tbd' ? 'retractable roof' : ''].filter(Boolean).join(' · ');
+    return { k: k, t: t };
+  }
+  function wxInner(g){
+    const x = wxKind(g);
+    return x ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="' + escapeHTML(x.t) + '"><title>' + escapeHTML(x.t) + '</title>' + WX_SVG[x.k] + '</svg>' : '';
+  }
+  function wxIconHTML(team){
+    const g = team ? intelGameFor(team) : null;
+    return g ? '<span class="wx-ic" data-wx-g="' + escapeHTML(g.id) + '">' + wxInner(g) + '</span>' : '';
+  }
+  function wxPaint(gid){
+    const g = intelGames().find(function(x){ return x.id === gid; });
+    if(g) document.querySelectorAll('.wx-ic[data-wx-g="' + CSS.escape(gid) + '"]').forEach(function(el){ el.innerHTML = wxInner(g); });
   }
   function snapFlagHTML(pid){
     const tr = hasSnaps(pid) ? snapTrend(pid) : null;
@@ -8549,10 +8686,11 @@
     return '<span class="depth-chip" title="Depth chart">' + escapeHTML((e && e.d) || '—') + '</span>';
   }
   // Table-mode cells (desktop): opponent on its own, snap % with trend arrow.
-  function oppOnly(team){
+  function oppOnly(team, pid){
     const live = gameStatusHTML(team, true);   // narrow table column: state + score
     if(live) return live;
     const m = matchup(team, ctx.week);
+    if(m && !m.bye && pid) return oppToneHTML(pid, m.text);
     return m ? '<span class="opp' + (m.bye ? ' bye' : '') + '">' + escapeHTML(m.text) + '</span>' : '<span class="opp">—</span>';
   }
   function snapCell(pid){
@@ -9388,17 +9526,17 @@
     const byeChip = byeStarter ? '<span class="status-chip bye-tag">Bye</span>' : '';
 
     return '' +
-      '<div class="slot-row' + (isNewHere ? ' swapped' : '') + (byeStarter ? ' bye-start' : '') + '" ' +
+      '<div class="slot-row' + (isNewHere ? ' swapped' : '') + (byeStarter ? ' bye-start' : '') + '" style="--pc:' + color + '" ' +
         (ro ? 'data-open="' + escapeHTML(playerId) + '"' : 'data-player-id="' + escapeHTML(playerId) + '" data-slot-index="' + (slotIndex !== undefined ? slotIndex : '') + '"') + '>' +
         '<div class="slot-tag" style="color:' + color + '; border-color:' + color + ';" title="' + escapeHTML(slotLabel || pos) + '">' + escapeHTML(slotShort(slotLabel || pos)) + '</div>' +
         photoBadgeHTML(playerId, 'avatar', ro ? '' : analyzeAttr(playerId)) +
         '<div class="player-info">' +
           '<div class="player-name">' + (ro ? '<span class="pn">' + escapeHTML(name) + '</span>' : analyzeName(playerId, name)) + byeChip + statusChip + newChip + ecrChipHTML(playerId) + '</div>' +
-          '<div class="player-meta"><span class="m-pos">' + escapeHTML(eligLabel(playerId)) + '</span><span class="m-rk">' + (ecrChipHTML(playerId) || escapeHTML(eligLabel(playerId))) + '</span>' + (eligLabel(playerId).indexOf('/') !== -1 ? '<span class="m-elig" title="Eligible at ' + escapeHTML(eligLabel(playerId)) + '">+' + escapeHTML(eligLabel(playerId).split('/').slice(1).join('/')) + '</span>' : '') + ' · ' + escapeHTML(team) + '<span class="m-opp">' + matchupHTML(p.team) + ' ' + dvpChipHTML(playerId) + '</span><span class="m-opp-c">' + oppCompactHTML(playerId) + '</span> ' + depthChipHTML(playerId) + itChipHTML(p.team) + rcBadgeHTML(playerId) + '</div>' +
+          '<div class="player-meta"><span class="m-pos">' + escapeHTML(eligLabel(playerId)) + '</span><span class="m-rk">' + (ecrChipHTML(playerId) || escapeHTML(eligLabel(playerId))) + '</span>' + (eligLabel(playerId).indexOf('/') !== -1 ? '<span class="m-elig" title="Eligible at ' + escapeHTML(eligLabel(playerId)) + '">+' + escapeHTML(eligLabel(playerId).split('/').slice(1).join('/')) + '</span>' : '') + ' · ' + escapeHTML(team) + '<span class="m-opp">' + matchupHTML(p.team, playerId) + ' ' + dvpChipHTML(playerId) + '</span><span class="m-opp-c">' + oppCompactHTML(playerId) + '</span> ' + depthChipHTML(playerId) + itChipHTML(p.team) + rcBadgeHTML(playerId) + '</div>' +
           (keyStats ? '<div class="key-stats">' + keyStats + '</div>' : '') +
           signalsHTML(playerId, false) +
         '</div>' +
-        '<div class="col col-opp">' + oppOnly(p.team) + (gameStatusHTML(p.team, true) ? '' : dvpChipHTML(playerId, true)) + '</div>' +
+        '<div class="col col-opp">' + oppOnly(p.team, playerId) + (gameStatusHTML(p.team, true) ? '' : dvpChipHTML(playerId, true)) + '</div>' +
         '<div class="col col-snap">' + snapCell(playerId) + '</div>' +
         pointsColsHTML(playerId) +
         '<div class="col col-l3">' + fmtPts(last3Avg(playerId)) + '</div>' +
@@ -11201,12 +11339,38 @@
     return ctx.ros || null;
   }
   let rosMemo = {};
-  // { pts, weeks } in this league's scoring, or null when the player has no projection left this season.
+  // { pts, weeks } in this league's scoring, or null when the player has no projection left this season. est: an
+  // injured player Sleeper stopped projecting, valued from his return (rosReturnEst).
   function rosValue(pid){
     if(!ctx.ros || !ctx.ros.players) return null;
+    if(rosMemo._e !== ctx.espnTs) rosMemo = { _e: ctx.espnTs };   // return dates arrive after the first render
     if(pid in rosMemo) return rosMemo[pid];
     const r = ctx.ros.players[pid];
-    return (rosMemo[pid] = r ? { pts: projPoints(r.s, pid, ctx.league.scoring_settings || {}) || 0, weeks: r.w } : null);
+    if(r && r.w) return (rosMemo[pid] = { pts: projPoints(r.s, pid, ctx.league.scoring_settings || {}) || 0, weeks: r.w });
+    const e = rosReturnEst(pid);
+    return (rosMemo[pid] = e ? { pts: e.per * e.k.length, weeks: e.k.length, est: true, back: e.from } : null);
+  }
+  // The NFL week a moment falls in: weeks run Wednesday to Tuesday, so the current one ends this coming Tuesday night.
+  function weekOfTime(t){
+    const end = new Date(); end.setHours(23, 59, 59, 999); end.setDate(end.getDate() + (2 - end.getDay() + 7) % 7);
+    const cur = ctx.sleeperWeek || ctx.week;
+    return t <= end.getTime() ? cur : cur + Math.ceil((t - end.getTime()) / (7 * 864e5));
+  }
+  // Sleeper stops projecting some injured players altogether (no row in ros.json), which would make a star who is back
+  // in three weeks look worthless the rest of the way, and the first player to cut. When he is ruled out and has played
+  // this season: back in the week of ESPN's return date (or after the usual time out for his status, IR_DAYS), then his
+  // season average in each week his team plays. Season-ending (back after the last fantasy week): null, worth nothing.
+  // { from, per, k: [weeks] } | null
+  function rosReturnEst(pid){
+    const p = ctx.players[pid];
+    if(!p || !p.team || !ctx.ros || !cantPlay(effectiveStatus(pid))) return null;
+    const h = hist(pid), avg = h && h.length >= 2 ? seasonAvgPts(pid) : null;
+    if(!(avg > 0)) return null;
+    const st = irStatus(pid), ret = irReturn(pid) || (IR_DAYS[st] ? Date.now() + IR_DAYS[st] * 864e5 : null);
+    if(!ret) return null;
+    const from = Math.max(ctx.week + 1, weekOfTime(ret)), to = ctx.ros.through_week || 17, k = [];
+    for(let w = from; w <= to; w++){ const g = matchup(p.team, w); if(!(g && g.bye)) k.push(w); }
+    return k.length ? { from: from, per: avg, k: k } : null;
   }
   // ============ Expected points (xFP) ============
   // xfp.json (GitHub Action, from ffverse/ffopportunity): each player-week as the catches, yards, TDs and first downs his
@@ -11489,7 +11653,7 @@
     const item = function(pid, mine){
       const p = ctx.players[pid], v = rosValue(pid), tr = recentTrend(pid), r = weekRange(pid), bye = isOnBye(pid);
       const bits = [];
-      bits.push(v ? '<b>' + v.pts.toFixed(2) + '</b> pts rest of season · ' + v.weeks + ' wk' + (v.weeks === 1 ? '' : 's') : '<b>—</b> no projection left');
+      bits.push(v ? '<b>' + v.pts.toFixed(2) + '</b> pts rest of season · ' + v.weeks + ' wk' + (v.weeks === 1 ? '' : 's') + (v.est ? ' (back wk ' + v.back + ', est.)' : '') : '<b>—</b> no projection left');
       if(tr) bits.push('last 3: ' + tr.last3.toFixed(2) + ' <span class="trend ' + tr.dir + '">' + { up: '↑', down: '↓', flat: '→' }[tr.dir] + '</span> vs ' + tr.avg.toFixed(2) + ' avg');
       else if(hist(pid)) bits.push((hist(pid).length || 0) + ' game' + (hist(pid).length === 1 ? '' : 's') + ' played');
       if(r && r.ok) bits.push('range ' + Math.round(r.floor) + '–' + Math.round(r.ceil) + (r.early ? ' (early)' : ''));
@@ -11529,7 +11693,7 @@
   const lineupPtsMemo = { raw: null, ros: null, sc: null, w: {} };
   function lineupPts(pid, week, sc){
     const raw = ctx.projRaw || null, ros = ctx.ros || null;
-    if(lineupPtsMemo.raw !== raw || lineupPtsMemo.ros !== ros || lineupPtsMemo.sc !== sc){ lineupPtsMemo.raw = raw; lineupPtsMemo.ros = ros; lineupPtsMemo.sc = sc; lineupPtsMemo.w = {}; }
+    if(lineupPtsMemo.raw !== raw || lineupPtsMemo.ros !== ros || lineupPtsMemo.sc !== sc || lineupPtsMemo.e !== ctx.espnTs){ lineupPtsMemo.raw = raw; lineupPtsMemo.ros = ros; lineupPtsMemo.sc = sc; lineupPtsMemo.e = ctx.espnTs; lineupPtsMemo.w = {}; }
     const m = lineupPtsMemo.w[week] || (lineupPtsMemo.w[week] = {});
     if(pid in m) return m[pid];
     const p = ctx.players[pid];
@@ -11542,6 +11706,9 @@
       if(r && r.w){
         const g = matchup(p.team, week), plays = r.k ? r.k.indexOf(week) !== -1 : !(g && g.bye);
         if(plays){ const x = projPoints(r.s, pid, sc); v = typeof x === 'number' && x > 0 ? x / r.w : 0; }
+      }else if(ros){
+        const e = rosReturnEst(pid);   // hurt, no Sleeper projection: his season average from the week he is back
+        if(e && e.k.indexOf(week) !== -1) v = e.per;
       }
     }
     return (m[pid] = v);
@@ -11604,7 +11771,7 @@
   const WV_POS_N = 3;    // top available players shown per position
   const WV_MIN = 0.5;    // lineup gains below this read as depth (same noise line as trades)
   function waiverValue(mode){
-    const key = 'wv_' + (mode === 'ros' && ctx.ros ? 'ros' : 'week');
+    const key = 'wv_' + (mode === 'ros' && ctx.ros ? 'ros' : ctx.ros ? 'week+' : 'week');
     if(plMemo[key]) return plMemo[key];
     const weeks = waiverWeeks(mode), sc = (ctx.league && ctx.league.scoring_settings) || {};
     const fa = new Set();
@@ -11625,6 +11792,21 @@
       const cost = weeks.reduce(function(a, w){ return a + (base[w].starts.has(pid) ? base[w].tot - BL(without(active, pid), w).total : 0); }, 0);
       return { pid: pid, cost: cost, pts: ptsOf(pid), starts: base[ctx.week] && base[ctx.week].starts.has(pid) };
     }).sort(function(a, b){ return a.cost - b.cost || a.pts - b.pts; });
+    // This week only, a player who cannot play (bye, injury) costs nothing to drop, so the one-week view would cut a starter
+    // who is back next week. Held: anyone in my best lineup in at least half the later weeks he plays (two or more). He is
+    // never offered as a drop here, and the drop list says why. Rest of season already counts those weeks.
+    if(key === 'wv_week+'){
+      const later = waiverWeeks('ros').filter(function(w){ return w > ctx.week; }).map(function(w){
+        const b = BL(active, w);
+        return { w: w, starts: new Set(b.slots.map(function(x){ return x.pid; }).filter(Boolean)) };
+      });
+      drops.forEach(function(d){
+        let plays = 0, starts = 0, first = null;
+        later.forEach(function(x){ if(P(d.pid, x.w) > 0){ plays++; if(x.starts.has(d.pid)){ starts++; if(first === null) first = x.w; } } });
+        if(starts >= 2 && starts * 2 >= plays) d.hold = { why: isOnBye(d.pid) ? 'bye' : cantPlay(effectiveStatus(d.pid)) ? 'hurt' : '', back: first, starts: starts, of: later.length };
+      });
+      drops.sort(function(a, b){ return (a.hold ? 1 : 0) - (b.hold ? 1 : 0); });
+    }
     [].concat.apply([], leaguePositions().map(function(pos){ return ctx.freeAgents[pos] || []; })).forEach(function(pid){ fa.add(pid); });
     const adds = [], pool = [];
     fa.forEach(function(pid){
@@ -11640,7 +11822,7 @@
     const swapMemo = {};
     // samePos: only drop someone who shares a position with the add (keeps your depth: a backup QB isn't traded for an RB)
     const shares = function(a, b){ const fa2 = fantasyPositions(a); return fantasyPositions(b).some(function(x){ return fa2.indexOf(x) !== -1; }); };
-    return (plMemo[key] = { mode: key === 'wv_ros' ? 'ros' : 'week', weeks: weeks, base: baseTot, adds: adds, pool: pool, drops: drops, open: open,
+    return (plMemo[key] = { mode: key === 'wv_ros' ? 'ros' : 'week', held: drops.filter(function(d){ return d.hold; }).length, weeks: weeks, base: baseTot, adds: adds, pool: pool, drops: drops, open: open,
       // my weakest active player at a position (least projected points over the weeks): what a depth add has to beat
       weakest: function(pos){ let w = null; active.forEach(function(pid){ if(posGroup(pid) !== pos) return; const p = ptsOf(pid); if(!w || p < w.pts) w = { pid: pid, pts: p }; }); return w; },
       swapFor: function(list, samePos){
@@ -11650,7 +11832,7 @@
         if(swapMemo[mk]) return swapMemo[mk];
         let best = null;
         drops.forEach(function(d){
-          if(samePos && !shares(a.pid, d.pid)) return;
+          if(d.hold || (samePos && !shares(a.pid, d.pid))) return;
           const rest = without(active, d.pid).concat([a.pid]);
           const net = weeks.reduce(function(s, w){ return s + (P(a.pid, w) > base[w].floor || base[w].starts.has(d.pid) ? BL(rest, w).total - base[w].tot : 0); }, 0);
           if(!best || net > best.net + 1e-9) best = { add: a.pid, drop: d.pid, net: net };
@@ -11661,11 +11843,11 @@
   }
   function wvRowHTML(pid, val, kind, extra){
     const p = ctx.players[pid];
-    const valTxt = kind === 'add' ? '+' + val.toFixed(2) : kind === 'depth' ? fmtPts(val) : val < 0.005 ? '0.00' : '−' + val.toFixed(2);
+    const valTxt = kind === 'add' ? '+' + val.toFixed(2) : kind === 'depth' ? fmtPts(val) : kind === 'keep' ? 'Keep' : val < 0.005 ? '0.00' : '−' + val.toFixed(2);
     return '<div class="ad-item wv-item" data-wv-open="' + escapeHTML(pid) + '" role="button" tabindex="0">' +
       avatarTag(pid, 'ad-av') + '<div class="ad-info"><div class="ad-name">' + escapeHTML(playerName(p)) + ' ' + injuryChip(p.injury_status) + '</div>' +
       '<div class="ad-meta">' + escapeHTML(eligLabel(pid)) + ' · ' + escapeHTML(p.team || 'FA') + (extra ? ' · ' + extra : '') + '</div></div>' +
-      '<div class="wv-num ' + kind + (kind === 'drop' && val < 0.005 ? ' zero' : '') + '"><b>' + valTxt + '</b><span>' + (kind === 'add' ? 'adds' : kind === 'depth' ? 'proj' : 'costs') + '</span></div></div>';
+      '<div class="wv-num ' + kind + (kind === 'drop' && val < 0.005 ? ' zero' : '') + '"><b>' + valTxt + '</b><span>' + (kind === 'add' ? 'adds' : kind === 'depth' ? 'proj' : kind === 'keep' ? 'starter' : 'costs') + '</span></div></div>';
   }
   try{ ctx.wvMode = localStorage.getItem('rv-wv-mode') === 'ros' ? 'ros' : 'week'; }catch(e){ ctx.wvMode = 'week'; }
   try{ ctx.wvSame = localStorage.getItem('rv-wv-same') !== 'any'; }catch(e){ ctx.wvSame = true; }   /* swaps within the same position by default */
@@ -11990,7 +12172,11 @@
     const posTxt = pos.length ? ' · ' + pos.join('/') : '';
     const span = V.mode === 'ros' ? 'weeks ' + V.weeks[0] + '–' + V.weeks[V.weeks.length - 1] : 'week ' + ctx.week;
     const when = V.mode === 'ros' ? 'over the rest of the season' : 'this week';
-    const dropRows = V.drops.slice(0, 8).map(function(d){ return wvRowHTML(d.pid, d.cost, 'drop', V.mode === 'ros' ? fmtPts(d.pts) + ' proj' : d.starts ? 'starting' : d.pts > 0 ? fmtPts(d.pts) + ' proj, bench' : 'no points this week'); }).join('');
+    const holdTxt = function(h){ return (h.why === 'bye' ? 'on bye' : h.why === 'hurt' ? 'out this week' : 'on your bench this week') + ' · starts for you ' + h.starts + ' of the next ' + h.of + ' weeks' + (h.back && h.back > ctx.week + 1 ? ', from wk ' + h.back : ''); };
+    const dropRows = V.drops.filter(function(d){ return !d.hold; }).slice(0, 8).concat(V.drops.filter(function(d){ return d.hold && !d.starts; })).map(function(d){
+      if(d.hold) return wvRowHTML(d.pid, 0, 'keep', holdTxt(d.hold));
+      return wvRowHTML(d.pid, d.cost, 'drop', V.mode === 'ros' ? fmtPts(d.pts) + ' proj' + (rosValue(d.pid) && rosValue(d.pid).est ? ' (back wk ' + rosValue(d.pid).back + ', est.)' : '') : d.starts ? 'starting' : d.pts > 0 ? fmtPts(d.pts) + ' proj, bench' : 'no points this week');
+    }).join('');
     const posBlocks = groups.map(function(g){
       const rows = g.cands.map(function(a){
         if(g0(a)) return wvRowHTML(a.pid, a.gain, 'add', fmtPts(a.pts) + ' proj' + faabChip(FS, a.pid, a.gain));
@@ -12014,7 +12200,9 @@
         '<div class="wv-cols"><div class="eyebrow ad-h">Top adds by position · marginal value, or depth</div><div class="wv-grid">' + posBlocks + '</div></div>' +
         '<div class="wv-cols"><div class="eyebrow ad-h">Cheapest drops · drop cost</div><div class="wv-drops">' + (dropRows || '<div class="ad-none">No droppable players.</div>') + '</div></div>' +
         '<div class="ad-foot">Best swaps = the best one per position. Marginal value = your best lineup with the player minus without (a depth player would not start for you, so his projection shows instead); drop cost = your best lineup minus your best lineup without him; a swap’s net is the exact change with both moves' + (V.mode === 'ros' ? ', each summed over ' + span : '') + '. ' +
-          'Best lineup = most restrictive slots filled first, from Sleeper’s projections in your league’s scoring' + (V.mode === 'ros' ? ' (this week’s real projections, then each player’s average projected week in the weeks he’s projected to play)' : '') + '; byes and ruled-out players count as zero, and so does a free agent whose game has already started this week. ' +
+          'Best lineup = most restrictive slots filled first, from Sleeper’s projections in your league’s scoring' + (V.mode === 'ros' ? ' (this week’s real projections, then each player’s average projected week in the weeks he’s projected to play)' : '') + '; byes and ruled-out players count as zero, and so does a free agent whose game has already started this week' +
+          (V.mode === 'ros' ? ' (an injured player Sleeper stopped projecting counts his season average from his expected return)' : '') + '. ' +
+          (V.held ? 'This week only: anyone who starts for you in most later weeks (on bye, or back from injury soon) is marked Keep and never offered as a drop. ' : '') +
           'IR / taxi players aren’t counted or offered as drops. Waivers may not clear in time to start an add this week.</div>' +
       '</div>';
   }
@@ -12671,14 +12859,14 @@
           '<div class="player-meta">' + escapeHTML(eligLabel(pid)) + ' · ' + escapeHTML(p.team || 'FA') +
             (tc != null ? ' · <span class="tr-count ' + ctx.pl.trendKind + '">' + (ctx.pl.trendKind === 'add' ? '+' : '−') + fmtCount(tc) + '</span>' : '') +
             (ctx.pl.view === 'trend' && ctx.pl.trendKind === 'rise' ? risingHTML(pid) : '') +
-            '<span class="m-opp">' + matchupHTML(p.team) + ' ' + dvpChipHTML(pid) + '</span> ' + depthChipHTML(pid) + '</div>' +
+            '<span class="m-opp">' + matchupHTML(p.team, pid) + ' ' + dvpChipHTML(pid) + '</span> ' + depthChipHTML(pid) + '</div>' +
           (function(){ const k = plFormStats(pid) + keyStatsLine(pid, p.position); return k ? '<div class="key-stats">' + k + '</div>' : ''; })() +
           who + signalsHTML(pid, true) +
         '</div>' +
         pointsColsHTML(pid) + plFormCols(pid) + plXfpCols(pid) +
         '<div class="col col-snap">' + snapCell(pid) + '</div>' +
         '<div class="col col-tgt">' + (isIdp(pid) ? '<span title="Tackle share">' + pct(seasonShare(pid, 'k')) + '</span>' : SKILL_POSITIONS.indexOf(p.position) !== -1 && p.position !== 'QB' ? pct(seasonShare(pid, 't')) : '—') + '</div>' +
-        '<div class="col col-opp">' + oppOnly(p.team) + (gameStatusHTML(p.team, true) ? '' : dvpChipHTML(pid, true)) + '</div>' +
+        '<div class="col col-opp">' + oppOnly(p.team, pid) + (gameStatusHTML(p.team, true) ? '' : dvpChipHTML(pid, true)) + '</div>' +
         '<div class="col col-vs">' + who.replace('class="fa-vs"', 'class="fa-vs-inline"') + '</div>' +
         '<div class="row-vs">' + vsBtn(pid) + '</div>' +
       '</div>';
@@ -13871,7 +14059,7 @@
   function dvpChipHTML(pid, short){
     const i = dvpInfo(pid);
     if(!i) return '';
-    return '<span class="dvp-chip ' + (i.early ? 'early' : i.tone) + '" title="' + escapeHTML(dvpSentence(i)) + '">' + dvpLabel(i, short) + (i.early && !short ? ' · ' + i.g + ' gm' + (i.g > 1 ? 's' : '') : '') + '</span>';
+    return '<span class="dvp-chip ' + (i.early ? 'early' : oppTone(pid).tone) + '" title="' + escapeHTML(dvpSentence(i)) + '">' + dvpLabel(i, short) + (i.early && !short ? ' · ' + i.g + ' gm' + (i.g > 1 ? 's' : '') : '') + '</span>';
   }
 
   // ---- Start / Sit (Compare): pick 2–4 players (VS buttons anywhere, search, or your roster) ----
@@ -17538,6 +17726,7 @@
         intelWeather(g).then(function(r){
           IT_WX[g.id] = r.w ? { st: 'ok', w: r.w, ts: r.ts || Date.now() } : r.skip ? { st: 'skip', why: r.skip, ts: Date.now() } : { st: 'err', why: r.err, ts: Date.now() };
           itPatchChips(g.id);
+          wxPaint(g.id);
           if(!chipsOnly){ clearTimeout(itWxTimer); itWxTimer = setTimeout(itRerender, 120); }
         });
       });
@@ -19028,30 +19217,54 @@
 </script>
 
 <script id="v2">
-/* ==== Sleepa Next: redesign preview helpers (next.html only) ==== */
+/* ==== Sleepa Next: redesign preview controls (next.html only) ==== */
 (function(){
-  var KEY = 'v2-density', root = document.documentElement;
-  function get(){ try { return localStorage.getItem(KEY) || 'simple'; } catch(e){ return 'simple'; } }
-  function set(v){ try { localStorage.setItem(KEY, v); } catch(e){} apply(v); }
-  function apply(v){
-    root.classList.toggle('v2-full', v === 'full');
-    document.querySelectorAll('.v2-density button').forEach(function(b){ b.setAttribute('aria-pressed', String(b.dataset.d === v)); });
-  }
+  const root = document.documentElement;
   document.title = 'sleepa · preview';
-  var bar = document.querySelector('#roster-view .lu-bar');
-  if(bar){
-    var seg = document.createElement('div');
-    seg.className = 'wk-seg v2-density'; seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', 'Detail');
-    seg.innerHTML = '<button type="button" data-d="simple">Simple</button><button type="button" data-d="full">Detailed</button>';
-    seg.addEventListener('click', function(e){ var b = e.target.closest('button'); if(b) set(b.dataset.d); });
-    bar.appendChild(seg);
+  // Simple / Detailed switch on Lineup and Players: buttons for the app's Detail level setting (.cards-seg: the app's
+  // own click handler saves and applies it everywhere)
+  function densitySeg(){
+    const seg = document.createElement('div');
+    seg.className = 'wk-seg cards-seg v2-density'; seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', 'Detail level');
+    const d = root.classList.contains('cards-detailed');
+    seg.innerHTML = '<button type="button" data-cards-opt="compact" aria-pressed="' + !d + '">Simple</button><button type="button" data-cards-opt="detailed" aria-pressed="' + d + '">Detailed</button>';
+    return seg;
   }
+  const bar = document.querySelector('#roster-view .lu-bar');
+  if(bar) bar.appendChild(densitySeg());
+  const plHead = document.querySelector('#fa-view .section-title');
+  if(plHead) plHead.insertBefore(densitySeg(), plHead.querySelector('.xbtn'));
+
   document.querySelectorAll('.brand .wordmark, .m-brand .wordmark').forEach(function(w){
-    var p = document.createElement('span'); p.className = 'v2-pill'; p.textContent = 'Preview'; w.after(p);
+    const p = document.createElement('span'); p.className = 'v2-pill'; p.textContent = 'Preview'; w.after(p);
   });
-  var foot = document.querySelector('.side-foot');
-  if(foot){ var a = document.createElement('a'); a.className = 'v2-back'; a.href = 'index.html' + location.hash; a.textContent = '← Current version'; foot.appendChild(a); }
-  apply(get());
+  // labels as tooltips for the icon rail
+  document.querySelectorAll('#side-nav .nav-btn').forEach(function(b){ if(!b.title){ const s = b.querySelector('span'); if(s) b.title = s.textContent; } });
+
+  // Navigation on wide screens: sidebar | icons | bar (localStorage rv-nav; applied before first paint in <head>)
+  const NAV = ['sidebar', 'icons', 'bar'];
+  function applyNav(v, save){
+    v = NAV.indexOf(v) !== -1 ? v : 'sidebar';
+    root.classList.toggle('nav-icons', v === 'icons');
+    root.classList.toggle('nav-bar', v === 'bar');
+    document.querySelectorAll('[data-nav-opt]').forEach(function(b){ b.setAttribute('aria-pressed', String(b.getAttribute('data-nav-opt') === v)); });
+    const c = document.querySelector('.v2-collapse');
+    if(c){ c.title = v === 'icons' ? 'Show the full sidebar' : 'Collapse to icons'; c.setAttribute('aria-label', c.title); }
+    if(save){ try { localStorage.setItem('rv-nav', v); } catch(e){ console.warn('Could not save navigation style', e); } }
+    window.dispatchEvent(new Event('resize'));   // re-place the nav highlight
+  }
+  function navNow(){ return root.classList.contains('nav-icons') ? 'icons' : root.classList.contains('nav-bar') ? 'bar' : 'sidebar'; }
+  const foot = document.querySelector('.side-foot');
+  if(foot){
+    const f = document.createElement('div'); f.className = 'v2-foot';
+    f.innerHTML = '<a class="v2-back" href="index.html">← Current version</a>' +
+      '<button type="button" class="v2-collapse"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><path d="M9.5 4.5v15M16 10l-2 2 2 2"/></svg></button>';
+    f.querySelector('.v2-back').addEventListener('click', function(){ this.href = 'index.html' + location.hash; });
+    f.querySelector('.v2-collapse').addEventListener('click', function(){ applyNav(navNow() === 'icons' ? 'sidebar' : 'icons', true); });
+    foot.appendChild(f);
+  }
+  document.addEventListener('click', function(e){ const b = e.target.closest && e.target.closest('[data-nav-opt]'); if(b) applyNav(b.getAttribute('data-nav-opt'), true); });
+  applyNav(navNow());
 })();
 </script>
 </body>
