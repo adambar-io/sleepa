@@ -4130,6 +4130,17 @@
   .side-collapse{ display: grid; place-items: center; width: 34px; height: 34px; min-height: 0; padding: 0; border-radius: 10px; background: none; color: var(--text-3); }
   .side-collapse:hover{ background: var(--surface-2); color: var(--text); }
   .side-collapse svg{ width: 18px; height: 18px; }
+  /* full screen toggle: sidebar corner and phone header; only where the browser supports it (html.fs-ok) */
+  .side-fs, .ph-fs{ display: none; }
+  html.fs-ok .side-fs{ display: grid; place-items: center; width: 34px; height: 34px; min-height: 0; padding: 0; border-radius: 10px; background: none; color: var(--text-3); }
+  html.fs-ok .side-fs:hover{ background: var(--surface-2); color: var(--text); }
+  :is(.side-fs, .ph-fs) svg{ width: 18px; height: 18px; }
+  :is(.side-fs, .ph-fs) .fs-out, :is(.side-fs, .ph-fs)[aria-pressed="true"] .fs-in{ display: none; }
+  :is(.side-fs, .ph-fs)[aria-pressed="true"] .fs-out{ display: block; }
+  @media (max-width: 1023px){
+    html.fs-ok .ph-fs{ position: absolute; z-index: 5; top: calc(12px + env(safe-area-inset-top)); right: calc(64px + env(safe-area-inset-right)); display: grid; place-items: center;
+      width: 40px; height: 40px; border: 0; border-radius: 50%; background: none; color: var(--text-2); cursor: pointer; }
+  }
 
   /* sidebar sections */
   .nav-sec{ display: block; padding: 16px 10px 5px; font-size: 11px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--text-3); }
@@ -4164,7 +4175,7 @@
     html.nav-icons .nav-thumb + .nav-sec{ display: none; }
     html.nav-icons .nav-btn .nav-badge{ top: 3px; right: 3px; transform: none; }
     html.nav-icons .league-menu{ width: 280px; }
-    html.nav-icons .side-tools{ justify-content: center; }
+    html.nav-icons .side-tools{ flex-direction: column; align-items: center; gap: 4px; }
     html.nav-icons .side-collapse svg{ transform: scaleX(-1); }
 
     /* floating bar at the bottom, as on phones */
@@ -4176,6 +4187,8 @@
     html.nav-bar .ph-search{ position: absolute; z-index: 5; top: 24px; right: 36px; display: grid; place-items: center; width: 40px; height: 40px; border: 0;
       border-radius: 50%; background: var(--surface-2); color: var(--text); cursor: pointer; }
     html.nav-bar .ph-search svg{ width: 19px; height: 19px; }
+    html.nav-bar.fs-ok .ph-fs{ position: absolute; z-index: 5; top: 24px; right: 84px; display: grid; place-items: center; width: 40px; height: 40px; border: 0;
+      border-radius: 50%; background: none; color: var(--text-2); cursor: pointer; }
   }
 
   /* page header: one line each, no squeezed wrapping on phones */
@@ -4331,11 +4344,13 @@
     <div class="side-foot">
       <div class="theme-seg" role="group" aria-label="Theme"><button type="button" data-theme-opt="system">Auto</button><button type="button" data-theme-opt="light">Light</button><button type="button" data-theme-opt="dark">Dark</button></div>
       <div class="data-status" data-status></div>
+      <div class="side-tools"><button type="button" class="side-fs" data-fs title="Full screen (F)" aria-label="Full screen (F)" aria-pressed="false"><svg class="fs-in" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><svg class="fs-out" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button><button type="button" class="side-collapse"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><path d="M9.5 4.5v15M16 10l-2 2 2 2"/></svg></button></div>
     </div>
   </aside>
 
   <main class="main">
     <div class="m-brand" data-home role="button" data-brand aria-haspopup="menu" aria-expanded="false" tabindex="0" aria-label="sleepa: go to your lineup"><svg class="brand-mark" viewBox="0 0 200 200" aria-hidden="true"><use href="#sleepa-mark"/></svg><span class="wordmark">sleepa</span><svg class="brand-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 10l4 4 4-4"/></svg></div>
+    <button type="button" class="ph-fs" data-fs title="Full screen (F)" aria-label="Full screen (F)" aria-pressed="false"><svg class="fs-in" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><svg class="fs-out" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button>
     <button type="button" class="ph-search" data-cmdk aria-label="Search players, pages, leagues and teams"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg></button>
     <header class="page-head">
       <div>
@@ -18707,6 +18722,24 @@
   // #/ deep links are all built from this list. id, title, words (extra search words), key (shortcut), help (cheat-sheet
   // text when it differs from the title), hash (deep link: sleepa/#/intel/injuries), run ----
   function ckSec(view, sel){ return function(){ if(ctx.view !== view) setView(view); const b = document.querySelector(sel); if(b) b.click(); window.scrollTo({ top: 0 }); }; }
+  // Full screen (the browser's Fullscreen API): the button in the sidebar corner or the phone header, F, or search.
+  // Hidden where a page can't go full screen (iPhone Safari) or already fills the screen (installed app). Esc also exits.
+  function fsOn(){ return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+  function fsToggle(){
+    const d = document, el = d.documentElement;
+    try{
+      const p = fsOn() ? (d.exitFullscreen || d.webkitExitFullscreen).call(d) : (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+      if(p && p.catch) p.catch(function(e){ console.warn('Full screen refused', e); });
+    }catch(e){ console.warn('Full screen unavailable', e); }
+  }
+  function fsSync(){
+    const on = fsOn(), t = on ? 'Exit full screen (F)' : 'Full screen (F)';
+    document.querySelectorAll('[data-fs]').forEach(function(b){ b.setAttribute('aria-pressed', String(on)); b.title = t; b.setAttribute('aria-label', t); });
+  }
+  document.documentElement.classList.toggle('fs-ok', !!(document.fullscreenEnabled || document.webkitFullscreenEnabled) && !window.matchMedia('(display-mode: standalone)').matches);
+  document.addEventListener('fullscreenchange', fsSync);
+  document.addEventListener('webkitfullscreenchange', fsSync);
+  document.addEventListener('click', function(e){ const b = e.target.closest && e.target.closest('[data-fs]'); if(b) fsToggle(); });
   const ACTIONS = [
     { id: 'lineup', title: 'Lineup', words: 'roster my team starters bench home', key: 'L', hash: 'lineup', run: kbView('roster') },
     { id: 'huddle', title: 'Sleepa Huddle', words: 'set lineup power rank cards build', key: 'H', hash: 'huddle', run: function(){ openHuddle(); } },
@@ -18732,6 +18765,7 @@
     { id: 'resources', title: 'Resources', words: 'links tools', hash: 'resources', run: kbView('resources') },
     { id: 'settings', title: 'Settings', words: 'theme options preferences', hash: 'settings', run: kbView('settings') },
     { id: 'health', title: 'Data health', words: 'sources freshness stale errors status data updated', hash: 'settings/data', run: function(){ kbView('settings')(); const el = document.getElementById('dh'); if(el) el.closest('.card').scrollIntoView({ block: 'start' }); } },
+    { id: 'fullscreen', title: 'Full screen', words: 'fullscreen maximize enter exit expand window', key: 'F', help: 'Full screen (again to exit)', run: function(){ fsToggle(); } },
     { id: 'keys', title: 'Keyboard shortcuts', words: 'help keys cheat sheet', key: '?', run: function(){ kbHelp(true); } },
   ];
   function actById(id){ return ACTIONS.find(function(a){ return a.id === id; }); }
@@ -19247,13 +19281,8 @@
     window.dispatchEvent(new Event('resize'));   // re-place the nav highlight
   }
   function navNow(){ return root.classList.contains('nav-icons') ? 'icons' : root.classList.contains('nav-bar') ? 'bar' : 'sidebar'; }
-  const foot = document.querySelector('.side-foot');
-  if(foot){
-    const f = document.createElement('div'); f.className = 'side-tools';
-    f.innerHTML = '<button type="button" class="side-collapse"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><path d="M9.5 4.5v15M16 10l-2 2 2 2"/></svg></button>';
-    f.querySelector('.side-collapse').addEventListener('click', function(){ applyNav(navNow() === 'icons' ? 'sidebar' : 'icons', true); });
-    foot.appendChild(f);
-  }
+  const collapse = document.querySelector('.side-collapse');
+  if(collapse) collapse.addEventListener('click', function(){ applyNav(navNow() === 'icons' ? 'sidebar' : 'icons', true); });
   document.addEventListener('click', function(e){ const b = e.target.closest && e.target.closest('[data-nav-opt]'); if(b) applyNav(b.getAttribute('data-nav-opt'), true); });
   applyNav(navNow());
 })();
