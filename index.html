@@ -4446,14 +4446,7 @@
   .hx-todo{ display: grid; gap: 10px; justify-items: start; color: var(--text-2); font-size: 13.5px; }
 
   /* the way in, under the Huddle card on Lineup */
-  .hx-entry{ display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 8px; padding: 11px 14px; border: 0; border-radius: var(--radius); background: var(--surface); color: inherit; font: inherit; text-align: left; cursor: pointer;
     box-shadow: var(--shadow), inset 0 0 0 1px var(--hair); }
-  .hx-entry-ic{ flex: none; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); }
-  .hx-entry-ic svg{ width: 18px; height: 18px; }
-  .hx-entry-t{ flex: 1; min-width: 0; }
-  .hx-entry-t b{ display: block; font-size: 14px; }
-  .hx-entry-t small{ display: block; font-size: 12px; color: var(--text-2); margin-top: 1px; }
-  .hx-entry-go{ font-weight: 700; font-size: 13px; color: var(--accent); white-space: nowrap; }
 
   @media (max-width: 640px){
     .hx-top{ padding: 10px 12px; gap: 10px; flex-wrap: wrap; }
@@ -4509,7 +4502,31 @@
     .hx-tray .hx-tchip{ font-size: 12px; }
   }
 
-  .hx-side svg{ color: var(--accent); }
+
+  /* ============ Huddle bar (Lineup) + "Every league" under Huddle in the sidebar ============ */
+  .hd-bar{ grid-template-columns: minmax(0, 1fr) auto; cursor: default; }
+  .hd-bar:active{ transform: none; }
+  .hd-hit{ display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px; min-width: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+  .hd-acts{ display: flex; align-items: center; gap: 8px; }
+  .hd-acts .hd-go{ border: 0; font-family: inherit; cursor: pointer; }
+  .hd-go2{ background: var(--surface-2); color: var(--text); box-shadow: inset 0 0 0 1px var(--hair); }
+  .hd-go2:hover{ box-shadow: inset 0 0 0 1px var(--text-3); }
+  .hd-go2 small{ font-size: 11.5px; font-weight: 600; color: var(--accent); }
+  @media (max-width: 640px){
+    .hd-bar{ grid-template-columns: minmax(0, 1fr); row-gap: 10px; }
+    .hd-acts .hd-go{ flex: 1; justify-content: center; min-height: 40px; }
+  }
+  .nav-sub[hidden]{ display: none; }
+  html:not(.nav-icons) .nav-sub{ margin-top: -2px; padding-left: 28px; font-size: 13px; }
+  html:not(.nav-icons) .nav-sub svg{ width: 15px; height: 15px; }
+  .nav-sub svg{ color: var(--accent); }
+
+  /* lineup problems (bye / empty slot): a slim line, not a banner */
+  .bye-alert{ background: none; color: var(--text-2); padding: 2px 2px 2px 14px; margin: -4px 0 12px; font-size: 12.5px; position: relative; gap: 10px; }
+  .bye-alert::before{ content: ''; position: absolute; left: 2px; top: calc(2px + .72em - 3.5px); width: 7px; height: 7px; border-radius: 50%; background: var(--danger); }
+  .bye-alert strong{ color: var(--danger); font-weight: 600; }
+  .bye-alert .bye-text{ flex: 0 1 auto; min-width: 0; }
+  .bye-fix{ background: none; color: var(--danger); padding: 2px 4px; min-height: 0; font-size: 12.5px; font-weight: 650; text-decoration: underline; text-underline-offset: 2px; }
 </style>
 </head>
 <body>
@@ -4576,6 +4593,7 @@
       <span class="nav-sec" aria-hidden="true">Your team</span>
       <button class="nav-btn" data-view="roster"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><span>Lineup</span><span class="nav-badge" data-bye-badge hidden></span></button>
       <button class="nav-btn nav-huddle" data-huddle title="Sleepa Huddle (H)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="7" r="2.6"/><circle cx="5.5" cy="10" r="2.2"/><circle cx="18.5" cy="10" r="2.2"/><path d="M7.5 20a4.5 4.5 0 0 1 9 0M2.5 18.5a3.3 3.3 0 0 1 5-2.8M21.5 18.5a3.3 3.3 0 0 0-5-2.8"/></svg><span>Huddle</span><kbd>H</kbd></button>
+      <button class="nav-btn nav-sub" data-hx-open hidden title="Huddle every league: set all your lineups in one pass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="7" height="7" rx="1.5"/><rect x="14" y="4" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 17.5l2 2 4-4"/></svg><span>Every league</span></button>
       <button class="nav-btn" data-view="league"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0V4zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8.5 20h7M10 17h4"/></svg><span>League</span></button>
       <span class="nav-sec" aria-hidden="true">Research</span>
       <button class="nav-btn" data-view="fa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg><span>Players</span></button>
@@ -10115,16 +10133,23 @@
     const status = draft ? '<b class="warn">Draft in progress</b> · ' + set + ' of ' + slots.length + ' set'
       : !st.saved ? 'Starts from your Sleeper lineup · go position by position'
       : set === slots.length ? '<b class="ok">Saved</b> · all ' + slots.length + ' set' : '<b class="ok">Saved</b> · ' + (slots.length - set) + ' empty';
-    return '<button type="button" class="hd-card" data-huddle aria-label="Open ' + HUDDLE_NAME + ': set your week ' + ctx.week + ' lineup position by position">' +
-      '<span class="hd-ico">' + HUDDLE_ICON + '</span>' +
+    const label = 'Open ' + HUDDLE_NAME + ': set your week ' + ctx.week + ' lineup position by position';
+    const inner = '<span class="hd-ico">' + HUDDLE_ICON + '</span>' +
       '<span class="hd-main"><span class="hd-top"><b class="hd-name">' + HUDDLE_NAME + '</b><span class="hd-wk">Week ' + ctx.week + '</span></span>' +
         '<span class="hd-status">' + status + (locked ? ' · ' + locked + ' locked' : '') + '</span>' +
-        '<span class="hd-chips">' + chips + '</span></span>' +
-      '<span class="hd-go">Huddle up <span aria-hidden="true">›</span></span></button>';
+        '<span class="hd-chips">' + chips + '</span></span>';
+    const hx = hxProgress();
+    if(!hx) return '<button type="button" class="hd-card" data-huddle aria-label="' + label + '">' + inner + '<span class="hd-go">Huddle up <span aria-hidden="true">›</span></span></button>';
+    // 2+ leagues: one bar, two ways in: this league (position by position) or every league in one pass
+    return '<div class="hd-card hd-bar"><button type="button" class="hd-hit" data-huddle aria-label="' + label + '">' + inner + '</button>' +
+      '<span class="hd-acts"><button type="button" class="hd-go" data-huddle>This league <span aria-hidden="true">›</span></button>' +
+      '<button type="button" class="hd-go hd-go2" data-hx-open title="Set all ' + hx.n + ' lineups in one pass">Every league' + (hx.set ? ' <small>' + hx.set + '/' + hx.n + '</small>' : '') + ' <span aria-hidden="true">›</span></button></span></div>';
   }
   function renderHuddleCard(){
     const slot = document.getElementById('huddle-slot');
     if(slot) slot.innerHTML = huddleCardHTML();
+    const sub = document.querySelector('.nav-sub[data-hx-open]');
+    if(sub) sub.hidden = !hxProgress();   // "Every league" under Huddle in the sidebar: only with 2+ leagues
   }
   function prSlotIdx(){ return new Set(prSlots().map(function(s){ return s.i; })); }
   // this lineup with every unlocked Power Rank slot emptied
@@ -19118,7 +19143,7 @@
       }
     } else{
       const v = ctx.view;
-      if(v === 'roster') sel = '.mu-card[data-open-opp], .hd-card, #starters-list .slot-row, #bench-list .slot-row';
+      if(v === 'roster') sel = '.mu-card[data-open-opp], button.hd-card, .hd-hit, #starters-list .slot-row, #bench-list .slot-row';
       else if(v === 'fa') sel = ctx.pl.view === 'value' ? '#wv .wv-item' : ctx.pl.view === 'assess' ? '#wv .as-row' : '#fa-list .slot-row';
       else if(v === 'league') sel = '.mu-card[data-open-opp], #standings .st-row[data-open-trade]';
       else if(v === 'intel') sel = itDesk() && ctx.it.mode === 'cards' ? '' : '#it-root .it-tile';
@@ -20145,13 +20170,13 @@
   }, true);
   document.addEventListener('click', function(e){ if(e.target.closest && e.target.closest('[data-hx-open]')){ e.preventDefault(); hxOpen(); } });
 
-  // the way in: a row under the Huddle card on Lineup (only with 2+ leagues)
-  function hxEntryHTML(){
+  // The ways in: the "Every league" button on the Lineup page's Huddle bar (huddleCardHTML) and "Every league" under
+  // Huddle in the sidebar (.nav-sub), both only with 2+ leagues. n set of m this week, for the button.
+  function hxProgress(){
     const n = (ctx.pendingLeagues || []).length;
-    if(n < 2 || !ctx.league) return '';
-    const st = hxStore(), set = ctx.pendingLeagues.filter(function(l){ return st.leagues[l.league_id]; }).length;
-    return '<button type="button" class="hx-entry" data-hx-open><span class="hx-entry-ic">' + HX_ICON + '</span><span class="hx-entry-t"><b>Huddle every league</b>' +
-      '<small>' + (set ? set + ' of ' + n + ' lineups set this week' : 'Set all ' + n + ' lineups in one pass, close calls side by side') + '</small></span><span class="hx-entry-go">' + (set ? (set === n ? 'Review' : 'Continue') : 'Start') + ' ›</span></button>';
+    if(n < 2 || !ctx.league) return null;
+    const st = hxStore();
+    return { n: n, set: ctx.pendingLeagues.filter(function(l){ return st.leagues[l.league_id]; }).length };
   }
   // Data that lands after the league opened (schedule and kickoffs, weekly stats, rankings, a background refresh) rebuilds
   // the model; your picks, week type and dropped reasons stay.
@@ -20169,17 +20194,6 @@
   rerenderEverything = function(){
     hxBaseRerender.apply(this, arguments);
     if(HX.open && !HX.busy && HX.m && HX.i < HX.n && ctx.league && ctx.league.league_id === HX.m.id) safeRun('Huddle every league', hxRefresh);
-  };
-  // and in the sidebar, under Sleepa Zone (the other every-league view)
-  (function(){
-    const z = document.querySelector('.side-zone');
-    if(z) z.insertAdjacentHTML('afterend', '<button type="button" class="zn-entry side-zone hx-side" data-hx-open title="Set every league’s lineup in one pass">' + HX_ICON + '<span>Huddle every league</span><small>lineups</small></button>');
-  })();
-  const hxBaseHuddleCard = renderHuddleCard;
-  renderHuddleCard = function(){
-    hxBaseHuddleCard();
-    const slot = document.getElementById('huddle-slot');
-    if(slot && !HX.open) slot.insertAdjacentHTML('beforeend', hxEntryHTML());
   };
 
 })();
