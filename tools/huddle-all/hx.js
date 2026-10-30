@@ -679,6 +679,11 @@
     hxBaseRerender.apply(this, arguments);
     if(HX.open && !HX.busy && HX.m && HX.i < HX.n && ctx.league && ctx.league.league_id === HX.m.id) safeRun('Huddle every league', hxRefresh);
   };
+  // and in the sidebar, under Sleepa Zone (the other every-league view)
+  (function(){
+    const z = document.querySelector('.side-zone');
+    if(z) z.insertAdjacentHTML('afterend', '<button type="button" class="zn-entry side-zone hx-side" data-hx-open title="Set every league’s lineup in one pass">' + HX_ICON + '<span>Huddle every league</span><small>preview</small></button>');
+  })();
   const hxBaseHuddleCard = renderHuddleCard;
   renderHuddleCard = function(){
     hxBaseHuddleCard();

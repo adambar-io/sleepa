@@ -240,3 +240,5 @@
     .hx-prow .hx-acts{ grid-column: 2 / -1; justify-content: flex-start; }
     .hx-tray .hx-tchip{ font-size: 12px; }
   }
+
+  .hx-side svg{ color: var(--accent); }
