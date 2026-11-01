@@ -3502,6 +3502,15 @@
   .sb-wav .am-rows{ grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 8px; }   /* wide: the radar spreads into columns */
   .sb-wav .am-xr{ grid-template-columns: 42px minmax(0, 1fr) auto; gap: 3px 10px; padding: 10px 12px; } .sb-wav .ph.am-xi{ width: 42px; height: 42px; }
   .sb-wav .am-xn b{ font-size: 14px; } .sb-wav .am-xn small{ font-size: 12px; }
+  /* alerts: a grid of cards on desktop, a list on phones */
+  .sb-alerts{ list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+  .sb-al{ display: grid; gap: 4px; align-content: start; padding: 12px 14px; border-radius: 16px; background: var(--surface); border: 1px solid var(--hair); }
+  .sb-al.up{ box-shadow: inset 3px 0 0 var(--impact-pos); } .sb-al.dn{ box-shadow: inset 3px 0 0 var(--impact-neg); } .sb-al.warn{ box-shadow: inset 3px 0 0 var(--warn); }
+  .sb-alh{ display: flex; align-items: center; gap: 8px; } .sb-alh b{ font-size: 14px; } .sb-alh em{ margin-left: auto; font-style: normal; font-size: 11.5px; color: var(--text-3); white-space: nowrap; }
+  .sb-al.up .sb-alh b{ color: var(--impact-pos); } .sb-al.dn .sb-alh b{ color: var(--impact-neg); } .sb-al.warn .sb-alh b{ color: var(--warn); }
+  .sb-alb{ font-size: 13px; line-height: 1.4; } .sb-al small{ font-size: 12px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+  /* rooting board tabs: phones only (desktop shows the three columns) */
+  .sb-tabs{ display: none; }
   .sb-lg + .sb-lg{ margin-top: 6px; } .sb-lg .am-list{ margin-bottom: 8px; }
   .sb-lgh{ display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 0 4px; background: none; color: var(--text); text-align: left; }
   .sb-lgh b{ font-size: 14px; } .sb-lgh small{ font-size: 12.5px; color: var(--text-2); } .sb-lgh svg{ margin-left: auto; width: 18px; height: 18px; color: var(--text-3); transition: transform .2s var(--ease); } .sb-lgh[aria-expanded="true"] svg{ transform: rotate(180deg); }
@@ -3512,6 +3521,14 @@
     .sb-xw .sb-stats{ grid-template-columns: minmax(0, 1fr); gap: 8px; }
     .sb-games{ display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin: 0 -14px; padding: 0 14px; }
     .sb-game{ flex: 0 0 72%; scroll-snap-align: start; }
+    .sb-tabs{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 3px; margin-bottom: 12px; border-radius: 14px; background: var(--surface-2); }
+    .sb-tabs button{ display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-height: 48px; border-radius: 11px; background: none; font-weight: 400; }
+    .sb-tabs b{ font-size: 13.5px; } .sb-tabs span{ font-size: 12px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+    .sb-tabs .for b{ color: var(--impact-pos); } .sb-tabs .both b{ color: var(--impact-mixed); } .sb-tabs .against b{ color: var(--impact-neg); }
+    .sb-tabs button[aria-pressed="true"]{ background: var(--surface-3); } .sb-tabs button[aria-pressed="true"] span{ color: var(--text); }
+    .sb-cols[data-tab] .sb-col{ display: none; } .sb-cols[data-tab="for"] .sb-col.for, .sb-cols[data-tab="both"] .sb-col.both, .sb-cols[data-tab="against"] .sb-col.against{ display: grid; }
+    .sb-cols[data-tab] .sb-colh h3{ display: none; } .sb-tug > div:first-child{ display: none; }   /* the tabs carry the totals */
+    .sb-alerts{ grid-template-columns: minmax(0, 1fr); }
   }
   @media (min-width: 900px){
     .sb-top{ display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); overflow: visible; margin: 0; padding: 0; }
@@ -17372,7 +17389,11 @@
         (shown.length ? shown.map(sbRowHTML).join('') : '<p class="sb-none">' + (view === 'live' ? 'None playing right now.' : 'Nobody here this week.') + '</p>') +
         (rows.length > SB_ROWS ? sbMore('rb' + c[0], rows.length, open) : '') + '</div>';
     }).join('');
-    return head + bar + '<div class="sb-cols">' + cols + '</div><p class="sb-fine">Big numbers add up every league he starts in; chips show each league’s own scoring. A player on both sides leans toward the closer matchup.</p>';
+    const tab = a.rbTab === 'both' && !list.some(function(o){ return o.kind === 'both'; }) ? 'for' : (a.rbTab || 'for');
+    const tabs = '<div class="sb-tabs" role="group" aria-label="Side">' + [['for', 'For you', sbN(tf)], ['both', 'Both', String(list.filter(function(o){ return o.kind === 'both'; }).length)], ['against', 'Against', sbN(ta)]].map(function(t){
+      return '<button type="button" class="' + t[0] + '" data-sb-tab="' + t[0] + '" aria-pressed="' + (tab === t[0]) + '"><b>' + t[1] + '</b><span>' + t[2] + '</span></button>';
+    }).join('') + '</div>';
+    return head + bar + tabs + '<div class="sb-cols" data-tab="' + tab + '">' + cols + '</div><p class="sb-fine">Big numbers add up every league he starts in; chips show each league’s own scoring. A player on both sides leans toward the closer matchup.</p>';
   }
 
   // ---- win probability per league, and the plays that moved it (the matchup charts' replays) ----
@@ -17447,6 +17468,55 @@
     const body = shown.length ? '<ol class="sb-mos-l">' + shown.map(sbMomentHTML).join('') + '</ol>' + (ms.length > SB_MOMENTS ? sbMore('mo', Math.min(40, ms.length), a.more.mo) : '')
       : '<p class="sb-none">' + (lines.length ? 'No big swings yet.' : 'Plays that move your win probability show up here once games kick off.') + '</p>';
     return '<section class="sb-card">' + sbHd('Plays that moved your odds', 'Moments') + alerts + body + '</section>';
+  }
+
+  // ---- alerts: the turns of the day in one scrollable list, inside the Scoreboard (no notifications) ----
+  // From the same replays: lead changes, single plays worth 15%+ of win probability, the moment a matchup was locked
+  // up / out of reach, plus in-game injuries to my stake players. Newest first.
+  const SB_SWING_ALERT = 0.15, SB_ALERTS = 4;
+  function sbAlerts(lines, list){
+    const out = [];
+    lines.forEach(function(x){
+      const pts = x.D.pts, L = x.L, opp = x.P.tb ? x.P.tb.name : 'them';
+      let lead = 0, locked = false, gone = false;
+      pts.forEach(function(q, i){
+        const d = q.a - q.b, sgn = d > 0.004 ? 1 : d < -0.004 ? -1 : 0, prev = i ? pts[i - 1] : null;
+        const who = q.w ? sbFull(q.w) + ': ' + sbTrim(q.d, 90) : '';
+        const score = 'You ' + sbN(q.a, 2) + ' – ' + sbN(q.b, 2) + ' ' + opp;
+        if(i && sgn && lead && sgn !== lead && !q.snap) out.push({ t: q.t, L: L, kind: sgn > 0 ? 'up' : 'dn', title: sgn > 0 ? 'You took the lead' : 'You fell behind', body: who, sub: score });
+        if(sgn) lead = sgn;
+        if(prev && !q.snap && q.w && Math.abs(q.p - prev.p) >= SB_SWING_ALERT){
+          const up = q.p > prev.p;
+          out.push({ t: q.t, L: L, kind: up ? 'up' : 'dn', title: 'Big swing ' + (up ? 'for' : 'against') + ' you', body: who, sub: 'Win probability ' + sbPct(prev.p) + ' → ' + sbPct(q.p) });
+        }
+        if(i && !locked && q.p >= 0.99 && prev.p < 0.99){ locked = true; out.push({ t: q.t, L: L, kind: 'up', title: 'Locked up', body: 'Up ' + sbN(d) + ' with too little left for ' + opp + '.', sub: score }); }
+        if(i && !gone && q.p <= 0.01 && prev.p > 0.01){ gone = true; out.push({ t: q.t, L: L, kind: 'dn', title: 'Out of reach', body: 'Down ' + sbN(-d) + ' with too little left.', sub: score }); }
+      });
+    });
+    sbInjuries(list).forEach(function(x){
+      out.push({ t: x.pl.t || 0, L: (x.o.legs[0] || {}).L, kind: 'warn', title: sbFull(x.o.pid) + ' was hurt', body: zClock(x.pl) + (x.ret ? ' · return ' + x.ret.toLowerCase() : ''), sub: sbStakeWords(x.o) });
+    });
+    // one play that did the same thing in several leagues is one alert, with each league's line
+    const by = {}, merged = [];
+    out.forEach(function(x){
+      const k = x.t + '|' + x.title + '|' + x.body, m = by[k];
+      const line = (x.L && x.kind !== 'warn' ? amCode(x.L.name) + ' ' : '') + x.sub;
+      if(m){ m.Ls.push(x.L); m.subs.push(line); return; }
+      merged.push(by[k] = Object.assign({}, x, { Ls: [x.L].filter(Boolean), subs: [line] }));
+    });
+    merged.forEach(function(m){ if(m.subs.length === 1) m.subs = [m.sub]; });
+    return merged.sort(function(a, b){ return b.t - a.t; });
+  }
+  function sbAlertsHTML(lines, list){
+    const a = ctx.zone.am, al = sbAlerts(lines, list);
+    const shown = a.more.al ? al : al.slice(0, SB_ALERTS);
+    return '<section class="sb-sec" aria-label="Alerts">' + sbHd('Lead changes, big swings, injuries · newest first', 'Alerts', al.length ? '<span class="sb-chip">' + al.length + ' this week</span>' : '') +
+      (al.length ? '<ol class="sb-alerts">' + shown.map(function(x){
+        return '<li class="sb-al ' + x.kind + '"><span class="sb-alh">' + (x.Ls.length ? x.Ls.map(function(L){ return '<i class="sb-dot" style="background:' + sbColor(L) + '"></i>'; }).join('') : '<i class="sb-dot" style="background:var(--text-3)"></i>') +
+          '<b>' + escapeHTML(x.title) + '</b><em>' + escapeHTML(x.Ls.map(function(L){ return amCode(L.name); }).concat(x.t ? [wpcWhen(x.t)] : []).join(' · ')) + '</em></span>' +
+          (x.body ? '<span class="sb-alb">' + escapeHTML(x.body) + '</span>' : '') + x.subs.map(function(s){ return '<small>' + escapeHTML(s) + '</small>'; }).join('') + '</li>';
+      }).join('') + '</ol>' + (al.length > SB_ALERTS ? sbMore('al', al.length, a.more.al) : '')
+        : '<p class="sb-none">' + (lines.length ? 'Nothing big yet. Lead changes, 15%+ swings and injuries show up here.' : 'Lead changes, big swings and injuries show up here once games kick off.') + '</p>') + '</section>';
   }
 
   // ---- standings if this week's scores hold ----
@@ -17619,7 +17689,7 @@
     const top = '<section class="sb-top" aria-label="Your matchups">';
     if(mode === 'live') return sbHeadHTML(mode, ps) +
       top + safeHTML('Expected wins', function(){ return sbXwHTML(ps, lines); }) + ps.map(function(P){ return safeHTML('Matchup', function(){ return sbCardHTML(P); }); }).join('') + '</section>' +
-      safeHTML('Games that matter', sbGamesHTML) +
+      safeHTML('Games that matter', sbGamesHTML) + safeHTML('Alerts', function(){ return sbAlertsHTML(lines, list); }) +
       '<div class="sb-split"><section class="sb-card sb-rb">' + safeHTML('Rooting board', function(){ return sbBoardHTML(list); }) + '</section>' +
         '<div class="sb-side">' + safeHTML('Win probability', function(){ return sbChartHTML(lines, 'This week, every league'); }) + safeHTML('Moments', function(){ return sbMomentsHTML(lines, list); }) + '</div></div>' +
       '<div class="sb-split b">' + safeHTML('As it stands', sbStandHTML) +
@@ -17690,6 +17760,8 @@
     if(by){ a.rbBy = by.getAttribute('data-sb-by'); amSave(); amRender(); return true; }
     const vw = t.closest('[data-sb-view]');
     if(vw){ a.rbView = vw.getAttribute('data-sb-view'); amRender(); return true; }
+    const tb = t.closest('[data-sb-tab]');
+    if(tb){ a.rbTab = tb.getAttribute('data-sb-tab'); amRender(); return true; }
     const mo = t.closest('[data-sb-more]');
     if(mo){ const k = mo.getAttribute('data-sb-more'); a.more[k] = !a.more[k]; amRender(); return true; }
     const sl = t.closest('[data-sb-st]');
