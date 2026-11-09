@@ -1860,6 +1860,7 @@
   .it-mine-c{ padding: 8px 6px; } .it-mine-c .it-ch{ padding: 6px 10px 0; }
   .it-pr{ display: grid; grid-template-columns: 44px 36px minmax(0, 1fr) auto auto; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; cursor: pointer; min-height: 52px; }
   .it-pr + .it-pr{ border-top: 1px solid var(--hair); }
+  .it-pr.tb{ grid-template-columns: 44px 36px minmax(0, 1fr) auto auto minmax(70px, auto); }   /* game page table: + defense-vs-position column */
   @media (hover: hover){ .it-pr:hover{ background: var(--surface-2); } }
   .it-pr .slot-tag{ width: 44px; padding: 2px 0; border: 1px solid; border-radius: 6px; font-size: 11px; font-weight: 700; }
   .it-av{ width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background: var(--surface-2); box-shadow: 0 0 0 1.5px var(--pc, var(--hair)); }
@@ -1999,6 +2000,20 @@
   @media (min-width: 900px){ .it-ov .it-page{ max-width: 760px; margin: 0 auto; width: 100%; } .it-ov .it-pills{ max-width: 760px; margin-left: auto !important; margin-right: auto !important; width: calc(100% - 24px); } }
   .it-qb{ font-style: normal; font-size: 11.5px; font-weight: 600; color: var(--text-2); white-space: nowrap; max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
   .it-two2{ display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  /* live box score: away | stat | home, a two-team bar under each row, then each side's leaders */
+  .it-bxh, .it-bxr{ display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: baseline; gap: 10px; font-variant-numeric: tabular-nums; }
+  .it-bxh{ padding-bottom: 6px; } .it-bxh b{ font-size: 13px; font-weight: 800; letter-spacing: .06em; } .it-bxh b:last-child, .it-bxr b:nth-of-type(2){ text-align: right; }
+  .it-bxh span{ font-size: 13px; font-weight: 700; color: var(--text-2); }
+  .it-bxr{ padding: 6px 0 9px; position: relative; } .it-bxr + .it-bxr{ border-top: 1px solid var(--hair); }
+  .it-bxr b{ font-size: 16px; font-weight: 600; color: var(--text-2); } .it-bxr b.w{ font-weight: 800; color: var(--text); }
+  .it-bxr span{ font-size: 12px; font-weight: 600; color: var(--text-3); text-align: center; min-width: 84px; }
+  .it-bxb{ position: absolute; left: 0; right: 0; bottom: 2px; height: 3px; border-radius: 2px; background: linear-gradient(90deg, var(--ac) calc(var(--a) * 100%), var(--hc) 0); opacity: .55; }
+  .it-bls{ margin-top: 12px; display: grid; gap: 10px; }
+  .it-blg > b{ display: block; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); margin-bottom: 4px; }
+  .it-bl{ display: grid; grid-template-columns: 36px minmax(0, 1fr); align-items: center; gap: 10px; cursor: pointer; min-width: 0; }
+  .it-bl.none{ display: block; cursor: default; color: var(--text-3); }
+  .it-bl .it-pn small{ font-variant-numeric: tabular-nums; }
+  @container itv (max-width: 560px){ .it-bl{ grid-template-columns: 28px minmax(0, 1fr); gap: 8px; } .it-bl .it-av{ width: 28px; height: 28px; } }
   .it-inj > b, .it-watch > b{ display: block; font-size: 12px; font-weight: 800; letter-spacing: .06em; color: var(--text-2); margin-bottom: 6px; }
   .it-injr{ display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "n c" "s c"; align-items: center; column-gap: 8px; padding: 6px 0; cursor: pointer; }
   .it-injr + .it-injr{ border-top: 1px solid var(--hair); }
@@ -2041,7 +2056,7 @@
   @container itv (min-width: 860px){
     .it-detail{ grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: start; }
     .it-two{ grid-template-columns: 1fr 1fr; }
-    .it-pr{ grid-template-columns: 44px 36px minmax(0, 1fr) auto auto 70px; } .it-pj{ text-align: right; }
+    .it-pj{ text-align: right; }
   }
   /* desktop list: focus lift */
   .it-lift{ position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 24px; background: var(--scrim); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
@@ -18529,7 +18544,7 @@
     const rows = m.my.map(function(x){
       const p = ctx.players[x.pid] || {}, opp = x.team === m.g.home ? 'vs ' + m.g.away : '@ ' + m.g.home, pc = posColor(posGroup(x.pid)), a = itActual(x.pid, x.sc);
       if(a){ act += a.pts; anyAct = true; } if(!a || a.state !== 'post') allFinal = false;
-      return '<div class="it-pr" data-open="' + escapeHTML(x.pid) + '" style="--pc:' + pc + '"><span class="slot-tag" style="color:' + pc + ';border-color:' + pc + '">' + escapeHTML(x.slot) + '</span>' +
+      return '<div class="it-pr' + (table ? ' tb' : '') + '" data-open="' + escapeHTML(x.pid) + '" style="--pc:' + pc + '"><span class="slot-tag" style="color:' + pc + ';border-color:' + pc + '">' + escapeHTML(x.slot) + '</span>' +
         avatarTag(x.pid, 'it-av') + '<span class="it-pn"><b>' + escapeHTML(p.position === 'DEF' ? x.team + ' D/ST' : playerName(p)) + '</b><small>' + escapeHTML(x.team + ' · ' + opp) +
         (zone ? ' · ' + x.leagues.map(function(l){ return escapeHTML(l.name); }).join(', ') : '') + '</small></span>' +
         (table ? '<span class="it-mu">' + (dvpChipHTML(x.pid, true) || '<span class="dim">—</span>') + '</span>' : '') +
@@ -18667,6 +18682,59 @@
     };
     return '<div class="card it-card"><div class="it-ch"><span class="eyebrow">' + (live ? 'Top scorers' : 'Players to watch') + '</span><span class="it-lt">' + (live ? (lv.state === 'post' ? 'final' : 'so far') : 'top projected') + ' · ' + escapeHTML(ctx.league ? ctx.league.name : '') + '</span></div><div class="it-two2 stack">' + side(g.away) + side(g.home) + '</div></div>';
   }
+  // ---- box score once a game is on: team totals and each side's passing / rushing / receiving leaders ----
+  // Real football stats (not fantasy points), from the same live Sleeper stats as the scores. Total yards is the
+  // other team's D/ST "yards allowed" when we have it (net of sacks); passing yards are gross, as Sleeper counts them.
+  function itBox(team, opp){
+    const S = ctx.live.stats || {}, t = { pass: 0, rush: 0, plays: 0, to: 0, sk: 0, skyd: 0, n: 0 }, lead = {};
+    const n = function(s, k){ return s[k] || 0; };
+    const better = function(k, pid, s, a, b){ const c = lead[k]; if(!c || a > c.a || (a === c.a && b > c.b)) lead[k] = { pid: pid, s: s, a: a, b: b }; };
+    for(const pid in S){
+      const e = S[pid]; if(!e || e.t !== team || pid === team) continue;
+      const x = e.s; t.n++;
+      t.pass += n(x, 'pass_yd'); t.rush += n(x, 'rush_yd'); t.plays += n(x, 'pass_att') + n(x, 'rush_att') + n(x, 'pass_sack');
+      t.to += n(x, 'pass_int') + n(x, 'fum_lost'); t.sk += n(x, 'pass_sack'); t.skyd += n(x, 'pass_sack_yds');
+      if(n(x, 'pass_att')) better('pass', pid, x, n(x, 'pass_yd'), n(x, 'pass_att'));
+      if(n(x, 'rush_att')) better('rush', pid, x, n(x, 'rush_yd'), n(x, 'rush_att'));
+      if(n(x, 'rec')) better('rec', pid, x, n(x, 'rec_yd'), n(x, 'rec'));
+    }
+    const d = S[opp] && S[opp].s;
+    t.yds = d && typeof d.yds_allow === 'number' ? d.yds_allow : t.pass - t.skyd + t.rush;
+    t.ypp = t.plays ? Math.round(t.yds / t.plays * 10) / 10 : 0;
+    return { t: t, lead: lead };
+  }
+  function itLeadLine(k, s){
+    const n = function(x){ return s[x] || 0; }, yd = function(v){ return (v < 0 ? '−' + Math.abs(v) : v) + ' yd'; }, out = [];
+    if(k === 'pass'){ out.push(n('pass_cmp') + '/' + n('pass_att'), yd(n('pass_yd'))); if(n('pass_td')) out.push(n('pass_td') + ' TD'); if(n('pass_int')) out.push(n('pass_int') + ' INT'); }
+    if(k === 'rush'){ out.push(n('rush_att') + ' car', yd(n('rush_yd'))); if(n('rush_td')) out.push(n('rush_td') + ' TD'); if(n('rush_lng')) out.push('long ' + n('rush_lng')); }
+    if(k === 'rec'){ out.push(n('rec') + ' rec', yd(n('rec_yd'))); if(n('rec_td')) out.push(n('rec_td') + ' TD'); if(n('rec_tgt')) out.push(n('rec_tgt') + ' tgt'); }
+    return out.join(' · ');
+  }
+  function itBoxHTML(m){
+    const g = m.g, lv = itLive(g);
+    if(!lv || !ctx.live.stats) return '';
+    const A = itBox(g.away, g.home), H = itBox(g.home, g.away);
+    if(!A.t.n && !H.t.n) return '';
+    const rows = [['Total yards', 'yds', 1], ['Passing', 'pass', 1], ['Rushing', 'rush', 1], ['Yards / play', 'ypp', 1], ['Turnovers', 'to', -1], ['Sacked', 'sk', -1]].map(function(r){
+      const a = A.t[r[1]], h = H.t[r[1]], tot = Math.abs(a) + Math.abs(h), wa = r[2] * (a - h) > 0, wh = r[2] * (h - a) > 0;
+      const f = function(v){ const x = r[1] === 'ypp' ? v.toFixed(1) : String(Math.abs(v)); return v < 0 ? '−' + x.replace('-', '') : x; };
+      return '<div class="it-bxr"><b class="' + (wa ? 'w' : '') + '">' + f(a) + '</b><span>' + r[0] + '</span><b class="' + (wh ? 'w' : '') + '">' + f(h) + '</b>' +
+        '<i class="it-bxb" style="--a:' + (tot ? Math.max(0, a) / (Math.max(0, a) + Math.max(0, h) || 1) : 0.5) + ';--ac:' + teamColor(g.away) + ';--hc:' + teamColor(g.home) + '"></i></div>';
+    }).join('');
+    const cell = function(L, k){
+      const x = L.lead[k];
+      if(!x) return '<div class="it-bl none"><small>—</small></div>';
+      const p = ctx.players[x.pid] || {};
+      return '<div class="it-bl" data-open="' + escapeHTML(x.pid) + '" style="--pc:' + posColor(posGroup(x.pid)) + '">' + avatarTag(x.pid, 'it-av') +
+        '<span class="it-pn"><b>' + escapeHTML(playerName(p)) + '</b><small>' + escapeHTML(itLeadLine(k, x.s)) + '</small></span></div>';
+    };
+    const leaders = [['Passing', 'pass'], ['Rushing', 'rush'], ['Receiving', 'rec']].map(function(r){
+      return '<div class="it-blg"><b>' + r[0] + '</b><div class="it-two2">' + cell(A, r[1]) + cell(H, r[1]) + '</div></div>';
+    }).join('');
+    return '<div class="card it-card it-box"><div class="it-ch"><span class="eyebrow">Box score</span><span class="it-lt">' + (lv.state === 'post' ? 'final' : 'live') + '</span></div>' +
+      '<div class="it-bxh"><b style="color:' + teamColor(g.away) + '">' + escapeHTML(g.away) + '</b><span>' + escapeHTML(itScoreText(g, lv) ? lv.a + ' – ' + lv.h : '') + '</span><b style="color:' + teamColor(g.home) + '">' + escapeHTML(g.home) + '</b></div>' +
+      rows + '<div class="it-bls">' + leaders + '</div></div>';
+  }
   function itFormHTML(m){
     const g = m.g, f = g.form || {};
     const row = function(side){
@@ -18697,11 +18765,11 @@
     return '<div class="card it-card"><div class="it-ch"><span class="eyebrow">Sidelines</span></div><div class="it-two2 stack">' + html + '</div>' + (credit ? '<p class="it-attr">Coach photos: ' + credit + '</p>' : '') + '</div>';
   }
   function itPageHTML(m){
-    return '<div class="it-page" data-it-page="' + escapeHTML(m.g.id) + '">' + itHeroHTML(m) + itEnvCardHTML(m) + itImpliedHTML(m) + itMineHTML(m) + itRootHTML(m) +
+    return '<div class="it-page" data-it-page="' + escapeHTML(m.g.id) + '">' + itHeroHTML(m) + itBoxHTML(m) + itEnvCardHTML(m) + itImpliedHTML(m) + itMineHTML(m) + itRootHTML(m) +
       itWatchHTML(m) + itInjHTML(m) + itWeatherHTML(m) + itVenueHTML(m) + itEdgeHTML(m) + itRestHTML(m) + itDvpHTML(m) + itBetHTML(m) + itFormHTML(m) + itH2HHTML(m) + itSidelinesHTML(m) + '</div>';
   }
   function itDetailHTML(m){
-    return '<div class="it-detail"><div class="it-dl">' + itMineHTML(m, true) + itRootHTML(m) + itWatchHTML(m) + itInjHTML(m) + '<div class="it-two">' + itRestHTML(m) + itEdgeHTML(m) + '</div>' + itVenueHTML(m) + itSidelinesHTML(m) + '</div>' +
+    return '<div class="it-detail"><div class="it-dl">' + itBoxHTML(m) + itMineHTML(m, true) + itRootHTML(m) + itWatchHTML(m) + itInjHTML(m) + '<div class="it-two">' + itRestHTML(m) + itEdgeHTML(m) + '</div>' + itVenueHTML(m) + itSidelinesHTML(m) + '</div>' +
       '<div class="it-dr">' + itEnvCardHTML(m) + itImpliedHTML(m) + itWeatherHTML(m) + itDvpHTML(m) + itBetHTML(m) + itFormHTML(m) + itH2HHTML(m) + '</div></div>';
   }
 
