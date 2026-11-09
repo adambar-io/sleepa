@@ -1866,6 +1866,14 @@
   .it-av.sm{ width: 26px; height: 26px; margin-left: -6px; box-shadow: 0 0 0 2px var(--surface); } .it-av.sm:first-child{ margin-left: 0; }
   .it-pn{ display: flex; flex-direction: column; min-width: 0; } .it-pn b{ font-size: 14.5px; font-weight: 600; } .it-pn small{ font-size: 12px; color: var(--text-2); }
   .it-pj{ font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  /* once a game starts: actual points (green while live), the projection under them, the stat line across the row */
+  .it-pj.act{ display: flex; flex-direction: column; align-items: flex-end; line-height: 1.15; } .it-pj.act.in{ color: var(--accent); }
+  .it-pj.act small{ font-size: 10.5px; font-weight: 600; color: var(--text-3); white-space: nowrap; }
+  .it-line{ grid-column: 3 / -1; margin-top: -6px; font-size: 12px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+  .it-sc{ display: inline-flex; align-items: baseline; gap: 10px; font-size: 34px !important; font-weight: 800 !important; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .it-sc i{ font-style: normal; font-size: 20px; color: var(--text-3); } .it-sc span.poss::after{ content: ''; display: inline-block; width: 7px; height: 7px; margin: 0 0 6px 4px; border-radius: 50%; background: var(--warn); vertical-align: middle; }
+  .it-lh2 .it-sc{ font-size: 24px !important; } .it-mid small.live{ color: var(--danger); }
+  .it-lv{ font-weight: 650; color: var(--text); } .it-lv.on{ color: var(--danger); } .it-lmine b.act.in{ color: var(--accent); }
   .it-mu{ white-space: nowrap; }
   .it-lean{ font-size: 10.5px; font-weight: 700; padding: 2px 6px; border-radius: 5px; white-space: nowrap; cursor: help; }
   .it-lean.up{ background: var(--accent-soft); color: var(--accent); } .it-lean.down{ background: var(--danger-soft); color: var(--danger); }
@@ -7543,6 +7551,7 @@
     if(ctx.view === 'fa' && !(document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName))) renderPlayers(true);
     refreshFocus();
     if(maxOpen()) renderMax(0);
+    if(ctx.it && ctx.it.tab !== 'inj' && (ctx.view === 'intel' || ctx.it.open)) itRerender();   // Intel: scores, clocks, actual points
     renderLiveAgo();
   }
   function liveAgoText(){
@@ -16088,8 +16097,13 @@
   function zStatLine(r){
     const z = ctx.zone, s = z.stats && z.statsWeek === z.week ? z.stats[r.pid] : null;
     if(!s || !(r.state === 'in' || r.state === 'post')) return '';
-    const n = function(k){ return s[k] || 0; }, out = [], pos = r.p.position, idp = IDP_GROUPS.indexOf(pos) !== -1 || /^(DE|DT|NT|LB|ILB|OLB|MLB|CB|S|SS|FS|DB|DL)$/.test(pos || '');
-    const rush = function(){ if(n('rush_att')) out.push(n('rush_att') + '-' + n('rush_yd') + ' rush' + (n('rush_td') ? ', ' + n('rush_td') + ' TD' : '')); };
+    return statLine(s, r.p.position, r.state === 'post');
+  }
+  // a player's game in a few words ("18/27, 241 yd, 2 TD · 4-12 rush"), from Sleeper's raw weekly stats
+  function statLine(s, pos, done){
+    const n = function(k){ return s[k] || 0; }, out = [], idp = IDP_GROUPS.indexOf(pos) !== -1 || /^(DE|DT|NT|LB|ILB|OLB|MLB|CB|S|SS|FS|DB|DL)$/.test(pos || '');
+    const yd = function(v){ return (v < 0 ? '−' + Math.abs(v) : v) + ' yd'; };
+    const rush = function(){ if(n('rush_att')) out.push(n('rush_att') + ' rush, ' + yd(n('rush_yd')) + (n('rush_td') ? ', ' + n('rush_td') + ' TD' : '')); };
     const rec = function(){ if(n('rec_tgt') || n('rec')) out.push(n('rec') + '/' + n('rec_tgt') + ' rec, ' + n('rec_yd') + ' yd' + (n('rec_td') ? ', ' + n('rec_td') + ' TD' : '')); };
     if(pos === 'QB'){ if(n('pass_att')) out.push(n('pass_cmp') + '/' + n('pass_att') + ', ' + n('pass_yd') + ' yd' + (n('pass_td') ? ', ' + n('pass_td') + ' TD' : '') + (n('pass_int') ? ', ' + n('pass_int') + ' INT' : '')); rush(); }
     else if(pos === 'RB'){ rush(); rec(); }
@@ -16098,7 +16112,7 @@
     else if(pos === 'DEF'){ [['sack', ' sk'], ['int', ' INT'], ['fum_rec', ' FR'], ['def_td', ' TD']].forEach(function(x){ if(n(x[0])) out.push(n(x[0]) + x[1]); }); if(typeof s.pts_allow === 'number') out.push(s.pts_allow + ' pts allowed'); }
     else if(idp){ const t = n('idp_tkl') || n('idp_tkl_solo') + n('idp_tkl_ast'); if(t) out.push(t + ' tkl'); [['idp_sack', ' sk'], ['idp_int', ' INT'], ['idp_pass_def', ' PD'], ['idp_ff', ' FF'], ['idp_fum_rec', ' FR'], ['idp_def_td', ' TD']].forEach(function(x){ if(n(x[0])) out.push(n(x[0]) + x[1]); }); }
     if(n('fum_lost')) out.push(n('fum_lost') + ' fum lost');
-    return out.join(' · ') || (r.state === 'post' ? 'No stats' : '');
+    return out.join(' · ') || (done ? 'No stats' : '');
   }
   function zScore(r){ return r.g && r.g.src === 'espn' && (r.state === 'in' || r.state === 'post') ? r.g.us + '–' + r.g.them : ''; }
   // An actual score you can tap for its breakdown (stats × this league's scoring).
@@ -18303,11 +18317,11 @@
   // ---- my players (per scope) ----
   // [{ pid, team, slot, proj, leagues: [{ id, name }] }]; scope 'zone' merges every league (one row per player).
   function itMine(scope){
-    const out = {}, add = function(pid, slot, proj, L){
+    const out = {}, add = function(pid, slot, proj, L, sc){
       if(!pid || pid === '0') return;
       const p = ctx.players[pid] || {}, team = p.team || (/^[A-Z]{2,3}$/.test(pid) ? pid : null);
       if(!team) return;
-      const e = out[pid] || (out[pid] = { pid: pid, team: team, slot: slot, proj: proj, leagues: [] });
+      const e = out[pid] || (out[pid] = { pid: pid, team: team, slot: slot, proj: proj, sc: sc || null, leagues: [] });
       if(L && !e.leagues.some(function(x){ return x.id === L.id; })) e.leagues.push(L);
     };
     const cur = ctx.league ? { id: ctx.league.league_id, name: ctx.league.name } : null;
@@ -18324,7 +18338,7 @@
         const sc = (m.league && m.league.scoring_settings) || {};
         (m.roster.starters || []).forEach(function(pid, i){
           const raw = ctx.projRaw && ctx.projRaw[pid];
-          add(pid, slotShort(m.slots[i]), raw ? projPoints(raw, pid, sc) : null, { id: l.league_id, name: l.name });
+          add(pid, slotShort(m.slots[i]), raw ? projPoints(raw, pid, sc) : null, { id: l.league_id, name: l.name }, sc);
         });
       });
     }
@@ -18396,8 +18410,18 @@
   function itTime(ms){ return new Date(ms).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(/\s?([AP])M$/i, function(m, a){ return a.toLowerCase(); }); }
   function itDay(ms){ return new Date(ms).toLocaleDateString([], { weekday: 'short' }).toUpperCase(); }
   function itKick(g){ const k = Date.parse(g.kick); return isNaN(k) ? '' : itDay(k) + ' ' + itTime(k); }
+  // once a game kicks off: ESPN's score, clock and ball (via the live poll, gameOf); null before kickoff
+  function itLive(g){
+    const ga = gameOf(g.away), gh = gameOf(g.home), x = gh || ga;
+    if(!x || x.state === 'pre') return null;
+    const espn = !!(ga && gh && ga.src === 'espn' && gh.src === 'espn');
+    return { state: x.state, text: gameStateText(x) || '', espn: espn, a: espn ? ga.us : null, h: espn ? gh.us : null,
+      poss: espn && ga.poss ? 'away' : espn && gh.poss ? 'home' : null, rz: !!((ga && ga.rz) || (gh && gh.rz)) };
+  }
+  function itScoreText(g, lv){ return lv && lv.espn ? g.away + ' ' + lv.a + ' – ' + lv.h + ' ' + g.home : ''; }
   function itCountdown(g){
-    const k = Date.parse(g.kick), now = Date.now();
+    const k = Date.parse(g.kick), now = Date.now(), lv = itLive(g);
+    if(lv) return lv.state === 'in' ? 'Live' : lv.state === 'post' ? 'Final' : '';
     if(isNaN(k)) return '';
     if(now >= k + GAME_LENGTH) return 'Final';
     if(now >= k) return 'Live';
@@ -18421,7 +18445,7 @@
   // the over / under gets its own badge everywhere; the spread rides along as text
   function itOU(m, cls){ const t = m.g.lines && m.g.lines.total; return '<span class="it-ou' + (cls ? ' ' + cls : '') + '" title="Over / under: total points expected"><small>O/U</small><b>' + (typeof t === 'number' ? intelNum(t) : '—') + '</b></span>'; }
   function itSpread(m){ const g = m.g, f = intelFav(g.lines, g.away, g.home); return f ? (f.by === 0 ? 'PK' : f.fav + ' −' + intelNum(f.by)) : (g.lines ? '' : 'Lines not posted'); }
-  function itSub(m){ return [itSpread(m), itWxShort(m)].filter(Boolean).join(' · '); }
+  function itSub(m){ const lv = itLive(m.g); if(lv) return [itScoreText(m.g, lv), lv.text].filter(Boolean).join(' · '); return [itSpread(m), itWxShort(m)].filter(Boolean).join(' · '); }
   function itDots(m){ return m.my.map(function(x){ return '<i style="background:' + posColor(posGroup(x.pid)) + '"></i>'; }).join(''); }
   function itWindows(games){
     const out = [];
@@ -18442,7 +18466,7 @@
     const g = m.g, dense = ctx.it.dense === 'condensed';
     return '<button type="button" class="it-tile" data-it-game="' + escapeHTML(g.id) + '" style="--i:' + (i || 0) + '">' +
       '<span class="it-pair">' + itLogo(g.away, 'sm') + itLogo(g.home, 'sm') + '</span>' +
-      '<span class="it-tt"><b>' + escapeHTML(g.away + ' @ ' + g.home) + '</b><small>' + itOU(m) + escapeHTML(itSub(m)) + '</small></span>' + itEnvNum(m) +
+      '<span class="it-tt"><b>' + escapeHTML(g.away + ' @ ' + g.home) + '</b><small>' + (itLive(g) ? '<span class="it-lv' + (itLive(g).state === 'in' ? ' on' : '') + '">' + escapeHTML(itSub(m)) + '</span>' : itOU(m) + escapeHTML(itSub(m))) + '</small></span>' + itEnvNum(m) +
       (dense ? '' : '<span class="it-tf">' + (m.my.length ? '<span class="it-dots">' + itDots(m) + '</span><span class="it-mine">' + m.my.length + ' mine</span>' : '') + itFlagsHTML(m.flags, 3) + '</span>') +
       '</button>';
   }
@@ -18458,7 +18482,12 @@
     const g = m.g, cd = itCountdown(g);
     return '<div class="it-hero" style="--ta:' + teamColor(g.away) + ';--th:' + teamColor(g.home) + '">' +
       '<div class="it-side">' + itLogo(g.away, 'lg') + '<small>' + escapeHTML(g.rec ? g.rec.away : '') + '</small>' + (g.qb && g.qb.away ? '<em class="it-qb">QB ' + escapeHTML(g.qb.away) + '</em>' : '') + '</div>' +
-      '<div class="it-mid"><small>' + (g.neutral ? 'VS' : 'AT') + '</small><b>' + escapeHTML(itKick(g)) + '</b>' + (cd ? '<span class="it-cd' + (cd === 'Live' ? ' live' : '') + '">' + cd + '</span>' : '') + itOU(m, 'lg') + '</div>' +
+      (function(){
+        const lv = itLive(g);
+        if(lv && lv.espn) return '<div class="it-mid"><b class="it-sc"><span' + (lv.poss === 'away' ? ' class="poss"' : '') + '>' + lv.a + '</span><i>–</i><span' + (lv.poss === 'home' ? ' class="poss"' : '') + '>' + lv.h + '</span></b>' +
+          '<span class="it-cd' + (lv.state === 'in' ? ' live' : '') + '">' + escapeHTML(lv.text) + (lv.rz && lv.state === 'in' ? ' · red zone' : '') + '</span><small>' + escapeHTML(itKick(g)) + '</small></div>';
+        return '<div class="it-mid"><small>' + (g.neutral ? 'VS' : 'AT') + '</small><b>' + escapeHTML(itKick(g)) + '</b>' + (cd ? '<span class="it-cd' + (cd === 'Live' ? ' live' : '') + '">' + (lv ? escapeHTML(lv.text || cd) : cd) + '</span>' : '') + itOU(m, 'lg') + '</div>';
+      })() +
       '<div class="it-side">' + itLogo(g.home, 'lg') + '<small>' + escapeHTML(g.rec ? g.rec.home : '') + '</small>' + (g.qb && g.qb.home ? '<em class="it-qb">QB ' + escapeHTML(g.qb.home) + '</em>' : '') + '</div>' +
       '<div class="it-venue">' + escapeHTML([g.vname, m.v && m.v.city].filter(Boolean).join(' · ')) + '</div></div>';
   }
@@ -18481,19 +18510,35 @@
       (s ? '<div class="it-scr"><div class="it-ch"><span class="eyebrow">Game script</span><b>' + s.label + '</b></div><div class="it-meter" style="--p:' + s.pos.toFixed(4) + ';--a:' + s.avg.toFixed(4) + '"><i></i></div>' +
         '<div class="it-cap"><span>Slog</span><span>avg ' + INTEL_TUNE.AVG_TOTAL + '</span><span>Shootout</span></div></div>' : '') + '</div>';
   }
+  // a player's points so far this week in the scoring his projection uses (the current league unless sc is given):
+  // Sleeper's live points / the play-by-play for the current league (thisWeekLive / weekActual), else his raw stats
+  function itActual(pid, sc){
+    const p = ctx.players[pid] || {}, team = p.team || (/^[A-Z]{2,3}$/.test(pid) ? pid : null), g = gameOf(team);
+    if(!g || g.state === 'pre' || g.state === 'off') return null;
+    const st = ctx.live.stats && ctx.live.stats[pid];
+    let pts;
+    if(!sc){ const lw = thisWeekLive(pid); pts = lw ? lw.pts : weekActual(pid); }
+    else pts = st ? (calcPoints(st.s, sc) || 0) : (ctx.live.stats ? 0 : null);
+    if(pts === null || pts === undefined) return null;
+    return { pts: pts, state: g.state, line: st ? statLine(st.s, p.position, g.state === 'post') : '' };
+  }
   function itMineHTML(m, table){
     const zone = ctx.it.scope === 'zone';
     if(!m.my.length) return '<div class="card it-card"><div class="it-ch"><span class="eyebrow">My players in this game</span></div><p class="it-none">None of your starters' + (zone ? ' in any league' : '') + ' play in this game.</p></div>';
+    let act = 0, anyAct = false, allFinal = true;
     const rows = m.my.map(function(x){
-      const p = ctx.players[x.pid] || {}, opp = x.team === m.g.home ? 'vs ' + m.g.away : '@ ' + m.g.home, pc = posColor(posGroup(x.pid));
+      const p = ctx.players[x.pid] || {}, opp = x.team === m.g.home ? 'vs ' + m.g.away : '@ ' + m.g.home, pc = posColor(posGroup(x.pid)), a = itActual(x.pid, x.sc);
+      if(a){ act += a.pts; anyAct = true; } if(!a || a.state !== 'post') allFinal = false;
       return '<div class="it-pr" data-open="' + escapeHTML(x.pid) + '" style="--pc:' + pc + '"><span class="slot-tag" style="color:' + pc + ';border-color:' + pc + '">' + escapeHTML(x.slot) + '</span>' +
         avatarTag(x.pid, 'it-av') + '<span class="it-pn"><b>' + escapeHTML(p.position === 'DEF' ? x.team + ' D/ST' : playerName(p)) + '</b><small>' + escapeHTML(x.team + ' · ' + opp) +
         (zone ? ' · ' + x.leagues.map(function(l){ return escapeHTML(l.name); }).join(', ') : '') + '</small></span>' +
         (table ? '<span class="it-mu">' + (dvpChipHTML(x.pid, true) || '<span class="dim">—</span>') + '</span>' : '') +
         (function(){ const lean = intelWeatherFor(posGroup(x.pid), m.w, m.roof); return lean ? '<span class="it-lean ' + lean.dir + '" title="' + escapeHTML(lean.why) + '">Weather ' + (lean.dir === 'up' ? '▲' : '▼') + '</span>' : '<span></span>'; })() +
-        '<span class="it-pj"' + (typeof x.proj === 'number' ? ' data-it-count2="' + x.proj.toFixed(2) + '"' : '') + '>' + (typeof x.proj === 'number' ? x.proj.toFixed(2) : '—') + '</span></div>';
+        (a ? '<span class="it-pj act ' + a.state + '">' + a.pts.toFixed(2) + '<small>' + (a.state === 'post' ? 'final' : 'live') + (typeof x.proj === 'number' ? ' · proj ' + x.proj.toFixed(2) : '') + '</small></span>'
+          : '<span class="it-pj"' + (typeof x.proj === 'number' ? ' data-it-count2="' + x.proj.toFixed(2) + '"' : '') + '>' + (typeof x.proj === 'number' ? x.proj.toFixed(2) : '—') + '</span>') +
+        (a && a.line ? '<span class="it-line">' + escapeHTML(a.line) + '</span>' : '') + '</div>';
     }).join('');
-    return '<div class="card it-card it-mine-c"><div class="it-ch"><span class="eyebrow">My players in this game</span><span class="it-lt">Total ' + m.myTotal.toFixed(2) + '</span></div>' + rows + '</div>';
+    return '<div class="card it-card it-mine-c"><div class="it-ch"><span class="eyebrow">My players in this game</span><span class="it-lt">' + (anyAct ? act.toFixed(2) + (allFinal ? ' final' : ' so far') + ' · proj ' + m.myTotal.toFixed(2) : 'Total ' + m.myTotal.toFixed(2)) + '</span></div>' + rows + '</div>';
   }
   // what to root for, for my players only
   function itRootText(m){
@@ -18604,15 +18649,23 @@
     return '<div class="card it-card"><div class="it-ch"><span class="eyebrow">Injuries</span><span class="it-lt">key players · Sleeper</span></div><div class="it-two2">' + side(g.away) + side(g.home) + '</div></div>';
   }
   function itWatchHTML(m){
-    const g = m.g, mine = {}; m.my.forEach(function(x){ mine[x.pid] = true; });
-    const side = function(t){
-      return '<div class="it-watch"><b>' + escapeHTML(t) + '</b>' + itWatch(t, 3).map(function(pid){
-        const p = ctx.players[pid], pc = posColor(posGroup(pid)), fa = isAvailable(pid), own = isMine(pid);
-        return '<div class="it-wr" data-open="' + escapeHTML(pid) + '" style="--pc:' + pc + '">' + avatarTag(pid, 'it-av') + '<span class="it-pn"><b>' + escapeHTML(playerName(p)) + '</b><small>' + escapeHTML(p.position) +
-          (fa ? ' · <em class="it-fa">Free agent</em>' : own ? ' · <em class="it-yours">Yours</em>' : '') + '</small></span><span class="it-pj">' + ctx.projections[pid].toFixed(2) + '</span></div>';
-      }).join('') + '</div>';
+    const g = m.g, mine = {}, lv = itLive(g), live = !!(lv && ctx.live.stats); m.my.forEach(function(x){ mine[x.pid] = true; });
+    // once the game is on: the top fantasy scorers so far (league scoring) with their stat lines; before: top projected
+    const top = function(t){
+      if(!live) return itWatch(t, 3);
+      return itTeamPlayers(t).map(function(pid){ const a = itActual(pid); return { pid: pid, v: a ? a.pts : 0 }; }).filter(function(x){ return x.v > 0; })
+        .sort(function(a, b){ return b.v - a.v; }).slice(0, 4).map(function(x){ return x.pid; });
     };
-    return '<div class="card it-card"><div class="it-ch"><span class="eyebrow">Players to watch</span><span class="it-lt">top projected · ' + escapeHTML(ctx.league ? ctx.league.name : '') + '</span></div><div class="it-two2 stack">' + side(g.away) + side(g.home) + '</div></div>';
+    const side = function(t){
+      const list = top(t);
+      return '<div class="it-watch"><b>' + escapeHTML(t) + '</b>' + (list.length ? list.map(function(pid){
+        const p = ctx.players[pid], pc = posColor(posGroup(pid)), fa = isAvailable(pid), own = isMine(pid), a = live ? itActual(pid) : null;
+        return '<div class="it-wr" data-open="' + escapeHTML(pid) + '" style="--pc:' + pc + '">' + avatarTag(pid, 'it-av') + '<span class="it-pn"><b>' + escapeHTML(playerName(p)) + '</b><small>' + escapeHTML(p.position) +
+          (fa ? ' · <em class="it-fa">Free agent</em>' : own ? ' · <em class="it-yours">Yours</em>' : '') + (a && a.line ? ' · ' + escapeHTML(a.line) : '') + '</small></span>' +
+          '<span class="it-pj' + (a ? ' act ' + a.state : '') + '">' + (a ? a.pts.toFixed(2) : ctx.projections[pid].toFixed(2)) + '</span></div>';
+      }).join('') : '<p class="it-none">No fantasy points yet.</p>') + '</div>';
+    };
+    return '<div class="card it-card"><div class="it-ch"><span class="eyebrow">' + (live ? 'Top scorers' : 'Players to watch') + '</span><span class="it-lt">' + (live ? (lv.state === 'post' ? 'final' : 'so far') : 'top projected') + ' · ' + escapeHTML(ctx.league ? ctx.league.name : '') + '</span></div><div class="it-two2 stack">' + side(g.away) + side(g.home) + '</div></div>';
   }
   function itFormHTML(m){
     const g = m.g, f = g.form || {};
@@ -18656,7 +18709,7 @@
   function itRingCardHTML(m, o){
     const g = m.g, ao = Math.min(1.5, Math.abs(o));
     return '<button type="button" class="it-rc' + (o === 0 ? ' on' : '') + (Math.abs(o) > 1.5 ? ' far' : '') + '" data-it-ring="' + escapeHTML(g.id) + '" style="--o:' + o + ';--ao:' + ao + ';z-index:' + (10 - Math.round(ao * 4)) + '">' +
-      '<span class="it-rch"><span class="it-pair">' + itLogo(g.away, 'sm') + itLogo(g.home, 'sm') + '</span><span class="it-tt"><b>' + escapeHTML(g.away + ' @ ' + g.home) + '</b><small>' + escapeHTML(itKick(g) + ' · ' + (g.vname || '')) + '</small></span>' +
+      '<span class="it-rch"><span class="it-pair">' + itLogo(g.away, 'sm') + itLogo(g.home, 'sm') + '</span><span class="it-tt"><b>' + escapeHTML(g.away + ' @ ' + g.home) + '</b><small>' + escapeHTML(itLive(g) ? itSub(m) : itKick(g) + ' · ' + (g.vname || '')) + '</small></span>' +
       '<span class="it-env big t-' + (m.tone || 'none') + '"><b>' + (m.env === null ? '—' : m.env) + '</b><small>Game env</small></span></span>' +
       '<span class="it-rcl"><span>' + itOU(m, 'lg') + escapeHTML(itSpread(m)) + '</span><span>' + escapeHTML(m.roof === 'indoor' ? 'Indoors' : m.w ? Math.round(m.w.temp) + '° · wind ' + Math.round(m.w.wind) + ' · precip ' + Math.round(m.w.precip) + '%' : '') + '</span></span>' +
       (m.implied ? '<span class="it-imp it-rci"><b>' + escapeHTML(g.away) + ' <span>' + m.implied.away.toFixed(2) + '</span></b><b><span>' + m.implied.home.toFixed(2) + '</span> ' + escapeHTML(g.home) + '</b></span>' +
@@ -19136,11 +19189,12 @@
   function itLiftHTML(m){
     const g = m.g, im = m.implied;
     return '<div class="it-lift-c" role="dialog" aria-label="' + escapeHTML(g.away + ' at ' + g.home) + '"><div class="it-lift-l">' +
-      '<div class="it-lh2">' + itLogo(g.away) + '<span class="it-mid"><small>' + (g.neutral ? 'VS' : 'AT') + '</small><b>' + escapeHTML(itKick(g)) + '</b></span>' + itLogo(g.home) + '</div>' +
+      '<div class="it-lh2">' + itLogo(g.away) + (function(){ const lv = itLive(g); return lv && lv.espn ? '<span class="it-mid"><b class="it-sc"><span>' + lv.a + '</span><i>–</i><span>' + lv.h + '</span></b><small class="' + (lv.state === 'in' ? 'live' : '') + '">' + escapeHTML(lv.text) + '</small></span>'
+        : '<span class="it-mid"><small>' + (g.neutral ? 'VS' : 'AT') + '</small><b>' + escapeHTML(itKick(g)) + '</b></span>'; })() + itLogo(g.home) + '</div>' +
       (im ? '<div class="it-imp sm"><b>' + escapeHTML(g.away) + ' <span>' + im.away.toFixed(2) + '</span></b><b><span>' + im.home.toFixed(2) + '</span> ' + escapeHTML(g.home) + '</b></div><div class="it-tug" style="--s:' + (im.away / (im.away + im.home)).toFixed(4) + '"><i></i></div>' : '<p class="it-none">Lines not posted yet.</p>') +
-      '<small class="it-sub2">' + itOU(m) + escapeHTML(itSub(m) + (m.w ? ' · wind ' + Math.round(m.w.wind) + ' · precip ' + Math.round(m.w.precip) + '%' : '')) + '</small><div class="it-flags">' + itFlagsHTML(m.flags) + '</div></div>' +
+      '<small class="it-sub2">' + itOU(m) + escapeHTML((itLive(g) ? [itSpread(m), itWxShort(m)].filter(Boolean).join(' · ') : itSub(m)) + (m.w ? ' · wind ' + Math.round(m.w.wind) + ' · precip ' + Math.round(m.w.precip) + '%' : '')) + '</small><div class="it-flags">' + itFlagsHTML(m.flags) + '</div></div>' +
       '<div class="it-lift-r"><span class="it-env big t-' + (m.tone || 'none') + '"><b>' + (m.env === null ? '—' : m.env) + '</b><small>Game environment</small></span>' +
-      '<div class="it-lmine">' + (m.my.length ? m.my.map(function(x){ const p = ctx.players[x.pid] || {}; return '<div><i style="background:' + posColor(posGroup(x.pid)) + '"></i><span>' + escapeHTML(p.position === 'DEF' ? x.team + ' D/ST' : playerName(p)) + '</span><b>' + (typeof x.proj === 'number' ? x.proj.toFixed(2) : '—') + '</b></div>'; }).join('') : '<p class="it-none">No players of yours.</p>') + '</div>' +
+      '<div class="it-lmine">' + (m.my.length ? m.my.map(function(x){ const p = ctx.players[x.pid] || {}; return '<div><i style="background:' + posColor(posGroup(x.pid)) + '"></i><span>' + escapeHTML(p.position === 'DEF' ? x.team + ' D/ST' : playerName(p)) + '</span>' + (function(){ const a = itActual(x.pid, x.sc); return a ? '<b class="act ' + a.state + '" title="' + escapeHTML((a.state === 'post' ? 'Final' : 'So far') + (typeof x.proj === 'number' ? ' · projected ' + x.proj.toFixed(2) : '')) + '">' + a.pts.toFixed(2) + '</b>' : '<b>' + (typeof x.proj === 'number' ? x.proj.toFixed(2) : '—') + '</b>'; })() + '</div>'; }).join('') : '<p class="it-none">No players of yours.</p>') + '</div>' +
       '<button type="button" class="it-open" data-it-open="' + escapeHTML(g.id) + '">Open game ›</button></div></div>';
   }
   function itLift(id, instant){
