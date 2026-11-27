@@ -239,7 +239,7 @@
   /* desktop with the side panel open: the list uses its narrow card layout (sized for phones); keep faces readable */
   @container list (max-width: 599px){ @media (min-width: 900px){
     html :is(#starters-list, #bench-list, #fa-list) .slot-row .ph.avatar{ width: 44px; height: 44px; }
-    html:not(.cards-detailed) :is(#starters-list, #bench-list) .slot-row.slot-row + .slot-row::before{ left: 98px; }
+    html:not(.cards-detailed) :is(#starters-list, #bench-list, #ir-section) .slot-row.slot-row + .slot-row::before{ left: 98px; }
     html #fa-list .slot-row.slot-row + .slot-row::before{ left: 66px; }
   } }
 
@@ -257,30 +257,30 @@
   .opp.mt-easy{ color: var(--accent); font-weight: 600; } .opp.mt-mid{ color: var(--warn); font-weight: 600; } .opp.mt-hard{ color: var(--danger); font-weight: 600; }
   .snap-flag{ margin-left: 4px; font-size: 13px; font-weight: 700; }
   .snap-flag.up{ color: var(--accent); } .snap-flag.down{ color: var(--danger); }
-  html:not(.cards-detailed) :is(#starters-list, #bench-list) .slot-row :is(.m-opp, .key-stats, .sig, .depth-chip, .lock-tag, .te-flex-tag){ display: none; }
+  html:not(.cards-detailed) :is(#starters-list, #bench-list, #ir-section) .slot-row :is(.m-opp, .key-stats, .sig, .depth-chip, .lock-tag, .te-flex-tag){ display: none; }
   /* compact name line: the name keeps room first, then injury / bye flags; the rank chip gives way (tier in details) */
   /* compact: this week's consensus rank ("wk RB4", which includes the position) replaces the plain position on line 2 */
   .m-rk{ display: none; }
   .m-elig{ display: none; font-size: 10px; font-weight: 700; color: var(--text-3); margin-left: 3px; }
-  html:not(.cards-detailed) :is(#starters-list, #bench-list) .m-elig{ display: inline; }
-  html:not(.cards-detailed) :is(#starters-list, #bench-list) .player-name .ecr-chip, html:not(.cards-detailed) :is(#starters-list, #bench-list) .m-pos{ display: none; }
-  html:not(.cards-detailed) :is(#starters-list, #bench-list) .m-rk{ display: inline; }
-  html:not(.cards-detailed) :is(#starters-list, #bench-list) .m-rk .ecr-chip{ display: inline; padding: 0 4px; font-size: 10px; vertical-align: 1px; }
-  html:not(.cards-detailed) :is(#starters-list, #bench-list) .m-rk .ecr-chip i{ display: none; }   /* tier: player sheet / detailed cards */
-  html:not(.cards-detailed) :is(#starters-list, #bench-list) .slot-row .m-opp-c{ display: inline; }
-  html:not(.cards-detailed) :is(#starters-list, #bench-list) .slot-row .player-meta{ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  html:not(.cards-detailed) :is(#starters-list, #bench-list) .slot-row{ padding-top: 9px; padding-bottom: 9px; }
+  html:not(.cards-detailed) :is(#starters-list, #bench-list, #ir-section) .m-elig{ display: inline; }
+  html:not(.cards-detailed) :is(#starters-list, #bench-list, #ir-section) .player-name .ecr-chip, html:not(.cards-detailed) :is(#starters-list, #bench-list, #ir-section) .m-pos{ display: none; }
+  html:not(.cards-detailed) :is(#starters-list, #bench-list, #ir-section) .m-rk{ display: inline; }
+  html:not(.cards-detailed) :is(#starters-list, #bench-list, #ir-section) .m-rk .ecr-chip{ display: inline; padding: 0 4px; font-size: 10px; vertical-align: 1px; }
+  html:not(.cards-detailed) :is(#starters-list, #bench-list, #ir-section) .m-rk .ecr-chip i{ display: none; }   /* tier: player sheet / detailed cards */
+  html:not(.cards-detailed) :is(#starters-list, #bench-list, #ir-section) .slot-row .m-opp-c{ display: inline; }
+  html:not(.cards-detailed) :is(#starters-list, #bench-list, #ir-section) .slot-row .player-meta{ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  html:not(.cards-detailed) :is(#starters-list, #bench-list, #ir-section) .slot-row{ padding-top: 9px; padding-bottom: 9px; }
   @container list (max-width: 599px){ /* card layout only; the table layout keeps its column widths so headers line up */
-    html:not(.cards-detailed) :is(#starters-list, #bench-list) .slot-row{ gap: 8px; }
-    html:not(.cards-detailed) :is(#starters-list, #bench-list) .slot-tag{ width: 28px; }
-    html:not(.cards-detailed) :is(#starters-list, #bench-list) .avatar{ width: 34px; height: 34px; }
-    html:not(.cards-detailed) :is(#starters-list, #bench-list) .stat-col{ width: 50px; }
-    html:not(.cards-detailed) :is(#starters-list, #bench-list) .stat-col + .stat-col{ width: 42px; }
-    html:not(.cards-detailed) :is(#starters-list, #bench-list) .stat-col .val{ font-size: 16px; }
-    html:not(.cards-detailed) :is(#starters-list, #bench-list) .stat-col + .stat-col .val{ font-size: 12.5px; }
-    html:not(.cards-detailed) :is(#starters-list, #bench-list) .rng{ display: none; }   /* ###.##–###.## doesn't fit; shown in the detail views */
-    html:not(.cards-detailed) :is(#starters-list, #bench-list) .gs{ padding: 1px 4px; }
-    html:not(.cards-detailed) :is(#starters-list, #bench-list) .slot-row + .slot-row::before{ left: 88px; }
+    html:not(.cards-detailed) :is(#starters-list, #bench-list, #ir-section) .slot-row{ gap: 8px; }
+    html:not(.cards-detailed) :is(#starters-list, #bench-list, #ir-section) .slot-tag{ width: 28px; }
+    html:not(.cards-detailed) :is(#starters-list, #bench-list, #ir-section) .avatar{ width: 34px; height: 34px; }
+    html:not(.cards-detailed) :is(#starters-list, #bench-list, #ir-section) .stat-col{ width: 50px; }
+    html:not(.cards-detailed) :is(#starters-list, #bench-list, #ir-section) .stat-col + .stat-col{ width: 42px; }
+    html:not(.cards-detailed) :is(#starters-list, #bench-list, #ir-section) .stat-col .val{ font-size: 16px; }
+    html:not(.cards-detailed) :is(#starters-list, #bench-list, #ir-section) .stat-col + .stat-col .val{ font-size: 12.5px; }
+    html:not(.cards-detailed) :is(#starters-list, #bench-list, #ir-section) .rng{ display: none; }   /* ###.##–###.## doesn't fit; shown in the detail views */
+    html:not(.cards-detailed) :is(#starters-list, #bench-list, #ir-section) .gs{ padding: 1px 4px; }
+    html:not(.cards-detailed) :is(#starters-list, #bench-list, #ir-section) .slot-row + .slot-row::before{ left: 88px; }
     /* Players list on phones: two stat columns + the vs button left the name ~70px (the name itself shrank to nothing).
        The position is already on line 2, so drop the tag, and let the rank chip wrap under a long name. */
     #fa-list .slot-row{ gap: 8px; }
@@ -382,10 +382,10 @@
   .stat-col.act-main.act-live .cap{ color: var(--danger); font-weight: 600; }
   .stat-col.act-main.act-live .cap::before{ width: 5px; height: 5px; margin-right: 3px; }
   /* compact cards: the game chip is plain inline text so a long line trims the score, not the whole chip */
-  html:not(.cards-detailed) :is(#starters-list, #bench-list) .m-opp-c .gs{ display: inline; }
-  html:not(.cards-detailed) :is(#starters-list, #bench-list) .m-opp-c .gs{ font-size: 9.5px; letter-spacing: 0; padding: 1px 3px; }
-  html:not(.cards-detailed) :is(#starters-list, #bench-list) .player-meta{ font-size: 11.5px; }
-  html:not(.cards-detailed) :is(#starters-list, #bench-list) .m-opp-c .gs.live::before{ display: none; }
+  html:not(.cards-detailed) :is(#starters-list, #bench-list, #ir-section) .m-opp-c .gs{ display: inline; }
+  html:not(.cards-detailed) :is(#starters-list, #bench-list, #ir-section) .m-opp-c .gs{ font-size: 9.5px; letter-spacing: 0; padding: 1px 3px; }
+  html:not(.cards-detailed) :is(#starters-list, #bench-list, #ir-section) .player-meta{ font-size: 11.5px; }
+  html:not(.cards-detailed) :is(#starters-list, #bench-list, #ir-section) .m-opp-c .gs.live::before{ display: none; }
   .cs.dimmed .cv{ color: var(--text-3); font-weight: 500; }
   .hs-sub{ font-size: 11.5px; color: var(--text-3); margin-top: 1px; }
   .pf-stat .k.sub{ text-transform: none; letter-spacing: 0; margin-top: 1px; }
@@ -947,7 +947,7 @@
     .slot-row .player-info, .list-head .h-info{ min-width: 150px; }
     .slot-row .col.col-vs, .list-head .h-col.h-vs{ flex-shrink: 1; min-width: 64px; }
     .slot-row .key-stats, .slot-row .sig, .slot-row .m-opp, .slot-row .fa-vs{ display: none; }
-    html:not(.cards-detailed) :is(#starters-list, #bench-list) .slot-row .m-opp-c{ display: none; } /* table: the Opp column shows it */
+    html:not(.cards-detailed) :is(#starters-list, #bench-list, #ir-section) .slot-row .m-opp-c{ display: none; } /* table: the Opp column shows it */
     .slot-row .stat-col .cap{ display: none; }
     .slot-row .stat-col .val{ font-size: 17px; }
     .slot-row .stat-col + .stat-col .val{ font-size: 14px; }
@@ -2619,7 +2619,11 @@
   #league-mu .mu-card{ margin-bottom: 18px; }
   @media (max-width: 560px){
     .mu-pts{ font-size: 26px; }
-    .st-row{ grid-template-columns: 20px minmax(0, 1fr) 50px 46px 46px; padding: 10px 12px; font-size: 13px; gap: 4px; }
+    /* phones: PA drops so PF fits (1696.90 overflowed a 46px column into PA) and team names get the room */
+    .st-row{ grid-template-columns: 20px minmax(0, 1fr) 44px 62px; padding: 10px 12px; font-size: 13px; gap: 6px; }
+    .st-row > .st-num:last-child{ display: none; }
+    .st-team{ white-space: normal; }
+    .st-tn{ display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.2; }
     .st-headrow{ letter-spacing: 0; }
     .st-rec{ white-space: nowrap; }
   }
@@ -4352,8 +4356,8 @@
      one meta line per player with the opponent colored by difficulty; ranks, ENV, matchup-rank chips, ranges and snaps
      move to Detailed and the player page */
   html:not(.cards-detailed) .hd-chips, html:not(.cards-detailed) .hd-status, html:not(.cards-detailed) .mu-sub{ display: none; }
-  html:not(.cards-detailed) :is(#starters-list, #bench-list) .slot-row :is(.it-chip, .dvp-chip, .depth-chip, .rng){ display: none; }
-  html:not(.cards-detailed) :is(#starters-list, #bench-list) .slot-row .col-snap, html:not(.cards-detailed) #roster-view .list-head .h-snap{ display: none !important; }
+  html:not(.cards-detailed) :is(#starters-list, #bench-list, #ir-section) .slot-row :is(.it-chip, .dvp-chip, .depth-chip, .rng){ display: none; }
+  html:not(.cards-detailed) :is(#starters-list, #bench-list, #ir-section) .slot-row .col-snap, html:not(.cards-detailed) #roster-view .list-head .h-snap{ display: none !important; }
   html.pl-compact #fa-list .slot-row :is(.it-chip, .dvp-chip, .depth-chip, .rng, .player-name .ecr-chip){ display: none; }
   html.pl-compact #fa-list .slot-row :is(.col-snap, .col-tgt), html.pl-compact #fa-view .list-head :is(.h-snap, .h-tgt){ display: none !important; }
   .slot-row .opp:is(.mt-easy, .mt-good, .mt-mid, .mt-tough, .mt-hard){ font-weight: 650; }
@@ -4641,6 +4645,28 @@
   .bye-alert strong{ color: var(--danger); font-weight: 600; }
   .bye-alert .bye-text{ flex: 0 1 auto; min-width: 0; }
   .bye-fix{ background: none; color: var(--danger); padding: 2px 4px; min-height: 0; font-size: 12.5px; font-weight: 650; text-decoration: underline; text-underline-offset: 2px; }
+
+  /* ============ Phone polish (Nov 26 2026): app-like spacing on small screens ============ */
+  @media (max-width: 560px){
+    /* page head: the subtitle wraps (2 lines) instead of ending in "…"; the bell sits beside the title, not on its own row */
+    .page-head{ align-items: flex-start; gap: 10px; margin-bottom: 14px; }
+    .page-head .top-actions{ margin-top: 22px; }
+    .page-sub{ font-size: 14px; line-height: 1.35; margin-top: 4px; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    /* section titles: a long "— note" drops to its own line instead of hanging beside the title */
+    .section-title{ flex-wrap: wrap; row-gap: 0; }
+    /* Compare sections: 2 × 2, all visible (the scrolling row cut off "Lineup changes" with no hint there was more) */
+    .wk-seg.cmp-tabs{ display: grid; grid-template-columns: 1fr 1fr; width: 100%; border-radius: 18px; overflow: visible; }
+    .wk-seg.cmp-tabs button{ padding: 7px 4px; }
+    /* Start / Sit empty state: the button's label sat at the top of a 48px box, touching the text above */
+    .ss-empty2{ padding: 22px 20px; }
+    .ss-empty2 .ssp-add{ align-items: center; margin-top: 8px; }
+  }
+  /* touch screens: segmented controls and small pill buttons get a 38px+ tap height (they were 28–34px) */
+  @media (pointer: coarse){
+    .seg button, .wk-seg button{ min-height: 38px; }
+    .vs-btn{ position: relative; }
+    .vs-btn::after{ content: ''; position: absolute; inset: -7px; }   /* 31px circle, 45px hit area */
+  }
 </style>
 </head>
 <body>

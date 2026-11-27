@@ -525,6 +525,14 @@ A single-file local web app for viewing a Sleeper fantasy football roster with c
   - **Switching leagues without leaving the app**: the Settings list and a dropdown on the sidebar's team card (`#league-card` / `#league-menu`, closes on outside click or Esc) both call `loadEverything(leagueId, fromEl)`, which plays the same app-open transition growing out of the tapped league and shows "Opening <league name>" while it loads. League avatars come from `https://sleepercdn.com/avatars/thumbs/<avatar>`. The list only covers the season found at lookup (current season, or last season if none)
   - The panel shows the 8 most important season stats plus an "All N stats & game log →" link to the Analysis screen (the full list was ~40–50 rows with real data)
 - **Mobile / iPhone layout** (≤560px): tighter roster rows with the column header hidden, a full-screen focus sheet with a pinned close button and background scroll lock, 2-row candidate cards that keep Proj/Last/Avg visible, and short injury chips (Q/O/IR). It also handles safe areas for the notch and home bar, uses 16px inputs so iOS doesn't zoom, gates hover styles behind `(hover: hover)`, and turns off auto-capitalize on the username field. Tested down to 320px wide
+- **Phone polish (Nov 26 2026; owner: "spacing issues on the mobile app")**: the `Phone polish` block at the end of the main stylesheet.
+  - **Page head:** the subtitle wraps to 2 lines instead of ending in "…", and the bell sits beside the title instead of on its own row.
+  - **Section titles:** a long "— note" drops to its own line.
+  - **Compare section tabs:** a 2 × 2 grid on phones; the scrolling row cut off "Lineup changes".
+  - **Start / Sit empty state:** the button label is centered and no longer touches the text above.
+  - **Touch screens:** `.seg` / `.wk-seg` buttons are at least 38px tall, and VS buttons get a 45px hit area.
+  - **Simple mode now covers IR rows:** the compact rules for `#starters-list, #bench-list` now include `#ir-section`. Each IR row had been showing every detail line, about 190px tall.
+  - **Standings ≤560px:** PA is hidden. "1696.90" overflowed the 46px PF column into PA, so PF now gets 62px and team names wrap to 2 lines instead of being cut off.
 
 - **nflverse signals** (from `nflverse.json`, see below):
   - **Opponent / bye**: "vs KC" / "@ KC" / "BYE" on every player row (roster, waiver list, focus cards, Compare view) and in the Analysis header. A **starter on bye** gets a red row + red slot tag + "BYE" chip, and a red banner above the tabs lists every bye starter in the draft lineup
